@@ -3,6 +3,7 @@ package bot
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -18,7 +19,12 @@ var srv *httptest.Server
 func TestMain(m *testing.M) {
 
 	srv = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		w.Write([]byte("123"))
+		api := APIGetAccountInfo{}
+
+		body, _ := ioutil.ReadAll(req.Body)
+		json.Unmarshal(body, &api)
+
+		w.Write([]byte(api.Token))
 	}))
 	defer srv.Close()
 
@@ -50,7 +56,7 @@ func (p *APIGetAccountInfo) Unmarshal(meta interface{}, body []byte, header http
 
 func (p *APIGetAccountInfo) Assert(meta interface{}) error {
 	mp := meta.(*Metadata)
-	return assert.Equal(mp.Val, "123", reflect.TypeOf(*p).Name())
+	return assert.Equal(mp.Val, "111", reflect.TypeOf(*p).Name())
 }
 
 func TestBot(t *testing.T) {
