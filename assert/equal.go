@@ -168,9 +168,9 @@ func Equal(expected, actual interface{}, msgAndArgs ...interface{}) error {
 	if !objectsAreEqual(expected, actual) {
 		diff := diff(expected, actual)
 		expected, actual = formatUnequalValues(expected, actual)
-		return fmt.Errorf("Not equal: \n"+
+		return fmt.Errorf("%v Not equal: \n"+
 			"expected: %s\n"+
-			"actual  : %s%s", expected, actual, diff)
+			"actual  : %s%s", msgAndArgs, expected, actual, diff)
 	}
 
 	return nil
@@ -189,7 +189,7 @@ func NotEqual(expected, actual interface{}, msgAndArgs ...interface{}) error {
 	}
 
 	if objectsAreEqual(expected, actual) {
-		return fmt.Errorf("Should not be: %#v\n", actual)
+		return fmt.Errorf("%v Should not be: %#v\n", msgAndArgs, actual)
 	}
 
 	return nil

@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"runtime"
+	"reflect"
 	"testing"
 
 	"github.com/pojol/apibot/assert"
@@ -52,15 +52,7 @@ func (p *GetAccountInfoRequest) Unmarshal(body []byte, header http.Header) {
 }
 
 func (p *GetAccountInfoRequest) Assert() error {
-	err := assert.Equal(p.Meta.Val, "123")
-	if err != nil {
-		_, file, line, ok := runtime.Caller(1)
-		if ok {
-			err = fmt.Errorf("file : %v\nline : %v\nerr : %w", file, line, err)
-		}
-	}
-
-	return err
+	return assert.Equal(p.Meta.Val, "123", reflect.TypeOf(*p).Name())
 }
 
 func TestBot(t *testing.T) {
