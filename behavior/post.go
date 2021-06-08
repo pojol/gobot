@@ -13,6 +13,7 @@ import (
 type HTTPPost struct {
 	URL    string
 	Header map[string]string
+	Meta   interface{}
 	Api    api.API
 }
 
@@ -20,7 +21,7 @@ func (p *HTTPPost) Exec() error {
 
 	var res *http.Response
 
-	byt := p.Api.Marshal()
+	byt := p.Api.Marshal(p.Meta)
 
 	client := http.Client{}
 
@@ -39,9 +40,9 @@ func (p *HTTPPost) Exec() error {
 	if res.StatusCode == http.StatusOK {
 
 		body, _ := ioutil.ReadAll(res.Body)
-		p.Api.Unmarshal(body, res.Header)
+		p.Api.Unmarshal(p.Meta, body, res.Header)
 
-		err = p.Api.Assert()
+		err = p.Api.Assert(p.Meta)
 
 	} else {
 		io.Copy(ioutil.Discard, res.Body)

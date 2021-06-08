@@ -30,12 +30,10 @@ type Metadata struct {
 }
 
 type APIGetAccountInfo struct {
-	Meta *Metadata
-
 	Token string
 }
 
-func (p *APIGetAccountInfo) Marshal() []byte {
+func (p *APIGetAccountInfo) Marshal(meta interface{}) []byte {
 
 	byt, err := json.Marshal(p)
 	if err != nil {
@@ -45,14 +43,14 @@ func (p *APIGetAccountInfo) Marshal() []byte {
 	return byt
 }
 
-func (p *APIGetAccountInfo) Unmarshal(body []byte, header http.Header) {
-
-	p.Meta.Val = string(body)
-
+func (p *APIGetAccountInfo) Unmarshal(meta interface{}, body []byte, header http.Header) {
+	mp := meta.(*Metadata)
+	mp.Val = string(body)
 }
 
-func (p *APIGetAccountInfo) Assert() error {
-	return assert.Equal(p.Meta.Val, "123", reflect.TypeOf(*p).Name())
+func (p *APIGetAccountInfo) Assert(meta interface{}) error {
+	mp := meta.(*Metadata)
+	return assert.Equal(mp.Val, "123", reflect.TypeOf(*p).Name())
 }
 
 func TestBot(t *testing.T) {
@@ -61,9 +59,9 @@ func TestBot(t *testing.T) {
 	b := New("", &md)
 
 	b.Post(&behavior.HTTPPost{
-		URL: srv.URL,
+		URL:  srv.URL,
+		Meta: &md,
 		Api: &APIGetAccountInfo{
-			Meta:  &md,
 			Token: "111",
 		},
 	})
