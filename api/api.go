@@ -1,8 +1,8 @@
-package script
+package api
 
 import "net/http"
 
-type IScriptObject interface {
+type API interface {
 	Marshal() []byte
 	Unmarshal([]byte, http.Header)
 	Assert() error

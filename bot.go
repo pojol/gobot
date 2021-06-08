@@ -2,7 +2,6 @@ package bot
 
 import (
 	"fmt"
-	"reflect"
 
 	"github.com/pojol/apibot/behavior"
 )
@@ -30,30 +29,25 @@ func New(name string, meta interface{}) *Bot {
 
 }
 
-func (b *Bot) NewBehavor(behav interface{}) {
+func (b *Bot) Post(p behavior.POST) {
+	b.behaviors = append(b.behaviors, &botBehavior{
+		behavior: "POST",
+		post:     p,
+	})
+}
 
-	name := reflect.TypeOf(behav).Name()
-	switch name {
-	case "POST":
-		p, ok := behav.(behavior.POST)
-		if ok {
-			b.behaviors = append(b.behaviors, &botBehavior{
-				behavior: name,
-				post:     p,
-			})
-		}
+func (b *Bot) Jump(j behavior.Jump) {
+	b.behaviors = append(b.behaviors, &botBehavior{
+		behavior: "Jump",
+		jump:     j,
+	})
+}
 
-	case "Jump":
-		b.behaviors = append(b.behaviors, &botBehavior{
-			behavior: name,
-			jump:     behav.(behavior.Jump),
-		})
-	case "Delay":
-		b.behaviors = append(b.behaviors, &botBehavior{
-			behavior: name,
-			delay:    behav.(behavior.Delay),
-		})
-	}
+func (b *Bot) Delay(d behavior.Delay) {
+	b.behaviors = append(b.behaviors, &botBehavior{
+		behavior: "Delay",
+		delay:    d,
+	})
 }
 
 func (b *Bot) Run() {

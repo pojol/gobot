@@ -29,13 +29,13 @@ type Metadata struct {
 	Val string
 }
 
-type GetAccountInfoRequest struct {
+type APIGetAccountInfo struct {
 	Meta *Metadata
 
 	Token string
 }
 
-func (p *GetAccountInfoRequest) Marshal() []byte {
+func (p *APIGetAccountInfo) Marshal() []byte {
 
 	byt, err := json.Marshal(p)
 	if err != nil {
@@ -45,13 +45,13 @@ func (p *GetAccountInfoRequest) Marshal() []byte {
 	return byt
 }
 
-func (p *GetAccountInfoRequest) Unmarshal(body []byte, header http.Header) {
+func (p *APIGetAccountInfo) Unmarshal(body []byte, header http.Header) {
 
 	p.Meta.Val = string(body)
 
 }
 
-func (p *GetAccountInfoRequest) Assert() error {
+func (p *APIGetAccountInfo) Assert() error {
 	return assert.Equal(p.Meta.Val, "123", reflect.TypeOf(*p).Name())
 }
 
@@ -60,10 +60,9 @@ func TestBot(t *testing.T) {
 	md := Metadata{}
 	b := New("", &md)
 
-	b.NewBehavor(behavior.POST{
-		Name: "test",
-		URL:  srv.URL,
-		Object: &GetAccountInfoRequest{
+	b.Post(&behavior.HTTPPost{
+		URL: srv.URL,
+		Api: &APIGetAccountInfo{
 			Meta:  &md,
 			Token: "111",
 		},
