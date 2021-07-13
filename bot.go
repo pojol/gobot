@@ -7,10 +7,9 @@ import (
 )
 
 type botBehavior struct {
-	behavior string
+	behavior behavior.BehaviorType
 
 	post  behavior.POST
-	jump  behavior.Jump
 	delay behavior.Delay
 }
 
@@ -31,21 +30,14 @@ func New(name string, meta interface{}) *Bot {
 
 func (b *Bot) Post(p behavior.POST) {
 	b.behaviors = append(b.behaviors, &botBehavior{
-		behavior: "POST",
+		behavior: behavior.PostTy,
 		post:     p,
-	})
-}
-
-func (b *Bot) Jump(j behavior.Jump) {
-	b.behaviors = append(b.behaviors, &botBehavior{
-		behavior: "Jump",
-		jump:     j,
 	})
 }
 
 func (b *Bot) Delay(d behavior.Delay) {
 	b.behaviors = append(b.behaviors, &botBehavior{
-		behavior: "Delay",
+		behavior: behavior.DelayTy,
 		delay:    d,
 	})
 }
@@ -53,12 +45,21 @@ func (b *Bot) Delay(d behavior.Delay) {
 func (b *Bot) Run() {
 	var err error
 
-	for _, v := range b.behaviors {
-		if v.behavior == "POST" {
-			err = v.post.Exec()
+	end := len(b.behaviors)
+	begin := 0
+
+	for {
+		b := b.behaviors[begin]
+		if b.behavior == behavior.PostTy {
+			err = b.post.Do()
 			if err != nil {
 				goto ext
 			}
+		}
+
+		begin++
+		if begin == end {
+			break
 		}
 	}
 

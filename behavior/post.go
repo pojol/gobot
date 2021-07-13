@@ -14,24 +14,28 @@ type HTTPPost struct {
 	URL    string
 	Header map[string]string
 	Meta   interface{}
-	Api    api.API
+	Param  interface{}
+	Api    interface{}
 }
 
-func (p *HTTPPost) Exec() error {
+func (p *HTTPPost) Do() error {
 
 	var res *http.Response
 
-	byt := p.Api.Marshal(p.Meta)
+	api := p.Api.(api.API)
+	byt := api.Marshal(p.Meta, p.Param)
 
 	client := http.Client{}
 
 	req, err := http.NewRequest("POST", p.URL, bytes.NewBuffer(byt))
 	if err != nil {
+		fmt.Println("http.request", err.Error())
 		goto ext
 	}
 
 	res, err = client.Do(req)
 	if err != nil {
+		fmt.Println("client.Do", err.Error())
 		goto ext
 	}
 	defer res.Body.Close()
@@ -40,9 +44,9 @@ func (p *HTTPPost) Exec() error {
 	if res.StatusCode == http.StatusOK {
 
 		body, _ := ioutil.ReadAll(res.Body)
-		p.Api.Unmarshal(p.Meta, body, res.Header)
+		api.Unmarshal(p.Meta, body, res.Header)
 
-		err = p.Api.Assert(p.Meta)
+		err = api.Assert(p.Meta)
 
 	} else {
 		io.Copy(ioutil.Discard, res.Body)
