@@ -38,10 +38,10 @@ type Metadata struct {
 type GetAccountInfoParam struct {
 	Token string
 }
-type GetAccountInfo struct {
+type GetAccountPack struct {
 }
 
-func (p *GetAccountInfo) Marshal(meta interface{}, param interface{}) []byte {
+func (p *GetAccountPack) Marshal(meta interface{}, param interface{}) []byte {
 
 	byt, err := json.Marshal(&param)
 	if err != nil {
@@ -51,12 +51,15 @@ func (p *GetAccountInfo) Marshal(meta interface{}, param interface{}) []byte {
 	return byt
 }
 
-func (p *GetAccountInfo) Unmarshal(meta interface{}, body []byte, header http.Header) {
+func (p *GetAccountPack) Unmarshal(meta interface{}, body []byte, header http.Header) {
 	mp := meta.(*Metadata)
 	mp.Val = string(body)
 }
 
-func (p *GetAccountInfo) Assert(meta interface{}) error {
+type GetAccountAssert struct {
+}
+
+func (p *GetAccountAssert) Do(meta interface{}) error {
 	mp := meta.(*Metadata)
 	return assert.Equal(mp.Val, "aabbcc", reflect.TypeOf(*p).Name())
 }
@@ -66,7 +69,7 @@ var compose = `
 	"behavior": "post",
 	"url": "",
 	"name": "",
-	"script" : "GetAccountInfo",
+	"script" : "GetAccountPack",
 	"param" : {
 		"Token" : "aabbcc" 
 	}
@@ -89,7 +92,7 @@ func TestBot(t *testing.T) {
 	b := New("", &md)
 
 	structmap = make(map[string]interface{})
-	structmap["GetAccountInfo"] = &GetAccountInfo{}
+	structmap["GetAccountPack"] = &GetAccountPack{}
 
 	info := &composeInfo{}
 

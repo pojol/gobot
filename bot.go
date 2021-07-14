@@ -9,8 +9,8 @@ import (
 type botBehavior struct {
 	behavior behavior.BehaviorType
 
-	post  behavior.POST
-	delay behavior.Delay
+	post  behavior.IPOST
+	delay behavior.IDelay
 }
 
 type Bot struct {
@@ -28,14 +28,14 @@ func New(name string, meta interface{}) *Bot {
 
 }
 
-func (b *Bot) Post(p behavior.POST) {
+func (b *Bot) Post(p behavior.IPOST) {
 	b.behaviors = append(b.behaviors, &botBehavior{
 		behavior: behavior.PostTy,
 		post:     p,
 	})
 }
 
-func (b *Bot) Delay(d behavior.Delay) {
+func (b *Bot) Delay(d behavior.IDelay) {
 	b.behaviors = append(b.behaviors, &botBehavior{
 		behavior: behavior.DelayTy,
 		delay:    d,
