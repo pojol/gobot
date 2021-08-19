@@ -46,7 +46,7 @@ func (p *HTTPPost) Do() error {
 		body, _ := ioutil.ReadAll(res.Body)
 		api.Unmarshal(p.Meta, body, res.Header)
 
-		err = api.Assert(p.Meta)
+		//err = api.Assert(p.Meta)
 
 	} else {
 		io.Copy(ioutil.Discard, res.Body)
