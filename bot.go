@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/imdario/mergo"
 	"github.com/mitchellh/mapstructure"
 	"github.com/pojol/apibot/behavior"
 	"github.com/pojol/apibot/plugins"
@@ -13,7 +14,7 @@ type Bot struct {
 	name string
 
 	url      string
-	metadata interface{}
+	metadata map[string]interface{}
 	tree     *BehaviorTree
 
 	defaultPost behavior.IPOST
@@ -66,7 +67,7 @@ func NewWithBehaviorFile(f []byte, url string, meta interface{}) (*Bot, error) {
 	}
 
 	return &Bot{
-		metadata:    meta,
+		metadata:    make(map[string]interface{}),
 		url:         url,
 		tree:        tree,
 		defaultPost: &behavior.HTTPPost{URL: url},
@@ -110,8 +111,12 @@ func (b *Bot) run_http(nod *BehaviorTree) (bool, error) {
 	}
 	t := make(map[string]interface{})
 	err = p.Unmarshal(resBody, &t)
+	if err != nil {
+		return false, err
+	}
 
-	fmt.Println(t, err)
+	mergo.MergeWithOverwrite(&b.metadata, t)
+
 	b.run_children(nod.Children)
 	return true, nil
 }
