@@ -52,7 +52,7 @@ const (
 	}
 */
 type IPOST interface {
-	Do() error
+	Do([]byte) ([]byte, error)
 }
 
 type ISend interface {

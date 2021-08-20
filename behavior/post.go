@@ -6,28 +6,21 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-
-	"github.com/pojol/apibot/api"
 )
 
 type HTTPPost struct {
 	URL    string
 	Header map[string]string
-	Meta   interface{}
-	Param  interface{}
-	Api    interface{}
 }
 
-func (p *HTTPPost) Do() error {
+func (p *HTTPPost) Do(in []byte) ([]byte, error) {
 
 	var res *http.Response
-
-	api := p.Api.(api.API)
-	byt := api.Marshal(p.Meta, p.Param)
+	var out []byte
 
 	client := http.Client{}
 
-	req, err := http.NewRequest("POST", p.URL, bytes.NewBuffer(byt))
+	req, err := http.NewRequest("POST", p.URL, bytes.NewBuffer(in))
 	if err != nil {
 		fmt.Println("http.request", err.Error())
 		goto ext
@@ -42,17 +35,12 @@ func (p *HTTPPost) Do() error {
 	req.Body.Close()
 
 	if res.StatusCode == http.StatusOK {
-
-		body, _ := ioutil.ReadAll(res.Body)
-		api.Unmarshal(p.Meta, body, res.Header)
-
-		//err = api.Assert(p.Meta)
-
+		out, _ = ioutil.ReadAll(res.Body)
 	} else {
 		io.Copy(ioutil.Discard, res.Body)
 		err = fmt.Errorf("http status %v url = %v err", res.Status, p.URL)
 	}
 
 ext:
-	return err
+	return out, err
 }

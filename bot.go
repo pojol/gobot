@@ -1,70 +1,148 @@
 package bot
 
 import (
+	"encoding/json"
 	"fmt"
 
+	"github.com/mitchellh/mapstructure"
 	"github.com/pojol/apibot/behavior"
+	"github.com/pojol/apibot/plugins"
 )
 
-type botBehavior struct {
-	behavior behavior.BehaviorType
-
-	post  behavior.IPOST
-	delay behavior.IDelay
-}
-
 type Bot struct {
-	name      string
-	metadata  interface{}
-	behaviors []*botBehavior
+	name string
+
+	url      string
+	metadata interface{}
+	tree     *BehaviorTree
+
+	defaultPost behavior.IPOST
 }
 
-func New(name string, meta interface{}) *Bot {
+type BehaviorTree struct {
+	Ty     string      `mapstructure:"ty"`
+	Api    string      `mapstructure:"api"`
+	Parm   interface{} `mapstructure:"parm"`
+	Script interface{} `mapstructure:"script"`
 
-	return &Bot{
-		name:     name,
-		metadata: meta,
+	Children []BehaviorTree `mapstructure:"children"`
+}
+
+func PrintTree(t *BehaviorTree) {
+	fmt.Println(t.Ty)
+	switch t.Ty {
+	case "RootNode", "SelectorNode":
+		goto ext
+	case "ConditionNode":
+		fmt.Println("script ", t.Script)
+		goto ext
+	case "HTTPActionNode":
+		fmt.Println("api ", t.Api)
+		fmt.Println("parm ", t.Parm)
+		goto ext
+	default:
+		return
+	}
+ext:
+	if len(t.Children) > 0 {
+		for k := range t.Children {
+			PrintTree(&t.Children[k])
+		}
+	}
+}
+
+func NewWithBehaviorFile(f []byte, url string, meta interface{}) (*Bot, error) {
+	m := make(map[string]interface{})
+	err := json.Unmarshal(f, &m)
+	if err != nil {
+		return nil, fmt.Errorf("behavior file unmarshal fail %v", err.Error())
 	}
 
+	tree := &BehaviorTree{}
+
+	err = mapstructure.Decode(m, tree)
+	if err != nil {
+		return nil, fmt.Errorf("behavior tree decode fail %v", err.Error())
+	}
+
+	return &Bot{
+		metadata:    meta,
+		url:         url,
+		tree:        tree,
+		defaultPost: &behavior.HTTPPost{URL: url},
+	}, nil
+
 }
 
-func (b *Bot) Post(p behavior.IPOST) {
-	b.behaviors = append(b.behaviors, &botBehavior{
-		behavior: behavior.PostTy,
-		post:     p,
-	})
-}
+func (b *Bot) run_selector(nod *BehaviorTree) (bool, error) {
 
-func (b *Bot) Delay(d behavior.IDelay) {
-	b.behaviors = append(b.behaviors, &botBehavior{
-		behavior: behavior.DelayTy,
-		delay:    d,
-	})
-}
-
-func (b *Bot) Run() {
-	var err error
-
-	end := len(b.behaviors)
-	begin := 0
-
-	for {
-		b := b.behaviors[begin]
-		if b.behavior == behavior.PostTy {
-			err = b.post.Do()
-			if err != nil {
-				goto ext
-			}
-		}
-
-		begin++
-		if begin == end {
+	for k := range nod.Children {
+		ok, _ := b.run_nod(&nod.Children[k])
+		if ok {
 			break
 		}
 	}
 
-ext:
-	if err != nil {
-		fmt.Println(err.Error())
+	return true, nil
+}
+
+func (b *Bot) run_condition(nod *BehaviorTree) (bool, error) {
+
+	b.run_children(nod.Children)
+	return true, nil
+}
+
+func (b *Bot) run_http(nod *BehaviorTree) (bool, error) {
+
+	p := plugins.Get("jsonp")
+	if p == nil {
+		return false, fmt.Errorf("can't find serialization plugin %v", "jsonp")
 	}
+
+	byt, err := p.Marshal(nod.Parm)
+	if err != nil {
+		return false, err
+	}
+
+	resBody, err := b.defaultPost.Do(byt)
+	if err != nil {
+		return false, err
+	}
+	t := make(map[string]interface{})
+	err = p.Unmarshal(resBody, &t)
+
+	fmt.Println(t, err)
+	b.run_children(nod.Children)
+	return true, nil
+}
+
+func (b *Bot) run_nod(nod *BehaviorTree) (bool, error) {
+
+	var ok bool
+	var err error
+
+	switch nod.Ty {
+	case "SelectorNode":
+		ok, err = b.run_selector(nod)
+	case "ConditionNode":
+		ok, err = b.run_condition(nod)
+	case "HTTPActionNode":
+		ok, err = b.run_http(nod)
+	}
+
+	if !ok {
+		fmt.Println(nod.Ty, err.Error())
+	}
+
+	return ok, err
+}
+
+func (b *Bot) run_children(children []BehaviorTree) {
+	for k := range children {
+		b.run_nod(&children[k])
+	}
+}
+
+func (b *Bot) Run() {
+	b.run_children(b.tree.Children)
 }
