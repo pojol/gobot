@@ -13,14 +13,14 @@ type HTTPPost struct {
 	Header map[string]string
 }
 
-func (p *HTTPPost) Do(in []byte) ([]byte, error) {
+func (p *HTTPPost) Do(in []byte, api string) ([]byte, error) {
 
 	var res *http.Response
 	var out []byte
 
 	client := http.Client{}
 
-	req, err := http.NewRequest("POST", p.URL, bytes.NewBuffer(in))
+	req, err := http.NewRequest("POST", p.URL+api, bytes.NewBuffer(in))
 	if err != nil {
 		fmt.Println("http.request", err.Error())
 		goto ext

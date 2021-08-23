@@ -3,12 +3,21 @@ package bot
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/imdario/mergo"
 	"github.com/mitchellh/mapstructure"
 	"github.com/pojol/apibot/behavior"
 	"github.com/pojol/apibot/plugins"
 )
+
+/*
+	{
+		"$ne" : {
+			"meta.token" : ""
+		}
+	}
+*/
 
 type Bot struct {
 	name string
@@ -23,33 +32,11 @@ type Bot struct {
 type BehaviorTree struct {
 	Ty     string      `mapstructure:"ty"`
 	Api    string      `mapstructure:"api"`
+	Loop   int32       `mapstructure:"loop"`
 	Parm   interface{} `mapstructure:"parm"`
 	Script interface{} `mapstructure:"script"`
 
 	Children []BehaviorTree `mapstructure:"children"`
-}
-
-func PrintTree(t *BehaviorTree) {
-	fmt.Println(t.Ty)
-	switch t.Ty {
-	case "RootNode", "SelectorNode":
-		goto ext
-	case "ConditionNode":
-		fmt.Println("script ", t.Script)
-		goto ext
-	case "HTTPActionNode":
-		fmt.Println("api ", t.Api)
-		fmt.Println("parm ", t.Parm)
-		goto ext
-	default:
-		return
-	}
-ext:
-	if len(t.Children) > 0 {
-		for k := range t.Children {
-			PrintTree(&t.Children[k])
-		}
-	}
 }
 
 func NewWithBehaviorFile(f []byte, url string, meta interface{}) (*Bot, error) {
@@ -93,6 +80,23 @@ func (b *Bot) run_condition(nod *BehaviorTree) (bool, error) {
 	return true, nil
 }
 
+func (b *Bot) run_loop(nod *BehaviorTree) (bool, error) {
+
+	if nod.Loop == 0 {
+		for {
+			b.run_children(nod.Children)
+			time.Sleep(time.Millisecond)
+		}
+	} else {
+		for i := 0; i < int(nod.Loop); i++ {
+			b.run_children(nod.Children)
+			time.Sleep(time.Millisecond)
+		}
+	}
+
+	return true, nil
+}
+
 func (b *Bot) run_http(nod *BehaviorTree) (bool, error) {
 
 	p := plugins.Get("jsonp")
@@ -105,7 +109,7 @@ func (b *Bot) run_http(nod *BehaviorTree) (bool, error) {
 		return false, err
 	}
 
-	resBody, err := b.defaultPost.Do(byt)
+	resBody, err := b.defaultPost.Do(byt, nod.Api)
 	if err != nil {
 		return false, err
 	}
@@ -131,6 +135,8 @@ func (b *Bot) run_nod(nod *BehaviorTree) (bool, error) {
 		ok, err = b.run_selector(nod)
 	case "ConditionNode":
 		ok, err = b.run_condition(nod)
+	case "LoopNode":
+		ok, err = b.run_loop(nod)
 	case "HTTPActionNode":
 		ok, err = b.run_http(nod)
 	}
@@ -150,4 +156,6 @@ func (b *Bot) run_children(children []BehaviorTree) {
 
 func (b *Bot) Run() {
 	b.run_children(b.tree.Children)
+
+	fmt.Println(b.metadata)
 }
