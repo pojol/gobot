@@ -9,8 +9,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/pojol/apibot/assert"
 	"github.com/pojol/apibot/plugins"
+	"github.com/stretchr/testify/assert"
 )
 
 var srv *httptest.Server
@@ -142,11 +142,19 @@ var compose = `
 
 func TestBot(t *testing.T) {
 
-	err := plugins.Load("plugins/json/json.so")
+	err := plugins.Load("../plugins/json/json.so")
 	assert.Equal(t, err, nil)
 
-	md := Metadata{}
-	b, _ := NewWithBehaviorFile([]byte(compose), srv.URL, &md)
-
+	b, _ := NewWithBehaviorFile([]byte(compose), srv.URL)
 	b.Run()
+}
+
+func TestStep(t *testing.T) {
+	err := plugins.Load("../plugins/json/json.so")
+	assert.Equal(t, err, nil)
+
+	b, _ := NewWithBehaviorFile([]byte(compose), srv.URL)
+	for i := 0; i < 30; i++ {
+		b.RunStep()
+	}
 }

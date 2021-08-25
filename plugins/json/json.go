@@ -19,7 +19,7 @@ func (jm *jsonp) Unmarshal(data []byte, v interface{}) error {
 }
 
 var Plugin = plugins.Plugin{
-	Name: "jsonp",
+	Name: "jsonparse",
 	Type: "json",
 	CreateFunc: func() serialization.ISerialization {
 
