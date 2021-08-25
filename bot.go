@@ -8,6 +8,7 @@ import (
 	"github.com/imdario/mergo"
 	"github.com/mitchellh/mapstructure"
 	"github.com/pojol/apibot/behavior"
+	"github.com/pojol/apibot/expression"
 	"github.com/pojol/apibot/plugins"
 )
 
@@ -30,11 +31,11 @@ type Bot struct {
 }
 
 type BehaviorTree struct {
-	Ty     string      `mapstructure:"ty"`
-	Api    string      `mapstructure:"api"`
-	Loop   int32       `mapstructure:"loop"`
-	Parm   interface{} `mapstructure:"parm"`
-	Script interface{} `mapstructure:"script"`
+	Ty   string      `mapstructure:"ty"`
+	Api  string      `mapstructure:"api"`
+	Loop int32       `mapstructure:"loop"`
+	Parm interface{} `mapstructure:"parm"`
+	Expr string      `mapstructure:"expr"`
 
 	Children []BehaviorTree `mapstructure:"children"`
 }
@@ -53,8 +54,11 @@ func NewWithBehaviorFile(f []byte, url string, meta interface{}) (*Bot, error) {
 		return nil, fmt.Errorf("behavior tree decode fail %v", err.Error())
 	}
 
+	md := make(map[string]interface{})
+	md["Token"] = ""
+
 	return &Bot{
-		metadata:    make(map[string]interface{}),
+		metadata:    md,
 		url:         url,
 		tree:        tree,
 		defaultPost: &behavior.HTTPPost{URL: url},
@@ -76,8 +80,17 @@ func (b *Bot) run_selector(nod *BehaviorTree) (bool, error) {
 
 func (b *Bot) run_condition(nod *BehaviorTree) (bool, error) {
 
-	b.run_children(nod.Children)
-	return true, nil
+	eg, err := expression.Parse(nod.Expr)
+	if err != nil {
+		return false, err
+	}
+
+	if eg.DecideWithMap(b.metadata) {
+		b.run_children(nod.Children)
+		return true, nil
+	}
+
+	return false, nil
 }
 
 func (b *Bot) run_loop(nod *BehaviorTree) (bool, error) {
@@ -139,10 +152,6 @@ func (b *Bot) run_nod(nod *BehaviorTree) (bool, error) {
 		ok, err = b.run_loop(nod)
 	case "HTTPActionNode":
 		ok, err = b.run_http(nod)
-	}
-
-	if !ok {
-		fmt.Println(nod.Ty, err.Error())
 	}
 
 	return ok, err

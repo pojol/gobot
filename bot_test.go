@@ -15,20 +15,34 @@ import (
 
 var srv *httptest.Server
 
-type res struct {
+type guestRes struct {
 	Token string
+}
+
+type infoRes struct {
+	Diamond int32
+	Gold    int32
 }
 
 func TestMain(m *testing.M) {
 
 	srv = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 
-		body, _ := ioutil.ReadAll(req.Body)
-		fmt.Println("http server recv ", req.RequestURI, body)
+		ioutil.ReadAll(req.Body)
+		var byt []byte
 
-		byt, _ := json.Marshal(res{
-			Token: "abcd",
-		})
+		fmt.Println("http server recv ", req.RequestURI)
+
+		if req.RequestURI == "/login/guest" {
+			byt, _ = json.Marshal(guestRes{
+				Token: "abcd",
+			})
+		} else if req.RequestURI == "/base/acc.info" {
+			byt, _ = json.Marshal(infoRes{
+				Diamond: 100,
+				Gold:    100,
+			})
+		}
 
 		w.Write(byt)
 	}))
@@ -42,8 +56,89 @@ type Metadata struct {
 }
 
 var compose = `
-{"id":"b36fabfd-dd9a-4d24-941c-69f64233a589","ty":"RootNode","pos":{"x":0,"y":0},"children":[{"id":"7872b200-52ef-40f8-8059-d019fca99501","ty":"LoopNode","pos":{"x":-5,"y":47},"children":[{"id":"0059758d-cba6-4718-a98f-19bcad43f975","ty":"SelectorNode","pos":{"x":-15,"y":126},"children":[{"id":"31121c03-787d-44f0-88ec-81a440700c61","ty":"ConditionNode","pos":{"x":-20,"y":179},"children":[{"id":"8fe159f5-fcb5-4106-9b3c-ed7f950cd547","ty":"HTTPActionNode","pos":{"x":-50,"y":245},"children":[],"api":"/login/guest","parm":{}}],"script":{"$eq":{"meta.token":""}}},{"id":"5fe427f2-a19e-40c9-a17a-10dd994134f5","ty":"ConditionNode","pos":{"x":50,"y":179},"children":[{"id":"1b2569a6-bb1b-4b88-8866-7d93cf552739","ty":"HTTPActionNode","pos":{"x":55,"y":245},"children":[],"api":"/base/acc.info","parm":{"token":"meta.token"}}],"script":{"$ne":{"meta.token":""}}}]}],"loop":3}]}
-`
+{
+    "id":"b36fabfd-dd9a-4d24-941c-69f64233a589",
+    "ty":"RootNode",
+    "pos":{
+        "x":0,
+        "y":0
+    },
+    "children":[
+        {
+            "id":"7872b200-52ef-40f8-8059-d019fca99501",
+            "ty":"LoopNode",
+            "pos":{
+                "x":-5,
+                "y":47
+            },
+            "children":[
+                {
+                    "id":"0059758d-cba6-4718-a98f-19bcad43f975",
+                    "ty":"SelectorNode",
+                    "pos":{
+                        "x":-15,
+                        "y":126
+                    },
+                    "children":[
+                        {
+                            "id":"31121c03-787d-44f0-88ec-81a440700c61",
+                            "ty":"ConditionNode",
+                            "pos":{
+                                "x":-20,
+                                "y":179
+                            },
+                            "children":[
+                                {
+                                    "id":"8fe159f5-fcb5-4106-9b3c-ed7f950cd547",
+                                    "ty":"HTTPActionNode",
+                                    "pos":{
+                                        "x":-50,
+                                        "y":245
+                                    },
+                                    "children":[
+
+                                    ],
+                                    "api":"/login/guest",
+                                    "parm":{
+
+                                    }
+                                }
+                            ],
+                            "expr":"$eq:{Token:''}"
+                        },
+                        {
+                            "id":"5fe427f2-a19e-40c9-a17a-10dd994134f5",
+                            "ty":"ConditionNode",
+                            "pos":{
+                                "x":50,
+                                "y":179
+                            },
+                            "children":[
+                                {
+                                    "id":"1b2569a6-bb1b-4b88-8866-7d93cf552739",
+                                    "ty":"HTTPActionNode",
+                                    "pos":{
+                                        "x":55,
+                                        "y":245
+                                    },
+                                    "children":[
+
+                                    ],
+                                    "api":"/base/acc.info",
+                                    "parm":{
+                                        "token":"meta.token"
+                                    }
+                                }
+                            ],
+                            "expr":"$ne:{Token:''}"
+                        }
+                    ]
+                }
+            ],
+            "loop":3
+        }
+    ]
+}`
 
 func TestBot(t *testing.T) {
 

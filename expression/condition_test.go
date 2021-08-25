@@ -10,9 +10,15 @@ import (
 )
 
 /*
-	列表 [  ]
-	键值 {  }
+	值
+		* true
+		* false
+		* float32
+		* int
+		* string  这里要考虑到中文
+	键值 { : }
 	表达式 $symbol : {}
+	列表 [  ]	只能包含表达式
 */
 
 type MetaMarket struct {
@@ -24,17 +30,18 @@ type Meta struct {
 	Diamond int32
 	Gold    int32
 	Ticket  int32
-	Market  *MetaMarket
+	Market  *MetaMarket // 这里需要使用指针值，不然没办法使用反射向下传递
 }
 
 func TestParse(t *testing.T) {
 
 	lst := []string{
-		`$eq : { Token : "" }`,
-		`$eq : {Market.ID : "aabb"}`,
-		`$and : [$ne:{Token:""}, $gt:{Gold:100}}] `,
+		`$eq : { Token : '' }`,
+		`$eq : {Market.ID : 'aabb'}`,
+		`$and : [$ne:{Token:''}, $gt:{Gold:101}}] `,
 		`$or : [$gt:{Gold: 100}, $gt:{Diamond:100}]`,
-		`$and : [ $eq:{Token:"aabb"}, $or:[$gt:{Diamond:100}, $gt:{Ticket:100}] ]`,
+		`$and : [ $eq:{Token:'aabb'}, $or:[$gt:{Diamond:100}, $gt:{Ticket:100}] ]`,
+		`$eq : { Token : '中文' }`,
 	}
 
 	var metalst []map[string]interface{}
@@ -57,6 +64,10 @@ func TestParse(t *testing.T) {
 	json.Unmarshal([]byte(`{"Token":"aabb", "Gold":200, "Diamond":150}`), &m3)
 	metalst = append(metalst, m4)
 
+	m5 := make(map[string]interface{})
+	json.Unmarshal([]byte(`{"Token":"中文"}`), &m5)
+	metalst = append(metalst, m5)
+
 	meta := make(map[string]interface{})
 
 	for k, v := range lst {
@@ -64,8 +75,7 @@ func TestParse(t *testing.T) {
 		assert.Equal(t, err, nil)
 
 		mergo.MergeWithOverwrite(&meta, metalst[k])
-		fmt.Println(k, meta)
-		assert.Equal(t, true, eg.DecideMap(meta))
+		assert.Equal(t, true, eg.DecideWithMap(meta))
 	}
 
 	metas := []Meta{
@@ -75,16 +85,19 @@ func TestParse(t *testing.T) {
 		{
 			Market: &MetaMarket{ID: "aabb"},
 		},
-		{ //$and : [$ne:{meta.Token:""}, $gt:{meta.Gold:100}}]
+		{
 			Token: "aabb",
 			Gold:  200,
 		},
 		{
 			Diamond: 150,
 		},
-		{ //$and : [ $eq:{meta.Token:"aabb"}, $or:[$gt:{meta.Diamond:100}, $gt:{meta.Ticket:100}] ]
+		{
 			Token:   "aabb",
 			Diamond: 150,
+		},
+		{
+			Token: "中文",
 		},
 	}
 
@@ -92,7 +105,8 @@ func TestParse(t *testing.T) {
 		eg, err := Parse(v)
 		assert.Equal(t, err, nil)
 
-		assert.Equal(t, true, eg.Decide(metas[k]))
+		fmt.Println(k, metas[k])
+		assert.Equal(t, true, eg.DecideWithStruct(&metas[k]))
 	}
 
 }
