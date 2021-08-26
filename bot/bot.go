@@ -13,8 +13,6 @@ import (
 )
 
 type Bot struct {
-	name string
-
 	url      string
 	metadata map[string]interface{}
 	tree     *BehaviorTree
@@ -26,10 +24,12 @@ type Bot struct {
 }
 
 type BehaviorTree struct {
-	ID       string `mapstructure:"id"`
-	Ty       string `mapstructure:"ty"`
-	Api      string `mapstructure:"api"`
-	Loop     int32  `mapstructure:"loop"`
+	ID   string `mapstructure:"id"`
+	Ty   string `mapstructure:"ty"`
+	Api  string `mapstructure:"api"`
+	Wait int32  `mapstructure:"wait"`
+
+	Loop     int32 `mapstructure:"loop"`
 	LoopStep int32
 
 	Parm interface{} `mapstructure:"parm"`
@@ -117,6 +117,19 @@ func (b *Bot) run_selector(nod *BehaviorTree, next bool) (bool, error) {
 	return true, nil
 }
 
+func (b *Bot) run_sequence(nod *BehaviorTree, next bool) (bool, error) {
+	if next {
+		for k := range nod.Children {
+			ok, _ := b.run_nod(nod.Children[k])
+			if !ok {
+				break
+			}
+		}
+	}
+
+	return true, nil
+}
+
 func (b *Bot) run_condition(nod *BehaviorTree, next bool) (bool, error) {
 
 	eg, err := expression.Parse(nod.Expr)
@@ -133,6 +146,16 @@ func (b *Bot) run_condition(nod *BehaviorTree, next bool) (bool, error) {
 	}
 
 	return false, nil
+}
+
+func (b *Bot) run_wait(nod *BehaviorTree, next bool) (bool, error) {
+	time.Sleep(time.Second * time.Duration(nod.Wait))
+
+	if next {
+		b.run_children(nod, nod.Children)
+	}
+
+	return true, nil
 }
 
 func (b *Bot) run_loop(nod *BehaviorTree, next bool) (bool, error) {
@@ -196,8 +219,12 @@ func (b *Bot) run_nod(nod *BehaviorTree) (bool, error) {
 	switch nod.Ty {
 	case "SelectorNode":
 		ok, err = b.run_selector(nod, true)
+	case "SequenceNode":
+		ok, _ = b.run_sequence(nod, true)
 	case "ConditionNode":
 		ok, err = b.run_condition(nod, true)
+	case "WaitNode":
+		ok, _ = b.run_wait(nod, true)
 	case "LoopNode":
 		ok, err = b.run_loop(nod, true)
 	case "HTTPActionNode":
@@ -224,8 +251,12 @@ func (b *Bot) step(nod *BehaviorTree) bool {
 	switch nod.Ty {
 	case "SelectorNode":
 		ok, _ = b.run_selector(nod, false)
+	case "SequenceNode":
+		ok, _ = b.run_sequence(nod, false)
 	case "ConditionNode":
 		ok, _ = b.run_condition(nod, false)
+	case "WaitNode":
+		ok, _ = b.run_wait(nod, false)
 	case "LoopNode":
 		ok, _ = b.run_loop(nod, false)
 	case "HTTPActionNode":
