@@ -1,0 +1,11 @@
+version: "3.7"
+services:
+  apibot:
+    image: braidgo/apibot:latest
+    restart: always
+    ports:
+      - 8888:8888
+    deploy:
+      resources:
+        limits:
+          cpus: "0.3"

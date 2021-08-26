@@ -3,6 +3,7 @@ package bot
 import (
 	"encoding/json"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/imdario/mergo"
@@ -19,6 +20,8 @@ type Bot struct {
 
 	prev *BehaviorTree
 	cur  *BehaviorTree
+
+	sync.Mutex
 
 	defaultPost behavior.IPOST
 }
@@ -265,6 +268,8 @@ func (b *Bot) step(nod *BehaviorTree) bool {
 		ok = true
 	}
 
+	fmt.Println("step", ok, nod)
+
 	return ok
 }
 
@@ -315,7 +320,12 @@ func (b *Bot) RunStep() bool {
 		return false
 	}
 
+	b.Lock()
+	defer b.Unlock()
+
 	f := b.step(b.cur)
+	// step 中使用了sleep之后，会有多个goroutine执行接下来的程序
+	// fmt.Println(goid.Get())
 
 	if f && b.cur.Step < len(b.cur.Children) {
 		// down
@@ -324,7 +334,6 @@ func (b *Bot) RunStep() bool {
 		next := b.cur.Children[nextidx]
 		b.prev = b.cur
 		b.cur = next
-
 	} else {
 		// right
 		if b.cur.Parent != nil {
