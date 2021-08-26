@@ -327,6 +327,10 @@ func (b *Bot) RunStep() bool {
 	// step 中使用了sleep之后，会有多个goroutine执行接下来的程序
 	// fmt.Println(goid.Get())
 
+	if b.cur.Parent.Ty == "SelectorNode" && f {
+		b.cur.Parent.Step = len(b.cur.Parent.Children)
+	}
+
 	if f && b.cur.Step < len(b.cur.Children) {
 		// down
 		nextidx := b.cur.Step
