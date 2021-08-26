@@ -97,7 +97,8 @@ EXT:
 }
 
 type StepResponse struct {
-	NodeID     string
+	Prev       string
+	Cur        string
 	Blackboard string
 }
 
@@ -128,7 +129,8 @@ func Step(ctx echo.Context) error {
 		msg = err.Error()
 		code = -3
 	}
-	body.NodeID = mbot.GetCurNodeID()
+	body.Cur = mbot.GetCurNodeID()
+	body.Prev = mbot.GetPrevNodeID()
 
 EXT:
 	res.Code = code

@@ -18,7 +18,9 @@ type Bot struct {
 	url      string
 	metadata map[string]interface{}
 	tree     *BehaviorTree
-	cur      *BehaviorTree
+
+	prev *BehaviorTree
+	cur  *BehaviorTree
 
 	defaultPost behavior.IPOST
 }
@@ -59,6 +61,13 @@ func (b *Bot) GetMetadata() (string, error) {
 func (b *Bot) GetCurNodeID() string {
 	if b.cur != nil {
 		return b.cur.ID
+	}
+	return ""
+}
+
+func (b *Bot) GetPrevNodeID() string {
+	if b.prev != nil {
+		return b.prev.ID
 	}
 	return ""
 }
@@ -282,11 +291,13 @@ func (b *Bot) RunStep() bool {
 		nextidx := b.cur.Step
 		b.cur.Step++
 		next := b.cur.Children[nextidx]
+		b.prev = b.cur
 		b.cur = next
 
 	} else {
 		// right
 		if b.cur.Parent != nil {
+			b.prev = b.cur
 			b.cur = b.next(b.cur.Parent)
 			if b.cur == nil {
 				return false

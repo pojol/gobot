@@ -1,9 +1,10 @@
-FROM alpine
+FROM frolvlad/alpine-go
 
-COPY ./bot_linux /home/app/
-COPY ./plugins/json/json.so /home/app
+WORKDIR /home/bot
+COPY . .
 
-WORKDIR /home/app
+RUN go build -buildmode=plugin /home/bot/plugins/json/json.go
+RUN go build -o bot_linux /home/bot/main.go
 
 EXPOSE 8888
 
