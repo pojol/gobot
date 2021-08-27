@@ -1,0 +1,6 @@
+json.so
+bot_linux
+make.sh
+make_plugin.sh
+build.sh
+plugins/json/build_plugin.sh
