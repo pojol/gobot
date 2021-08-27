@@ -199,6 +199,11 @@ func (b *Bot) run_http(nod *BehaviorTree, next bool) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+	fmt.Println(string(resBody))
+	if string(resBody) == "error" {
+		return false, fmt.Errorf("req %s err", nod.Api)
+	}
+
 	t := make(map[string]interface{})
 	err = p.Unmarshal(resBody, &t)
 	if err != nil {
@@ -247,36 +252,39 @@ func (b *Bot) Run() {
 	b.run_children(b.tree, b.tree.Children)
 }
 
-func (b *Bot) step(nod *BehaviorTree) bool {
+func (b *Bot) step(nod *BehaviorTree) (bool, error) {
 
 	var ok bool
+	var err error
 
 	switch nod.Ty {
 	case "SelectorNode":
-		ok, _ = b.run_selector(nod, false)
+		ok, err = b.run_selector(nod, false)
 	case "SequenceNode":
-		ok, _ = b.run_sequence(nod, false)
+		ok, err = b.run_sequence(nod, false)
 	case "ConditionNode":
-		ok, _ = b.run_condition(nod, false)
+		ok, err = b.run_condition(nod, false)
 	case "WaitNode":
-		ok, _ = b.run_wait(nod, false)
+		ok, err = b.run_wait(nod, false)
 	case "LoopNode":
-		ok, _ = b.run_loop(nod, false)
+		ok, err = b.run_loop(nod, false)
 	case "HTTPActionNode":
-		ok, _ = b.run_http(nod, false)
+		ok, err = b.run_http(nod, false)
 	default:
 		ok = true
 	}
 
-	fmt.Println("step", ok, nod)
-
-	return ok
+	return ok, err
 }
 
+// 这边的重置，应该是重置loop节点名下的所有children
 func (loopnod *BehaviorTree) resetChildren() {
 	for k := range loopnod.Children {
 
 		loopnod.Children[k].Step = 0
+		if loopnod.Children[k].Ty == "LoopNode" {
+			loopnod.Children[k].LoopStep = 0
+		}
 
 		if len(loopnod.Children[k].Children) > 0 {
 			loopnod.Children[k].resetChildren()
@@ -286,6 +294,7 @@ func (loopnod *BehaviorTree) resetChildren() {
 }
 
 func (b *Bot) next(nod *BehaviorTree) *BehaviorTree {
+
 	if nod.Step < len(nod.Children) {
 		nextidx := nod.Step
 		nod.Step++
@@ -299,6 +308,7 @@ func (b *Bot) next(nod *BehaviorTree) *BehaviorTree {
 				return nod
 			} else {
 				nod.LoopStep++
+				fmt.Println(nod.ID, nod.LoopStep)
 				if nod.LoopStep < nod.Loop {
 					nod.Step = 0
 					nod.resetChildren()
@@ -315,15 +325,28 @@ func (b *Bot) next(nod *BehaviorTree) *BehaviorTree {
 	return nil
 }
 
-func (b *Bot) RunStep() bool {
+type State int32
+
+// 系统内部错误
+const (
+	SEnd State = 1 + iota
+	SBreak
+	SSucc
+)
+
+func (b *Bot) RunStep() State {
 	if b.cur == nil {
-		return false
+		return SEnd
 	}
 
 	b.Lock()
 	defer b.Unlock()
 
-	f := b.step(b.cur)
+	f, err := b.step(b.cur)
+	if err != nil {
+		fmt.Println("break", err.Error())
+		return SBreak
+	}
 	// step 中使用了sleep之后，会有多个goroutine执行接下来的程序
 	// fmt.Println(goid.Get())
 
@@ -346,10 +369,10 @@ func (b *Bot) RunStep() bool {
 			b.prev = b.cur
 			b.cur = b.next(b.cur.Parent)
 			if b.cur == nil {
-				return false
+				return SEnd
 			}
 		}
 	}
 
-	return true
+	return SSucc
 }
