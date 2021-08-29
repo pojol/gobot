@@ -1,6 +1,9 @@
 package expression
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 func getValueWithMap(key string, m map[string]interface{}) interface{} {
 	var parent, child string
@@ -32,31 +35,47 @@ func (e *Expression) decidemap(m map[string]interface{}) bool {
 	var b bool
 
 	switch e.Symbol {
-	case "$and":
+	case AND:
 		for _, v := range e.Exprs {
 			b = v.decidemap(m)
 			if !b {
 				break
 			}
 		}
-	case "$or":
+	case OR:
 		for _, v := range e.Exprs {
 			b = v.decidemap(m)
 			if b {
 				break
 			}
 		}
-	case "$eq":
+	case EQ:
 		v := getValueWithMap(e.Object.Left, m)
 		b = decide_eq(v, e.Object.Right)
-	case "$ne":
+	case NE:
 		v := getValueWithMap(e.Object.Left, m)
 		b = decide_ne(v, e.Object.Right)
-	case "$gt":
+	case LT:
+		v := getValueWithMap(e.Object.Left, m)
+		b = decide_lt(v, e.Object.Right)
+	case LTE:
+		v := getValueWithMap(e.Object.Left, m)
+		b = decide_lte(v, e.Object.Right)
+	case GT:
 		v := getValueWithMap(e.Object.Left, m)
 		b = decide_gt(v, e.Object.Right)
+	case GTE:
+		v := getValueWithMap(e.Object.Left, m)
+		b = decide_gte(v, e.Object.Right)
+	case NIN:
+		v := getValueWithMap(e.Object.Left, m)
+		b = decide_nin(v, e.Object.Right)
+	case IN:
+		v := getValueWithMap(e.Object.Left, m)
+		fmt.Println("map in", v)
+		b = decide_in(v, e.Object.Right)
 	default:
-		println("decide", e.Symbol)
+		println("decide unknown symbol", e.Symbol)
 	}
 
 	return b
