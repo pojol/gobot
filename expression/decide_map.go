@@ -1,7 +1,6 @@
 package expression
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -49,30 +48,14 @@ func (e *Expression) decidemap(m map[string]interface{}) bool {
 				break
 			}
 		}
-	case EQ:
+	case EQ, NE, LT, LTE, GT, GTE:
 		v := getValueWithMap(e.Object.Left, m)
-		b = decide_eq(v, e.Object.Right)
-	case NE:
-		v := getValueWithMap(e.Object.Left, m)
-		b = decide_ne(v, e.Object.Right)
-	case LT:
-		v := getValueWithMap(e.Object.Left, m)
-		b = decide_lt(v, e.Object.Right)
-	case LTE:
-		v := getValueWithMap(e.Object.Left, m)
-		b = decide_lte(v, e.Object.Right)
-	case GT:
-		v := getValueWithMap(e.Object.Left, m)
-		b = decide_gt(v, e.Object.Right)
-	case GTE:
-		v := getValueWithMap(e.Object.Left, m)
-		b = decide_gte(v, e.Object.Right)
+		b = decide_conv(v, e.Object.Right, e.Symbol)
 	case NIN:
 		v := getValueWithMap(e.Object.Left, m)
 		b = decide_nin(v, e.Object.Right)
 	case IN:
 		v := getValueWithMap(e.Object.Left, m)
-		fmt.Println("map in", v)
 		b = decide_in(v, e.Object.Right)
 	default:
 		println("decide unknown symbol", e.Symbol)

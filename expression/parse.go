@@ -123,7 +123,7 @@ func (eg *ExpressionGroup) ParseObject(symbol, val string, e *Expression) {
 	e.Object.Left = objArr[0]
 
 	vlen := len(objArr[1])
-	// int, float32, string, true, false
+	// int64, float64, string, true, false
 	if vlen == 0 {
 		panic(ErrEmptyValue)
 	}
@@ -163,7 +163,7 @@ func (eg *ExpressionGroup) ParseObject(symbol, val string, e *Expression) {
 			if err != nil {
 				panic(err)
 			}
-			e.Object.Right = int32(iv)
+			e.Object.Right = iv
 		}
 
 		return
