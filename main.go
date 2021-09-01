@@ -123,6 +123,15 @@ func Step(ctx echo.Context) error {
 	}
 
 	s = mbot.RunStep()
+
+	body.Blackboard, err = mbot.GetMetadata()
+	if err != nil {
+		msg = err.Error()
+		code = -3
+	}
+	body.Cur = mbot.GetCurNodeID()
+	body.Prev = mbot.GetPrevNodeID()
+
 	if s == bot.SEnd {
 		mbot = nil
 		behaviorBuffer.Reset()
@@ -137,14 +146,6 @@ func Step(ctx echo.Context) error {
 		behaviorBuffer.Reset()
 		goto EXT
 	}
-
-	body.Blackboard, err = mbot.GetMetadata()
-	if err != nil {
-		msg = err.Error()
-		code = -3
-	}
-	body.Cur = mbot.GetCurNodeID()
-	body.Prev = mbot.GetPrevNodeID()
 
 EXT:
 	res.Code = code

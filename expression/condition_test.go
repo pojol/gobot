@@ -51,7 +51,8 @@ func TestParse(t *testing.T) {
 		`$and : [ $eq:{Token:'aabb'}, $or:[$gt:{Diamond:100}, $gt:{Ticket:100}] ]`,
 		`$eq : { Token : '中文' }`,
 		`$in : { Heros : 'b' }`,
-		//`$in : {Ranks : 10}`,
+		`$in : {Ranks : 10}`,
+		`$nin : {Heros : 'aa'}`,
 	}
 
 	// 匹配失败的表达式列表
@@ -71,6 +72,7 @@ func TestParse(t *testing.T) {
 		`{"Token":"中文"}`,
 		`{"Heros":["a", "b", "c"]}`,
 		`{"Ranks":[1,3,5,7,10]}`,
+		`{"Heros":["a", "b", "c"]}`,
 	}
 
 	//assert.Equal(t, len(succlst), len(orglst))
@@ -141,6 +143,9 @@ func TestParse(t *testing.T) {
 		},
 		{
 			Ranks: []int32{1, 3, 5, 7, 9, 10},
+		},
+		{
+			Heros: []string{"a", "b", "c", "d"},
 		},
 	}
 
