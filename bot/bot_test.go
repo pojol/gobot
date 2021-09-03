@@ -9,6 +9,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/pojol/apibot/behavior"
+	"github.com/pojol/apibot/mock"
 	"github.com/pojol/apibot/plugins"
 	"github.com/stretchr/testify/assert"
 )
@@ -140,21 +142,21 @@ var compose = `
     ]
 }`
 
-func TestBot(t *testing.T) {
-
-	err := plugins.Load("../plugins/json/json.so")
-	assert.Equal(t, err, nil)
-
-	b, _ := NewWithBehaviorFile([]byte(compose), srv.URL)
-	b.Run()
-}
-
 func TestStep(t *testing.T) {
 	err := plugins.Load("../plugins/json/json.so")
 	assert.Equal(t, err, nil)
 
-	b, _ := NewWithBehaviorFile([]byte(compose), srv.URL)
+	srv := mock.NewServer()
+
+	var tree *behavior.Tree
+	var bot *Bot
+
+	tree, err = behavior.NewBehaviorTree([]byte(compose))
+	assert.Equal(t, err, nil)
+
+	bot = NewWithBehaviorTree(*tree, srv.Url())
+
 	for i := 0; i < 30; i++ {
-		b.RunStep()
+		bot.RunStep()
 	}
 }

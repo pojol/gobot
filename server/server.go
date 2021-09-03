@@ -1,15 +1,15 @@
 package server
 
 import (
-	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	"github.com/pojol/apibot/behavior"
 	"github.com/pojol/apibot/bot"
-	"github.com/pojol/apibot/mock"
-	"github.com/pojol/apibot/plugins"
+	"github.com/pojol/apibot/factory"
 )
 
 type Response struct {
@@ -18,44 +18,67 @@ type Response struct {
 	Body interface{}
 }
 
+type Err int32
+
+const (
+	Succ Err = 200 + iota
+	ErrContentRead
+	ErrJsonInvalid
+	ErrPluginLoad
+	ErrMetaData
+	ErrEnd
+	ErrBreak
+	ErrCantFindBot
+	ErrCreateBot
+)
+
+var errmap map[Err]string = map[Err]string{
+	ErrContentRead: "failed to read request content",
+	ErrJsonInvalid: "wrong file format",
+	ErrPluginLoad:  "failed to plugin load",
+	ErrMetaData:    "failed to get meta data",
+	ErrEnd:         "run to the end",
+	ErrBreak:       "run to the break",
+	ErrCantFindBot: "can't find bot",
+	ErrCreateBot:   "failed to create bot ",
+}
+
 func Upload(ctx echo.Context) error {
 	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
 	res := &Response{}
-	code := 200
-	msg := ""
+	code := Succ
+	var tree *behavior.Tree
 
 	bts, err := ioutil.ReadAll(ctx.Request().Body)
 	if err != nil {
-		code = -1 // tmp
-		msg = err.Error()
+		code = ErrContentRead // tmp
+		fmt.Println(err.Error())
 		goto EXT
 	}
 
 	if !json.Valid(bts) {
-		code = -2
-		msg = "json invalid"
+		code = ErrJsonInvalid
 		goto EXT
 	}
 
-	err = plugins.Load("./json.so")
+	tree, err = behavior.New(bts)
 	if err != nil {
-		msg = err.Error()
-		code = -3
+		fmt.Println(err.Error())
+		code = ErrJsonInvalid
 		goto EXT
 	}
-
-	mockServer.Reset()
-	behaviorBuffer.Reset()
-	behaviorBuffer.Write(bts)
-
-	mbot, _ = bot.NewWithBehaviorFile(behaviorBuffer.Bytes(), mockServer.Url())
+	factory.Global.AppendBehavior(tree.ID, bts)
 
 EXT:
-	res.Code = code
-	res.Msg = msg
+	res.Code = int(code)
+	res.Msg = errmap[code]
 
 	ctx.JSON(http.StatusOK, res)
 	return nil
+}
+
+type RunRequest struct {
+	BotID string
 }
 
 type RunResponse struct {
@@ -65,33 +88,52 @@ type RunResponse struct {
 func Run(ctx echo.Context) error {
 	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
 	res := &Response{}
+	req := &RunRequest{}
 	body := &RunResponse{}
-	code := 200
-	msg := ""
+	var b *bot.Bot
+	code := Succ
 
 	var err error
 
-	if behaviorBuffer.Len() == 0 {
-		code = -1
-		msg = "not behavior data, need upload!"
+	bts, err := ioutil.ReadAll(ctx.Request().Body)
+	if err != nil {
+		code = ErrContentRead // tmp
+		fmt.Println(err.Error())
 		goto EXT
 	}
 
-	mbot.Run()
-
-	body.Blackboard, err = mbot.GetMetadata()
+	err = json.Unmarshal(bts, &req)
 	if err != nil {
-		msg = err.Error()
-		code = -3
+		code = ErrContentRead // tmp
+		fmt.Println(err.Error())
+		goto EXT
+	}
+
+	b = factory.Global.FindBot(req.BotID)
+	if b == nil {
+		code = ErrCantFindBot
+		goto EXT
+	}
+	b.Run(nil, nil, nil)
+	defer factory.Global.RmvBot(req.BotID)
+
+	body.Blackboard, err = b.GetMetadata()
+	if err != nil {
+		fmt.Println(err.Error())
+		code = ErrMetaData
 	}
 
 EXT:
-	res.Code = code
-	res.Msg = msg
+	res.Code = int(code)
+	res.Msg = errmap[code]
 	res.Body = body
 
 	ctx.JSON(http.StatusOK, res)
 	return nil
+}
+
+type StepRequest struct {
+	BotID string
 }
 
 type StepResponse struct {
@@ -103,64 +145,111 @@ type StepResponse struct {
 func Step(ctx echo.Context) error {
 	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
 	res := &Response{}
+	req := &StepRequest{}
 	body := &StepResponse{}
-	code := 200
-	msg := ""
+	code := Succ
+	var b *bot.Bot
 
 	var err error
 	var s bot.State
 
-	if behaviorBuffer.Len() == 0 {
-		code = -1
-		msg = "not behavior data, need upload!"
+	bts, err := ioutil.ReadAll(ctx.Request().Body)
+	if err != nil {
+		code = ErrContentRead // tmp
+		fmt.Println(err.Error())
 		goto EXT
 	}
 
-	s = mbot.RunStep()
-
-	body.Blackboard, err = mbot.GetMetadata()
+	err = json.Unmarshal(bts, &req)
 	if err != nil {
-		msg = err.Error()
-		code = -3
+		code = ErrContentRead // tmp
+		fmt.Println(err.Error())
+		goto EXT
 	}
-	body.Cur = mbot.GetCurNodeID()
-	body.Prev = mbot.GetPrevNodeID()
+
+	b = factory.Global.FindBot(req.BotID)
+	if b == nil {
+		code = ErrCantFindBot
+		goto EXT
+	}
+
+	s = b.RunStep()
+	body.Blackboard, _ = b.GetMetadata()
+	body.Cur = b.GetCurNodeID()
+	body.Prev = b.GetPrevNodeID()
 
 	if s == bot.SEnd {
-		mbot = nil
-		behaviorBuffer.Reset()
-		code = -4
-		msg = "执行到末尾，重新上传行为文件开始！"
+		code = ErrEnd
+		defer factory.Global.RmvBot(req.BotID)
 		goto EXT
 	} else if s == bot.SBreak {
-		body.Blackboard, _ = mbot.GetMetadata()
-		code = -5
-		msg = "执行遇到请求错误!"
-		mbot = nil
-		behaviorBuffer.Reset()
+		code = ErrBreak
+		defer factory.Global.RmvBot(req.BotID)
 		goto EXT
 	}
 
 EXT:
-	res.Code = code
-	res.Msg = msg
+	res.Code = int(code)
+	res.Msg = errmap[code]
 	res.Body = body
 
 	ctx.JSON(http.StatusOK, res)
 	return nil
 }
 
-var mbot *bot.Bot
-var behaviorBuffer bytes.Buffer
-var mockServer *mock.MockServer
+type createRequest struct {
+	TreeID string
+}
+
+type createResponse struct {
+	BotID string
+}
+
+func Create(ctx echo.Context) error {
+	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
+	res := &Response{}
+	req := &createRequest{}
+	body := &createResponse{}
+	code := Succ
+	var b *bot.Bot
+
+	bts, err := ioutil.ReadAll(ctx.Request().Body)
+	if err != nil {
+		code = ErrContentRead // tmp
+		fmt.Println(err.Error())
+		goto EXT
+	}
+
+	err = json.Unmarshal(bts, &req)
+	if err != nil {
+		code = ErrContentRead // tmp
+		fmt.Println(err.Error())
+		goto EXT
+	}
+
+	b = factory.Global.CreateBot(req.TreeID)
+	if b == nil {
+		fmt.Println("create bot err", req.TreeID)
+		code = ErrCreateBot
+		goto EXT
+	}
+
+	body.BotID = b.ID()
+
+EXT:
+	res.Code = int(code)
+	res.Msg = errmap[code]
+	res.Body = body
+
+	ctx.JSON(http.StatusOK, res)
+	return nil
+}
 
 func Route(e *echo.Echo) {
 
-	mockServer = mock.NewServer()
-	behaviorBuffer.Reset()
-
-	e.POST("/upload", Upload)
-	e.POST("/run", Run)
-	e.POST("/step", Step)
+	e.POST("/upload", Upload) // 上传行为树模版文件
+	e.POST("/create", Create) // 创建一个bot
+	e.POST("/run", Run)       // 运行一个bot
+	e.POST("/step", Step)     // 单步运行一个bot
 
 }

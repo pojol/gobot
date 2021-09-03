@@ -6,55 +6,42 @@ import (
 	"sync"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/imdario/mergo"
-	"github.com/mitchellh/mapstructure"
 	"github.com/pojol/apibot/behavior"
 	"github.com/pojol/apibot/expression"
 	"github.com/pojol/apibot/plugins"
+	"github.com/pojol/apibot/utils"
 )
 
+type ErrInfo struct {
+	ID  string
+	Err error
+}
+
 type Bot struct {
+	id string
+
 	url      string
 	metadata map[string]interface{}
-	tree     *BehaviorTree
+	tree     *behavior.Tree
 
-	prev *BehaviorTree
-	cur  *BehaviorTree
+	prev *behavior.Tree
+	cur  *behavior.Tree
 
 	sync.Mutex
 
-	defaultPost behavior.IPOST
+	post behavior.IPOST
 }
 
-type BehaviorTree struct {
-	ID   string `mapstructure:"id"`
-	Ty   string `mapstructure:"ty"`
-	Api  string `mapstructure:"api"`
-	Wait int32  `mapstructure:"wait"`
-
-	Loop     int32 `mapstructure:"loop"`
-	LoopStep int32
-
-	Parm interface{} `mapstructure:"parm"`
-	Expr string      `mapstructure:"expr"`
-
-	Step int
-
-	Parent   *BehaviorTree
-	Children []*BehaviorTree `mapstructure:"children"`
-}
-
-func (tree *BehaviorTree) link(nod *BehaviorTree) {
-
-	tree.Parent = nod
-	for k := range tree.Children {
-		tree.Children[k].link(tree)
-	}
+func (b *Bot) ID() string {
+	return b.id
 }
 
 func (b *Bot) GetMetadata() (string, error) {
 	byt, err := json.Marshal(b.metadata)
 	if err != nil {
+		fmt.Println("meta marshal err", err.Error())
 		return "", err
 	}
 
@@ -75,42 +62,28 @@ func (b *Bot) GetPrevNodeID() string {
 	return ""
 }
 
-func NewWithBehaviorFile(f []byte, url string) (*Bot, error) {
-	m := make(map[string]interface{})
-	err := json.Unmarshal(f, &m)
-	if err != nil {
-		return nil, fmt.Errorf("behavior file unmarshal fail %v", err.Error())
-	}
-
-	tree := &BehaviorTree{}
-
-	err = mapstructure.Decode(m, tree)
-	if err != nil {
-		return nil, fmt.Errorf("behavior tree decode fail %v", err.Error())
-	}
-	tree.Parent = nil
-	for k := range tree.Children {
-		tree.Children[k].link(tree)
-	}
+func NewWithBehaviorTree(bt *behavior.Tree, mockip string) *Bot {
 
 	md := make(map[string]interface{})
 	md["Token"] = ""
 
-	return &Bot{
-		metadata:    md,
-		url:         url,
-		tree:        tree,
-		cur:         tree,
-		defaultPost: &behavior.HTTPPost{URL: url},
-	}, nil
+	bot := &Bot{
+		id:       uuid.New().String(),
+		metadata: md,
+		url:      mockip,
+		tree:     bt,
+		cur:      bt,
+		post:     &behavior.HTTPPost{URL: mockip},
+	}
 
+	return bot
 }
 
-func (b *Bot) run_selector(nod *BehaviorTree, next bool) (bool, error) {
+func (b *Bot) run_selector(nod *behavior.Tree, next bool) (bool, error) {
 
 	if next {
 		for k := range nod.Children {
-			ok, _ := b.run_nod(nod.Children[k])
+			ok, _ := b.run_nod(nod.Children[k], true)
 			if ok {
 				break
 			}
@@ -120,10 +93,10 @@ func (b *Bot) run_selector(nod *BehaviorTree, next bool) (bool, error) {
 	return true, nil
 }
 
-func (b *Bot) run_sequence(nod *BehaviorTree, next bool) (bool, error) {
+func (b *Bot) run_sequence(nod *behavior.Tree, next bool) (bool, error) {
 	if next {
 		for k := range nod.Children {
-			ok, _ := b.run_nod(nod.Children[k])
+			ok, _ := b.run_nod(nod.Children[k], true)
 			if !ok {
 				break
 			}
@@ -133,8 +106,9 @@ func (b *Bot) run_sequence(nod *BehaviorTree, next bool) (bool, error) {
 	return true, nil
 }
 
-func (b *Bot) run_condition(nod *BehaviorTree, next bool) (bool, error) {
+func (b *Bot) run_condition(nod *behavior.Tree, next bool) (bool, error) {
 
+	// parse 可以提前到 behavior tree 构造阶段
 	eg, err := expression.Parse(nod.Expr)
 	if err != nil {
 		return false, err
@@ -151,7 +125,7 @@ func (b *Bot) run_condition(nod *BehaviorTree, next bool) (bool, error) {
 	return false, nil
 }
 
-func (b *Bot) run_wait(nod *BehaviorTree, next bool) (bool, error) {
+func (b *Bot) run_wait(nod *behavior.Tree, next bool) (bool, error) {
 	time.Sleep(time.Second * time.Duration(nod.Wait))
 
 	if next {
@@ -161,7 +135,7 @@ func (b *Bot) run_wait(nod *BehaviorTree, next bool) (bool, error) {
 	return true, nil
 }
 
-func (b *Bot) run_loop(nod *BehaviorTree, next bool) (bool, error) {
+func (b *Bot) run_loop(nod *behavior.Tree, next bool) (bool, error) {
 
 	if nod.Loop == 0 {
 		for {
@@ -183,7 +157,7 @@ func (b *Bot) run_loop(nod *BehaviorTree, next bool) (bool, error) {
 	return true, nil
 }
 
-func (b *Bot) run_http(nod *BehaviorTree, next bool) (bool, error) {
+func (b *Bot) run_http(nod *behavior.Tree, next bool) (bool, error) {
 
 	p := plugins.Get("jsonparse")
 	if p == nil {
@@ -192,16 +166,12 @@ func (b *Bot) run_http(nod *BehaviorTree, next bool) (bool, error) {
 
 	byt, err := p.Marshal(nod.Parm)
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("marshal plugin err %v", err.Error())
 	}
 
-	resBody, err := b.defaultPost.Do(byt, nod.Api)
+	resBody, err := b.post.Do(byt, nod.Api)
 	if err != nil {
 		return false, err
-	}
-	fmt.Println(string(resBody))
-	if string(resBody) == "error" {
-		return false, fmt.Errorf("req %s err", nod.Api)
 	}
 
 	t := make(map[string]interface{})
@@ -219,110 +189,46 @@ func (b *Bot) run_http(nod *BehaviorTree, next bool) (bool, error) {
 	return true, nil
 }
 
-func (b *Bot) run_nod(nod *BehaviorTree) (bool, error) {
+func (b *Bot) run_nod(nod *behavior.Tree, next bool) (bool, error) {
 
 	var ok bool
 	var err error
 
 	switch nod.Ty {
-	case "SelectorNode":
-		ok, err = b.run_selector(nod, true)
-	case "SequenceNode":
-		ok, _ = b.run_sequence(nod, true)
-	case "ConditionNode":
-		ok, err = b.run_condition(nod, true)
-	case "WaitNode":
-		ok, _ = b.run_wait(nod, true)
-	case "LoopNode":
-		ok, err = b.run_loop(nod, true)
-	case "HTTPActionNode":
-		ok, err = b.run_http(nod, true)
-	}
-
-	return ok, err
-}
-
-func (b *Bot) run_children(parent *BehaviorTree, children []*BehaviorTree) {
-	for k := range children {
-		b.run_nod(children[k])
-	}
-}
-
-func (b *Bot) Run() {
-	b.run_children(b.tree, b.tree.Children)
-}
-
-func (b *Bot) step(nod *BehaviorTree) (bool, error) {
-
-	var ok bool
-	var err error
-
-	switch nod.Ty {
-	case "SelectorNode":
-		ok, err = b.run_selector(nod, false)
-	case "SequenceNode":
-		ok, err = b.run_sequence(nod, false)
-	case "ConditionNode":
-		ok, err = b.run_condition(nod, false)
-	case "WaitNode":
-		ok, err = b.run_wait(nod, false)
-	case "LoopNode":
-		ok, err = b.run_loop(nod, false)
-	case "HTTPActionNode":
-		ok, err = b.run_http(nod, false)
-	default:
+	case behavior.SELETE:
+		ok, err = b.run_selector(nod, next)
+	case behavior.SEQUENCE:
+		ok, _ = b.run_sequence(nod, next)
+	case behavior.CONDITION:
+		ok, err = b.run_condition(nod, next)
+	case behavior.WAIT:
+		ok, _ = b.run_wait(nod, next)
+	case behavior.LOOP:
+		ok, err = b.run_loop(nod, next)
+	case behavior.HTTPACTION:
+		ok, err = b.run_http(nod, next)
+	case behavior.ROOT:
 		ok = true
+	default:
+		ok = false
+		err = fmt.Errorf("run node type err %s", nod.Ty)
 	}
 
 	return ok, err
 }
 
-// 这边的重置，应该是重置loop节点名下的所有children
-func (loopnod *BehaviorTree) resetChildren() {
-	for k := range loopnod.Children {
-
-		loopnod.Children[k].Step = 0
-		if loopnod.Children[k].Ty == "LoopNode" {
-			loopnod.Children[k].LoopStep = 0
-		}
-
-		if len(loopnod.Children[k].Children) > 0 {
-			loopnod.Children[k].resetChildren()
-		}
-
+func (b *Bot) run_children(parent *behavior.Tree, children []*behavior.Tree) {
+	for k := range children {
+		b.run_nod(children[k], true)
 	}
 }
 
-func (b *Bot) next(nod *BehaviorTree) *BehaviorTree {
+func (b *Bot) Run(sw *utils.Switch, doneCh chan string, errCh chan ErrInfo) {
 
-	if nod.Step < len(nod.Children) {
-		nextidx := nod.Step
-		nod.Step++
-		return nod.Children[nextidx]
-	} else {
+	go func() {
+		b.run_children(b.tree, b.tree.Children)
+	}()
 
-		if nod.Ty == "LoopNode" {
-			if nod.Loop == 0 { // 永远循环
-				nod.Step = 0
-				nod.resetChildren()
-				return nod
-			} else {
-				nod.LoopStep++
-				fmt.Println(nod.ID, nod.LoopStep)
-				if nod.LoopStep < nod.Loop {
-					nod.Step = 0
-					nod.resetChildren()
-					return nod
-				}
-			}
-		}
-
-		if nod.Parent != nil {
-			return b.next(nod.Parent)
-		}
-	}
-
-	return nil
 }
 
 type State int32
@@ -342,16 +248,17 @@ func (b *Bot) RunStep() State {
 	b.Lock()
 	defer b.Unlock()
 
-	f, err := b.step(b.cur)
+	fmt.Println("step", b.cur.ID, b.cur.Step)
+	f, err := b.run_nod(b.cur, false)
 	if err != nil {
-		fmt.Println("break", err.Error())
+		b.metadata["err"] = err.Error()
 		return SBreak
 	}
 	// step 中使用了sleep之后，会有多个goroutine执行接下来的程序
 	// fmt.Println(goid.Get())
 
 	if b.cur.Parent != nil {
-		if b.cur.Parent.Ty == "SelectorNode" && f {
+		if b.cur.Parent.Ty == behavior.SELETE && f {
 			b.cur.Parent.Step = len(b.cur.Parent.Children)
 		}
 	}
@@ -367,7 +274,7 @@ func (b *Bot) RunStep() State {
 		// right
 		if b.cur.Parent != nil {
 			b.prev = b.cur
-			b.cur = b.next(b.cur.Parent)
+			b.cur = b.cur.Parent.Next()
 			if b.cur == nil {
 				return SEnd
 			}
