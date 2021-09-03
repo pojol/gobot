@@ -20,6 +20,7 @@ type accInfoReq struct {
 }
 
 type accInfoRes struct {
+	Token   string
 	Diamond int32
 	Gold    int32
 }
@@ -34,6 +35,7 @@ type heroInfo struct {
 }
 
 type heroInfoRes struct {
+	Token string
 	Heros []heroInfo
 }
 
@@ -43,6 +45,7 @@ type lvupReq struct {
 }
 
 type lvupRes struct {
+	Token string
 	Heros []heroInfo
 }
 
@@ -73,6 +76,10 @@ func createAcc() *MockAcc {
 		Token:   token,
 		Diamond: 50,
 		Gold:    100,
+		Heros: []heroInfo{
+			{ID: "joy", Lv: 1},
+			{ID: "pojoy", Lv: 2},
+		},
 	}
 
 	accmap[token] = acc
@@ -103,6 +110,7 @@ func routeAccInfo(in []byte) ([]byte, bool) {
 
 	if _, ok := accmap[accinfo.Token]; ok {
 		byt, _ = json.Marshal(accInfoRes{
+			Token:   accinfo.Token,
 			Diamond: accmap[accinfo.Token].Diamond,
 			Gold:    accmap[accinfo.Token].Gold,
 		})
@@ -128,6 +136,7 @@ func routeHeroInfo(in []byte) ([]byte, bool) {
 
 	if _, ok := accmap[heroinfo.Token]; ok {
 		byt, _ = json.Marshal(heroInfoRes{
+			Token: heroinfo.Token,
 			Heros: accmap[heroinfo.Token].Heros,
 		})
 	} else {
@@ -163,12 +172,13 @@ func routeHeroLvup(in []byte) ([]byte, bool) {
 		}
 
 		if !flag {
-			fmt.Println("can't find hero", lvup.Token, lvup.HeroID)
+			fmt.Println("can't find hero token", lvup.Token, "hero", lvup.HeroID)
 			ret = false
 			goto ext
 		}
 
 		byt, _ = json.Marshal(lvupRes{
+			Token: lvup.Token,
 			Heros: accmap[lvup.Token].Heros,
 		})
 
