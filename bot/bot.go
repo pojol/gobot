@@ -157,12 +157,22 @@ func (b *Bot) run_loop(nod *behavior.Tree, next bool) (bool, error) {
 	return true, nil
 }
 
+func (b *Bot) parse_right(rv interface{}) interface{} {
+
+	return rv
+}
+
 func (b *Bot) run_http(nod *behavior.Tree, next bool) (bool, error) {
 
 	p := plugins.Get("jsonparse")
 	if p == nil {
 		return false, fmt.Errorf("can't find serialization plugin %v", "jsonparse")
 	}
+
+	// nod.Parm need to judge the right value to see if there is a reference value.
+	//  like meta.Token
+
+	nod.Parm = b.parse_right(nod.Parm)
 
 	byt, err := p.Marshal(nod.Parm)
 	if err != nil {

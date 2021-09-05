@@ -151,10 +151,10 @@ func TestStep(t *testing.T) {
 	var tree *behavior.Tree
 	var bot *Bot
 
-	tree, err = behavior.NewBehaviorTree([]byte(compose))
+	tree, err = behavior.New([]byte(compose))
 	assert.Equal(t, err, nil)
 
-	bot = NewWithBehaviorTree(*tree, srv.Url())
+	bot = NewWithBehaviorTree(tree, srv.Url())
 
 	for i := 0; i < 30; i++ {
 		bot.RunStep()
