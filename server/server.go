@@ -40,7 +40,7 @@ var errmap map[Err]string = map[Err]string{
 	ErrEnd:         "run to the end",
 	ErrBreak:       "run to the break",
 	ErrCantFindBot: "can't find bot",
-	ErrCreateBot:   "failed to create bot ",
+	ErrCreateBot:   "failed to create bot, the behavior tree file needs to be uploaded to the server before creation",
 }
 
 func Upload(ctx echo.Context) error {
