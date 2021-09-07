@@ -2,6 +2,7 @@ package bot
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -91,6 +92,23 @@ func (b *Bot) run_selector(nod *behavior.Tree, next bool) (bool, error) {
 	}
 
 	return true, nil
+}
+
+func (b *Bot) run_assert(nod *behavior.Tree, next bool) (bool, error) {
+	eg, err := expression.Parse(nod.Expr)
+	if err != nil {
+		return false, err
+	}
+
+	if eg.DecideWithMap(b.metadata) {
+		if next {
+			b.run_children(nod, nod.Children)
+		}
+
+		return true, nil
+	}
+
+	return false, errors.New("assert failed")
 }
 
 func (b *Bot) run_sequence(nod *behavior.Tree, next bool) (bool, error) {
@@ -217,6 +235,8 @@ func (b *Bot) run_nod(nod *behavior.Tree, next bool) (bool, error) {
 		ok, err = b.run_loop(nod, next)
 	case behavior.HTTPACTION:
 		ok, err = b.run_http(nod, next)
+	case behavior.ASSERT:
+		ok, err = b.run_assert(nod, next)
 	case behavior.ROOT:
 		ok = true
 	default:

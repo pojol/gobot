@@ -15,6 +15,7 @@ const (
 	WAIT       = "WaitNode"
 	LOOP       = "LoopNode"
 	HTTPACTION = "HTTPActionNode"
+	ASSERT     = "AssertNode"
 )
 
 type Tree struct {
