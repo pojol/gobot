@@ -4,15 +4,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 	"sync"
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/imdario/mergo"
 	"github.com/pojol/apibot/behavior"
-	"github.com/pojol/apibot/expression"
-	"github.com/pojol/apibot/plugins"
 	"github.com/pojol/apibot/utils"
+	lua "github.com/yuin/gopher-lua"
 )
 
 type ErrInfo struct {
@@ -30,9 +29,8 @@ type Bot struct {
 	prev *behavior.Tree
 	cur  *behavior.Tree
 
+	L *lua.LState
 	sync.Mutex
-
-	post behavior.IPOST
 }
 
 func (b *Bot) ID() string {
@@ -74,8 +72,23 @@ func NewWithBehaviorTree(bt *behavior.Tree, mockip string) *Bot {
 		url:      mockip,
 		tree:     bt,
 		cur:      bt,
-		post:     &behavior.HTTPPost{URL: mockip},
+		L:        lua.NewState(),
 	}
+
+	// test
+	init := `meta = { Token = "" }`
+	err := bot.L.DoString(init)
+	fmt.Println("init", err, init)
+
+	bot.L.DoFile("/Users/pojol/work/go15/src/apibot/script/print_table.lua")
+	//bot.L.DoFile()
+	bot.L.DoFile("/Users/pojol/work/go15/src/apibot/script/json.lua")
+
+	init = "mock = '" + mockip + "'"
+	err = bot.L.DoString(init)
+	fmt.Println("init", err, init)
+
+	bot.L.PreloadModule("cli", behavior.NewHttpModule(&http.Client{}).Loader)
 
 	return bot
 }
@@ -95,12 +108,24 @@ func (b *Bot) run_selector(nod *behavior.Tree, next bool) (bool, error) {
 }
 
 func (b *Bot) run_assert(nod *behavior.Tree, next bool) (bool, error) {
-	eg, err := expression.Parse(nod.Expr)
+
+	err := b.L.DoString(nod.Code)
 	if err != nil {
 		return false, err
 	}
 
-	if eg.DecideWithMap(b.metadata) {
+	err = b.L.CallByParam(lua.P{
+		Fn:      b.L.GetGlobal("execute"),
+		NRet:    1,
+		Protect: true,
+	})
+	if err != nil {
+		return false, err
+	}
+	v := b.L.Get(-1)
+	b.L.Pop(1)
+
+	if lua.LVAsBool(v) {
 		if next {
 			b.run_children(nod, nod.Children)
 		}
@@ -126,13 +151,24 @@ func (b *Bot) run_sequence(nod *behavior.Tree, next bool) (bool, error) {
 
 func (b *Bot) run_condition(nod *behavior.Tree, next bool) (bool, error) {
 
-	// parse 可以提前到 behavior tree 构造阶段
-	eg, err := expression.Parse(nod.Expr)
+	err := b.L.DoString(nod.Code)
 	if err != nil {
 		return false, err
 	}
 
-	if eg.DecideWithMap(b.metadata) {
+	err = b.L.CallByParam(lua.P{
+		Fn:      b.L.GetGlobal("execute"),
+		NRet:    1,
+		Protect: true,
+	})
+	if err != nil {
+		return false, err
+	}
+
+	v := b.L.Get(-1)
+	b.L.Pop(1)
+
+	if lua.LVAsBool(v) {
 		if next {
 			b.run_children(nod, nod.Children)
 		}
@@ -175,40 +211,25 @@ func (b *Bot) run_loop(nod *behavior.Tree, next bool) (bool, error) {
 	return true, nil
 }
 
-func (b *Bot) parse_right(rv interface{}) interface{} {
-
-	return rv
-}
-
 func (b *Bot) run_http(nod *behavior.Tree, next bool) (bool, error) {
 
-	p := plugins.Get("jsonparse")
-	if p == nil {
-		return false, fmt.Errorf("can't find serialization plugin %v", "jsonparse")
-	}
-
-	// nod.Parm need to judge the right value to see if there is a reference value.
-	//  like meta.Token
-
-	nod.Parm = b.parse_right(nod.Parm)
-
-	byt, err := p.Marshal(nod.Parm)
-	if err != nil {
-		return false, fmt.Errorf("marshal plugin err %v", err.Error())
-	}
-
-	resBody, err := b.post.Do(byt, nod.Api)
+	err := b.L.DoString(nod.Code)
 	if err != nil {
 		return false, err
 	}
 
-	t := make(map[string]interface{})
-	err = p.Unmarshal(resBody, &t)
+	err = b.L.CallByParam(lua.P{
+		Fn:      b.L.GetGlobal("execute"),
+		NRet:    1,
+		Protect: true,
+	})
 	if err != nil {
 		return false, err
 	}
+	//v := b.L.Get(-1)
+	b.L.Pop(1)
 
-	mergo.MergeWithOverwrite(&b.metadata, t)
+	// mergo.MergeWithOverwrite(&b.metadata, t)
 
 	if next {
 		b.run_children(nod, nod.Children)
@@ -244,6 +265,10 @@ func (b *Bot) run_nod(nod *behavior.Tree, next bool) (bool, error) {
 		err = fmt.Errorf("run node type err %s", nod.Ty)
 	}
 
+	if err != nil {
+		fmt.Println("run node err", nod.ID, nod.Ty, err.Error())
+	}
+
 	return ok, err
 }
 
@@ -259,6 +284,10 @@ func (b *Bot) Run(sw *utils.Switch, doneCh chan string, errCh chan ErrInfo) {
 		b.run_children(b.tree, b.tree.Children)
 	}()
 
+}
+
+func (b *Bot) close() {
+	//b.L.Close()
 }
 
 type State int32
@@ -278,10 +307,11 @@ func (b *Bot) RunStep() State {
 	b.Lock()
 	defer b.Unlock()
 
-	fmt.Println("step", b.cur.ID, b.cur.Step)
+	fmt.Println("step", b.cur.ID, b.cur.Step, b.cur.Ty)
 	f, err := b.run_nod(b.cur, false)
 	if err != nil {
 		b.metadata["err"] = err.Error()
+		b.close()
 		return SBreak
 	}
 	// step 中使用了sleep之后，会有多个goroutine执行接下来的程序
@@ -306,6 +336,7 @@ func (b *Bot) RunStep() State {
 			b.prev = b.cur
 			b.cur = b.cur.Parent.Next()
 			if b.cur == nil {
+				b.close()
 				return SEnd
 			}
 		}

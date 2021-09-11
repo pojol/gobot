@@ -1,10 +1,7 @@
 package behavior
 
 import (
-	"encoding/json"
-	"fmt"
-
-	"github.com/mitchellh/mapstructure"
+	"encoding/xml"
 )
 
 const (
@@ -19,21 +16,20 @@ const (
 )
 
 type Tree struct {
-	ID   string `mapstructure:"id"`
-	Ty   string `mapstructure:"ty"`
-	Api  string `mapstructure:"api"`
-	Wait int32  `mapstructure:"wait"`
+	ID string `xml:"id"`
+	Ty string `xml:"ty"`
 
-	Loop     int32 `mapstructure:"loop"`
+	Wait int32 `xml:"wait"`
+
+	Loop     int32 `xml:"loop"`
 	LoopStep int32
 
-	Parm interface{} `mapstructure:"parm"`
-	Expr string      `mapstructure:"expr"`
+	Code string `xml:"code"`
 
 	Step int
 
 	Parent   *Tree
-	Children []*Tree `mapstructure:"children"`
+	Children []*Tree `xml:"children"`
 }
 
 func (tree *Tree) Link(nod *Tree) {
@@ -45,18 +41,18 @@ func (tree *Tree) Link(nod *Tree) {
 }
 
 func New(f []byte) (*Tree, error) {
-	m := make(map[string]interface{})
-	err := json.Unmarshal(f, &m)
-	if err != nil {
-		return nil, fmt.Errorf("behavior file unmarshal fail %v", err.Error())
-	}
 
 	tree := &Tree{}
-
-	err = mapstructure.Decode(m, tree)
+	err := xml.Unmarshal([]byte(f), &tree)
 	if err != nil {
-		return nil, fmt.Errorf("behavior tree decode fail %v", err.Error())
+		panic(err)
 	}
+	/*
+		err = mapstructure.Decode(m, tree)
+		if err != nil {
+			return nil, fmt.Errorf("behavior tree decode fail %v", err.Error())
+		}
+	*/
 	tree.Parent = nil
 	for k := range tree.Children {
 		tree.Children[k].Link(tree)

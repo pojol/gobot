@@ -217,7 +217,7 @@ func mockRoute(w http.ResponseWriter, req *http.Request) {
 	} else {
 		w.WriteHeader(http.StatusBadRequest)
 	}
-	fmt.Println("write", ok)
+	fmt.Println("server ret", ok)
 	w.Write(byt)
 }
 
