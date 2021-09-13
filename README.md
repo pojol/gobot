@@ -2,7 +2,7 @@
 
 > Note: The current version is for preview only
 
-[![](https://img.shields.io/badge/Example-2ca5e0?style=flat&logo=appveyor)](http://1.117.168.37:7777/) [![](https://img.shields.io/badge/Editor-2ca5e0?style=flat&logo=github)](https://github.com/pojol/apibot-editor)
+[![](https://img.shields.io/badge/online-use-2ca5e0?style=flat&logo=appveyor)](http://1.117.168.37:7777/) [![](https://img.shields.io/badge/editor-code-2ca5e0?style=flat&logo=github)](https://github.com/pojol/apibot-editor)
 
 
 
