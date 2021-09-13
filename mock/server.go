@@ -2,13 +2,12 @@ package mock
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"math/rand"
 	"net/http"
-	"net/http/httptest"
-	"sync"
 	"time"
+
+	"github.com/labstack/echo/v4"
 )
 
 type guestRes struct {
@@ -56,12 +55,13 @@ type MockAcc struct {
 	Gold    int32
 }
 
-type MockServer struct {
-	srv *httptest.Server
+type MockResponse struct {
+	Code int32
+	Msg  string
+	Body interface{}
 }
 
 var accmap map[string]*MockAcc
-var acclock sync.RWMutex
 
 var strlst = []string{"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k"}
 
@@ -87,75 +87,107 @@ func createAcc() *MockAcc {
 	return acc
 }
 
-func routeGuest(in []byte) []byte {
+func routeGuest(ctx echo.Context) error {
+	var res MockResponse
 	acc := createAcc()
-	byt, _ := json.Marshal(guestRes{
-		Token: acc.Token,
-	})
 
-	return byt
+	res = MockResponse{
+		Code: 200,
+		Msg:  "",
+		Body: guestRes{
+			Token: acc.Token,
+		},
+	}
+
+	ctx.JSON(http.StatusOK, res)
+	return nil
 }
 
-func routeAccInfo(in []byte) ([]byte, bool) {
+func routeAccInfo(ctx echo.Context) error {
 	accinfo := accInfoReq{}
-	byt := []byte("{}")
-	ret := true
+	var res MockResponse
+	var body accInfoRes
 
-	err := json.Unmarshal(in, &accinfo)
+	bts, err := ioutil.ReadAll(ctx.Request().Body)
 	if err != nil {
-		byt = []byte(err.Error())
-		ret = false
+		res.Code = 400
+		res.Msg = err.Error()
+		goto ext
+	}
+
+	err = json.Unmarshal(bts, &accinfo)
+	if err != nil {
+		res.Code = 400
+		res.Msg = err.Error()
 		goto ext
 	}
 
 	if _, ok := accmap[accinfo.Token]; ok {
-		byt, _ = json.Marshal(accInfoRes{
+		body = accInfoRes{
 			Token:   accinfo.Token,
 			Diamond: accmap[accinfo.Token].Diamond,
 			Gold:    accmap[accinfo.Token].Gold,
-		})
+		}
+		res.Body = body
+		res.Code = 200
 	} else {
-		fmt.Println("can't find acc", accinfo.Token)
-		ret = false
+		res.Code = 400
+		res.Msg = "can't find acc" + accinfo.Token
 	}
+
 ext:
-	return byt, ret
+	ctx.JSON(http.StatusOK, res)
+	return nil
 }
 
-func routeHeroInfo(in []byte) ([]byte, bool) {
-	byt := []byte("{}")
-	ret := true
+func routeHeroInfo(ctx echo.Context) error {
+	var heroinfo heroInfoReq
+	var res MockResponse
 
-	heroinfo := heroInfoReq{}
-	err := json.Unmarshal(in, &heroinfo)
+	bts, err := ioutil.ReadAll(ctx.Request().Body)
 	if err != nil {
-		byt = []byte(err.Error())
-		ret = false
+		res.Code = 400
+		res.Msg = err.Error()
+		goto ext
+	}
+
+	err = json.Unmarshal(bts, &heroinfo)
+	if err != nil {
+		res.Code = 400
+		res.Msg = err.Error()
 		goto ext
 	}
 
 	if _, ok := accmap[heroinfo.Token]; ok {
-		byt, _ = json.Marshal(heroInfoRes{
+		res.Body = heroInfoRes{
 			Token: heroinfo.Token,
 			Heros: accmap[heroinfo.Token].Heros,
-		})
+		}
+		res.Code = 200
 	} else {
-		fmt.Println("can't find acc", heroinfo.Token)
-		ret = false
+		res.Code = 400
+		res.Msg = "can't find acc : " + heroinfo.Token
 	}
 ext:
-	return byt, ret
+	ctx.JSON(http.StatusOK, res)
+	return nil
 }
 
-func routeHeroLvup(in []byte) ([]byte, bool) {
-	byt := []byte("{}")
-	ret := true
-
+func routeHeroLvup(ctx echo.Context) error {
 	lvup := lvupReq{}
-	err := json.Unmarshal(in, &lvup)
+	var res MockResponse
+
+	bts, err := ioutil.ReadAll(ctx.Request().Body)
 	if err != nil {
-		byt = []byte(err.Error())
-		ret = false
+		res.Code = 400
+		res.Msg = err.Error()
+		goto ext
+	}
+
+	err = json.Unmarshal(bts, &lvup)
+	if err != nil {
+		res.Code = 400
+		res.Msg = err.Error()
 		goto ext
 	}
 
@@ -172,75 +204,37 @@ func routeHeroLvup(in []byte) ([]byte, bool) {
 		}
 
 		if !flag {
-			fmt.Println("can't find hero token", lvup.Token, "hero", lvup.HeroID)
-			ret = false
+			res.Code = 400
+			res.Msg = "can't find hero token " + lvup.Token + " hero " + lvup.HeroID
 			goto ext
 		}
 
-		byt, _ = json.Marshal(lvupRes{
+		res.Code = 200
+		res.Body = lvupRes{
 			Token: lvup.Token,
 			Heros: accmap[lvup.Token].Heros,
-		})
+		}
 
 	} else {
-		fmt.Println("can't find acc", lvup.Token)
-		ret = false
+		res.Code = 400
+		res.Msg = "can't find acc : " + lvup.Token
 	}
 
 ext:
-	return byt, ret
+	ctx.JSON(http.StatusOK, res)
+	return nil
 }
 
-func mockRoute(w http.ResponseWriter, req *http.Request) {
-
-	reqbyt, _ := ioutil.ReadAll(req.Body)
-	var byt []byte
-	var ok bool
-
-	//fmt.Println("http server recv ", req.RequestURI)
-	acclock.Lock()
-	defer acclock.Unlock()
-
-	if req.RequestURI == "/login/guest" {
-		ok = true
-		byt = routeGuest(reqbyt)
-	} else if req.RequestURI == "/base/acc.info" {
-		byt, ok = routeAccInfo(reqbyt)
-	} else if req.RequestURI == "/base/hero.info" {
-		byt, ok = routeHeroInfo(reqbyt)
-	} else if req.RequestURI == "/base/hero.lvup" {
-		byt, ok = routeHeroLvup(reqbyt)
-	}
-
-	if ok {
-		w.WriteHeader(http.StatusOK)
-	} else {
-		w.WriteHeader(http.StatusBadRequest)
-	}
-	fmt.Println("server ret", ok)
-	w.Write(byt)
-}
-
-func NewServer() *MockServer {
+func NewServer() *echo.Echo {
 
 	accmap = make(map[string]*MockAcc)
 	rand.Seed(time.Now().UnixNano())
 
-	ms := &MockServer{}
-	// mock server
-	ms.srv = httptest.NewServer(http.HandlerFunc(mockRoute))
+	mock := echo.New()
+	mock.POST("/login/guest", routeGuest)
+	mock.POST("/base/acc.info", routeAccInfo)
+	mock.POST("/base/hero.info", routeHeroInfo)
+	mock.POST("/base/hero.lvup", routeHeroLvup)
 
-	return ms
-}
-
-func (ms *MockServer) Url() string {
-	return ms.srv.URL
-}
-
-func (ms *MockServer) Reset(token string) {
-	delete(accmap, token)
-}
-
-func (ms *MockServer) Close() {
-	ms.srv.Close()
+	return mock
 }

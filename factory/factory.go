@@ -113,7 +113,7 @@ func (f *Factory) getRobot() *bot.Bot {
 		return nil
 	}
 
-	return bot.NewWithBehaviorTree(tree, f.parm.mock.Url())
+	return bot.NewWithBehaviorTree(tree)
 }
 
 func (f *Factory) CreateBot(rootid string) *bot.Bot {
@@ -127,7 +127,7 @@ func (f *Factory) CreateBot(rootid string) *bot.Bot {
 				return nil
 			}
 
-			b = bot.NewWithBehaviorTree(tree, f.parm.mock.Url())
+			b = bot.NewWithBehaviorTree(tree)
 			f.bots[b.ID()] = b
 			break
 		}

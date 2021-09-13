@@ -1,11 +1,10 @@
 # apibot
 
-> 注: 当前版本仅用于预览
+> Note: The current version is for preview only
 
-[**ApibotEditor**](https://github.com/pojol/apibot-editor)
+[**Online sample**](http://1.117.168.37:7777/) [**Editor**](https://github.com/pojol/apibot-editor)
 
 
-[![image.png](https://i.postimg.cc/Mp4GWnsY/image.png)](https://postimg.cc/cvRWhLGK)
-
----
+### Preview
+[![image.png](https://i.postimg.cc/XYbsbn4W/image.png)](https://postimg.cc/qz1scVND)
 

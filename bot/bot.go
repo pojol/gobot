@@ -22,9 +22,7 @@ type ErrInfo struct {
 type Bot struct {
 	id string
 
-	url      string
-	metadata map[string]interface{}
-	tree     *behavior.Tree
+	tree *behavior.Tree
 
 	prev *behavior.Tree
 	cur  *behavior.Tree
@@ -38,13 +36,19 @@ func (b *Bot) ID() string {
 }
 
 func (b *Bot) GetMetadata() (string, error) {
-	byt, err := json.Marshal(b.metadata)
+
+	meta, err := utils.Table2Map(b.L.GetGlobal("meta").(*lua.LTable))
 	if err != nil {
-		fmt.Println("meta marshal err", err.Error())
 		return "", err
 	}
 
-	return string(byt), nil
+	bty, err := json.Marshal(&meta)
+	if err != nil {
+		return "", err
+	}
+
+	return string(bty), nil
+
 }
 
 func (b *Bot) GetCurNodeID() string {
@@ -61,18 +65,13 @@ func (b *Bot) GetPrevNodeID() string {
 	return ""
 }
 
-func NewWithBehaviorTree(bt *behavior.Tree, mockip string) *Bot {
-
-	md := make(map[string]interface{})
-	md["Token"] = ""
+func NewWithBehaviorTree(bt *behavior.Tree) *Bot {
 
 	bot := &Bot{
-		id:       uuid.New().String(),
-		metadata: md,
-		url:      mockip,
-		tree:     bt,
-		cur:      bt,
-		L:        lua.NewState(),
+		id:   uuid.New().String(),
+		tree: bt,
+		cur:  bt,
+		L:    lua.NewState(),
 	}
 
 	// test
@@ -80,13 +79,8 @@ func NewWithBehaviorTree(bt *behavior.Tree, mockip string) *Bot {
 	err := bot.L.DoString(init)
 	fmt.Println("init", err, init)
 
-	bot.L.DoFile("/Users/pojol/work/go15/src/apibot/script/print_table.lua")
-	//bot.L.DoFile()
-	bot.L.DoFile("/Users/pojol/work/go15/src/apibot/script/json.lua")
-
-	init = "mock = '" + mockip + "'"
-	err = bot.L.DoString(init)
-	fmt.Println("init", err, init)
+	bot.L.DoFile("script/global.lua")
+	bot.L.DoFile("script/json.lua")
 
 	bot.L.PreloadModule("cli", behavior.NewHttpModule(&http.Client{}).Loader)
 
@@ -180,7 +174,7 @@ func (b *Bot) run_condition(nod *behavior.Tree, next bool) (bool, error) {
 }
 
 func (b *Bot) run_wait(nod *behavior.Tree, next bool) (bool, error) {
-	time.Sleep(time.Second * time.Duration(nod.Wait))
+	time.Sleep(time.Millisecond * time.Duration(nod.Wait))
 
 	if next {
 		b.run_children(nod, nod.Children)
@@ -310,7 +304,6 @@ func (b *Bot) RunStep() State {
 	fmt.Println("step", b.cur.ID, b.cur.Step, b.cur.Ty)
 	f, err := b.run_nod(b.cur, false)
 	if err != nil {
-		b.metadata["err"] = err.Error()
 		b.close()
 		return SBreak
 	}

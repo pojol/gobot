@@ -34,7 +34,6 @@ end
 
 table.print = print_table
 
-
 function merge(t1, t2)
     for k,v in pairs(t2) do
       if type(v) == "table" then
@@ -48,4 +47,10 @@ function merge(t1, t2)
       end
     end
     return t1
+end
+
+
+function GetMeta()
+    table.print(meta)
+    return json.encode(meta)
 end

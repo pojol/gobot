@@ -31,12 +31,12 @@ func ToUpperCamelCase(s string) string {
 }
 
 // Map maps the lua table to the given struct pointer.
-func Table2Map(tbl *lua.LTable) (map[interface{}]interface{}, error) {
+func Table2Map(tbl *lua.LTable) (map[string]interface{}, error) {
 	opt := Option{
 		NameFunc: ToUpperCamelCase,
 		TagName:  "gluamapper",
 	}
-	mp, ok := ToGoValue(tbl, opt).(map[interface{}]interface{})
+	mp, ok := ToGoValue(tbl, opt).(map[string]interface{})
 	if !ok {
 		return mp, errors.New("arguments #1 must be a table, but got an array")
 	}
@@ -58,7 +58,7 @@ func ToGoValue(lv lua.LValue, opt Option) interface{} {
 	case *lua.LTable:
 		maxn := v.MaxN()
 		if maxn == 0 { // table
-			ret := make(map[interface{}]interface{})
+			ret := make(map[string]interface{})
 			v.ForEach(func(key, value lua.LValue) {
 				keystr := fmt.Sprint(ToGoValue(key, opt))
 				ret[opt.NameFunc(keystr)] = ToGoValue(value, opt)

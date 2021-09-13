@@ -56,11 +56,6 @@ func Upload(ctx echo.Context) error {
 		goto EXT
 	}
 
-	if !json.Valid(bts) {
-		code = ErrJsonInvalid
-		goto EXT
-	}
-
 	tree, err = behavior.New(bts)
 	if err != nil {
 		fmt.Println(err.Error())
@@ -174,7 +169,8 @@ func Step(ctx echo.Context) error {
 	}
 
 	s = b.RunStep()
-	body.Blackboard, _ = b.GetMetadata()
+	body.Blackboard, err = b.GetMetadata()
+	fmt.Println("blackboard", body.Blackboard, err)
 	body.Cur = b.GetCurNodeID()
 	body.Prev = b.GetPrevNodeID()
 

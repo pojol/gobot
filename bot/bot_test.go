@@ -1,11 +1,7 @@
 package bot
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net/http"
-	"net/http/httptest"
 	"os"
 	"testing"
 
@@ -15,8 +11,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	lua "github.com/yuin/gopher-lua"
 )
-
-var srv *httptest.Server
 
 type guestRes struct {
 	Token string
@@ -28,29 +22,10 @@ type infoRes struct {
 }
 
 func TestMain(m *testing.M) {
+	ms := mock.NewServer()
+	go ms.Start(":7777")
 
-	srv = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-
-		ioutil.ReadAll(req.Body)
-		var byt []byte
-
-		fmt.Println("http server recv ", req.RequestURI)
-
-		if req.RequestURI == "/login/guest" {
-			byt, _ = json.Marshal(guestRes{
-				Token: "abcd",
-			})
-		} else if req.RequestURI == "/base/acc.info" {
-			byt, _ = json.Marshal(infoRes{
-				Diamond: 100,
-				Gold:    100,
-			})
-		}
-
-		w.Write(byt)
-	}))
-	defer srv.Close()
-
+	defer ms.Close()
 	os.Exit(m.Run())
 }
 
@@ -60,206 +35,217 @@ type Metadata struct {
 
 var compose = `
 <behavior>
-  <id>bb49e4e6-a89d-419b-9517-d2fb9f9d6d11</id>
+  <id>20913145-5f7e-4b0c-babc-4e94e7c4d6ad</id>
   <ty>RootNode</ty>
   <pos>
     <x>0</x>
     <y>0</y>
   </pos>
   <children>
-    <id>e0d9de38-a927-4ebf-a88b-787942362564</id>
+    <id>6258e521-4d7a-4427-a467-d102daf6ab9e</id>
     <ty>LoopNode</ty>
     <pos>
       <x>-5</x>
-      <y>47</y>
+      <y>66</y>
     </pos>
     <children>
-      <id>5e9b233c-5e9d-4706-996c-da868e7af15a</id>
+      <id>1291d5c2-5964-4b98-82d1-bb106f0e9c57</id>
       <ty>SelectorNode</ty>
       <pos>
         <x>-15</x>
-        <y>126</y>
+        <y>125</y>
       </pos>
       <children>
-        <id>190affa9-a509-4de9-a23c-e3519af0a8ea</id>
+        <id>743186ab-655b-47c8-a986-44ae49adf33b</id>
         <ty>ConditionNode</ty>
         <pos>
-          <x>-20</x>
-          <y>179</y>
+          <x>-70</x>
+          <y>171</y>
         </pos>
         <children>
-          <id>67d3595e-2c76-4534-8734-4365434ae974</id>
+          <id>e3e32962-edcb-4dc1-add2-f934ff8bb87e</id>
           <ty>HTTPActionNode</ty>
           <pos>
-            <x>-50</x>
-            <y>245</y>
+            <x>-85</x>
+            <y>222</y>
           </pos>
-          <code>-- http request parm
+          <code>
 local parm = {
-  body = {},    -- request body
+  body = {
+      Token = meta.Token
+  },    -- request body
   timeout = &#34;10s&#34;,
   headers = {},
 }
 
+local url = &#34;http://127.0.0.1:7777/login/guest&#34;
 local cli = require(&#34;cli&#34;)
 
---[[ 
-  Write to http client call
-  like &gt;&gt; cli.post(&#34;url&#34;,&#34;api&#34;, parm)
-]]--
 function execute()
-    url = mock .. "/login/guest"
-    res, errmsg = cli.post(url, parm)
-    print(url, errmsg)
-    if errmsg == nil then
-        merge(meta, json.decode(res["body"]))
-    end
 
-    table.print(meta)
+  -- http post request
+  res, errmsg = cli.post(url, parm)
+  print(url,errmsg)
+  if errmsg == nil then
+    body = json.decode(res[&#34;body&#34;])
+    merge(meta, body.Body)
+  end
+  table.print(meta)
 end
 </code>
         </children>
         <code>
+
 -- Write expression to return true or false
 function execute()
 
     return meta.Token == &#34;&#34;
 
-end</code>
+end
+</code>
       </children>
       <children>
-        <id>1caa5e2f-8c81-48e3-ba90-0c8229e60fad</id>
+        <id>262cf484-5075-4971-885b-f9f74c9b1e92</id>
         <ty>ConditionNode</ty>
         <pos>
-          <x>50</x>
-          <y>179</y>
+          <x>95</x>
+          <y>171</y>
         </pos>
         <children>
-          <id>8dde4c5e-4676-42d0-9a59-854c003244a6</id>
+          <id>01f48591-3b97-46b9-a86c-df10a4d009c6</id>
           <ty>HTTPActionNode</ty>
           <pos>
-            <x>55</x>
-            <y>245</y>
+            <x>80</x>
+            <y>222</y>
           </pos>
           <children>
-            <id>1de3a303-e821-4b76-9e4a-889f3910321f</id>
+            <id>f7bbb512-d239-4d5a-881b-7c445a47abc7</id>
             <ty>SequenceNode</ty>
             <pos>
-              <x>0</x>
-              <y>314</y>
+              <x>70</x>
+              <y>302</y>
             </pos>
             <children>
-              <id>1ab45b16-9bfb-478f-b384-852ee9440e53</id>
+              <id>2796bf91-a0f8-4be1-92fc-b164500b7cf0</id>
               <ty>HTTPActionNode</ty>
               <pos>
-                <x>-35</x>
-                <y>382</y>
+                <x>15</x>
+                <y>347</y>
               </pos>
               <code>
--- http request parm
 local parm = {
   body = {
-      Token: &#34;abcd&#34;,
+      Token = meta.Token
   },    -- request body
   timeout = &#34;10s&#34;,
   headers = {},
 }
 
+local url = &#34;http://127.0.0.1:7777/base/hero.info&#34;
 local cli = require(&#34;cli&#34;)
 
---[[ 
-  Write to http client call
-  like &gt;&gt; cli.post(&#34;url&#34;,&#34;api&#34;, parm)
-]]--
 function execute()
 
-    cli.post(&#34;htts://127.0.0.1:8888/base/hero.info&#34;, parm)
-
+  -- http post request
+  res, errmsg = cli.post(url, parm)
+  print(url,errmsg)
+  if errmsg == nil then
+    body = json.decode(res[&#34;body&#34;])
+    merge(meta, body.Body)
+  end
+  table.print(meta)
 end
 </code>
             </children>
             <children>
-              <id>4410b7fd-1b76-4d16-a269-5c3fef3cdc52</id>
+              <id>b620b162-f5d5-41b4-ab5f-65436792d4b4</id>
               <ty>WaitNode</ty>
               <pos>
-                <x>55</x>
-                <y>382</y>
+                <x>100</x>
+                <y>347</y>
               </pos>
               <wait>100</wait>
             </children>
             <children>
-              <id>6dd0dd90-c11c-44dc-a6b8-22ac82d149fe</id>
+              <id>2eda6249-b555-42cb-b6b1-accce15c4f34</id>
               <ty>LoopNode</ty>
               <pos>
-                <x>105</x>
-                <y>377</y>
+                <x>161</x>
+                <y>342</y>
               </pos>
               <children>
-                <id>97952050-95c1-4ca2-be75-d131818ec6f7</id>
+                <id>3c6a6691-be4d-42b3-a909-451ab741309d</id>
                 <ty>HTTPActionNode</ty>
                 <pos>
-                  <x>105</x>
-                  <y>455</y>
+                  <x>166</x>
+                  <y>419</y>
                 </pos>
                 <code>
--- http request parm
 local parm = {
   body = {
-      Token = &#34;abcd&#34;,
-      HeroID = &#34;joy&#34;,
+      Token = meta.Token,
+      HeroID = &#34;joy&#34;
   },    -- request body
   timeout = &#34;10s&#34;,
   headers = {},
 }
 
+local url = &#34;http://127.0.0.1:7777/base/hero.lvup&#34;
 local cli = require(&#34;cli&#34;)
 
---[[ 
-  Write to http client call
-  like &gt;&gt; cli.post(&#34;url&#34;,&#34;api&#34;, parm)
-]]--
 function execute()
 
-    cli.post(&#34;htts://127.0.0.1:8888/base/hero.lvup&#34;, parm)
-
+  -- http post request
+  res, errmsg = cli.post(url, parm)
+  print(url,errmsg)
+  if errmsg == nil then
+    body = json.decode(res[&#34;body&#34;])
+    merge(meta, body.Body)
+  end
+  table.print(meta)
 end
 </code>
               </children>
-              <loop>5</loop>
+              <loop>2</loop>
             </children>
           </children>
-          <code>-- http request parm
+          <code>
 local parm = {
   body = {
-      Token = &#34;abcd&#34;,
+      Token = meta.Token
   },    -- request body
   timeout = &#34;10s&#34;,
   headers = {},
 }
 
+local url = &#34;http://127.0.0.1:7777/base/acc.info&#34;
 local cli = require(&#34;cli&#34;)
 
---[[
-  Write to http client call
-  like &gt;&gt; cli.post(&#34;url&#34;,&#34;api&#34;, parm)
-]]--
 function execute()
 
-    cli.post(&#34;htts://127.0.0.1:8888/base/acc.info&#34;, parm)
-
+  -- http post request
+  res, errmsg = cli.post(url, parm)
+  print(url,errmsg)
+  if errmsg == nil then
+    body = json.decode(res[&#34;body&#34;])
+    merge(meta, body.Body)
+  end
+  GetMeta()
 end
 </code>
         </children>
         <code>
+
 -- Write expression to return true or false
 function execute()
 
     return meta.Token ~= &#34;&#34;
 
-end</code>
+end
+</code>
       </children>
     </children>
-    <loop>5</loop>
+    <loop>3</loop>
   </children>
 </behavior>
 
@@ -270,14 +256,13 @@ func TestLoad(t *testing.T) {
 	var tree *behavior.Tree
 	var bot *Bot
 
-	srv := mock.NewServer()
-
 	tree, err := behavior.New([]byte(compose))
 	assert.Equal(t, err, nil)
 
-	bot = NewWithBehaviorTree(tree, srv.Url())
-	for i := 0; i < 10; i++ {
+	bot = NewWithBehaviorTree(tree)
+	for i := 0; i < 20; i++ {
 		bot.RunStep()
+		fmt.Println(bot.GetMetadata())
 	}
 }
 

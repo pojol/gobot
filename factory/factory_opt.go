@@ -3,8 +3,6 @@ package factory
 import (
 	"net/http"
 	"time"
-
-	"github.com/pojol/apibot/mock"
 )
 
 // 机器人的运行模式
@@ -56,18 +54,9 @@ type Parm struct {
 	// batchSize 批次大小（用于控制goroutine的并发数量（默认1024
 	batchSize int
 
-	mock *mock.MockServer
-
 	//
 	md interface{}
 }
 
 // Option consul discover config wrapper
 type Option func(*Parm)
-
-// WithMock 调试模式
-func WithMock() Option {
-	return func(c *Parm) {
-		c.mock = mock.NewServer()
-	}
-}

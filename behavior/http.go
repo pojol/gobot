@@ -78,24 +78,17 @@ func (h *httpModule) doRequest(L *lua.LState, method string, url string, options
 		}
 
 		body := options.RawGet(lua.LString("body"))
-		if _, ok := body.(lua.LString); !ok {
-			// "form" is deprecated.
-			body = options.RawGet(lua.LString("form"))
-			// Only set the Content-Type to application/x-www-form-urlencoded
-			// when someone uses "form", not for "body".
-			if _, ok := body.(lua.LString); ok {
-				req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-			}
-		}
 
 		switch reqBody := body.(type) {
 		case *lua.LTable:
 			m, err := utils.Table2Map(reqBody)
 			if err != nil {
+				fmt.Println("table 2 map err", err.Error())
 				return nil, err
 			}
 			byt, err := json.Marshal(m)
 			if err != nil {
+				fmt.Println("ltable marshal err", err.Error())
 				return nil, err
 			}
 			req.Body = ioutil.NopCloser(bytes.NewReader(byt))
