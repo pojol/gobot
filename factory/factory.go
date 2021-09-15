@@ -2,6 +2,7 @@ package factory
 
 import (
 	"errors"
+	"fmt"
 	"sync"
 	"time"
 
@@ -11,9 +12,19 @@ import (
 	"github.com/pojol/apibot/utils"
 )
 
-type behaviorInfo struct {
-	RootID string
-	Dat    []byte
+type BehaviorInfo struct {
+	Name       string
+	RootID     string
+	Dat        []byte
+	UpdateTime int64
+}
+
+type BatchBotInfo struct {
+	Behavior string
+	Num      int32
+}
+type BatchInfo struct {
+	Batch []BatchBotInfo
 }
 
 type Factory struct {
@@ -21,7 +32,8 @@ type Factory struct {
 	pickCursor int
 	bots       map[string]*bot.Bot
 
-	behaviorLst []behaviorInfo
+	behaviorLst []BehaviorInfo
+	pipeline    []BatchInfo
 
 	translateCh chan *bot.Bot
 	doneCh      chan string
@@ -73,12 +85,12 @@ func (f *Factory) Close() {
 	f.exit.Open()
 }
 
-func (f *Factory) AppendBehavior(rootid string, byt []byte) {
+func (f *Factory) AddBehavior(rootid string, name string, byt []byte) {
 
 	flag := false
 	idx := 0
 	for k, v := range f.behaviorLst {
-		if v.RootID == rootid {
+		if v.Name == name {
 			flag = true
 			idx = k
 			break
@@ -89,10 +101,45 @@ func (f *Factory) AppendBehavior(rootid string, byt []byte) {
 		f.behaviorLst = append(f.behaviorLst[:idx], f.behaviorLst[idx+1:]...)
 	}
 
-	f.behaviorLst = append(f.behaviorLst, behaviorInfo{
-		RootID: rootid,
-		Dat:    byt,
+	f.behaviorLst = append(f.behaviorLst, BehaviorInfo{
+		Name:       name,
+		RootID:     rootid,
+		Dat:        byt,
+		UpdateTime: time.Now().Unix(),
 	})
+}
+
+func (f *Factory) GetBehaviors() []BehaviorInfo {
+	info := []BehaviorInfo{}
+	for _, v := range f.behaviorLst {
+		info = append(info, BehaviorInfo{
+			Name:       v.Name,
+			UpdateTime: v.UpdateTime,
+		})
+	}
+
+	return info
+}
+
+func (f *Factory) FindBehavior(name string) (BehaviorInfo, error) {
+
+	var info BehaviorInfo
+	err := fmt.Errorf("FindBehavior err not found %v", name)
+
+	for _, v := range f.behaviorLst {
+		if v.Name == name {
+			info = v
+			err = nil
+			break
+		}
+	}
+
+	return info, err
+
+}
+
+func (f *Factory) Append(info BatchInfo) {
+	f.pipeline = append(f.pipeline, info)
 }
 
 func (f *Factory) getRobot() *bot.Bot {
@@ -116,11 +163,11 @@ func (f *Factory) getRobot() *bot.Bot {
 	return bot.NewWithBehaviorTree(tree)
 }
 
-func (f *Factory) CreateBot(rootid string) *bot.Bot {
+func (f *Factory) CreateBot(name string) *bot.Bot {
 	var b *bot.Bot
 
 	for _, v := range f.behaviorLst {
-		if v.RootID == rootid {
+		if v.Name == name {
 
 			tree, err := behavior.New(v.Dat)
 			if err != nil {

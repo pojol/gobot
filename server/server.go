@@ -10,6 +10,7 @@ import (
 	"github.com/pojol/apibot/behavior"
 	"github.com/pojol/apibot/bot"
 	"github.com/pojol/apibot/factory"
+	"github.com/pojol/apibot/utils"
 )
 
 type Response struct {
@@ -43,12 +44,14 @@ var errmap map[Err]string = map[Err]string{
 	ErrCreateBot:   "failed to create bot, the behavior tree file needs to be uploaded to the server before creation",
 }
 
-func Upload(ctx echo.Context) error {
+func UploadWithBlob(ctx echo.Context) error {
 	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
 	res := &Response{}
 	code := Succ
+	var name string
 	var tree *behavior.Tree
 
+	name = ctx.Request().Header.Get("FileName")
 	bts, err := ioutil.ReadAll(ctx.Request().Body)
 	if err != nil {
 		code = ErrContentRead // tmp
@@ -62,7 +65,7 @@ func Upload(ctx echo.Context) error {
 		code = ErrJsonInvalid
 		goto EXT
 	}
-	factory.Global.AppendBehavior(tree.ID, bts)
+	factory.Global.AddBehavior(tree.ID, name, bts)
 
 EXT:
 	res.Code = int(code)
@@ -72,20 +75,129 @@ EXT:
 	return nil
 }
 
+func UploadWithFile(ctx echo.Context) error {
+	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
+	res := &Response{}
+	code := Succ
+	var upload *utils.UploadFile
+	var fbyte []byte
+	var name string
+	var tree *behavior.Tree
+
+	f, header, err := ctx.Request().FormFile("file")
+	if err != nil {
+		code = ErrContentRead
+		fmt.Println(err.Error())
+		goto EXT
+	}
+
+	upload = utils.NewUploadFile(f, header)
+	if upload.GetFileExt() != ".xml" {
+		code = ErrJsonInvalid
+		goto EXT
+	}
+	fbyte = upload.ReadBytes()
+	if len(fbyte) == 0 {
+		code = ErrContentRead
+		goto EXT
+	}
+
+	name = upload.FileName()
+	tree, err = behavior.New(fbyte)
+	if err != nil {
+		fmt.Println(err.Error())
+		code = ErrJsonInvalid
+		goto EXT
+	}
+	factory.Global.AddBehavior(tree.ID, name, fbyte)
+
+EXT:
+	res.Code = int(code)
+	res.Msg = errmap[code]
+
+	ctx.JSON(http.StatusOK, res)
+	return nil
+}
+
+type behaviorInfo struct {
+	Name   string
+	Update int64
+}
+type BehaviorListRes struct {
+	Bots []behaviorInfo
+}
+
+func GetList(ctx echo.Context) error {
+	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
+	code := Succ
+	res := &Response{}
+	body := &BehaviorListRes{}
+
+	info := factory.Global.GetBehaviors()
+	for _, v := range info {
+		body.Bots = append(body.Bots, behaviorInfo{
+			Name:   v.Name,
+			Update: v.UpdateTime,
+		})
+	}
+
+	res.Code = int(code)
+	res.Msg = errmap[code]
+	res.Body = body
+
+	ctx.JSON(http.StatusOK, res)
+	return nil
+}
+
+type FindBehaviorReq struct {
+	Name string
+}
+
+type FindBehaviorRes struct {
+	Info factory.BehaviorInfo
+}
+
+func GetBlob(ctx echo.Context) error {
+	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
+	req := &FindBehaviorReq{}
+	info := factory.BehaviorInfo{}
+
+	bts, err := ioutil.ReadAll(ctx.Request().Body)
+	if err != nil {
+		fmt.Println(err.Error())
+		goto EXT
+	}
+
+	err = json.Unmarshal(bts, &req)
+	if err != nil {
+		fmt.Println(err.Error())
+		goto EXT
+	}
+
+	info, err = factory.Global.FindBehavior(req.Name)
+	if err != nil {
+		fmt.Println(err.Error())
+		goto EXT
+	}
+
+	fmt.Println("get blob", info.Name, info.RootID)
+
+EXT:
+	ctx.Blob(http.StatusOK, "text/plain;charset=utf-8", info.Dat)
+	return nil
+}
+
 type RunRequest struct {
-	BotID string
+	Info factory.BatchInfo
 }
 
 type RunResponse struct {
-	Blackboard string
 }
 
 func Run(ctx echo.Context) error {
 	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
 	res := &Response{}
 	req := &RunRequest{}
-	body := &RunResponse{}
-	var b *bot.Bot
 	code := Succ
 
 	var err error
@@ -104,24 +216,21 @@ func Run(ctx echo.Context) error {
 		goto EXT
 	}
 
-	b = factory.Global.FindBot(req.BotID)
-	if b == nil {
-		code = ErrCantFindBot
-		goto EXT
+	for _, v := range req.Info.Batch {
+		if v.Behavior == "" {
+			goto EXT
+		}
+		if v.Num == 0 {
+			goto EXT
+		}
 	}
-	b.Run(nil, nil, nil)
-	defer factory.Global.RmvBot(req.BotID)
 
-	body.Blackboard, err = b.GetMetadata()
-	if err != nil {
-		fmt.Println(err.Error())
-		code = ErrMetaData
-	}
+	factory.Global.Append(req.Info)
+	factory.Global.RunBatch()
 
 EXT:
 	res.Code = int(code)
 	res.Msg = errmap[code]
-	res.Body = body
 
 	ctx.JSON(http.StatusOK, res)
 	return nil
@@ -194,7 +303,7 @@ EXT:
 }
 
 type createRequest struct {
-	TreeID string
+	Name string
 }
 
 type createResponse struct {
@@ -223,9 +332,9 @@ func Create(ctx echo.Context) error {
 		goto EXT
 	}
 
-	b = factory.Global.CreateBot(req.TreeID)
+	b = factory.Global.CreateBot(req.Name)
 	if b == nil {
-		fmt.Println("create bot err", req.TreeID)
+		fmt.Println("create bot err", req.Name)
 		code = ErrCreateBot
 		goto EXT
 	}
@@ -243,9 +352,13 @@ EXT:
 
 func Route(e *echo.Echo) {
 
-	e.POST("/upload", Upload) // 上传行为树模版文件
+	e.POST("/upload.blob", UploadWithBlob) // 上传行为树模版文件
+	e.POST("/upload.file", UploadWithFile)
+
+	e.POST("/get.list", GetList)
+	e.POST("/get.blob", GetBlob)
 	e.POST("/create", Create) // 创建一个bot
-	e.POST("/run", Run)       // 运行一个bot
+	e.POST("/run", Run)       // 运行bot
 	e.POST("/step", Step)     // 单步运行一个bot
 
 }

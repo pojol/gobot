@@ -301,7 +301,6 @@ func (b *Bot) RunStep() State {
 	b.Lock()
 	defer b.Unlock()
 
-	fmt.Println("step", b.cur.ID, b.cur.Step, b.cur.Ty)
 	f, err := b.run_nod(b.cur, false)
 	if err != nil {
 		b.close()
