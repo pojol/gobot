@@ -1,4 +1,4 @@
-# apibot-editor
+# apibot
 
 > Note: The current version is for preview only
 
@@ -32,11 +32,11 @@ $ docker run --rm -d  -p 8888:8888/tcp braidgo/apibot:latest
 * **Loop** Set the number of cycles of all child nodes under this node
 * **Wait** Set a certain amount of time to wait at the current node
 
-### Script
-* cli (client module
-    * post
-    * put
-    * get
-* meta (bot's data set
-* merge (overwrite update
-* table.print
+### API
+* `/upload.blob`
+* `/upload.file`
+* `/get.list`
+* `/get.blob`
+* `/bot.create`
+* `/bot.run`
+* `/bot.step`
