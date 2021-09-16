@@ -28,6 +28,8 @@ type Report struct {
 	reqNum int
 	errNum int
 
+	beginTime time.Time
+
 	urlMap map[string]*urlDetail
 }
 
@@ -47,8 +49,8 @@ type BatchInfo struct {
 }
 
 type Factory struct {
-	parm   Parm
-	report Report
+	parm          Parm
+	reportHistory []*Report
 
 	batchBots map[string]*bot.Bot
 	debugBots map[string]*bot.Bot
@@ -65,8 +67,7 @@ type Factory struct {
 	batch     utils.SizeWaitGroup
 	batchDone chan interface{}
 
-	colorer   *color.Color
-	beginTime time.Time
+	colorer *color.Color
 
 	lock sync.Mutex
 	exit *utils.Switch
@@ -97,9 +98,6 @@ func Create(opts ...Option) (*Factory, error) {
 		batchDone:   make(chan interface{}, 1),
 		colorer:     color.New(),
 		batch:       utils.New(p.batchSize),
-		report: Report{
-			urlMap: make(map[string]*urlDetail),
-		},
 	}
 
 	go f.loop()
@@ -110,32 +108,33 @@ func Create(opts ...Option) (*Factory, error) {
 
 var Global *Factory
 
-func (f *Factory) pushReport(bot *bot.Bot) {
+func (f *Factory) pushReport(rep *Report, bot *bot.Bot) {
 	f.lock.Lock()
 	defer f.lock.Unlock()
 
-	f.report.botNum++
+	rep.botNum++
 	robotReport := bot.GetReport()
 
-	f.report.reqNum += len(robotReport)
+	rep.reqNum += len(robotReport)
 	for _, v := range robotReport {
-		if _, ok := f.report.urlMap[v.Api]; !ok {
-			f.report.urlMap[v.Api] = &urlDetail{}
+		if _, ok := rep.urlMap[v.Api]; !ok {
+			rep.urlMap[v.Api] = &urlDetail{}
 		}
 
-		f.report.urlMap[v.Api].reqNum++
-		f.report.urlMap[v.Api].avgNum += int64(v.Consume)
-		f.report.urlMap[v.Api].reqSize += int64(v.ReqBody)
-		f.report.urlMap[v.Api].resSize += int64(v.ResBody)
+		rep.urlMap[v.Api].reqNum++
+		rep.urlMap[v.Api].avgNum += int64(v.Consume)
+		rep.urlMap[v.Api].reqSize += int64(v.ReqBody)
+		rep.urlMap[v.Api].resSize += int64(v.ResBody)
 		if v.Err != "" {
-			f.report.errNum++
-			f.report.urlMap[v.Api].errNum++
+			rep.errNum++
+			rep.urlMap[v.Api].errNum++
 		}
 	}
+
 }
 
 // Report 输出报告
-func (f *Factory) Report() {
+func (f *Factory) Report(rep *Report) {
 
 	f.lock.Lock()
 	defer f.lock.Unlock()
@@ -144,7 +143,7 @@ func (f *Factory) Report() {
 	fmt.Printf("Req url%-33s Req count %-5s Average time %-5s Body req/res %-5s Succ rate %-10s\n", "", "", "", "", "")
 
 	arr := []string{}
-	for k := range f.report.urlMap {
+	for k := range rep.urlMap {
 		arr = append(arr, k)
 	}
 	sort.Strings(arr)
@@ -152,7 +151,7 @@ func (f *Factory) Report() {
 	var reqtotal int64
 
 	for _, sk := range arr {
-		v := f.report.urlMap[sk]
+		v := rep.urlMap[sk]
 		var avg string
 		if v.avgNum == 0 {
 			avg = "0 ms"
@@ -176,7 +175,7 @@ func (f *Factory) Report() {
 	}
 	fmt.Println("+--------------------------------------------------------------------------------------------------------+")
 
-	durations := int(time.Since(f.beginTime).Seconds())
+	durations := int(time.Since(rep.beginTime).Seconds())
 	if durations <= 0 {
 		durations = 1
 	}
@@ -184,10 +183,10 @@ func (f *Factory) Report() {
 	qps := int(reqtotal / int64(durations))
 
 	duration := strconv.Itoa(durations) + "s"
-	if f.report.errNum != 0 {
-		f.colorer.Printf("robot : %d req count : %d duration : %s qps : %d errors : %v\n", f.report.botNum, f.report.reqNum, duration, qps, utils.Red(f.report.errNum))
+	if rep.errNum != 0 {
+		f.colorer.Printf("robot : %d req count : %d duration : %s qps : %d errors : %v\n", rep.botNum, rep.reqNum, duration, qps, utils.Red(rep.errNum))
 	} else {
-		fmt.Printf("robot : %d req count : %d duration : %s qps : %d errors : %d\n", f.report.botNum, f.report.reqNum, duration, qps, f.report.errNum)
+		fmt.Printf("robot : %d req count : %d duration : %s qps : %d errors : %d\n", rep.botNum, rep.reqNum, duration, qps, rep.errNum)
 	}
 
 }
@@ -319,7 +318,7 @@ func (f *Factory) push(bot *bot.Bot) {
 	f.batchBots[bot.ID()] = bot
 }
 
-func (f *Factory) pop(id string, err error) {
+func (f *Factory) pop(id string, err error, rep *Report) {
 	f.batch.Done()
 
 	if err != nil && f.parm.Interrupt {
@@ -328,7 +327,7 @@ func (f *Factory) pop(id string, err error) {
 
 	if _, ok := f.batchBots[id]; ok {
 
-		f.pushReport(f.batchBots[id])
+		f.pushReport(rep, f.batchBots[id])
 		if err != nil {
 			f.colorer.Printf("%v\n", utils.Red(err.Error()))
 		}
@@ -368,7 +367,10 @@ func (f *Factory) loop() {
 }
 
 func (f *Factory) router() {
-	f.beginTime = time.Now()
+	rep := &Report{
+		beginTime: time.Now(),
+		urlMap:    make(map[string]*urlDetail),
+	}
 
 	for {
 		select {
@@ -376,9 +378,9 @@ func (f *Factory) router() {
 			f.push(bot)
 			bot.Run(f.exit, f.doneCh, f.errCh)
 		case id := <-f.doneCh:
-			f.pop(id, nil)
+			f.pop(id, nil, rep)
 		case err := <-f.errCh:
-			f.pop(err.ID, err.Err)
+			f.pop(err.ID, err.Err, rep)
 		case <-f.batchDone:
 			goto ext
 		}
@@ -387,6 +389,10 @@ func (f *Factory) router() {
 ext:
 
 	// report
-	f.Report()
+	f.Report(rep)
+	if len(f.reportHistory) > 10 {
+		f.reportHistory = f.reportHistory[1:]
+	}
+	f.reportHistory = append(f.reportHistory, rep)
 	f.running = false
 }
