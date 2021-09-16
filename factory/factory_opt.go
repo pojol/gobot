@@ -56,6 +56,8 @@ type Parm struct {
 
 	ScriptPath string
 
+	ReportLimit int
+
 	//
 	md interface{}
 }
@@ -66,5 +68,11 @@ type Option func(*Parm)
 func WithScriptPath(path string) Option {
 	return func(c *Parm) {
 		c.ScriptPath = path
+	}
+}
+
+func WithReportLimit(limit int) Option {
+	return func(c *Parm) {
+		c.ReportLimit = limit
 	}
 }

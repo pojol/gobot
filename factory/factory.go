@@ -76,11 +76,12 @@ type Factory struct {
 func Create(opts ...Option) (*Factory, error) {
 
 	p := Parm{
-		frameRate:  time.Second * 1,
-		lifeTime:   time.Minute,
-		Interrupt:  true,
-		batchSize:  1024,
-		ScriptPath: "script/",
+		frameRate:   time.Second * 1,
+		lifeTime:    time.Minute,
+		Interrupt:   true,
+		batchSize:   1024,
+		ReportLimit: 10,
+		ScriptPath:  "script/",
 	}
 
 	for _, opt := range opts {
@@ -390,7 +391,7 @@ ext:
 
 	// report
 	f.Report(rep)
-	if len(f.reportHistory) > 10 {
+	if len(f.reportHistory) > f.parm.ReportLimit {
 		f.reportHistory = f.reportHistory[1:]
 	}
 	f.reportHistory = append(f.reportHistory, rep)
