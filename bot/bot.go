@@ -27,6 +27,8 @@ type Bot struct {
 	prev *behavior.Tree
 	cur  *behavior.Tree
 
+	httpMod *behavior.HttpModule
+
 	L *lua.LState
 	sync.Mutex
 }
@@ -68,10 +70,11 @@ func (b *Bot) GetPrevNodeID() string {
 func NewWithBehaviorTree(path string, bt *behavior.Tree) *Bot {
 
 	bot := &Bot{
-		id:   uuid.New().String(),
-		tree: bt,
-		cur:  bt,
-		L:    lua.NewState(),
+		id:      uuid.New().String(),
+		tree:    bt,
+		cur:     bt,
+		L:       lua.NewState(),
+		httpMod: behavior.NewHttpModule(&http.Client{}),
 	}
 
 	// test
@@ -80,7 +83,7 @@ func NewWithBehaviorTree(path string, bt *behavior.Tree) *Bot {
 	bot.L.DoFile(path + "global.lua")
 	bot.L.DoFile(path + "json.lua")
 
-	bot.L.PreloadModule("cli", behavior.NewHttpModule(&http.Client{}).Loader)
+	bot.L.PreloadModule("cli", bot.httpMod.Loader)
 
 	return bot
 }
@@ -277,6 +280,10 @@ func (b *Bot) Run(sw *utils.Switch, doneCh chan string, errCh chan ErrInfo) {
 		doneCh <- b.id
 	}()
 
+}
+
+func (b *Bot) GetReport() []behavior.Report {
+	return b.httpMod.GetReport()
 }
 
 func (b *Bot) close() {

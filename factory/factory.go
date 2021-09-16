@@ -2,6 +2,9 @@ package factory
 
 import (
 	"fmt"
+	"net/url"
+	"sort"
+	"strconv"
 	"sync"
 	"time"
 
@@ -10,6 +13,23 @@ import (
 	"github.com/pojol/apibot/bot"
 	"github.com/pojol/apibot/utils"
 )
+
+type urlDetail struct {
+	reqNum int
+	errNum int
+	avgNum int64
+
+	reqSize int64
+	resSize int64
+}
+
+type Report struct {
+	botNum int
+	reqNum int
+	errNum int
+
+	urlMap map[string]*urlDetail
+}
 
 type BehaviorInfo struct {
 	Name       string
@@ -27,7 +47,9 @@ type BatchInfo struct {
 }
 
 type Factory struct {
-	parm      Parm
+	parm   Parm
+	report Report
+
 	batchBots map[string]*bot.Bot
 	debugBots map[string]*bot.Bot
 
@@ -43,7 +65,8 @@ type Factory struct {
 	batch     utils.SizeWaitGroup
 	batchDone chan interface{}
 
-	colorer *color.Color
+	colorer   *color.Color
+	beginTime time.Time
 
 	lock sync.Mutex
 	exit *utils.Switch
@@ -74,6 +97,9 @@ func Create(opts ...Option) (*Factory, error) {
 		batchDone:   make(chan interface{}, 1),
 		colorer:     color.New(),
 		batch:       utils.New(p.batchSize),
+		report: Report{
+			urlMap: make(map[string]*urlDetail),
+		},
 	}
 
 	go f.loop()
@@ -83,6 +109,88 @@ func Create(opts ...Option) (*Factory, error) {
 }
 
 var Global *Factory
+
+func (f *Factory) pushReport(bot *bot.Bot) {
+	f.lock.Lock()
+	defer f.lock.Unlock()
+
+	f.report.botNum++
+	robotReport := bot.GetReport()
+
+	f.report.reqNum += len(robotReport)
+	for _, v := range robotReport {
+		if _, ok := f.report.urlMap[v.Api]; !ok {
+			f.report.urlMap[v.Api] = &urlDetail{}
+		}
+
+		f.report.urlMap[v.Api].reqNum++
+		f.report.urlMap[v.Api].avgNum += int64(v.Consume)
+		f.report.urlMap[v.Api].reqSize += int64(v.ReqBody)
+		f.report.urlMap[v.Api].resSize += int64(v.ResBody)
+		if v.Err != "" {
+			f.report.errNum++
+			f.report.urlMap[v.Api].errNum++
+		}
+	}
+}
+
+// Report 输出报告
+func (f *Factory) Report() {
+
+	f.lock.Lock()
+	defer f.lock.Unlock()
+
+	fmt.Println("+--------------------------------------------------------------------------------------------------------+")
+	fmt.Printf("Req url%-33s Req count %-5s Average time %-5s Body req/res %-5s Succ rate %-10s\n", "", "", "", "", "")
+
+	arr := []string{}
+	for k := range f.report.urlMap {
+		arr = append(arr, k)
+	}
+	sort.Strings(arr)
+
+	var reqtotal int64
+
+	for _, sk := range arr {
+		v := f.report.urlMap[sk]
+		var avg string
+		if v.avgNum == 0 {
+			avg = "0 ms"
+		} else {
+			avg = strconv.Itoa(int(v.avgNum/int64(v.reqNum))) + "ms"
+		}
+
+		succ := strconv.Itoa(v.reqNum-v.errNum) + "/" + strconv.Itoa(v.reqNum)
+
+		reqsize := strconv.Itoa(int(v.reqSize/1024)) + "kb"
+		ressize := strconv.Itoa(int(v.resSize/1024)) + "kb"
+
+		reqtotal += int64(v.reqNum)
+
+		u, _ := url.Parse(sk)
+		if v.errNum != 0 {
+			f.colorer.Printf("%-40s %-15d %-18s %-18s %-10s\n", u.Path, v.reqNum, avg, reqsize+" / "+ressize, utils.Red(succ))
+		} else {
+			fmt.Printf("%-40s %-15d %-18s %-18s %-10s\n", u.Path, v.reqNum, avg, reqsize+" / "+ressize, succ)
+		}
+	}
+	fmt.Println("+--------------------------------------------------------------------------------------------------------+")
+
+	durations := int(time.Since(f.beginTime).Seconds())
+	if durations <= 0 {
+		durations = 1
+	}
+
+	qps := int(reqtotal / int64(durations))
+
+	duration := strconv.Itoa(durations) + "s"
+	if f.report.errNum != 0 {
+		f.colorer.Printf("robot : %d req count : %d duration : %s qps : %d errors : %v\n", f.report.botNum, f.report.reqNum, duration, qps, utils.Red(f.report.errNum))
+	} else {
+		fmt.Printf("robot : %d req count : %d duration : %s qps : %d errors : %d\n", f.report.botNum, f.report.reqNum, duration, qps, f.report.errNum)
+	}
+
+}
 
 // Close 关闭机器人工厂
 func (f *Factory) Close() {
@@ -220,7 +328,7 @@ func (f *Factory) pop(id string, err error) {
 
 	if _, ok := f.batchBots[id]; ok {
 
-		//f.pushReport(f.bots[id])
+		f.pushReport(f.batchBots[id])
 		if err != nil {
 			f.colorer.Printf("%v\n", utils.Red(err.Error()))
 		}
@@ -260,6 +368,7 @@ func (f *Factory) loop() {
 }
 
 func (f *Factory) router() {
+	f.beginTime = time.Now()
 
 	for {
 		select {
@@ -278,6 +387,6 @@ func (f *Factory) router() {
 ext:
 
 	// report
-	fmt.Println("run done")
+	f.Report()
 	f.running = false
 }

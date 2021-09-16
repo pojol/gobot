@@ -16,23 +16,30 @@ import (
 
 // from https://github.com/cjoudrey/gluahttp
 
-type httpModule struct {
-	do func(req *http.Request) (*http.Response, error)
+type Report struct {
+	Api     string
+	ReqBody int
+	ResBody int
+	Consume int
+	Err     string
 }
 
-type empty struct{}
+type HttpModule struct {
+	repolst []Report
+	do      func(req *http.Request) (*http.Response, error)
+}
 
-func NewHttpModule(client *http.Client) *httpModule {
+func NewHttpModule(client *http.Client) *HttpModule {
 	return NewHttpModuleWithDo(client.Do)
 }
 
-func NewHttpModuleWithDo(do func(req *http.Request) (*http.Response, error)) *httpModule {
-	return &httpModule{
+func NewHttpModuleWithDo(do func(req *http.Request) (*http.Response, error)) *HttpModule {
+	return &HttpModule{
 		do: do,
 	}
 }
 
-func (h *httpModule) Loader(L *lua.LState) int {
+func (h *HttpModule) Loader(L *lua.LState) int {
 	mod := L.SetFuncs(L.NewTable(), map[string]lua.LGFunction{
 		"get":     h.get,
 		"post":    h.post,
@@ -44,24 +51,25 @@ func (h *httpModule) Loader(L *lua.LState) int {
 	return 1
 }
 
-func (h *httpModule) get(L *lua.LState) int {
+func (h *HttpModule) get(L *lua.LState) int {
 	return h.doRequestAndPush(L, "get", L.ToString(1), L.ToTable(2))
 }
 
-func (h *httpModule) post(L *lua.LState) int {
+func (h *HttpModule) post(L *lua.LState) int {
 	return h.doRequestAndPush(L, "post", L.ToString(1), L.ToTable(2))
 }
 
-func (h *httpModule) put(L *lua.LState) int {
+func (h *HttpModule) put(L *lua.LState) int {
 	return h.doRequestAndPush(L, "put", L.ToString(1), L.ToTable(2))
 }
 
-func (h *httpModule) request(L *lua.LState) int {
+func (h *HttpModule) request(L *lua.LState) int {
 	return h.doRequestAndPush(L, L.ToString(1), L.ToString(2), L.ToTable(3))
 }
 
-func (h *httpModule) doRequest(L *lua.LState, method string, url string, options *lua.LTable) (*lua.LUserData, error) {
+func (h *HttpModule) doRequest(L *lua.LState, method string, url string, options *lua.LTable) (*lua.LUserData, error) {
 	req, err := http.NewRequest(strings.ToUpper(method), url, nil)
+	var reqlen, reslen int
 	if err != nil {
 		return nil, err
 	}
@@ -91,6 +99,7 @@ func (h *httpModule) doRequest(L *lua.LState, method string, url string, options
 				fmt.Println("ltable marshal err", err.Error())
 				return nil, err
 			}
+			reqlen = len(byt)
 			req.Body = ioutil.NopCloser(bytes.NewReader(byt))
 			req.Header.Set("Content-Type", "application/json")
 		}
@@ -131,8 +140,16 @@ func (h *httpModule) doRequest(L *lua.LState, method string, url string, options
 		}
 	}
 
+	cur := time.Now()
+	inf := Report{
+		Api:     url,
+		ReqBody: reqlen,
+	}
+
 	res, err := h.do(req)
 	if err != nil {
+		inf.Err = err.Error()
+		h.repolst = append(h.repolst, inf)
 		return nil, err
 	}
 
@@ -140,13 +157,20 @@ func (h *httpModule) doRequest(L *lua.LState, method string, url string, options
 	body, err := ioutil.ReadAll(res.Body)
 
 	if err != nil {
+		inf.Err = err.Error()
+		h.repolst = append(h.repolst, inf)
 		return nil, err
 	}
 
-	return newHttpResponse(res, &body, len(body), L), nil
+	reslen = len(body)
+	inf.ResBody = reslen
+	inf.Consume = int(time.Since(cur).Milliseconds())
+
+	h.repolst = append(h.repolst, inf)
+	return newHttpResponse(res, &body, reslen, L), nil
 }
 
-func (h *httpModule) doRequestAndPush(L *lua.LState, method string, url string, options *lua.LTable) int {
+func (h *HttpModule) doRequestAndPush(L *lua.LState, method string, url string, options *lua.LTable) int {
 	response, err := h.doRequest(L, method, url, options)
 
 	if err != nil {
@@ -157,6 +181,10 @@ func (h *httpModule) doRequestAndPush(L *lua.LState, method string, url string, 
 
 	L.Push(response)
 	return 1
+}
+
+func (h *HttpModule) GetReport() []Report {
+	return h.repolst
 }
 
 func toTable(v lua.LValue) *lua.LTable {
