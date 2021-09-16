@@ -188,7 +188,7 @@ EXT:
 }
 
 type RunRequest struct {
-	Info factory.BatchInfo
+	Info []factory.BatchBotInfo
 }
 
 type RunResponse struct {
@@ -199,6 +199,7 @@ func Run(ctx echo.Context) error {
 	res := &Response{}
 	req := &RunRequest{}
 	code := Succ
+	var info factory.BatchInfo
 
 	var err error
 
@@ -216,7 +217,7 @@ func Run(ctx echo.Context) error {
 		goto EXT
 	}
 
-	for _, v := range req.Info.Batch {
+	for _, v := range req.Info {
 		if v.Behavior == "" {
 			goto EXT
 		}
@@ -224,9 +225,8 @@ func Run(ctx echo.Context) error {
 			goto EXT
 		}
 	}
-
-	factory.Global.Append(req.Info)
-	factory.Global.RunBatch()
+	info.Batch = append(info.Batch, req.Info...)
+	factory.Global.Append(info)
 
 EXT:
 	res.Code = int(code)
@@ -357,8 +357,9 @@ func Route(e *echo.Echo) {
 
 	e.POST("/get.list", GetList)
 	e.POST("/get.blob", GetBlob)
-	e.POST("/create", Create) // 创建一个bot
-	e.POST("/run", Run)       // 运行bot
-	e.POST("/step", Step)     // 单步运行一个bot
+
+	e.POST("/bot.create", Create) // 创建一个bot
+	e.POST("/bot.run", Run)       // 运行bot
+	e.POST("/bot.step", Step)     // 单步运行一个bot
 
 }

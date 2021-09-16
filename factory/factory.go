@@ -1,7 +1,6 @@
 package factory
 
 import (
-	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -28,33 +27,36 @@ type BatchInfo struct {
 }
 
 type Factory struct {
-	parm       Parm
-	pickCursor int
-	bots       map[string]*bot.Bot
+	parm      Parm
+	batchBots map[string]*bot.Bot
+	debugBots map[string]*bot.Bot
 
 	behaviorLst []BehaviorInfo
-	pipeline    []BatchInfo
+
+	pipelineCache []BatchInfo
+	running       bool
 
 	translateCh chan *bot.Bot
 	doneCh      chan string
 	errCh       chan bot.ErrInfo
 
-	batch utils.SizeWaitGroup
+	batch     utils.SizeWaitGroup
+	batchDone chan interface{}
 
 	colorer *color.Color
 
 	lock sync.Mutex
-	wg   sync.WaitGroup
 	exit *utils.Switch
 }
 
 func Create(opts ...Option) (*Factory, error) {
 
 	p := Parm{
-		frameRate: time.Second * 1,
-		lifeTime:  time.Minute,
-		Interrupt: true,
-		batchSize: 1024,
+		frameRate:  time.Second * 1,
+		lifeTime:   time.Minute,
+		Interrupt:  true,
+		batchSize:  1024,
+		ScriptPath: "script/",
 	}
 
 	for _, opt := range opts {
@@ -63,16 +65,18 @@ func Create(opts ...Option) (*Factory, error) {
 
 	f := &Factory{
 		parm:        p,
-		bots:        make(map[string]*bot.Bot),
+		batchBots:   make(map[string]*bot.Bot),
+		debugBots:   make(map[string]*bot.Bot),
 		exit:        utils.NewSwitch(),
 		translateCh: make(chan *bot.Bot),
 		doneCh:      make(chan string),
 		errCh:       make(chan bot.ErrInfo),
+		batchDone:   make(chan interface{}, 1),
 		colorer:     color.New(),
 		batch:       utils.New(p.batchSize),
 	}
 
-	f.wg.Add(1)
+	go f.loop()
 
 	Global = f
 	return f, nil
@@ -139,28 +143,7 @@ func (f *Factory) FindBehavior(name string) (BehaviorInfo, error) {
 }
 
 func (f *Factory) Append(info BatchInfo) {
-	f.pipeline = append(f.pipeline, info)
-}
-
-func (f *Factory) getRobot() *bot.Bot {
-
-	if len(f.behaviorLst) <= 0 {
-		panic(errors.New("no behavior tree list"))
-	}
-
-	if f.pickCursor >= len(f.behaviorLst) {
-		f.pickCursor = 0
-	}
-
-	info := f.behaviorLst[f.pickCursor]
-	f.pickCursor++
-
-	tree, err := behavior.New(info.Dat)
-	if err != nil {
-		return nil
-	}
-
-	return bot.NewWithBehaviorTree(tree)
+	f.pipelineCache = append(f.pipelineCache, info)
 }
 
 func (f *Factory) CreateBot(name string) *bot.Bot {
@@ -174,8 +157,28 @@ func (f *Factory) CreateBot(name string) *bot.Bot {
 				return nil
 			}
 
-			b = bot.NewWithBehaviorTree(tree)
-			f.bots[b.ID()] = b
+			b = bot.NewWithBehaviorTree(f.parm.ScriptPath, tree)
+			f.batchBots[b.ID()] = b
+			break
+		}
+	}
+
+	return b
+}
+
+func (f *Factory) CreateDebugBot(name string) *bot.Bot {
+	var b *bot.Bot
+
+	for _, v := range f.behaviorLst {
+		if v.Name == name {
+
+			tree, err := behavior.New(v.Dat)
+			if err != nil {
+				return nil
+			}
+
+			b = bot.NewWithBehaviorTree(f.parm.ScriptPath, tree)
+			f.debugBots[b.ID()] = b
 			break
 		}
 	}
@@ -185,15 +188,15 @@ func (f *Factory) CreateBot(name string) *bot.Bot {
 
 func (f *Factory) FindBot(botid string) *bot.Bot {
 
-	if _, ok := f.bots[botid]; ok {
-		return f.bots[botid]
+	if _, ok := f.debugBots[botid]; ok {
+		return f.debugBots[botid]
 	}
 
 	return nil
 }
 
 func (f *Factory) RmvBot(botid string) {
-	delete(f.bots, botid)
+	delete(f.debugBots, botid)
 
 	/*
 		if f.parm.mock != nil {
@@ -202,34 +205,10 @@ func (f *Factory) RmvBot(botid string) {
 	*/
 }
 
-// Run 运行
-func (f *Factory) RunBatch() error {
-
-	go f.router()
-
-	if f.parm.tickCreateNum == 0 {
-		f.parm.tickCreateNum = len(f.behaviorLst)
-	}
-
-	if f.parm.mode == FactoryModeStatic {
-		f.static()
-	} else if f.parm.mode == FactoryModeIncrease {
-		f.increase()
-		time.AfterFunc(f.parm.lifeTime, func() {
-			f.exit.Open()
-		})
-	}
-
-	<-f.exit.Done()
-	f.wg.Wait()
-
-	return nil
-}
-
 func (f *Factory) push(bot *bot.Bot) {
 	f.batch.Add()
 
-	f.bots[bot.ID()] = bot
+	f.batchBots[bot.ID()] = bot
 }
 
 func (f *Factory) pop(id string, err error) {
@@ -239,20 +218,45 @@ func (f *Factory) pop(id string, err error) {
 		panic(err)
 	}
 
-	if _, ok := f.bots[id]; ok {
+	if _, ok := f.batchBots[id]; ok {
 
 		//f.pushReport(f.bots[id])
 		if err != nil {
 			f.colorer.Printf("%v\n", utils.Red(err.Error()))
 		}
-		delete(f.bots, id)
+		delete(f.batchBots, id)
 
 	}
 
-	if len(f.bots) == 0 && f.parm.mode == FactoryModeStatic {
-		f.exit.Open()
+	fmt.Println(len(f.batchBots))
+	if len(f.batchBots) == 0 {
+		f.batchDone <- 1
 	}
 
+}
+
+func (f *Factory) loop() {
+	for {
+		f.lock.Lock()
+		if len(f.pipelineCache) > 0 && !f.running {
+			info := f.pipelineCache[0]
+			f.pipelineCache = f.pipelineCache[1:]
+
+			fmt.Println("pop", info)
+
+			go f.router()
+			f.running = true
+
+			for _, v := range info.Batch {
+				for i := 0; i < int(v.Num); i++ {
+					f.translateCh <- f.CreateBot(v.Behavior)
+				}
+			}
+
+		}
+		f.lock.Unlock()
+		time.Sleep(time.Millisecond)
+	}
 }
 
 func (f *Factory) router() {
@@ -266,7 +270,7 @@ func (f *Factory) router() {
 			f.pop(id, nil)
 		case err := <-f.errCh:
 			f.pop(err.ID, err.Err)
-		case <-f.exit.Done():
+		case <-f.batchDone:
 			goto ext
 		}
 	}
@@ -274,39 +278,6 @@ func (f *Factory) router() {
 ext:
 
 	// report
-	f.wg.Done()
-}
-
-func (f *Factory) static() {
-
-	for i := 0; i < f.parm.tickCreateNum; i++ {
-		f.translateCh <- f.getRobot()
-	}
-
-	f.batch.Wait()
-
-}
-
-func (f *Factory) increase() {
-
-	go func() {
-
-		ticker := time.NewTicker(f.parm.frameRate)
-
-		for {
-			select {
-			case <-ticker.C:
-
-				if f.exit.HasOpend() {
-					break
-				}
-
-				f.static()
-
-			case <-f.exit.Done():
-			}
-		}
-
-	}()
-
+	fmt.Println("run done")
+	f.running = false
 }

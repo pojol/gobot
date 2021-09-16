@@ -54,9 +54,17 @@ type Parm struct {
 	// batchSize 批次大小（用于控制goroutine的并发数量（默认1024
 	batchSize int
 
+	ScriptPath string
+
 	//
 	md interface{}
 }
 
 // Option consul discover config wrapper
 type Option func(*Parm)
+
+func WithScriptPath(path string) Option {
+	return func(c *Parm) {
+		c.ScriptPath = path
+	}
+}

@@ -259,32 +259,11 @@ func TestLoad(t *testing.T) {
 	tree, err := behavior.New([]byte(compose))
 	assert.Equal(t, err, nil)
 
-	bot = NewWithBehaviorTree(tree)
+	bot = NewWithBehaviorTree("../script/", tree)
 	for i := 0; i < 20; i++ {
 		bot.RunStep()
 		fmt.Println(bot.GetMetadata())
 	}
-}
-
-func TestStep(t *testing.T) {
-	/*
-		err := plugins.Load("../plugins/json/json.so")
-		assert.Equal(t, err, nil)
-
-		srv := mock.NewServer()
-
-		var tree *behavior.Tree
-		var bot *Bot
-
-		tree, err = behavior.New([]byte(compose))
-		assert.Equal(t, err, nil)
-
-		bot = NewWithBehaviorTree(tree, srv.Url())
-
-		for i := 0; i < 30; i++ {
-			bot.RunStep()
-		}
-	*/
 }
 
 var luastruct = `

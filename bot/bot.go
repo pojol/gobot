@@ -65,7 +65,7 @@ func (b *Bot) GetPrevNodeID() string {
 	return ""
 }
 
-func NewWithBehaviorTree(bt *behavior.Tree) *Bot {
+func NewWithBehaviorTree(path string, bt *behavior.Tree) *Bot {
 
 	bot := &Bot{
 		id:   uuid.New().String(),
@@ -75,12 +75,10 @@ func NewWithBehaviorTree(bt *behavior.Tree) *Bot {
 	}
 
 	// test
-	init := `meta = { Token = "" }`
-	err := bot.L.DoString(init)
-	fmt.Println("init", err, init)
+	bot.L.DoString(`meta = { Token = "" }`)
 
-	bot.L.DoFile("script/global.lua")
-	bot.L.DoFile("script/json.lua")
+	bot.L.DoFile(path + "global.lua")
+	bot.L.DoFile(path + "json.lua")
 
 	bot.L.PreloadModule("cli", behavior.NewHttpModule(&http.Client{}).Loader)
 
@@ -276,6 +274,7 @@ func (b *Bot) Run(sw *utils.Switch, doneCh chan string, errCh chan ErrInfo) {
 
 	go func() {
 		b.run_children(b.tree, b.tree.Children)
+		doneCh <- b.id
 	}()
 
 }
