@@ -404,7 +404,7 @@ func Create(ctx echo.Context) error {
 		goto EXT
 	}
 
-	b = factory.Global.CreateBot(req.Name)
+	b = factory.Global.CreateDebugBot(req.Name)
 	if b == nil {
 		fmt.Println("create bot err", req.Name)
 		code = ErrCreateBot
