@@ -408,7 +408,7 @@ ext:
 	atomic.AddInt64(&f.IncID, 1)
 	// report
 	f.Report(rep)
-	if len(f.reportHistory) > f.parm.ReportLimit {
+	if len(f.reportHistory) >= f.parm.ReportLimit {
 		f.reportHistory = f.reportHistory[1:]
 	}
 	f.reportHistory = append(f.reportHistory, rep)
