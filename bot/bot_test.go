@@ -259,7 +259,7 @@ func TestLoad(t *testing.T) {
 	tree, err := behavior.New([]byte(compose))
 	assert.Equal(t, err, nil)
 
-	bot = NewWithBehaviorTree("../script/", tree)
+	bot = NewWithBehaviorTree("../script/", tree, "test")
 	for i := 0; i < 20; i++ {
 		bot.RunStep()
 		fmt.Println(bot.GetMetadata())

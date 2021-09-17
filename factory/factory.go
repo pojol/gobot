@@ -6,6 +6,7 @@ import (
 	"sort"
 	"strconv"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/fatih/color"
@@ -15,22 +16,26 @@ import (
 )
 
 type urlDetail struct {
-	reqNum int
-	errNum int
-	avgNum int64
+	ReqNum int
+	ErrNum int
+	AvgNum int64
 
-	reqSize int64
-	resSize int64
+	ReqSize int64
+	ResSize int64
 }
 
 type Report struct {
-	botNum int
-	reqNum int
-	errNum int
+	ID     string
+	Name   string
+	BotNum int
+	ReqNum int
+	ErrNum int
+	Tps    int
+	Dura   string
 
-	beginTime time.Time
+	BeginTime time.Time
 
-	urlMap map[string]*urlDetail
+	UrlMap map[string]*urlDetail
 }
 
 type BehaviorInfo struct {
@@ -66,6 +71,8 @@ type Factory struct {
 
 	batch     utils.SizeWaitGroup
 	batchDone chan interface{}
+
+	IncID int64
 
 	colorer *color.Color
 
@@ -113,22 +120,22 @@ func (f *Factory) pushReport(rep *Report, bot *bot.Bot) {
 	f.lock.Lock()
 	defer f.lock.Unlock()
 
-	rep.botNum++
+	rep.BotNum++
 	robotReport := bot.GetReport()
 
-	rep.reqNum += len(robotReport)
+	rep.ReqNum += len(robotReport)
 	for _, v := range robotReport {
-		if _, ok := rep.urlMap[v.Api]; !ok {
-			rep.urlMap[v.Api] = &urlDetail{}
+		if _, ok := rep.UrlMap[v.Api]; !ok {
+			rep.UrlMap[v.Api] = &urlDetail{}
 		}
 
-		rep.urlMap[v.Api].reqNum++
-		rep.urlMap[v.Api].avgNum += int64(v.Consume)
-		rep.urlMap[v.Api].reqSize += int64(v.ReqBody)
-		rep.urlMap[v.Api].resSize += int64(v.ResBody)
+		rep.UrlMap[v.Api].ReqNum++
+		rep.UrlMap[v.Api].AvgNum += int64(v.Consume)
+		rep.UrlMap[v.Api].ReqSize += int64(v.ReqBody)
+		rep.UrlMap[v.Api].ResSize += int64(v.ResBody)
 		if v.Err != "" {
-			rep.errNum++
-			rep.urlMap[v.Api].errNum++
+			rep.ErrNum++
+			rep.UrlMap[v.Api].ErrNum++
 		}
 	}
 
@@ -144,7 +151,7 @@ func (f *Factory) Report(rep *Report) {
 	fmt.Printf("Req url%-33s Req count %-5s Average time %-5s Body req/res %-5s Succ rate %-10s\n", "", "", "", "", "")
 
 	arr := []string{}
-	for k := range rep.urlMap {
+	for k := range rep.UrlMap {
 		arr = append(arr, k)
 	}
 	sort.Strings(arr)
@@ -152,44 +159,51 @@ func (f *Factory) Report(rep *Report) {
 	var reqtotal int64
 
 	for _, sk := range arr {
-		v := rep.urlMap[sk]
+		v := rep.UrlMap[sk]
 		var avg string
-		if v.avgNum == 0 {
+		if v.AvgNum == 0 {
 			avg = "0 ms"
 		} else {
-			avg = strconv.Itoa(int(v.avgNum/int64(v.reqNum))) + "ms"
+			avg = strconv.Itoa(int(v.AvgNum/int64(v.ReqNum))) + "ms"
 		}
 
-		succ := strconv.Itoa(v.reqNum-v.errNum) + "/" + strconv.Itoa(v.reqNum)
+		succ := strconv.Itoa(v.ReqNum-v.ErrNum) + "/" + strconv.Itoa(v.ReqNum)
 
-		reqsize := strconv.Itoa(int(v.reqSize/1024)) + "kb"
-		ressize := strconv.Itoa(int(v.resSize/1024)) + "kb"
+		reqsize := strconv.Itoa(int(v.ReqSize/1024)) + "kb"
+		ressize := strconv.Itoa(int(v.ResSize/1024)) + "kb"
 
-		reqtotal += int64(v.reqNum)
+		reqtotal += int64(v.ReqNum)
 
 		u, _ := url.Parse(sk)
-		if v.errNum != 0 {
-			f.colorer.Printf("%-40s %-15d %-18s %-18s %-10s\n", u.Path, v.reqNum, avg, reqsize+" / "+ressize, utils.Red(succ))
+		if v.ErrNum != 0 {
+			f.colorer.Printf("%-40s %-15d %-18s %-18s %-10s\n", u.Path, v.ReqNum, avg, reqsize+" / "+ressize, utils.Red(succ))
 		} else {
-			fmt.Printf("%-40s %-15d %-18s %-18s %-10s\n", u.Path, v.reqNum, avg, reqsize+" / "+ressize, succ)
+			fmt.Printf("%-40s %-15d %-18s %-18s %-10s\n", u.Path, v.ReqNum, avg, reqsize+" / "+ressize, succ)
 		}
 	}
 	fmt.Println("+--------------------------------------------------------------------------------------------------------+")
 
-	durations := int(time.Since(rep.beginTime).Seconds())
+	durations := int(time.Since(rep.BeginTime).Seconds())
 	if durations <= 0 {
 		durations = 1
 	}
 
 	qps := int(reqtotal / int64(durations))
-
 	duration := strconv.Itoa(durations) + "s"
-	if rep.errNum != 0 {
-		f.colorer.Printf("robot : %d req count : %d duration : %s qps : %d errors : %v\n", rep.botNum, rep.reqNum, duration, qps, utils.Red(rep.errNum))
+
+	rep.Tps = qps
+	rep.Dura = duration
+
+	if rep.ErrNum != 0 {
+		f.colorer.Printf("robot : %d req count : %d duration : %s qps : %d errors : %v\n", rep.BotNum, rep.ReqNum, duration, qps, utils.Red(rep.ErrNum))
 	} else {
-		fmt.Printf("robot : %d req count : %d duration : %s qps : %d errors : %d\n", rep.botNum, rep.reqNum, duration, qps, rep.errNum)
+		fmt.Printf("robot : %d req count : %d duration : %s qps : %d errors : %d\n", rep.BotNum, rep.ReqNum, duration, qps, rep.ErrNum)
 	}
 
+}
+
+func (f *Factory) GetReport() []*Report {
+	return f.reportHistory
 }
 
 // Close 关闭机器人工厂
@@ -251,6 +265,7 @@ func (f *Factory) FindBehavior(name string) (BehaviorInfo, error) {
 }
 
 func (f *Factory) Append(info BatchInfo) {
+	fmt.Println("pipeline append", info)
 	f.pipelineCache = append(f.pipelineCache, info)
 }
 
@@ -265,7 +280,7 @@ func (f *Factory) CreateBot(name string) *bot.Bot {
 				return nil
 			}
 
-			b = bot.NewWithBehaviorTree(f.parm.ScriptPath, tree)
+			b = bot.NewWithBehaviorTree(f.parm.ScriptPath, tree, name)
 			f.batchBots[b.ID()] = b
 			break
 		}
@@ -285,7 +300,7 @@ func (f *Factory) CreateDebugBot(name string) *bot.Bot {
 				return nil
 			}
 
-			b = bot.NewWithBehaviorTree(f.parm.ScriptPath, tree)
+			b = bot.NewWithBehaviorTree(f.parm.ScriptPath, tree, name)
 			f.debugBots[b.ID()] = b
 			break
 		}
@@ -368,15 +383,18 @@ func (f *Factory) loop() {
 }
 
 func (f *Factory) router() {
+
 	rep := &Report{
-		beginTime: time.Now(),
-		urlMap:    make(map[string]*urlDetail),
+		ID:        strconv.Itoa((time.Now().YearDay() * 1000) + int(atomic.LoadInt64(&f.IncID))),
+		BeginTime: time.Now(),
+		UrlMap:    make(map[string]*urlDetail),
 	}
 
 	for {
 		select {
 		case bot := <-f.translateCh:
 			f.push(bot)
+			rep.Name = bot.Name()
 			bot.Run(f.exit, f.doneCh, f.errCh)
 		case id := <-f.doneCh:
 			f.pop(id, nil, rep)
@@ -386,9 +404,8 @@ func (f *Factory) router() {
 			goto ext
 		}
 	}
-
 ext:
-
+	atomic.AddInt64(&f.IncID, 1)
 	// report
 	f.Report(rep)
 	if len(f.reportHistory) > f.parm.ReportLimit {

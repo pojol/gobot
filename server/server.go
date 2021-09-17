@@ -31,6 +31,7 @@ const (
 	ErrBreak
 	ErrCantFindBot
 	ErrCreateBot
+	ErrEmptyBatch
 )
 
 var errmap map[Err]string = map[Err]string{
@@ -42,6 +43,7 @@ var errmap map[Err]string = map[Err]string{
 	ErrBreak:       "run to the break",
 	ErrCantFindBot: "can't find bot",
 	ErrCreateBot:   "failed to create bot, the behavior tree file needs to be uploaded to the server before creation",
+	ErrEmptyBatch:  "empty batch info",
 }
 
 func UploadWithBlob(ctx echo.Context) error {
@@ -187,6 +189,71 @@ EXT:
 	return nil
 }
 
+type ReportApiInfo struct {
+	Api        string
+	ReqNum     int
+	ErrNum     int
+	ConsumeNum int64
+
+	ReqSize int64
+	ResSize int64
+}
+
+type ReportInfo struct {
+	ID        string
+	Name      string
+	BotNum    int
+	ReqNum    int
+	ErrNum    int
+	Tps       int
+	Dura      string
+	BeginTime string
+	Apilst    []ReportApiInfo
+}
+
+type ReportRes struct {
+	Info []ReportInfo
+}
+
+func GetReport(ctx echo.Context) error {
+	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
+	res := &Response{}
+	body := &ReportRes{}
+
+	rep := factory.Global.GetReport()
+	for _, v := range rep {
+		info := ReportInfo{
+			ID:        v.ID,
+			Name:      v.Name,
+			BotNum:    v.BotNum,
+			ReqNum:    v.ReqNum,
+			ErrNum:    v.ErrNum,
+			Tps:       v.Tps,
+			Dura:      v.Dura,
+			BeginTime: v.BeginTime.Format("2006-01-02 15:04:05"),
+		}
+
+		for api, detail := range v.UrlMap {
+			info.Apilst = append(info.Apilst, ReportApiInfo{
+				Api:        api,
+				ReqNum:     detail.ReqNum,
+				ConsumeNum: detail.AvgNum,
+				ReqSize:    detail.ReqSize,
+				ResSize:    detail.ResSize,
+				ErrNum:     detail.ErrNum,
+			})
+		}
+		body.Info = append(body.Info, info)
+	}
+
+	res.Code = int(Succ)
+	res.Msg = ""
+	res.Body = body
+
+	ctx.JSON(http.StatusOK, res)
+	return nil
+}
+
 type RunRequest struct {
 	Info []factory.BatchBotInfo
 }
@@ -214,6 +281,11 @@ func Run(ctx echo.Context) error {
 	if err != nil {
 		code = ErrContentRead // tmp
 		fmt.Println(err.Error())
+		goto EXT
+	}
+
+	if len(req.Info) == 0 {
+		code = ErrEmptyBatch
 		goto EXT
 	}
 
@@ -357,6 +429,7 @@ func Route(e *echo.Echo) {
 
 	e.POST("/get.list", GetList)
 	e.POST("/get.blob", GetBlob)
+	e.POST("/get.report", GetReport)
 
 	e.POST("/bot.create", Create) // 创建一个bot
 	e.POST("/bot.run", Run)       // 运行bot

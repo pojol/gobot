@@ -20,7 +20,8 @@ type ErrInfo struct {
 }
 
 type Bot struct {
-	id string
+	id   string
+	name string
 
 	tree *behavior.Tree
 
@@ -35,6 +36,10 @@ type Bot struct {
 
 func (b *Bot) ID() string {
 	return b.id
+}
+
+func (b *Bot) Name() string {
+	return b.name
 }
 
 func (b *Bot) GetMetadata() (string, error) {
@@ -67,13 +72,14 @@ func (b *Bot) GetPrevNodeID() string {
 	return ""
 }
 
-func NewWithBehaviorTree(path string, bt *behavior.Tree) *Bot {
+func NewWithBehaviorTree(path string, bt *behavior.Tree, tmpl string) *Bot {
 
 	bot := &Bot{
 		id:      uuid.New().String(),
 		tree:    bt,
 		cur:     bt,
 		L:       lua.NewState(),
+		name:    tmpl,
 		httpMod: behavior.NewHttpModule(&http.Client{}),
 	}
 

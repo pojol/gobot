@@ -37,6 +37,7 @@ $ docker run --rm -d  -p 8888:8888/tcp braidgo/apibot:latest
 * `/upload.file`
 * `/get.list`
 * `/get.blob`
+* `/get.report`
 * `/bot.create`
 * `/bot.run`
 * `/bot.step`
