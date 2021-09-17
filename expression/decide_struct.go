@@ -47,31 +47,32 @@ func (e *Expression) decide(meta interface{}) bool {
 	var b bool
 
 	switch e.Symbol {
-	case "$and":
+	case AND:
 		for _, v := range e.Exprs {
 			b = v.decide(meta)
 			if !b {
 				break
 			}
 		}
-	case "$or":
+	case OR:
 		for _, v := range e.Exprs {
 			b = v.decide(meta)
 			if b {
 				break
 			}
 		}
-	case "$eq":
+	case EQ, NE, LT, LTE, GT, GTE:
 		v := getValueWithStrcut(e.Object.Left, meta)
-		b = decide_eq(v, e.Object.Right)
+		b = decide_conv(v, e.Object.Right, e.Symbol)
 
-	case "$ne":
+	case NIN:
 		v := getValueWithStrcut(e.Object.Left, meta)
-		b = decide_ne(v, e.Object.Right)
+		b = decide_nin(v, e.Object.Right)
 
-	case "$gt":
+	case IN:
 		v := getValueWithStrcut(e.Object.Left, meta)
-		b = decide_gt(v, e.Object.Right)
+		b = decide_in(v, e.Object.Right)
+
 	default:
 		println("decide", e.Symbol)
 	}

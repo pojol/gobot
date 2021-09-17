@@ -1,92 +1,109 @@
 package behavior
 
-type BehaviorType int
-
-const (
-	PostTy BehaviorType = iota + 1
-	JumpTy
-	DelayTy
+import (
+	"encoding/xml"
 )
 
-/*
-	tree compose
-	// 通过树编排文件执行逻辑 （脚本文件调度
-	// 数据文件
-		// 有 tmp-time-files - 通过数据文件，构建脚本文件；然后执行
-		// 无 script-files - 直接使用现有脚本
+const (
+	ROOT       = "RootNode"
+	SELETE     = "SelectorNode"
+	SEQUENCE   = "SequenceNode"
+	CONDITION  = "ConditionNode"
+	WAIT       = "WaitNode"
+	LOOP       = "LoopNode"
+	HTTPACTION = "HTTPActionNode"
+	ASSERT     = "AssertNode"
+)
 
-	{
-		"root":"",
-		"name":"",
-		"script":"ONCE | LOOP",
+type Tree struct {
+	ID string `xml:"id"`
+	Ty string `xml:"ty"`
 
-		"children" : [
+	Wait int32 `xml:"wait"`
 
-			{
-				"behavior" : "SELECT",
-				"name" : "",
-				"script" : " if meta.Token == "" return 0 else return 1,2 ",
-				"children" : [
-					{
-						"behavior" : "POST",
-						"name" : "login",
-						"script" : "登录"
-					},
-					{
-						"behavior" : "POST",
-						"name" : "getinfo",
-						"script" : "获取账户信息"
-					}
-				]
+	Loop     int32 `xml:"loop"`
+	LoopStep int32
+
+	Code string `xml:"code"`
+
+	Step int
+
+	Parent   *Tree
+	Children []*Tree `xml:"children"`
+}
+
+func (tree *Tree) Link(nod *Tree) {
+
+	tree.Parent = nod
+	for k := range tree.Children {
+		tree.Children[k].Link(tree)
+	}
+}
+
+func New(f []byte) (*Tree, error) {
+
+	tree := &Tree{}
+	err := xml.Unmarshal([]byte(f), &tree)
+	if err != nil {
+		panic(err)
+	}
+	/*
+		err = mapstructure.Decode(m, tree)
+		if err != nil {
+			return nil, fmt.Errorf("behavior tree decode fail %v", err.Error())
+		}
+	*/
+	tree.Parent = nil
+	for k := range tree.Children {
+		tree.Children[k].Link(tree)
+	}
+
+	return tree, nil
+}
+
+// 这边的重置，应该是重置loop节点名下的所有children
+func (tree *Tree) resetChildren() {
+	for k := range tree.Children {
+
+		tree.Children[k].Step = 0
+		if tree.Children[k].Ty == LOOP {
+			tree.Children[k].LoopStep = 0
+		}
+
+		if len(tree.Children[k].Children) > 0 {
+			tree.Children[k].resetChildren()
+		}
+
+	}
+}
+
+func (tree *Tree) Next() *Tree {
+
+	if tree.Step < len(tree.Children) {
+		nextidx := tree.Step
+		tree.Step++
+		return tree.Children[nextidx]
+	} else {
+
+		if tree.Ty == LOOP {
+			if tree.Loop == 0 { // 永远循环
+				tree.Step = 0
+				tree.resetChildren()
+				return tree
+			} else {
+				tree.LoopStep++
+				if tree.LoopStep < tree.Loop {
+					tree.Step = 0
+					tree.resetChildren()
+					return tree
+				}
 			}
+		}
 
-		]
-	}
-*/
-
-/*
-	{
-		"behavior" : "POST",
-		"name" : "",
-		"script" : "",
-	}
-*/
-type IPOST interface {
-	Do([]byte, string) ([]byte, error)
-}
-
-type ISend interface {
-	Do() error
-}
-
-/*
-	{
-		"behavior" : "DELAY",
-		"dura" : 100, // ms
-	}
-*/
-type IDelay interface {
-	Do() error
-}
-
-/*
-	{
-		"behavior" : "ASSERT",
-		"name" : "",
-		"script" : "xxx.lua",
-	}
-*/
-type IAssert interface {
-	Do() error
-}
-
-/*
-	{
-		"behavior" : "SELECT",
-		"name" : "",
-		"script" : "xxx.lua",
+		if tree.Parent != nil {
+			return tree.Parent.Next()
+		}
 	}
 
-*/
-type Select interface {
+	return nil
 }

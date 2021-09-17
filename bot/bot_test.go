@@ -1,19 +1,16 @@
 package bot
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net/http"
-	"net/http/httptest"
 	"os"
 	"testing"
 
-	"github.com/pojol/apibot/plugins"
+	"github.com/pojol/apibot/behavior"
+	"github.com/pojol/apibot/mock"
+	"github.com/pojol/apibot/utils"
 	"github.com/stretchr/testify/assert"
+	lua "github.com/yuin/gopher-lua"
 )
-
-var srv *httptest.Server
 
 type guestRes struct {
 	Token string
@@ -25,29 +22,10 @@ type infoRes struct {
 }
 
 func TestMain(m *testing.M) {
+	ms := mock.NewServer()
+	go ms.Start(":7777")
 
-	srv = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-
-		ioutil.ReadAll(req.Body)
-		var byt []byte
-
-		fmt.Println("http server recv ", req.RequestURI)
-
-		if req.RequestURI == "/login/guest" {
-			byt, _ = json.Marshal(guestRes{
-				Token: "abcd",
-			})
-		} else if req.RequestURI == "/base/acc.info" {
-			byt, _ = json.Marshal(infoRes{
-				Diamond: 100,
-				Gold:    100,
-			})
-		}
-
-		w.Write(byt)
-	}))
-	defer srv.Close()
-
+	defer ms.Close()
 	os.Exit(m.Run())
 }
 
@@ -56,105 +34,276 @@ type Metadata struct {
 }
 
 var compose = `
-{
-    "id":"b36fabfd-dd9a-4d24-941c-69f64233a589",
-    "ty":"RootNode",
-    "pos":{
-        "x":0,
-        "y":0
-    },
-    "children":[
-        {
-            "id":"7872b200-52ef-40f8-8059-d019fca99501",
-            "ty":"LoopNode",
-            "pos":{
-                "x":-5,
-                "y":47
-            },
-            "children":[
-                {
-                    "id":"0059758d-cba6-4718-a98f-19bcad43f975",
-                    "ty":"SelectorNode",
-                    "pos":{
-                        "x":-15,
-                        "y":126
-                    },
-                    "children":[
-                        {
-                            "id":"31121c03-787d-44f0-88ec-81a440700c61",
-                            "ty":"ConditionNode",
-                            "pos":{
-                                "x":-20,
-                                "y":179
-                            },
-                            "children":[
-                                {
-                                    "id":"8fe159f5-fcb5-4106-9b3c-ed7f950cd547",
-                                    "ty":"HTTPActionNode",
-                                    "pos":{
-                                        "x":-50,
-                                        "y":245
-                                    },
-                                    "children":[
-
-                                    ],
-                                    "api":"/login/guest",
-                                    "parm":{
-
-                                    }
-                                }
-                            ],
-                            "expr":"$eq:{Token:''}"
-                        },
-                        {
-                            "id":"5fe427f2-a19e-40c9-a17a-10dd994134f5",
-                            "ty":"ConditionNode",
-                            "pos":{
-                                "x":50,
-                                "y":179
-                            },
-                            "children":[
-                                {
-                                    "id":"1b2569a6-bb1b-4b88-8866-7d93cf552739",
-                                    "ty":"HTTPActionNode",
-                                    "pos":{
-                                        "x":55,
-                                        "y":245
-                                    },
-                                    "children":[
-
-                                    ],
-                                    "api":"/base/acc.info",
-                                    "parm":{
-                                        "token":"meta.token"
-                                    }
-                                }
-                            ],
-                            "expr":"$ne:{Token:''}"
-                        }
-                    ]
-                }
-            ],
-            "loop":3
-        }
-    ]
-}`
-
-func TestBot(t *testing.T) {
-
-	err := plugins.Load("../plugins/json/json.so")
-	assert.Equal(t, err, nil)
-
-	b, _ := NewWithBehaviorFile([]byte(compose), srv.URL)
-	b.Run()
+<behavior>
+  <id>20913145-5f7e-4b0c-babc-4e94e7c4d6ad</id>
+  <ty>RootNode</ty>
+  <pos>
+    <x>0</x>
+    <y>0</y>
+  </pos>
+  <children>
+    <id>6258e521-4d7a-4427-a467-d102daf6ab9e</id>
+    <ty>LoopNode</ty>
+    <pos>
+      <x>-5</x>
+      <y>66</y>
+    </pos>
+    <children>
+      <id>1291d5c2-5964-4b98-82d1-bb106f0e9c57</id>
+      <ty>SelectorNode</ty>
+      <pos>
+        <x>-15</x>
+        <y>125</y>
+      </pos>
+      <children>
+        <id>743186ab-655b-47c8-a986-44ae49adf33b</id>
+        <ty>ConditionNode</ty>
+        <pos>
+          <x>-70</x>
+          <y>171</y>
+        </pos>
+        <children>
+          <id>e3e32962-edcb-4dc1-add2-f934ff8bb87e</id>
+          <ty>HTTPActionNode</ty>
+          <pos>
+            <x>-85</x>
+            <y>222</y>
+          </pos>
+          <code>
+local parm = {
+  body = {
+      Token = meta.Token
+  },    -- request body
+  timeout = &#34;10s&#34;,
+  headers = {},
 }
 
-func TestStep(t *testing.T) {
-	err := plugins.Load("../plugins/json/json.so")
+local url = &#34;http://127.0.0.1:7777/login/guest&#34;
+local cli = require(&#34;cli&#34;)
+
+function execute()
+
+  -- http post request
+  res, errmsg = cli.post(url, parm)
+  print(url,errmsg)
+  if errmsg == nil then
+    body = json.decode(res[&#34;body&#34;])
+    merge(meta, body.Body)
+  end
+  table.print(meta)
+end
+</code>
+        </children>
+        <code>
+
+-- Write expression to return true or false
+function execute()
+
+    return meta.Token == &#34;&#34;
+
+end
+</code>
+      </children>
+      <children>
+        <id>262cf484-5075-4971-885b-f9f74c9b1e92</id>
+        <ty>ConditionNode</ty>
+        <pos>
+          <x>95</x>
+          <y>171</y>
+        </pos>
+        <children>
+          <id>01f48591-3b97-46b9-a86c-df10a4d009c6</id>
+          <ty>HTTPActionNode</ty>
+          <pos>
+            <x>80</x>
+            <y>222</y>
+          </pos>
+          <children>
+            <id>f7bbb512-d239-4d5a-881b-7c445a47abc7</id>
+            <ty>SequenceNode</ty>
+            <pos>
+              <x>70</x>
+              <y>302</y>
+            </pos>
+            <children>
+              <id>2796bf91-a0f8-4be1-92fc-b164500b7cf0</id>
+              <ty>HTTPActionNode</ty>
+              <pos>
+                <x>15</x>
+                <y>347</y>
+              </pos>
+              <code>
+local parm = {
+  body = {
+      Token = meta.Token
+  },    -- request body
+  timeout = &#34;10s&#34;,
+  headers = {},
+}
+
+local url = &#34;http://127.0.0.1:7777/base/hero.info&#34;
+local cli = require(&#34;cli&#34;)
+
+function execute()
+
+  -- http post request
+  res, errmsg = cli.post(url, parm)
+  print(url,errmsg)
+  if errmsg == nil then
+    body = json.decode(res[&#34;body&#34;])
+    merge(meta, body.Body)
+  end
+  table.print(meta)
+end
+</code>
+            </children>
+            <children>
+              <id>b620b162-f5d5-41b4-ab5f-65436792d4b4</id>
+              <ty>WaitNode</ty>
+              <pos>
+                <x>100</x>
+                <y>347</y>
+              </pos>
+              <wait>100</wait>
+            </children>
+            <children>
+              <id>2eda6249-b555-42cb-b6b1-accce15c4f34</id>
+              <ty>LoopNode</ty>
+              <pos>
+                <x>161</x>
+                <y>342</y>
+              </pos>
+              <children>
+                <id>3c6a6691-be4d-42b3-a909-451ab741309d</id>
+                <ty>HTTPActionNode</ty>
+                <pos>
+                  <x>166</x>
+                  <y>419</y>
+                </pos>
+                <code>
+local parm = {
+  body = {
+      Token = meta.Token,
+      HeroID = &#34;joy&#34;
+  },    -- request body
+  timeout = &#34;10s&#34;,
+  headers = {},
+}
+
+local url = &#34;http://127.0.0.1:7777/base/hero.lvup&#34;
+local cli = require(&#34;cli&#34;)
+
+function execute()
+
+  -- http post request
+  res, errmsg = cli.post(url, parm)
+  print(url,errmsg)
+  if errmsg == nil then
+    body = json.decode(res[&#34;body&#34;])
+    merge(meta, body.Body)
+  end
+  table.print(meta)
+end
+</code>
+              </children>
+              <loop>2</loop>
+            </children>
+          </children>
+          <code>
+local parm = {
+  body = {
+      Token = meta.Token
+  },    -- request body
+  timeout = &#34;10s&#34;,
+  headers = {},
+}
+
+local url = &#34;http://127.0.0.1:7777/base/acc.info&#34;
+local cli = require(&#34;cli&#34;)
+
+function execute()
+
+  -- http post request
+  res, errmsg = cli.post(url, parm)
+  print(url,errmsg)
+  if errmsg == nil then
+    body = json.decode(res[&#34;body&#34;])
+    merge(meta, body.Body)
+  end
+  GetMeta()
+end
+</code>
+        </children>
+        <code>
+
+-- Write expression to return true or false
+function execute()
+
+    return meta.Token ~= &#34;&#34;
+
+end
+</code>
+      </children>
+    </children>
+    <loop>3</loop>
+  </children>
+</behavior>
+
+`
+
+func TestLoad(t *testing.T) {
+
+	var tree *behavior.Tree
+	var bot *Bot
+
+	tree, err := behavior.New([]byte(compose))
 	assert.Equal(t, err, nil)
 
-	b, _ := NewWithBehaviorFile([]byte(compose), srv.URL)
-	for i := 0; i < 30; i++ {
-		b.RunStep()
+	bot = NewWithBehaviorTree("../script/", tree, "test")
+	for i := 0; i < 20; i++ {
+		bot.RunStep()
+		fmt.Println(bot.GetMetadata())
 	}
+}
+
+var luastruct = `
+meta = {
+    name = "Michel",
+    age  = 31,
+    fly = false,
+}
+
+function condition()
+    return meta.name == "joy"
+end 
+`
+
+func TestScript(t *testing.T) {
+	L := lua.NewState()
+	defer L.Close()
+
+	if err := L.DoString(luastruct); err != nil {
+		panic(err)
+	}
+	if err := L.DoString(`meta.name="joy"`); err != nil {
+		panic(err)
+	}
+
+	if err := L.CallByParam(lua.P{
+		Fn:      L.GetGlobal("condition"),
+		NRet:    1,
+		Protect: true,
+	}); err != nil {
+		panic(err)
+	}
+	ret := L.Get(-1) // returned value
+	fmt.Println("condition ret", ret)
+	L.Pop(1) // remove received value
+
+	meta, err := utils.Table2Map(L.GetGlobal("meta").(*lua.LTable))
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(meta)
 }

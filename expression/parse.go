@@ -69,9 +69,9 @@ func isValidNumber(s string) bool {
 func (eg *ExpressionGroup) parse_symbol(symbol string, val string, e *Expression) {
 
 	switch symbol {
-	case "$and", "$or":
+	case OR, AND:
 		eg.ParseAndOr(val, e)
-	case "$eq", "$gt", "$ne":
+	case GTE, GT, LTE, LT, EQ, NE, IN, NIN:
 		eg.ParseObject(symbol, val, e)
 	}
 
@@ -89,14 +89,14 @@ func (eg *ExpressionGroup) ParseAndOr(val string, e *Expression) {
 		symbol := subcontent[:idx]
 
 		switch symbol {
-		case "$and", "$or":
+		case AND, OR:
 			et.Symbol = symbol
 			tailIdx := strings.Index(subcontent, "]")
 			right := subcontent[idx+1 : tailIdx+1]
 
 			i += tailIdx + 2
 			eg.parse_symbol(symbol, right, &et)
-		case "$eq", "$gt", "$ne":
+		case GTE, GT, LTE, LT, EQ, NE, IN, NIN:
 
 			tailIdx := strings.Index(subcontent, "}")
 			right := subcontent[idx+1 : tailIdx+1]
@@ -105,7 +105,7 @@ func (eg *ExpressionGroup) ParseAndOr(val string, e *Expression) {
 
 			eg.parse_symbol(symbol, right, &et)
 		default:
-			fmt.Println("??")
+			fmt.Println("parse unknown symbol", symbol)
 			goto ext
 		}
 
@@ -123,7 +123,7 @@ func (eg *ExpressionGroup) ParseObject(symbol, val string, e *Expression) {
 	e.Object.Left = objArr[0]
 
 	vlen := len(objArr[1])
-	// int, float32, string, true, false
+	// int64, float64, string, true, false
 	if vlen == 0 {
 		panic(ErrEmptyValue)
 	}
@@ -163,7 +163,7 @@ func (eg *ExpressionGroup) ParseObject(symbol, val string, e *Expression) {
 			if err != nil {
 				panic(err)
 			}
-			e.Object.Right = int32(iv)
+			e.Object.Right = iv
 		}
 
 		return
