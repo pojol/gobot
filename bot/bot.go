@@ -292,8 +292,8 @@ func (b *Bot) GetReport() []behavior.Report {
 	return b.httpMod.GetReport()
 }
 
-func (b *Bot) close() {
-	//b.L.Close()
+func (b *Bot) Close() {
+	b.L.Close()
 }
 
 type State int32
@@ -315,7 +315,6 @@ func (b *Bot) RunStep() State {
 
 	f, err := b.run_nod(b.cur, false)
 	if err != nil {
-		b.close()
 		return SBreak
 	}
 	// step 中使用了sleep之后，会有多个goroutine执行接下来的程序
@@ -340,7 +339,6 @@ func (b *Bot) RunStep() State {
 			b.prev = b.cur
 			b.cur = b.cur.Parent.Next()
 			if b.cur == nil {
-				b.close()
 				return SEnd
 			}
 		}

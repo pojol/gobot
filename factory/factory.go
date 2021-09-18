@@ -319,13 +319,12 @@ func (f *Factory) FindBot(botid string) *bot.Bot {
 }
 
 func (f *Factory) RmvBot(botid string) {
-	delete(f.debugBots, botid)
 
-	/*
-		if f.parm.mock != nil {
-			f.parm.mock.Reset(botid)
-		}
-	*/
+	if _, ok := f.debugBots[botid]; ok {
+		f.debugBots[botid].Close()
+		delete(f.debugBots, botid)
+	}
+
 }
 
 func (f *Factory) push(bot *bot.Bot) {
@@ -347,6 +346,7 @@ func (f *Factory) pop(id string, err error, rep *Report) {
 		if err != nil {
 			f.colorer.Printf("%v\n", utils.Red(err.Error()))
 		}
+		f.batchBots[id].Close()
 		delete(f.batchBots, id)
 
 	}
