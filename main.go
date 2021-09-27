@@ -11,14 +11,9 @@ import (
 )
 
 func main() {
-	/*
-		err := plugins.Load("./json.so")
-		if err != nil {
-			panic(err)
-		}
-	*/
+	var err error
 
-	_, err := factory.Create()
+	_, err = factory.Create()
 	if err != nil {
 		panic(err)
 	}

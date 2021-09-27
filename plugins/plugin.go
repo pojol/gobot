@@ -30,7 +30,6 @@ func Get(name string) serialization.ISerialization {
 func Load(path string) error {
 
 	fmt.Println("load", path)
-
 	p, err := plugin.Open(path)
 	if err != nil {
 		return err

@@ -1,0 +1,39 @@
+syntax = "proto3";
+option csharp_namespace = "Google.Protobuf";
+option go_package = ".;gpb";
+
+message PItem {
+    // 字典id
+    int32 Id = 1;
+    // 道具数量
+    int32 Num = 2;
+    // 实例id
+    string InsId = 3;
+    // 等级
+    int32 Lv = 4;
+}
+
+enum CardRefushTy {
+    CR_None = 0;
+    CR_Daily = 1;
+}
+
+message PCard {
+    string Id = 1;
+
+    string BigImgUrl = 2;
+
+    string ImgUrl = 3;
+
+    // 卡片的刷新类型
+    CardRefushTy RefushTy = 4;
+
+    // 卡片的到期时间
+    int32 Timeout = 5;
+
+    // 卡片的刷新奖励
+    repeated PItem Items = 6;
+
+    // 刷新时间（上一次领取时间
+    int32 RefushTime = 7;
+}
