@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"github.com/fatih/color"
-	"github.com/pojol/apibot/behavior"
-	"github.com/pojol/apibot/bot"
-	"github.com/pojol/apibot/utils"
+	"github.com/pojol/gobot-driver/behavior"
+	"github.com/pojol/gobot-driver/bot"
+	"github.com/pojol/gobot-driver/utils"
 )
 
 type urlDetail struct {
@@ -233,6 +233,15 @@ func (f *Factory) AddBehavior(rootid string, name string, byt []byte) {
 		Dat:        byt,
 		UpdateTime: time.Now().Unix(),
 	})
+}
+
+func (f *Factory) RmvBehavior(name string) {
+	for k := range f.behaviorLst {
+		if f.behaviorLst[k].Name == name {
+			f.behaviorLst = append(f.behaviorLst[:k], f.behaviorLst[k+1:]...)
+			break
+		}
+	}
 }
 
 func (f *Factory) GetBehaviors() []BehaviorInfo {

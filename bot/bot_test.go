@@ -5,9 +5,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/pojol/apibot/behavior"
-	"github.com/pojol/apibot/mock"
-	"github.com/pojol/apibot/utils"
+	"github.com/pojol/gobot-driver/behavior"
+	"github.com/pojol/gobot-driver/mock"
+	"github.com/pojol/gobot-driver/utils"
 	"github.com/stretchr/testify/assert"
 	lua "github.com/yuin/gopher-lua"
 )

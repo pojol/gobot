@@ -5,9 +5,9 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"github.com/pojol/apibot/factory"
-	"github.com/pojol/apibot/mock"
-	"github.com/pojol/apibot/server"
+	"github.com/pojol/gobot-driver/factory"
+	"github.com/pojol/gobot-driver/mock"
+	"github.com/pojol/gobot-driver/server"
 )
 
 func main() {

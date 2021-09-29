@@ -2,6 +2,7 @@ syntax = "proto3";
 option csharp_namespace = "Google.Protobuf";
 option go_package = ".;gpb";
 
+
 message PItem {
     // 字典id
     int32 Id = 1;

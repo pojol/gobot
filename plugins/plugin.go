@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"plugin"
 
-	"github.com/pojol/apibot/serialization"
+	"github.com/pojol/gobot-driver/serialization"
 )
 
 type Plugin struct {

@@ -1,1 +1,1 @@
-protoc --go_out=. common.proto
+protoc --gogofaster_out=. common.proto
