@@ -19,27 +19,29 @@ $ docker run --rm -d  -p 8888:8888/tcp braidgo/apibot:latest
 [![image.png](https://i.postimg.cc/wT5HhYD3/image.png)](https://postimg.cc/6yQDXSjN)
 
 
-### Control
-* **Sequence** execute all child nodes under this node in sequence
-* **Selector** Execute all nodes under this node, and exit this node when a child node is successfully executed
-
-### Condition
-* **Condition** Use expressions to determine whether to execute downward
-* **Assert** Use expressions to determine whether to break execute
-
-### Action
-* **Http** Call an http request
-
-### Decorator
-* **Loop** Set the number of cycles of all child nodes under this node
-* **Wait** Set a certain amount of time to wait at the current node
 
 ### API
-* `/upload.blob`
-* `/upload.file`
-* `/get.list`
-* `/get.blob`
-* `/get.report`
+* `/file.txtUpload`
+* `/file.blobUpload`
+* `/file.remove`
+* `/file.list`
+* `/file.get`
+
 * `/bot.create`
-* `/bot.run`
-* `/bot.step`
+* `/bot.list`
+* `/bot.info`
+
+* `/debug.create`
+* `/debug.step`
+
+
+### Script
+* `http.post`
+* `http.get`
+* `http.put`
+
+* `json.encode`
+* `json.decode`
+
+* `proto.marshal`
+* `proto.unmarshal`
