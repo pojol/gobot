@@ -7,10 +7,10 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
-	"github.com/pojol/apibot/behavior"
-	"github.com/pojol/apibot/bot"
-	"github.com/pojol/apibot/factory"
-	"github.com/pojol/apibot/utils"
+	"github.com/pojol/gobot-driver/behavior"
+	"github.com/pojol/gobot-driver/bot"
+	"github.com/pojol/gobot-driver/factory"
+	"github.com/pojol/gobot-driver/utils"
 )
 
 type Response struct {
@@ -46,7 +46,7 @@ var errmap map[Err]string = map[Err]string{
 	ErrEmptyBatch:  "empty batch info",
 }
 
-func UploadWithBlob(ctx echo.Context) error {
+func FileBlobUpload(ctx echo.Context) error {
 	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
 	res := &Response{}
 	code := Succ
@@ -77,7 +77,7 @@ EXT:
 	return nil
 }
 
-func UploadWithFile(ctx echo.Context) error {
+func FileTextUpload(ctx echo.Context) error {
 	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
 	res := &Response{}
 	code := Succ
@@ -129,7 +129,52 @@ type BehaviorListRes struct {
 	Bots []behaviorInfo
 }
 
-func GetList(ctx echo.Context) error {
+type FileRemoveReq struct {
+	Name string
+}
+type FileRemoveRes struct {
+	Bots []behaviorInfo
+}
+
+func FileRemove(ctx echo.Context) error {
+	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
+	code := Succ
+	res := &Response{}
+	req := &FileRemoveReq{}
+	body := &FileRemoveRes{}
+
+	bts, err := ioutil.ReadAll(ctx.Request().Body)
+	if err != nil {
+		code = ErrContentRead // tmp
+		fmt.Println(err.Error())
+		goto EXT
+	}
+
+	err = json.Unmarshal(bts, req)
+	if err != nil {
+		code = ErrContentRead // tmp
+		fmt.Println(err.Error())
+		goto EXT
+	}
+
+	factory.Global.RmvBehavior(req.Name)
+	for _, v := range factory.Global.GetBehaviors() {
+		body.Bots = append(body.Bots, behaviorInfo{
+			Name:   v.Name,
+			Update: v.UpdateTime,
+		})
+	}
+
+EXT:
+	res.Code = int(code)
+	res.Msg = errmap[code]
+	res.Body = body
+
+	ctx.JSON(http.StatusOK, res)
+	return nil
+}
+
+func FileGetList(ctx echo.Context) error {
 	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
 	code := Succ
 	res := &Response{}
@@ -159,7 +204,7 @@ type FindBehaviorRes struct {
 	Info factory.BehaviorInfo
 }
 
-func GetBlob(ctx echo.Context) error {
+func FileGetBlob(ctx echo.Context) error {
 	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
 	req := &FindBehaviorReq{}
 	info := factory.BehaviorInfo{}
@@ -261,7 +306,7 @@ type RunRequest struct {
 type RunResponse struct {
 }
 
-func Run(ctx echo.Context) error {
+func BotRun(ctx echo.Context) error {
 	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
 	res := &Response{}
 	req := &RunRequest{}
@@ -318,7 +363,7 @@ type StepResponse struct {
 	Blackboard string
 }
 
-func Step(ctx echo.Context) error {
+func DebugStep(ctx echo.Context) error {
 	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
 	res := &Response{}
 	req := &StepRequest{}
@@ -382,7 +427,7 @@ type createResponse struct {
 	BotID string
 }
 
-func Create(ctx echo.Context) error {
+func DebugCreate(ctx echo.Context) error {
 	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
 	res := &Response{}
 	req := &createRequest{}
@@ -397,7 +442,7 @@ func Create(ctx echo.Context) error {
 		goto EXT
 	}
 
-	err = json.Unmarshal(bts, &req)
+	err = json.Unmarshal(bts, req)
 	if err != nil {
 		code = ErrContentRead // tmp
 		fmt.Println(err.Error())
@@ -424,15 +469,29 @@ EXT:
 
 func Route(e *echo.Echo) {
 
-	e.POST("/upload.blob", UploadWithBlob) // 上传行为树模版文件
-	e.POST("/upload.file", UploadWithFile)
+	e.POST("/file.txtUpload", FileTextUpload)
+	e.POST("/file.blobUpload", FileBlobUpload)
+	e.POST("/file.remove", FileRemove)
 
-	e.POST("/get.list", GetList)
-	e.POST("/get.blob", GetBlob)
+	//e.POST("/upload.blob", UploadWithBlob) // 上传行为树模版文件
+	//e.POST("/upload.file", UploadWithFile)
+
+	e.POST("/file.list", FileGetList)
+	e.POST("/file.get", FileGetBlob)
+
+	e.POST("/bot.create", BotRun) // 创建一批bot
+	//e.POST("/bot.list")
+	//e.POST("/bot.info")	// 获取所有运行时的bot信息（保留100个  运行中 | 已终止 | 有错误
+
+	e.POST("/debug.create", DebugCreate) // 创建一个 edit 中的bot 实例、
+	e.POST("/debug.step", DebugStep)     // 单步运行 edit 中的bot
+
+	//e.POST("/get.list", GetList)
+	//e.POST("/get.blob", GetBlob)
 	e.POST("/get.report", GetReport)
 
-	e.POST("/bot.create", Create) // 创建一个bot
-	e.POST("/bot.run", Run)       // 运行bot
-	e.POST("/bot.step", Step)     // 单步运行一个bot
+	//e.POST("/bot.create", Create) // 创建一个bot
+	//e.POST("/bot.run", Run)   // 运行bot
+	//e.POST("/bot.step", Step) // 单步运行一个bot
 
 }
