@@ -38,7 +38,7 @@ var compose = `
         </pos>
         <children>
           <id>e3e32962-edcb-4dc1-add2-f934ff8bb87e</id>
-          <ty>HTTPActionNode</ty>
+          <ty>ActionNode</ty>
           <pos>
             <x>-85</x>
             <y>222</y>
@@ -85,7 +85,7 @@ end
         </pos>
         <children>
           <id>01f48591-3b97-46b9-a86c-df10a4d009c6</id>
-          <ty>HTTPActionNode</ty>
+          <ty>ActionNode</ty>
           <pos>
             <x>80</x>
             <y>222</y>
@@ -99,7 +99,7 @@ end
             </pos>
             <children>
               <id>2796bf91-a0f8-4be1-92fc-b164500b7cf0</id>
-              <ty>HTTPActionNode</ty>
+              <ty>ActionNode</ty>
               <pos>
                 <x>15</x>
                 <y>347</y>
@@ -145,7 +145,7 @@ end
               </pos>
               <children>
                 <id>3c6a6691-be4d-42b3-a909-451ab741309d</id>
-                <ty>HTTPActionNode</ty>
+                <ty>ActionNode</ty>
                 <pos>
                   <x>166</x>
                   <y>419</y>

@@ -212,7 +212,7 @@ func (b *Bot) run_loop(nod *behavior.Tree, next bool) (bool, error) {
 	return true, nil
 }
 
-func (b *Bot) run_http(nod *behavior.Tree, next bool) (bool, error) {
+func (b *Bot) run_script(nod *behavior.Tree, next bool) (bool, error) {
 
 	err := b.L.DoString(nod.Code)
 	if err != nil {
@@ -255,8 +255,8 @@ func (b *Bot) run_nod(nod *behavior.Tree, next bool) (bool, error) {
 		ok, _ = b.run_wait(nod, next)
 	case behavior.LOOP:
 		ok, err = b.run_loop(nod, next)
-	case behavior.HTTPACTION:
-		ok, err = b.run_http(nod, next)
+	case behavior.ACTION:
+		ok, err = b.run_script(nod, next)
 	case behavior.ASSERT:
 		ok, err = b.run_assert(nod, next)
 	case behavior.ROOT:

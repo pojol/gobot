@@ -473,9 +473,6 @@ func Route(e *echo.Echo) {
 	e.POST("/file.blobUpload", FileBlobUpload)
 	e.POST("/file.remove", FileRemove)
 
-	//e.POST("/upload.blob", UploadWithBlob) // 上传行为树模版文件
-	//e.POST("/upload.file", UploadWithFile)
-
 	e.POST("/file.list", FileGetList)
 	e.POST("/file.get", FileGetBlob)
 
@@ -486,12 +483,5 @@ func Route(e *echo.Echo) {
 	e.POST("/debug.create", DebugCreate) // 创建一个 edit 中的bot 实例、
 	e.POST("/debug.step", DebugStep)     // 单步运行 edit 中的bot
 
-	//e.POST("/get.list", GetList)
-	//e.POST("/get.blob", GetBlob)
 	e.POST("/get.report", GetReport)
-
-	//e.POST("/bot.create", Create) // 创建一个bot
-	//e.POST("/bot.run", Run)   // 运行bot
-	//e.POST("/bot.step", Step) // 单步运行一个bot
-
 }
