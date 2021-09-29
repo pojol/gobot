@@ -3,6 +3,7 @@ package behavior
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"reflect"
 
@@ -34,22 +35,21 @@ func (p *ProtoModule) doMarshal(L *lua.LState, msgty string, jstr string) (lua.L
 
 	err = jsonpb.Unmarshal(bytes.NewBufferString(jstr), tins)
 	if err != nil {
-		return lua.LString(""), err
+		return lua.LString(""), fmt.Errorf("jsonpb.unmarshal %w", err)
 	}
 
 	byt, err := proto.Marshal(tins)
 	if err != nil {
-		return lua.LString(""), err
+		return lua.LString(""), fmt.Errorf("proto.marshal %w", err)
 	}
 
-	return lua.LString(byt), err
+	return lua.LString(byt), nil
 }
 
 func (p *ProtoModule) Marshal(L *lua.LState) int {
 
 	res, err := p.doMarshal(L, L.ToString(1), L.ToString(2))
 	if err != nil {
-		fmt.Println("marshal", err.Error())
 		L.Push(lua.LNil)
 		L.Push(lua.LString(fmt.Sprintf("%s", err)))
 		return 2
@@ -64,16 +64,19 @@ func (p *ProtoModule) doUnmarshal(L *lua.LState, msgty string, buf string) (lua.
 
 	t := ggp.MessageType(msgty).Elem()
 	tptr := reflect.New(t)
-	tins := tptr.Interface().(proto.Message)
+	tins, ok := tptr.Interface().(proto.Message)
+	if !ok {
+		return lua.LString(""), errors.New("msg type no proto.message")
+	}
 
 	err = proto.Unmarshal([]byte(buf), tins)
 	if err != nil {
-		return lua.LString(""), err
+		return lua.LString(""), fmt.Errorf("proto.unmarshal %w", err)
 	}
 
 	byt, err := json.Marshal(tins)
 	if err != nil {
-		return lua.LString(""), err
+		return lua.LString(""), fmt.Errorf("josn.marshal %w", err)
 	}
 
 	return lua.LString(byt), err
@@ -82,7 +85,6 @@ func (p *ProtoModule) doUnmarshal(L *lua.LState, msgty string, buf string) (lua.
 func (p *ProtoModule) Unmarshal(L *lua.LState) int {
 	t, err := p.doUnmarshal(L, L.ToString(1), L.ToString(2))
 	if err != nil {
-		fmt.Println("marshal", err.Error())
 		L.Push(lua.LNil)
 		L.Push(lua.LString(fmt.Sprintf("%s", err)))
 		return 2

@@ -9,7 +9,7 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/pojol/gobot-driver/behavior"
-	"github.com/pojol/gobot-driver/gpb"
+	"github.com/pojol/gobot-driver/book"
 	lua "github.com/yuin/gopher-lua"
 )
 
@@ -22,32 +22,38 @@ func TestMain(m *testing.M) {
 
 		fmt.Println("http server recv ", req.RequestURI)
 
-		if req.RequestURI == "/item" {
-
-			var msg gpb.PItem
+		if req.RequestURI == "/book" {
+			var msg book.AddressBook
 			err := proto.Unmarshal(reqbyt, &msg)
 			if err != nil {
 				fmt.Println(err.Error())
 			}
 
-			fmt.Println("item", msg)
-
-		} else if req.RequestURI == "/card" {
-			var msg gpb.PCard
-			err := proto.Unmarshal(reqbyt, &msg)
-			if err != nil {
-				fmt.Println(err.Error())
-			}
-
-			fmt.Println("card", msg)
+			fmt.Println("book", msg)
 
 		} else if req.RequestURI == "/unmarshal" {
-			body := gpb.PItem{
-				Id:  1001,
-				Num: 100,
-				Lv:  1,
+			var err error
+			phones := []*book.Person_PhoneNumber{}
+			phones = append(phones, &book.Person_PhoneNumber{
+				Number: "666",
+				Type:   book.Person_HOME,
+			})
+			person := []*book.Person{}
+			person = append(person, &book.Person{
+				Name:   "Joy",
+				Id:     222,
+				Email:  "joy@outlook.com",
+				Phones: phones,
+			})
+
+			body := book.AddressBook{
+				People: person,
 			}
-			byt, _ = proto.Marshal(&body)
+
+			byt, err = proto.Marshal(&body)
+			if err != nil {
+				fmt.Println(err.Error())
+			}
 		}
 
 		w.Write(byt)
@@ -73,11 +79,15 @@ func TestProtobufEncode(t *testing.T) {
 		local proto = require("proto")
 		local cli = require("cli")
 
-		local item = {
-			Id = 101,
-			Num = 10,
-			InsId = "hello,item",
-			Lv = 1,
+		local person = {
+			name = "joy",
+			id = 111,
+			email = "joy@outlook.com",
+			phones = { {number = "555", type = 2} }
+		}
+
+		local book = {
+			people = { person }
 		}
 
 		local parm = {
@@ -85,10 +95,10 @@ func TestProtobufEncode(t *testing.T) {
 			headers = {},
 		}
 		
-		posturl = url .. "/item"
+		posturl = url .. "/book"
 		print("post : " .. posturl)
 
-		parm.body = proto.marshal("PItem", json.encode(item))
+		parm.body = proto.marshal("AddressBook", json.encode(book))
 		cli.post(posturl, parm)
 
 	`)
@@ -96,38 +106,6 @@ func TestProtobufEncode(t *testing.T) {
 		fmt.Println(err.Error())
 	}
 
-	err = L.DoString(`
-		local proto = require("proto")
-		local cli = require("cli")
-
-		local item = {
-			Id = 101,
-			Num = 10,
-			InsId = "hello,item",
-			Lv = 1,
-		}
-
-		local card = {
-			Id = "201",
-			Timeout = 1000,
-			Items = { item }
-		}
-
-		local parm = {
-			timeout = 1000,
-			headers = {},
-		}
-
-		posturl = url .. "/card"
-		print("post : " .. posturl)
-
-		parm.body = proto.marshal("PCard", json.encode(card))
-		cli.post(posturl, parm)
-
-	`)
-	if err != nil {
-		fmt.Println(err.Error())
-	}
 }
 
 func TestProtobufDecode(t *testing.T) {
@@ -148,9 +126,9 @@ func TestProtobufDecode(t *testing.T) {
 		local cli = require("cli")
 
 		res, err = cli.post(url .. "/unmarshal", {})
-		print(err)
+		print(res, err)
 
-		body, err = proto.unmarshal("PItem", res["body"])
+		body, err = proto.unmarshal("AddressBook", res["body"])
 		print(err)
 
 		print("lua table", json.encode(body))
