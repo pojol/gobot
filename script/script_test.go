@@ -18,6 +18,7 @@ var ts *httptest.Server
 func TestMain(m *testing.M) {
 	ts = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		reqbyt, _ := ioutil.ReadAll(req.Body)
+		var byt []byte
 
 		fmt.Println("http server recv ", req.RequestURI)
 
@@ -40,9 +41,16 @@ func TestMain(m *testing.M) {
 
 			fmt.Println("card", msg)
 
+		} else if req.RequestURI == "/unmarshal" {
+			body := gpb.PItem{
+				Id:  1001,
+				Num: 100,
+				Lv:  1,
+			}
+			byt, _ = proto.Marshal(&body)
 		}
 
-		w.Write([]byte(""))
+		w.Write(byt)
 	}))
 	defer ts.Close()
 
@@ -72,12 +80,6 @@ func TestProtobufEncode(t *testing.T) {
 			Lv = 1,
 		}
 
-		local card = {
-			Id = 201,
-			Timeout = 1000,
-			Items = { item }
-		}
-
 		local parm = {
 			timeout = 1000,
 			headers = {},
@@ -95,7 +97,7 @@ func TestProtobufEncode(t *testing.T) {
 	}
 
 	err = L.DoString(`
-	local proto = require("proto")
+		local proto = require("proto")
 		local cli = require("cli")
 
 		local item = {
@@ -115,13 +117,43 @@ func TestProtobufEncode(t *testing.T) {
 			timeout = 1000,
 			headers = {},
 		}
-		
+
 		posturl = url .. "/card"
 		print("post : " .. posturl)
 
 		parm.body = proto.marshal("PCard", json.encode(card))
 		cli.post(posturl, parm)
 
+	`)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+}
+
+func TestProtobufDecode(t *testing.T) {
+	protomod := behavior.ProtoModule{}
+	httpmod := behavior.NewHttpModule(&http.Client{})
+	L := lua.NewState()
+	defer L.Close()
+
+	L.DoFile("./json.lua")
+	L.DoFile("./global.lua")
+	L.PreloadModule("cli", httpmod.Loader)
+	L.PreloadModule("proto", protomod.Loader)
+	L.SetGlobal("url", lua.LString(ts.URL))
+
+	err := L.DoString(`
+
+		local proto = require("proto")
+		local cli = require("cli")
+
+		res, err = cli.post(url .. "/unmarshal", {})
+		print(err)
+
+		body, err = proto.unmarshal("PItem", res["body"])
+		print(err)
+
+		print("lua table", json.encode(body))
 	`)
 	if err != nil {
 		fmt.Println(err.Error())
