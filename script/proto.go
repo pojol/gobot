@@ -1,4 +1,4 @@
-package behavior
+package script
 
 import (
 	"bytes"
@@ -29,8 +29,11 @@ func (p *ProtoModule) Loader(l *lua.LState) int {
 func (p *ProtoModule) doMarshal(L *lua.LState, msgty string, jstr string) (lua.LString, error) {
 	var err error
 
-	t := ggp.MessageType(msgty).Elem()
-	tptr := reflect.New(t)
+	t := ggp.MessageType(msgty)
+	if t == nil {
+		return lua.LString(""), fmt.Errorf("unknow proto message type %v", msgty)
+	}
+	tptr := reflect.New(t.Elem())
 	tins := tptr.Interface().(proto.Message)
 
 	err = jsonpb.Unmarshal(bytes.NewBufferString(jstr), tins)
@@ -62,8 +65,12 @@ func (p *ProtoModule) Marshal(L *lua.LState) int {
 func (p *ProtoModule) doUnmarshal(L *lua.LState, msgty string, buf string) (lua.LString, error) {
 	var err error
 
-	t := ggp.MessageType(msgty).Elem()
-	tptr := reflect.New(t)
+	t := ggp.MessageType(msgty)
+	if t == nil {
+		return lua.LString(""), fmt.Errorf("unknow proto message type %v", msgty)
+	}
+
+	tptr := reflect.New(t.Elem())
 	tins, ok := tptr.Interface().(proto.Message)
 	if !ok {
 		return lua.LString(""), errors.New("msg type no proto.message")

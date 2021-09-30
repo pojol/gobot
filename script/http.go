@@ -1,4 +1,4 @@
-package behavior
+package script
 
 import (
 	"bytes"

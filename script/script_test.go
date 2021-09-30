@@ -8,8 +8,7 @@ import (
 	"testing"
 
 	"github.com/gogo/protobuf/proto"
-	"github.com/pojol/gobot-driver/behavior"
-	"github.com/pojol/gobot-driver/book"
+	"github.com/pojol/gobot-driver/script/book"
 	lua "github.com/yuin/gopher-lua"
 )
 
@@ -64,20 +63,20 @@ func TestMain(m *testing.M) {
 }
 
 func TestProtobufEncode(t *testing.T) {
-	protomod := behavior.ProtoModule{}
-	httpmod := behavior.NewHttpModule(&http.Client{})
+	protomod := ProtoModule{}
+	httpmod := NewHttpModule(&http.Client{})
 	L := lua.NewState()
 	defer L.Close()
 
 	L.DoFile("./json.lua")
 	L.DoFile("./global.lua")
-	L.PreloadModule("cli", httpmod.Loader)
+	L.PreloadModule("http", httpmod.Loader)
 	L.PreloadModule("proto", protomod.Loader)
 	L.SetGlobal("url", lua.LString(ts.URL))
 
 	err := L.DoString(`
 		local proto = require("proto")
-		local cli = require("cli")
+		local http = require("http")
 
 		local person = {
 			name = "joy",
@@ -98,8 +97,11 @@ func TestProtobufEncode(t *testing.T) {
 		posturl = url .. "/book"
 		print("post : " .. posturl)
 
-		parm.body = proto.marshal("AddressBook", json.encode(book))
-		cli.post(posturl, parm)
+		parm.body, errmsg = proto.marshal("AddressBook", json.encode(book))
+		if errmsg ~= "" then
+			print(errmsg)
+		end
+		http.post(posturl, parm)
 
 	`)
 	if err != nil {
@@ -109,23 +111,23 @@ func TestProtobufEncode(t *testing.T) {
 }
 
 func TestProtobufDecode(t *testing.T) {
-	protomod := behavior.ProtoModule{}
-	httpmod := behavior.NewHttpModule(&http.Client{})
+	protomod := ProtoModule{}
+	httpmod := NewHttpModule(&http.Client{})
 	L := lua.NewState()
 	defer L.Close()
 
 	L.DoFile("./json.lua")
 	L.DoFile("./global.lua")
-	L.PreloadModule("cli", httpmod.Loader)
+	L.PreloadModule("http", httpmod.Loader)
 	L.PreloadModule("proto", protomod.Loader)
 	L.SetGlobal("url", lua.LString(ts.URL))
 
 	err := L.DoString(`
 
 		local proto = require("proto")
-		local cli = require("cli")
+		local http = require("http")
 
-		res, err = cli.post(url .. "/unmarshal", {})
+		res, err = http.post(url .. "/unmarshal", {})
 		print(res, err)
 
 		body, err = proto.unmarshal("AddressBook", res["body"])

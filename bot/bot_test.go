@@ -79,12 +79,12 @@ local parm = {
 }
 
 local url = &#34;http://127.0.0.1:7777/login/guest&#34;
-local cli = require(&#34;cli&#34;)
+local http = require(&#34;http&#34;)
 
 function execute()
 
   -- http post request
-  res, errmsg = cli.post(url, parm)
+  res, errmsg = http.post(url, parm)
   print(url,errmsg)
   if errmsg == nil then
     body = json.decode(res[&#34;body&#34;])
@@ -142,12 +142,12 @@ local parm = {
 }
 
 local url = &#34;http://127.0.0.1:7777/base/hero.info&#34;
-local cli = require(&#34;cli&#34;)
+local http = require(&#34;http&#34;)
 
 function execute()
 
   -- http post request
-  res, errmsg = cli.post(url, parm)
+  res, errmsg = http.post(url, parm)
   print(url,errmsg)
   if errmsg == nil then
     body = json.decode(res[&#34;body&#34;])
@@ -191,12 +191,12 @@ local parm = {
 }
 
 local url = &#34;http://127.0.0.1:7777/base/hero.lvup&#34;
-local cli = require(&#34;cli&#34;)
+local http = require(&#34;http&#34;)
 
 function execute()
 
   -- http post request
-  res, errmsg = cli.post(url, parm)
+  res, errmsg = http.post(url, parm)
   print(url,errmsg)
   if errmsg == nil then
     body = json.decode(res[&#34;body&#34;])
@@ -219,12 +219,12 @@ local parm = {
 }
 
 local url = &#34;http://127.0.0.1:7777/base/acc.info&#34;
-local cli = require(&#34;cli&#34;)
+local http = require(&#34;http&#34;)
 
 function execute()
 
   -- http post request
-  res, errmsg = cli.post(url, parm)
+  res, errmsg = http.post(url, parm)
   print(url,errmsg)
   if errmsg == nil then
     body = json.decode(res[&#34;body&#34;])

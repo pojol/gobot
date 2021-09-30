@@ -10,6 +10,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/pojol/gobot-driver/behavior"
+	"github.com/pojol/gobot-driver/script"
 	"github.com/pojol/gobot-driver/utils"
 	lua "github.com/yuin/gopher-lua"
 )
@@ -28,7 +29,7 @@ type Bot struct {
 	prev *behavior.Tree
 	cur  *behavior.Tree
 
-	httpMod *behavior.HttpModule
+	httpMod *script.HttpModule
 
 	L *lua.LState
 	sync.Mutex
@@ -80,7 +81,7 @@ func NewWithBehaviorTree(path string, bt *behavior.Tree, tmpl string) *Bot {
 		cur:     bt,
 		L:       lua.NewState(),
 		name:    tmpl,
-		httpMod: behavior.NewHttpModule(&http.Client{}),
+		httpMod: script.NewHttpModule(&http.Client{}),
 	}
 
 	// test
@@ -89,7 +90,7 @@ func NewWithBehaviorTree(path string, bt *behavior.Tree, tmpl string) *Bot {
 	bot.L.DoFile(path + "global.lua")
 	bot.L.DoFile(path + "json.lua")
 
-	bot.L.PreloadModule("cli", bot.httpMod.Loader)
+	bot.L.PreloadModule("http", bot.httpMod.Loader)
 
 	return bot
 }
@@ -288,7 +289,7 @@ func (b *Bot) Run(sw *utils.Switch, doneCh chan string, errCh chan ErrInfo) {
 
 }
 
-func (b *Bot) GetReport() []behavior.Report {
+func (b *Bot) GetReport() []script.Report {
 	return b.httpMod.GetReport()
 }
 
