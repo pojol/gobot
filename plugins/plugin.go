@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"plugin"
 
-	"github.com/pojol/apibot/serialization"
+	"github.com/pojol/gobot-driver/serialization"
 )
 
 type Plugin struct {
@@ -30,7 +30,6 @@ func Get(name string) serialization.ISerialization {
 func Load(path string) error {
 
 	fmt.Println("load", path)
-
 	p, err := plugin.Open(path)
 	if err != nil {
 		return err

@@ -4,3 +4,5 @@ make.sh
 make_plugin.sh
 build.sh
 plugins/json/build_plugin.sh
+build-linux.sh
+build-mac.sh

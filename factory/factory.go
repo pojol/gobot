@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"github.com/fatih/color"
-	"github.com/pojol/apibot/behavior"
-	"github.com/pojol/apibot/bot"
-	"github.com/pojol/apibot/utils"
+	"github.com/pojol/gobot-driver/behavior"
+	"github.com/pojol/gobot-driver/bot"
+	"github.com/pojol/gobot-driver/utils"
 )
 
 type urlDetail struct {
@@ -235,6 +235,15 @@ func (f *Factory) AddBehavior(rootid string, name string, byt []byte) {
 	})
 }
 
+func (f *Factory) RmvBehavior(name string) {
+	for k := range f.behaviorLst {
+		if f.behaviorLst[k].Name == name {
+			f.behaviorLst = append(f.behaviorLst[:k], f.behaviorLst[k+1:]...)
+			break
+		}
+	}
+}
+
 func (f *Factory) GetBehaviors() []BehaviorInfo {
 	info := []BehaviorInfo{}
 	for _, v := range f.behaviorLst {
@@ -319,13 +328,12 @@ func (f *Factory) FindBot(botid string) *bot.Bot {
 }
 
 func (f *Factory) RmvBot(botid string) {
-	delete(f.debugBots, botid)
 
-	/*
-		if f.parm.mock != nil {
-			f.parm.mock.Reset(botid)
-		}
-	*/
+	if _, ok := f.debugBots[botid]; ok {
+		f.debugBots[botid].Close()
+		delete(f.debugBots, botid)
+	}
+
 }
 
 func (f *Factory) push(bot *bot.Bot) {
@@ -347,6 +355,7 @@ func (f *Factory) pop(id string, err error, rep *Report) {
 		if err != nil {
 			f.colorer.Printf("%v\n", utils.Red(err.Error()))
 		}
+		f.batchBots[id].Close()
 		delete(f.batchBots, id)
 
 	}
@@ -408,7 +417,7 @@ ext:
 	atomic.AddInt64(&f.IncID, 1)
 	// report
 	f.Report(rep)
-	if len(f.reportHistory) > f.parm.ReportLimit {
+	if len(f.reportHistory) >= f.parm.ReportLimit {
 		f.reportHistory = f.reportHistory[1:]
 	}
 	f.reportHistory = append(f.reportHistory, rep)

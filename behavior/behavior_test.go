@@ -37,7 +37,7 @@ var compose = `
                             "children":[
                                 {
                                     "id":"8fe159f5-fcb5-4106-9b3c-ed7f950cd547",
-                                    "ty":"HTTPActionNode",
+                                    "ty":"ActionNode",
                                     "pos":{
                                         "x":-50,
                                         "y":245
@@ -63,7 +63,7 @@ var compose = `
                             "children":[
                                 {
                                     "id":"1b2569a6-bb1b-4b88-8866-7d93cf552739",
-                                    "ty":"HTTPActionNode",
+                                    "ty":"ActionNode",
                                     "pos":{
                                         "x":55,
                                         "y":245

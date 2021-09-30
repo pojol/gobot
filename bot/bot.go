@@ -9,8 +9,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/pojol/apibot/behavior"
-	"github.com/pojol/apibot/utils"
+	"github.com/pojol/gobot-driver/behavior"
+	"github.com/pojol/gobot-driver/script"
+	"github.com/pojol/gobot-driver/utils"
 	lua "github.com/yuin/gopher-lua"
 )
 
@@ -28,7 +29,7 @@ type Bot struct {
 	prev *behavior.Tree
 	cur  *behavior.Tree
 
-	httpMod *behavior.HttpModule
+	httpMod *script.HttpModule
 
 	L *lua.LState
 	sync.Mutex
@@ -80,7 +81,7 @@ func NewWithBehaviorTree(path string, bt *behavior.Tree, tmpl string) *Bot {
 		cur:     bt,
 		L:       lua.NewState(),
 		name:    tmpl,
-		httpMod: behavior.NewHttpModule(&http.Client{}),
+		httpMod: script.NewHttpModule(&http.Client{}),
 	}
 
 	// test
@@ -89,7 +90,7 @@ func NewWithBehaviorTree(path string, bt *behavior.Tree, tmpl string) *Bot {
 	bot.L.DoFile(path + "global.lua")
 	bot.L.DoFile(path + "json.lua")
 
-	bot.L.PreloadModule("cli", bot.httpMod.Loader)
+	bot.L.PreloadModule("http", bot.httpMod.Loader)
 
 	return bot
 }
@@ -212,7 +213,7 @@ func (b *Bot) run_loop(nod *behavior.Tree, next bool) (bool, error) {
 	return true, nil
 }
 
-func (b *Bot) run_http(nod *behavior.Tree, next bool) (bool, error) {
+func (b *Bot) run_script(nod *behavior.Tree, next bool) (bool, error) {
 
 	err := b.L.DoString(nod.Code)
 	if err != nil {
@@ -255,8 +256,8 @@ func (b *Bot) run_nod(nod *behavior.Tree, next bool) (bool, error) {
 		ok, _ = b.run_wait(nod, next)
 	case behavior.LOOP:
 		ok, err = b.run_loop(nod, next)
-	case behavior.HTTPACTION:
-		ok, err = b.run_http(nod, next)
+	case behavior.ACTION:
+		ok, err = b.run_script(nod, next)
 	case behavior.ASSERT:
 		ok, err = b.run_assert(nod, next)
 	case behavior.ROOT:
@@ -288,12 +289,12 @@ func (b *Bot) Run(sw *utils.Switch, doneCh chan string, errCh chan ErrInfo) {
 
 }
 
-func (b *Bot) GetReport() []behavior.Report {
+func (b *Bot) GetReport() []script.Report {
 	return b.httpMod.GetReport()
 }
 
-func (b *Bot) close() {
-	//b.L.Close()
+func (b *Bot) Close() {
+	b.L.Close()
 }
 
 type State int32
@@ -315,7 +316,6 @@ func (b *Bot) RunStep() State {
 
 	f, err := b.run_nod(b.cur, false)
 	if err != nil {
-		b.close()
 		return SBreak
 	}
 	// step 中使用了sleep之后，会有多个goroutine执行接下来的程序
@@ -340,7 +340,6 @@ func (b *Bot) RunStep() State {
 			b.prev = b.cur
 			b.cur = b.cur.Parent.Next()
 			if b.cur == nil {
-				b.close()
 				return SEnd
 			}
 		}

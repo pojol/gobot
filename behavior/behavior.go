@@ -5,14 +5,14 @@ import (
 )
 
 const (
-	ROOT       = "RootNode"
-	SELETE     = "SelectorNode"
-	SEQUENCE   = "SequenceNode"
-	CONDITION  = "ConditionNode"
-	WAIT       = "WaitNode"
-	LOOP       = "LoopNode"
-	HTTPACTION = "HTTPActionNode"
-	ASSERT     = "AssertNode"
+	ROOT      = "RootNode"
+	SELETE    = "SelectorNode"
+	SEQUENCE  = "SequenceNode"
+	CONDITION = "ConditionNode"
+	WAIT      = "WaitNode"
+	LOOP      = "LoopNode"
+	ACTION    = "ActionNode"
+	ASSERT    = "AssertNode"
 )
 
 type Tree struct {

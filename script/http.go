@@ -1,4 +1,4 @@
-package behavior
+package script
 
 import (
 	"bytes"
@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pojol/apibot/utils"
+	"github.com/pojol/gobot-driver/utils"
 	lua "github.com/yuin/gopher-lua"
 )
 
@@ -101,6 +101,10 @@ func (h *HttpModule) doRequest(L *lua.LState, method string, url string, options
 			}
 			reqlen = len(byt)
 			req.Body = ioutil.NopCloser(bytes.NewReader(byt))
+			req.Header.Set("Content-Type", "application/json")
+		case lua.LString:
+			reqlen = len(reqBody.String())
+			req.Body = ioutil.NopCloser(bytes.NewBufferString(reqBody.String()))
 			req.Header.Set("Content-Type", "application/json")
 		}
 
