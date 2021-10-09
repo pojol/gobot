@@ -5,6 +5,7 @@
 [![](https://img.shields.io/badge/editor-code-2ca5e0?style=flat&logo=github)](https://github.com/pojol/gobot-editor)
 
 
+
 # Try it out
 Try the editor out [on website](http://1.117.168.37:7777/)
 
@@ -12,60 +13,69 @@ Try the editor out [on website](http://1.117.168.37:7777/)
 [![image.png](https://i.postimg.cc/wT5HhYD3/image.png)](https://postimg.cc/6yQDXSjN)
 
 # Install
-Make sure to pass in values for MYSQL_ROOT_PASSWORD and MYSQL_PASSWORD variables before you run this setup.
+1. Install docker-compose
+    ```shell
+    # for CentOS
+    yum install docker-compose -y
 
-```shell
-version: "3.7"
+    # for Ubuntu
+    apt-get install docker-compose -y
+    ```
 
-volumes:
-  db:
+2. Down load and modify [docker-compose.yml](https://github.com/pojol/gobot-driver/blob/develop/docker-compose.yml) file make sure to pass in values for `MYSQL_ROOT_PASSWORD` and `MYSQL_PASSWORD` variables before you run this setup.
 
-services:
-  db:
-    image: mariadb:10.5
-    restart: always
-    networks:
-      - gnet
+    ```yaml
+    version: "3.7"
+
     volumes:
-      - db:/var/lib/mysql
-    environment:
-      - MYSQL_ROOT_PASSWORD=
-      - MYSQL_PASSWORD=
-      - MYSQL_DATABASE=gobot
-      - MYSQL_USER=gobot
+    db:
 
-  gobot_driver:
-    image: braidgo/gobot-driver:latest
-    restart: always
+    services:
+    db:
+        image: mariadb:10.5
+        restart: always
+        networks:
+        - gnet
+        volumes:
+        - db:/var/lib/mysql
+        environment:
+        - MYSQL_ROOT_PASSWORD=
+        - MYSQL_PASSWORD=
+        - MYSQL_DATABASE=gobot
+        - MYSQL_USER=gobot
+
+    gobot_driver:
+        image: braidgo/gobot-driver:latest
+        restart: always
+        networks:
+        - gnet
+        depends_on:
+        - db
+        ports:
+        - 8888:8888
+        deploy:
+        resources:
+            limits:
+            cpus: "0.3"
+        environment:
+        - MYSQL_PASSWORD=
+        - MYSQL_DATABASE=gobot
+        - MYSQL_USER=gobot
+        - MYSQL_HOST=db
+
+    gobot_editor:
+        image: braidgo/gobot-editor:latest
+        restart: always
+        depends_on:
+        - gobot_driver
+        ports:
+        - 7777:7777
+
     networks:
-      - gnet
-    depends_on:
-      - db
-    ports:
-      - 8888:8888
-    deploy:
-      resources:
-        limits:
-          cpus: "0.3"
-    environment:
-      - MYSQL_PASSWORD=
-      - MYSQL_DATABASE=gobot
-      - MYSQL_USER=gobot
-      - MYSQL_HOST=db
-
-  gobot_editor:
-    image: braidgo/gobot-editor:latest
-    restart: always
-    depends_on:
-      - gobot_driver
-    ports:
-      - 7777:7777
-
-networks:
-  gnet:
-    driver: bridge
-```
-Then run docker-compose up -d, now you can access gobot at http://localhost:7777/ from your host system.
+    gnet:
+        driver: bridge
+    ```
+3. Run `docker-compose up -d`, now you can access gobot at http://localhost:7777/ from your host system.
 
 
 
