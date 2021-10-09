@@ -51,7 +51,6 @@ func FileBlobUpload(ctx echo.Context) error {
 	res := &Response{}
 	code := Succ
 	var name string
-	var tree *behavior.Tree
 
 	name = ctx.Request().Header.Get("FileName")
 	bts, err := ioutil.ReadAll(ctx.Request().Body)
@@ -61,13 +60,13 @@ func FileBlobUpload(ctx echo.Context) error {
 		goto EXT
 	}
 
-	tree, err = behavior.New(bts)
+	_, err = behavior.New(bts)
 	if err != nil {
 		fmt.Println(err.Error())
 		code = ErrJsonInvalid
 		goto EXT
 	}
-	factory.Global.AddBehavior(tree.ID, name, bts)
+	factory.Global.AddBehavior(name, bts)
 
 EXT:
 	res.Code = int(code)
@@ -84,7 +83,6 @@ func FileTextUpload(ctx echo.Context) error {
 	var upload *utils.UploadFile
 	var fbyte []byte
 	var name string
-	var tree *behavior.Tree
 
 	f, header, err := ctx.Request().FormFile("file")
 	if err != nil {
@@ -105,13 +103,13 @@ func FileTextUpload(ctx echo.Context) error {
 	}
 
 	name = upload.FileName()
-	tree, err = behavior.New(fbyte)
+	_, err = behavior.New(fbyte)
 	if err != nil {
 		fmt.Println(err.Error())
 		code = ErrJsonInvalid
 		goto EXT
 	}
-	factory.Global.AddBehavior(tree.ID, name, fbyte)
+	factory.Global.AddBehavior(name, fbyte)
 
 EXT:
 	res.Code = int(code)
@@ -226,8 +224,6 @@ func FileGetBlob(ctx echo.Context) error {
 		fmt.Println(err.Error())
 		goto EXT
 	}
-
-	fmt.Println("get blob", info.Name, info.RootID)
 
 EXT:
 	ctx.Blob(http.StatusOK, "text/plain;charset=utf-8", info.Dat)

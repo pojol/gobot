@@ -229,7 +229,7 @@ func TestLoop(t *testing.T) {
 		panic(err)
 	}
 
-	f.AddBehavior("", "behavior", []byte(compose))
+	f.AddBehavior("behavior", []byte(compose))
 
 	for i := 0; i < 10; i++ {
 		f.Append(BatchInfo{

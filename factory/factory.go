@@ -38,13 +38,6 @@ type Report struct {
 	UrlMap map[string]*urlDetail
 }
 
-type BehaviorInfo struct {
-	Name       string
-	RootID     string
-	Dat        []byte
-	UpdateTime int64
-}
-
 type BatchBotInfo struct {
 	Behavior string
 	Num      int32
@@ -55,12 +48,11 @@ type BatchInfo struct {
 
 type Factory struct {
 	parm          Parm
+	bfile         *BehaviorFile
 	reportHistory []*Report
 
 	batchBots map[string]*bot.Bot
 	debugBots map[string]*bot.Bot
-
-	behaviorLst []BehaviorInfo
 
 	pipelineCache []BatchInfo
 	running       bool
@@ -106,6 +98,7 @@ func Create(opts ...Option) (*Factory, error) {
 		batchDone:   make(chan interface{}, 1),
 		colorer:     color.New(),
 		batch:       utils.New(p.batchSize),
+		bfile:       NewBehaviorFile(),
 	}
 
 	go f.loop()
@@ -211,89 +204,60 @@ func (f *Factory) Close() {
 	f.exit.Open()
 }
 
-func (f *Factory) AddBehavior(rootid string, name string, byt []byte) {
-
-	flag := false
-	idx := 0
-	for k, v := range f.behaviorLst {
-		if v.Name == name {
-			flag = true
-			idx = k
-			break
-		}
+func (f *Factory) AddBehavior(name string, byt []byte) {
+	err := f.bfile.Upset(name, byt)
+	if err != nil {
+		fmt.Println("AddBehavior ", err.Error())
 	}
-
-	if flag {
-		f.behaviorLst = append(f.behaviorLst[:idx], f.behaviorLst[idx+1:]...)
-	}
-
-	f.behaviorLst = append(f.behaviorLst, BehaviorInfo{
-		Name:       name,
-		RootID:     rootid,
-		Dat:        byt,
-		UpdateTime: time.Now().Unix(),
-	})
 }
 
 func (f *Factory) RmvBehavior(name string) {
-	for k := range f.behaviorLst {
-		if f.behaviorLst[k].Name == name {
-			f.behaviorLst = append(f.behaviorLst[:k], f.behaviorLst[k+1:]...)
-			break
-		}
+	err := f.bfile.Del(name)
+	if err != nil {
+		fmt.Println("RmvBehavior ", err.Error())
 	}
 }
 
 func (f *Factory) GetBehaviors() []BehaviorInfo {
-	info := []BehaviorInfo{}
-	for _, v := range f.behaviorLst {
-		info = append(info, BehaviorInfo{
-			Name:       v.Name,
-			UpdateTime: v.UpdateTime,
-		})
+	lst, err := f.bfile.All()
+	if err != nil {
+		fmt.Println("GetBehaviors ", err.Error())
 	}
 
-	return info
+	return lst
 }
 
 func (f *Factory) FindBehavior(name string) (BehaviorInfo, error) {
+	return f.bfile.Find(name)
+}
 
-	var info BehaviorInfo
-	err := fmt.Errorf("FindBehavior err not found %v", name)
-
-	for _, v := range f.behaviorLst {
-		if v.Name == name {
-			info = v
-			err = nil
-			break
+func (f *Factory) Append(info BatchInfo) error {
+	for _, v := range info.Batch {
+		_, err := f.bfile.Find(v.Behavior)
+		if err != nil {
+			return err
 		}
 	}
 
-	return info, err
-
-}
-
-func (f *Factory) Append(info BatchInfo) {
-	fmt.Println("pipeline append", info)
 	f.pipelineCache = append(f.pipelineCache, info)
+	return nil
 }
 
 func (f *Factory) CreateBot(name string) *bot.Bot {
 	var b *bot.Bot
 
-	for _, v := range f.behaviorLst {
-		if v.Name == name {
-
-			tree, err := behavior.New(v.Dat)
-			if err != nil {
-				return nil
-			}
-
-			b = bot.NewWithBehaviorTree(f.parm.ScriptPath, tree, name)
-			f.batchBots[b.ID()] = b
-			break
-		}
+	info, err := f.bfile.Find(name)
+	if err != nil {
+		return nil
 	}
+
+	tree, err := behavior.New(info.Dat)
+	if err != nil {
+		return nil
+	}
+
+	b = bot.NewWithBehaviorTree(f.parm.ScriptPath, tree, name)
+	f.batchBots[b.ID()] = b
 
 	return b
 }
@@ -301,19 +265,18 @@ func (f *Factory) CreateBot(name string) *bot.Bot {
 func (f *Factory) CreateDebugBot(name string) *bot.Bot {
 	var b *bot.Bot
 
-	for _, v := range f.behaviorLst {
-		if v.Name == name {
-
-			tree, err := behavior.New(v.Dat)
-			if err != nil {
-				return nil
-			}
-
-			b = bot.NewWithBehaviorTree(f.parm.ScriptPath, tree, name)
-			f.debugBots[b.ID()] = b
-			break
-		}
+	info, err := f.bfile.Find(name)
+	if err != nil {
+		return nil
 	}
+
+	tree, err := behavior.New(info.Dat)
+	if err != nil {
+		return nil
+	}
+
+	b = bot.NewWithBehaviorTree(f.parm.ScriptPath, tree, name)
+	f.debugBots[b.ID()] = b
 
 	return b
 }
