@@ -8,19 +8,68 @@
 # Try it out
 Try the editor out [on website](http://1.117.168.37:7777/)
 
-# Install
-```shell
-# run drive
-$ docker pull braidgo/apibot:latest
-$ docker run --rm -d  -p 8888:8888/tcp braidgo/apibot:latest
-```
-
 ## Preview
 [![image.png](https://i.postimg.cc/wT5HhYD3/image.png)](https://postimg.cc/6yQDXSjN)
 
+# Install
+Make sure to pass in values for MYSQL_ROOT_PASSWORD and MYSQL_PASSWORD variables before you run this setup.
+
+```shell
+version: "3.7"
+
+volumes:
+  db:
+
+services:
+  db:
+    image: mariadb:10.5
+    restart: always
+    networks:
+      - gnet
+    volumes:
+      - db:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=
+      - MYSQL_PASSWORD=
+      - MYSQL_DATABASE=gobot
+      - MYSQL_USER=gobot
+
+  gobot_driver:
+    image: braidgo/gobot-driver:latest
+    restart: always
+    networks:
+      - gnet
+    depends_on:
+      - db
+    ports:
+      - 8888:8888
+    deploy:
+      resources:
+        limits:
+          cpus: "0.3"
+    environment:
+      - MYSQL_PASSWORD=
+      - MYSQL_DATABASE=gobot
+      - MYSQL_USER=gobot
+      - MYSQL_HOST=db
+
+  gobot_editor:
+    image: braidgo/gobot-editor:latest
+    restart: always
+    depends_on:
+      - gobot_driver
+    ports:
+      - 7777:7777
+
+networks:
+  gnet:
+    driver: bridge
+```
+Then run docker-compose up -d, now you can access gobot at http://localhost:7777/ from your host system.
 
 
-### API
+
+# API
 * `/file.txtUpload`
 * `/file.blobUpload`
 * `/file.remove`
