@@ -9,6 +9,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/pojol/gobot-driver/behavior"
 	"github.com/pojol/gobot-driver/bot"
+	"github.com/pojol/gobot-driver/database"
 	"github.com/pojol/gobot-driver/factory"
 	"github.com/pojol/gobot-driver/utils"
 )
@@ -199,13 +200,13 @@ type FindBehaviorReq struct {
 }
 
 type FindBehaviorRes struct {
-	Info factory.BehaviorInfo
+	Info database.BehaviorInfo
 }
 
 func FileGetBlob(ctx echo.Context) error {
 	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
 	req := &FindBehaviorReq{}
-	info := factory.BehaviorInfo{}
+	info := database.BehaviorInfo{}
 
 	bts, err := ioutil.ReadAll(ctx.Request().Body)
 	if err != nil {

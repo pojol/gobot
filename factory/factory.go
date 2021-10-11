@@ -12,6 +12,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/pojol/gobot-driver/behavior"
 	"github.com/pojol/gobot-driver/bot"
+	"github.com/pojol/gobot-driver/database"
 	"github.com/pojol/gobot-driver/utils"
 )
 
@@ -48,7 +49,6 @@ type BatchInfo struct {
 
 type Factory struct {
 	parm          Parm
-	bfile         *BehaviorFile
 	reportHistory []*Report
 
 	batchBots map[string]*bot.Bot
@@ -98,7 +98,6 @@ func Create(opts ...Option) (*Factory, error) {
 		batchDone:   make(chan interface{}, 1),
 		colorer:     color.New(),
 		batch:       utils.New(p.batchSize),
-		bfile:       NewBehaviorFile(),
 	}
 
 	go f.loop()
@@ -205,21 +204,21 @@ func (f *Factory) Close() {
 }
 
 func (f *Factory) AddBehavior(name string, byt []byte) {
-	err := f.bfile.Upset(name, byt)
+	err := database.Get().UpsetFile(name, byt)
 	if err != nil {
 		fmt.Println("AddBehavior ", err.Error())
 	}
 }
 
 func (f *Factory) RmvBehavior(name string) {
-	err := f.bfile.Del(name)
+	err := database.Get().DelFile(name)
 	if err != nil {
 		fmt.Println("RmvBehavior ", err.Error())
 	}
 }
 
-func (f *Factory) GetBehaviors() []BehaviorInfo {
-	lst, err := f.bfile.All()
+func (f *Factory) GetBehaviors() []database.BehaviorInfo {
+	lst, err := database.Get().GetAllFiles()
 	if err != nil {
 		fmt.Println("GetBehaviors ", err.Error())
 	}
@@ -227,13 +226,13 @@ func (f *Factory) GetBehaviors() []BehaviorInfo {
 	return lst
 }
 
-func (f *Factory) FindBehavior(name string) (BehaviorInfo, error) {
-	return f.bfile.Find(name)
+func (f *Factory) FindBehavior(name string) (database.BehaviorInfo, error) {
+	return database.Get().FindFile(name)
 }
 
 func (f *Factory) Append(info BatchInfo) error {
 	for _, v := range info.Batch {
-		_, err := f.bfile.Find(v.Behavior)
+		_, err := database.Get().FindFile(v.Behavior)
 		if err != nil {
 			return err
 		}
@@ -246,7 +245,7 @@ func (f *Factory) Append(info BatchInfo) error {
 func (f *Factory) CreateBot(name string) *bot.Bot {
 	var b *bot.Bot
 
-	info, err := f.bfile.Find(name)
+	info, err := database.Get().FindFile(name)
 	if err != nil {
 		return nil
 	}
