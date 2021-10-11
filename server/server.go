@@ -51,13 +51,18 @@ func FileBlobUpload(ctx echo.Context) error {
 	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
 	res := &Response{}
 	code := Succ
-	var name string
 
-	name = ctx.Request().Header.Get("FileName")
+	name := ctx.Request().Header.Get("FileName")
 	bts, err := ioutil.ReadAll(ctx.Request().Body)
 	if err != nil {
 		code = ErrContentRead // tmp
 		fmt.Println(err.Error())
+		goto EXT
+	}
+
+	if len(bts) == 0 {
+		code = ErrContentRead // tmp
+		fmt.Println("bytes is empty!")
 		goto EXT
 	}
 
@@ -453,7 +458,20 @@ EXT:
 	return nil
 }
 
+func ReqPrint() echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			fmt.Println(c.Path(), c.Request().Method, "enter")
+			err := next(c)
+			fmt.Println(c.Path(), c.Request().Method, err)
+			return err
+		}
+	}
+}
+
 func Route(e *echo.Echo) {
+
+	//e.Use(ReqPrint())
 
 	e.POST("/file.txtUpload", FileTextUpload)
 	e.POST("/file.blobUpload", FileBlobUpload)
