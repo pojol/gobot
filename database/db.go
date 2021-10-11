@@ -18,8 +18,10 @@ type BehaviorInfo struct {
 }
 
 type BotTemplateConfig struct {
-	Name string
-	Tpl  []byte
+	gorm.Model
+
+	Name string `gorm:"<-"`
+	Tpl  []byte `gorm:"<-"`
 }
 
 type BotConfig struct {
