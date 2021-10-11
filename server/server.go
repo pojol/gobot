@@ -415,22 +415,18 @@ EXT:
 	return nil
 }
 
-type createRequest struct {
-	Name string
-}
-
-type createResponse struct {
+type createDebugBotResponse struct {
 	BotID string
 }
 
 func DebugCreate(ctx echo.Context) error {
 	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
 	res := &Response{}
-	req := &createRequest{}
-	body := &createResponse{}
+	body := &createDebugBotResponse{}
 	code := Succ
 	var b *bot.Bot
 
+	name := ctx.Request().Header.Get("FileName")
 	bts, err := ioutil.ReadAll(ctx.Request().Body)
 	if err != nil {
 		code = ErrContentRead // tmp
@@ -438,16 +434,9 @@ func DebugCreate(ctx echo.Context) error {
 		goto EXT
 	}
 
-	err = json.Unmarshal(bts, req)
-	if err != nil {
-		code = ErrContentRead // tmp
-		fmt.Println(err.Error())
-		goto EXT
-	}
-
-	b = factory.Global.CreateDebugBot(req.Name)
+	b = factory.Global.CreateDebugBot(name, bts)
 	if b == nil {
-		fmt.Println("create bot err", req.Name)
+		fmt.Println("create bot err", name)
 		code = ErrCreateBot
 		goto EXT
 	}

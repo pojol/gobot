@@ -262,15 +262,10 @@ func (f *Factory) CreateBot(name string) *bot.Bot {
 	return b
 }
 
-func (f *Factory) CreateDebugBot(name string) *bot.Bot {
+func (f *Factory) CreateDebugBot(name string, fbyt []byte) *bot.Bot {
 	var b *bot.Bot
 
-	info, err := f.bfile.Find(name)
-	if err != nil {
-		return nil
-	}
-
-	tree, err := behavior.New(info.Dat)
+	tree, err := behavior.New(fbyt)
 	if err != nil {
 		return nil
 	}
