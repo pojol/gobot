@@ -26,9 +26,9 @@ type BotTemplateConfig struct {
 
 type BotConfig struct {
 	gorm.Model
-	Name string              `gorm:"<-"`
-	Addr string              `gorm:"<-"` // bot driver address
-	Tpls []BotTemplateConfig `gorm:"<-"` // code template
+
+	Name string `gorm:"<-"`
+	Addr string `gorm:"<-"` // bot driver address
 }
 
 type Database struct {
@@ -74,8 +74,10 @@ func newDatabase() {
 		panic(err)
 	}
 
-	db.AutoMigrate(&BehaviorInfo{})
-	db.AutoMigrate(&BotConfig{})
+	err = db.AutoMigrate(&BehaviorInfo{}, &BotTemplateConfig{}, &BotConfig{})
+	if err != nil {
+		panic(err)
+	}
 
 	bf = &Database{
 		db: db,
@@ -123,8 +125,6 @@ func (f *Database) DelFile(name string) error {
 }
 
 func (f *Database) FindFile(name string) (BehaviorInfo, error) {
-	f.Lock()
-	defer f.Unlock()
 
 	info := BehaviorInfo{}
 
@@ -134,8 +134,6 @@ func (f *Database) FindFile(name string) (BehaviorInfo, error) {
 }
 
 func (f *Database) GetAllFiles() ([]BehaviorInfo, error) {
-	f.Lock()
-	defer f.Unlock()
 
 	lst := []BehaviorInfo{}
 
