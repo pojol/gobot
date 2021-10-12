@@ -10,7 +10,7 @@
 Try the editor out [on website](http://1.117.168.37:7777/)
 
 ## Preview
-[![image.png](https://i.postimg.cc/wT5HhYD3/image.png)](https://postimg.cc/6yQDXSjN)
+[![image.png](https://i.postimg.cc/9Mb241MK/image.png)](https://postimg.cc/WFdCCG0w)
 
 # Install
 1. Install docker-compose
