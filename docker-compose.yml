@@ -1,11 +1,49 @@
 version: "3.7"
+
+volumes:
+  db:
+
 services:
-  apibot:
-    image: braidgo/apibot:latest
+  db:
+    image: mariadb:10.5
     restart: always
+    networks:
+      - gnet
+    volumes:
+      - db:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=
+      - MYSQL_PASSWORD=
+      - MYSQL_DATABASE=gobot
+      - MYSQL_USER=gobot
+
+  gobot_driver:
+    image: braidgo/gobot-driver:latest
+    restart: always
+    networks:
+      - gnet
+    depends_on:
+      - db
     ports:
       - 8888:8888
     deploy:
       resources:
         limits:
           cpus: "0.3"
+    environment:
+      - MYSQL_PASSWORD=
+      - MYSQL_DATABASE=gobot
+      - MYSQL_USER=gobot
+      - MYSQL_HOST=db
+
+  gobot_editor:
+    image: braidgo/gobot-editor:latest
+    restart: always
+    depends_on:
+      - gobot_driver
+    ports:
+      - 7777:7777
+
+networks:
+  gnet:
+    driver: bridge

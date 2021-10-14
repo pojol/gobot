@@ -9,6 +9,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/pojol/gobot-driver/behavior"
 	"github.com/pojol/gobot-driver/bot"
+	"github.com/pojol/gobot-driver/database"
 	"github.com/pojol/gobot-driver/factory"
 	"github.com/pojol/gobot-driver/utils"
 )
@@ -50,10 +51,8 @@ func FileBlobUpload(ctx echo.Context) error {
 	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
 	res := &Response{}
 	code := Succ
-	var name string
-	var tree *behavior.Tree
 
-	name = ctx.Request().Header.Get("FileName")
+	name := ctx.Request().Header.Get("FileName")
 	bts, err := ioutil.ReadAll(ctx.Request().Body)
 	if err != nil {
 		code = ErrContentRead // tmp
@@ -61,13 +60,19 @@ func FileBlobUpload(ctx echo.Context) error {
 		goto EXT
 	}
 
-	tree, err = behavior.New(bts)
+	if len(bts) == 0 {
+		code = ErrContentRead // tmp
+		fmt.Println("bytes is empty!")
+		goto EXT
+	}
+
+	_, err = behavior.New(bts)
 	if err != nil {
 		fmt.Println(err.Error())
 		code = ErrJsonInvalid
 		goto EXT
 	}
-	factory.Global.AddBehavior(tree.ID, name, bts)
+	factory.Global.AddBehavior(name, bts)
 
 EXT:
 	res.Code = int(code)
@@ -84,7 +89,6 @@ func FileTextUpload(ctx echo.Context) error {
 	var upload *utils.UploadFile
 	var fbyte []byte
 	var name string
-	var tree *behavior.Tree
 
 	f, header, err := ctx.Request().FormFile("file")
 	if err != nil {
@@ -105,13 +109,13 @@ func FileTextUpload(ctx echo.Context) error {
 	}
 
 	name = upload.FileName()
-	tree, err = behavior.New(fbyte)
+	_, err = behavior.New(fbyte)
 	if err != nil {
 		fmt.Println(err.Error())
 		code = ErrJsonInvalid
 		goto EXT
 	}
-	factory.Global.AddBehavior(tree.ID, name, fbyte)
+	factory.Global.AddBehavior(name, fbyte)
 
 EXT:
 	res.Code = int(code)
@@ -201,13 +205,13 @@ type FindBehaviorReq struct {
 }
 
 type FindBehaviorRes struct {
-	Info factory.BehaviorInfo
+	Info database.BehaviorInfo
 }
 
 func FileGetBlob(ctx echo.Context) error {
 	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
 	req := &FindBehaviorReq{}
-	info := factory.BehaviorInfo{}
+	info := database.BehaviorInfo{}
 
 	bts, err := ioutil.ReadAll(ctx.Request().Body)
 	if err != nil {
@@ -226,8 +230,6 @@ func FileGetBlob(ctx echo.Context) error {
 		fmt.Println(err.Error())
 		goto EXT
 	}
-
-	fmt.Println("get blob", info.Name, info.RootID)
 
 EXT:
 	ctx.Blob(http.StatusOK, "text/plain;charset=utf-8", info.Dat)
@@ -300,7 +302,8 @@ func GetReport(ctx echo.Context) error {
 }
 
 type RunRequest struct {
-	Info []factory.BatchBotInfo
+	Name string
+	Num  int
 }
 
 type RunResponse struct {
@@ -329,20 +332,18 @@ func BotRun(ctx echo.Context) error {
 		goto EXT
 	}
 
-	if len(req.Info) == 0 {
-		code = ErrEmptyBatch
+	if req.Name == "" {
+		goto EXT
+	}
+	if req.Num == 0 {
 		goto EXT
 	}
 
-	for _, v := range req.Info {
-		if v.Behavior == "" {
-			goto EXT
-		}
-		if v.Num == 0 {
-			goto EXT
-		}
-	}
-	info.Batch = append(info.Batch, req.Info...)
+	info.Batch = append(info.Batch, factory.BatchBotInfo{
+		Behavior: req.Name,
+		Num:      int32(req.Num),
+	})
+
 	factory.Global.Append(info)
 
 EXT:
@@ -419,22 +420,18 @@ EXT:
 	return nil
 }
 
-type createRequest struct {
-	Name string
-}
-
-type createResponse struct {
+type createDebugBotResponse struct {
 	BotID string
 }
 
 func DebugCreate(ctx echo.Context) error {
 	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
 	res := &Response{}
-	req := &createRequest{}
-	body := &createResponse{}
+	body := &createDebugBotResponse{}
 	code := Succ
 	var b *bot.Bot
 
+	name := ctx.Request().Header.Get("FileName")
 	bts, err := ioutil.ReadAll(ctx.Request().Body)
 	if err != nil {
 		code = ErrContentRead // tmp
@@ -442,16 +439,9 @@ func DebugCreate(ctx echo.Context) error {
 		goto EXT
 	}
 
-	err = json.Unmarshal(bts, req)
-	if err != nil {
-		code = ErrContentRead // tmp
-		fmt.Println(err.Error())
-		goto EXT
-	}
-
-	b = factory.Global.CreateDebugBot(req.Name)
+	b = factory.Global.CreateDebugBot(name, bts)
 	if b == nil {
-		fmt.Println("create bot err", req.Name)
+		fmt.Println("create bot err", name)
 		code = ErrCreateBot
 		goto EXT
 	}
@@ -467,7 +457,20 @@ EXT:
 	return nil
 }
 
+func ReqPrint() echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			fmt.Println(c.Path(), c.Request().Method, "enter")
+			err := next(c)
+			fmt.Println(c.Path(), c.Request().Method, err)
+			return err
+		}
+	}
+}
+
 func Route(e *echo.Echo) {
+
+	//e.Use(ReqPrint())
 
 	e.POST("/file.txtUpload", FileTextUpload)
 	e.POST("/file.blobUpload", FileBlobUpload)

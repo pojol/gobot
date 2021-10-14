@@ -11,18 +11,24 @@ import (
 )
 
 func main() {
-	var err error
 
-	_, err = factory.Create()
+	_, err := factory.Create()
 	if err != nil {
 		panic(err)
 	}
 
 	ms := mock.NewServer()
-	go ms.Start(":7777")
+	go ms.Start(":6666")
 
 	e := echo.New()
 	e.Use(middleware.CORS())
+	e.Use(middleware.RecoverWithConfig(middleware.RecoverConfig{
+		Skipper:           middleware.DefaultSkipper,
+		StackSize:         4 << 10, // 4 KB
+		DisableStackAll:   true,
+		DisablePrintStack: true,
+		LogLevel:          1,
+	}))
 	server.Route(e)
 	e.Start(":8888")
 

@@ -89,6 +89,7 @@ func NewWithBehaviorTree(path string, bt *behavior.Tree, tmpl string) *Bot {
 	// test
 	bot.L.DoString(`meta = { Token = "" }`)
 
+	// 这里要对script目录进行一次检查，将lua脚本都载入进来
 	bot.L.DoFile(path + "global.lua")
 	bot.L.DoFile(path + "json.lua")
 
