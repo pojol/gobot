@@ -1,6 +1,6 @@
-# apibot
+# gobot
+Robot editor framework based on behavior tree, node supports binding script execution.
 
-> Note: The current version is for preview only
 
 [![](https://img.shields.io/badge/editor-code-2ca5e0?style=flat&logo=github)](https://github.com/pojol/gobot-editor)
  [![](https://img.shields.io/badge/%E4%B8%AD%E6%96%87-readme-2ca5e0?style=flat&logo=github)](https://github.com/pojol/gobot-driver/blob/master/README_CN.md)
