@@ -302,7 +302,8 @@ func GetReport(ctx echo.Context) error {
 }
 
 type RunRequest struct {
-	Info []factory.BatchBotInfo
+	Name string
+	Num  int
 }
 
 type RunResponse struct {
@@ -331,20 +332,18 @@ func BotRun(ctx echo.Context) error {
 		goto EXT
 	}
 
-	if len(req.Info) == 0 {
-		code = ErrEmptyBatch
+	if req.Name == "" {
+		goto EXT
+	}
+	if req.Num == 0 {
 		goto EXT
 	}
 
-	for _, v := range req.Info {
-		if v.Behavior == "" {
-			goto EXT
-		}
-		if v.Num == 0 {
-			goto EXT
-		}
-	}
-	info.Batch = append(info.Batch, req.Info...)
+	info.Batch = append(info.Batch, factory.BatchBotInfo{
+		Behavior: req.Name,
+		Num:      int32(req.Num),
+	})
+
 	factory.Global.Append(info)
 
 EXT:
