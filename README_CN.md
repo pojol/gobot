@@ -1,19 +1,20 @@
-# apibot
+# gobot editor
+基于行为树的机器人编辑器框架，节点支持绑定脚本执行。
 
-> Note: The current version is for preview only
+> 注: 当前版本为预览版本 
 
 [![](https://img.shields.io/badge/editor-code-2ca5e0?style=flat&logo=github)](https://github.com/pojol/gobot-editor)
- [![](https://img.shields.io/badge/%E4%B8%AD%E6%96%87-readme-2ca5e0?style=flat&logo=github)](https://github.com/pojol/gobot-driver/blob/master/README_CN.md)
+[![](https://img.shields.io/badge/%E4%B8%AD%E6%96%87-doc-2ca5e0?style=flat&logo=github)](https://docs.gobot.fun/)
+
+# 在线试用
+尝试在[网站](http://1.117.168.37:7777/)上进行编辑 
 
 
-# Try it out
-Try the editor out [on website](http://1.117.168.37:7777/)
-
-## Preview
+## 编辑器预览
 [![image.png](https://i.postimg.cc/9Mb241MK/image.png)](https://postimg.cc/WFdCCG0w)
 
-# Install
-1. Install docker-compose
+# 安装
+1. 安装 docker-compose
     ```shell
     # for CentOS
     yum install docker-compose -y
@@ -22,7 +23,7 @@ Try the editor out [on website](http://1.117.168.37:7777/)
     apt-get install docker-compose -y
     ```
 
-2. Down load and modify [docker-compose.yml](https://github.com/pojol/gobot-driver/blob/develop/docker-compose.yml) file make sure to pass in values for `MYSQL_ROOT_PASSWORD` and `MYSQL_PASSWORD` variables before you run this setup.
+2. 下载并编辑 [docker-compose.yml](https://github.com/pojol/gobot-driver/blob/develop/docker-compose.yml) 在启动前，请确保对 `MYSQL_ROOT_PASSWORD` 和 `MYSQL_PASSWORD` 参数进行赋值
 
     ```yaml
     version: "3.7"
@@ -75,9 +76,7 @@ Try the editor out [on website](http://1.117.168.37:7777/)
     gnet:
         driver: bridge
     ```
-3. Run `docker-compose up -d`, now you can access gobot at http://localhost:7777/ from your host system.
-
-
+3. 运行命令 `docker-compose up -d` 运行成功后，访问 http://localhost:7777/ 即可进行 gobot 的编辑
 
 # API
 * `/file.txtUpload`
@@ -92,15 +91,3 @@ Try the editor out [on website](http://1.117.168.37:7777/)
 
 * `/debug.create`
 * `/debug.step`
-
-
-### Script
-* `http.post`
-* `http.get`
-* `http.put`
-
-* `json.encode`
-* `json.decode`
-
-* `proto.marshal`
-* `proto.unmarshal`
