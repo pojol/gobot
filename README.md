@@ -10,7 +10,7 @@ Robot editor framework based on behavior tree, node supports binding script exec
 Try the editor out [on website](http://1.117.168.37:7777/)
 
 ## Preview
-[![image.png](https://i.postimg.cc/9Mb241MK/image.png)](https://postimg.cc/WFdCCG0w)
+[![image.png](https://i.postimg.cc/RCdYzPHh/image.png)](https://postimg.cc/DmW6rP53)
 
 # Install
 1. Install docker-compose
