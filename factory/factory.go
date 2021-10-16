@@ -6,7 +6,6 @@ import (
 	"sort"
 	"strconv"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/fatih/color"
@@ -39,34 +38,24 @@ type Report struct {
 	UrlMap map[string]*urlDetail
 }
 
-type BatchBotInfo struct {
-	Behavior string
-	Num      int32
-}
-type BatchInfo struct {
-	Batch []BatchBotInfo
+type TaskInfo struct {
+	Name string
+	Num  int32
 }
 
 type Factory struct {
 	parm          Parm
 	reportHistory []*Report
 
-	batchBots map[string]*bot.Bot
 	debugBots map[string]*bot.Bot
 
-	pipelineCache []BatchInfo
-	running       bool
+	pipelineCache []TaskInfo
+	batches       []*Batch
 
-	translateCh chan *bot.Bot
-	doneCh      chan string
-	errCh       chan bot.ErrInfo
-
+	colorer   *color.Color
 	batch     utils.SizeWaitGroup
 	batchDone chan interface{}
-
-	IncID int64
-
-	colorer *color.Color
+	batchLock sync.Mutex
 
 	lock sync.Mutex
 	exit *utils.Switch
@@ -78,9 +67,9 @@ func Create(opts ...Option) (*Factory, error) {
 		frameRate:   time.Second * 1,
 		lifeTime:    time.Minute,
 		Interrupt:   true,
-		batchSize:   1024,
 		ReportLimit: 10,
 		ScriptPath:  "script/",
+		batchSize:   1024,
 	}
 
 	for _, opt := range opts {
@@ -88,19 +77,15 @@ func Create(opts ...Option) (*Factory, error) {
 	}
 
 	f := &Factory{
-		parm:        p,
-		batchBots:   make(map[string]*bot.Bot),
-		debugBots:   make(map[string]*bot.Bot),
-		exit:        utils.NewSwitch(),
-		translateCh: make(chan *bot.Bot),
-		doneCh:      make(chan string),
-		errCh:       make(chan bot.ErrInfo),
-		batchDone:   make(chan interface{}, 1),
-		colorer:     color.New(),
-		batch:       utils.New(p.batchSize),
+		parm:      p,
+		debugBots: make(map[string]*bot.Bot),
+		exit:      utils.NewSwitch(),
+		colorer:   color.New(),
+		batch:     utils.NewSizeWaitGroup(p.batchSize),
+		batchDone: make(chan interface{}, 1),
 	}
 
-	go f.loop()
+	go f.taskLoop()
 
 	Global = f
 	return f, nil
@@ -230,35 +215,23 @@ func (f *Factory) FindBehavior(name string) (database.BehaviorInfo, error) {
 	return database.Get().FindFile(name)
 }
 
-func (f *Factory) Append(info BatchInfo) error {
-	for _, v := range info.Batch {
-		_, err := database.Get().FindFile(v.Behavior)
-		if err != nil {
-			return err
-		}
+func (f *Factory) AddTask(name string, cnt int32) error {
+	_, err := database.Get().FindFile(name)
+	if err != nil {
+		return err
 	}
 
-	f.pipelineCache = append(f.pipelineCache, info)
+	f.pipelineCache = append(f.pipelineCache, TaskInfo{Name: name, Num: cnt})
 	return nil
 }
 
-func (f *Factory) CreateBot(name string) *bot.Bot {
-	var b *bot.Bot
-
+func (f *Factory) CreateTask(name string, num int, bwg *utils.SizeWaitGroup) *Batch {
 	info, err := database.Get().FindFile(name)
 	if err != nil {
 		return nil
 	}
 
-	tree, err := behavior.New(info.Dat)
-	if err != nil {
-		return nil
-	}
-
-	b = bot.NewWithBehaviorTree(f.parm.ScriptPath, tree, name)
-	f.batchBots[b.ID()] = b
-
-	return b
+	return CreateBatch(f.parm.ScriptPath, name, num, info.Dat, bwg, f.batchDone)
 }
 
 func (f *Factory) CreateDebugBot(name string, fbyt []byte) *bot.Bot {
@@ -293,61 +266,57 @@ func (f *Factory) RmvBot(botid string) {
 
 }
 
-func (f *Factory) push(bot *bot.Bot) {
-	f.batch.Add()
-
-	f.batchBots[bot.ID()] = bot
-}
-
-func (f *Factory) pop(id string, err error, rep *Report) {
-	f.batch.Done()
-
-	if err != nil && f.parm.Interrupt {
-		panic(err)
-	}
-
-	if _, ok := f.batchBots[id]; ok {
-
-		f.pushReport(rep, f.batchBots[id])
-		if err != nil {
-			f.colorer.Printf("%v\n", utils.Red(err.Error()))
-		}
-		f.batchBots[id].Close()
-		delete(f.batchBots, id)
-
-	}
-
-	fmt.Println(len(f.batchBots))
-	if len(f.batchBots) == 0 {
-		f.batchDone <- 1
-	}
-
-}
-
-func (f *Factory) loop() {
+func (f *Factory) taskLoop() {
 	for {
 		f.lock.Lock()
-		if len(f.pipelineCache) > 0 && !f.running {
+		if len(f.pipelineCache) > 0 {
 			info := f.pipelineCache[0]
 			f.pipelineCache = f.pipelineCache[1:]
 
-			fmt.Println("pop", info)
-
-			go f.router()
-			f.running = true
-
-			for _, v := range info.Batch {
-				for i := 0; i < int(v.Num); i++ {
-					f.translateCh <- f.CreateBot(v.Behavior)
-				}
+			batchLen := len(f.batches)
+			if batchLen >= f.parm.batchSize {
+				time.Sleep(time.Millisecond * 10)
+				f.lock.Unlock()
+				continue
 			}
 
+			f.pushBatch(f.CreateTask(info.Name, int(info.Num), &f.batch))
 		}
 		f.lock.Unlock()
+
+		select {
+		case <-f.batchDone:
+			f.popBatch()
+		default:
+		}
+
 		time.Sleep(time.Millisecond)
 	}
 }
 
+func (f *Factory) pushBatch(b *Batch) {
+	f.batchLock.Lock()
+	f.batches = append(f.batches, b)
+	f.batchLock.Unlock()
+}
+
+func (f *Factory) popBatch() {
+	f.batchLock.Lock()
+	f.batches = f.batches[1:]
+	f.batchLock.Unlock()
+}
+
+func (f *Factory) GetBatchInfo() []BatchInfo {
+	var lst []BatchInfo
+	f.batchLock.Lock()
+	for _, v := range f.batches {
+		lst = append(lst, v.Info())
+	}
+	f.batchLock.Unlock()
+	return lst
+}
+
+/*
 func (f *Factory) router() {
 
 	rep := &Report{
@@ -380,3 +349,4 @@ ext:
 	f.reportHistory = append(f.reportHistory, rep)
 	f.running = false
 }
+*/

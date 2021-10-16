@@ -15,7 +15,7 @@ type SizeWaitGroup struct {
 }
 
 // 创建一个固定大小的拥塞队列
-func New(size int) SizeWaitGroup {
+func NewSizeWaitGroup(size int) SizeWaitGroup {
 	if size <= 0 || size > math.MaxInt16 {
 		panic(fmt.Errorf("not allow size %v", size))
 	}

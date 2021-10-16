@@ -314,7 +314,6 @@ func BotRun(ctx echo.Context) error {
 	res := &Response{}
 	req := &RunRequest{}
 	code := Succ
-	var info factory.BatchInfo
 
 	var err error
 
@@ -339,16 +338,34 @@ func BotRun(ctx echo.Context) error {
 		goto EXT
 	}
 
-	info.Batch = append(info.Batch, factory.BatchBotInfo{
-		Behavior: req.Name,
-		Num:      int32(req.Num),
-	})
-
-	factory.Global.Append(info)
+	fmt.Println("add task", req.Name)
+	err = factory.Global.AddTask(req.Name, int32(req.Num))
+	if err != nil {
+		res.Msg = err.Error()
+	}
 
 EXT:
 	res.Code = int(code)
 	res.Msg = errmap[code]
+
+	ctx.JSON(http.StatusOK, res)
+	return nil
+}
+
+type BotListResponse struct {
+	Lst []factory.BatchInfo
+}
+
+func BotList(ctx echo.Context) error {
+	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
+	res := &Response{}
+	body := &BotListResponse{}
+	code := Succ
+
+	body.Lst = factory.Global.GetBatchInfo()
+	res.Code = int(code)
+	res.Msg = errmap[code]
+	res.Body = body
 
 	ctx.JSON(http.StatusOK, res)
 	return nil
@@ -480,6 +497,7 @@ func Route(e *echo.Echo) {
 	e.POST("/file.get", FileGetBlob)
 
 	e.POST("/bot.create", BotRun) // 创建一批bot
+	e.POST("/bot.list", BotList)
 	//e.POST("/bot.list")
 	//e.POST("/bot.info")	// 获取所有运行时的bot信息（保留100个  运行中 | 已终止 | 有错误
 

@@ -38,29 +38,37 @@ type Database struct {
 
 var bf *Database
 
-func newDatabase() {
+func New(pwd, name, host, user string) {
 
-	pwd := os.Getenv("MYSQL_PASSWORD")
 	if pwd == "" {
-		panic(errors.New("mysql password is not defined"))
+		pwd = os.Getenv("MYSQL_PASSWORD")
+		if pwd == "" {
+			panic(errors.New("mysql password is not defined"))
+		}
 	}
 
-	dbname := os.Getenv("MYSQL_DATABASE")
-	if dbname == "" {
-		panic(errors.New("mysql database is not defined"))
+	if name == "" {
+		name = os.Getenv("MYSQL_DATABASE")
+		if name == "" {
+			panic(errors.New("mysql database is not defined"))
+		}
 	}
 
-	host := os.Getenv("MYSQL_HOST")
 	if host == "" {
-		panic(errors.New("mysql host is not defined"))
+		host = os.Getenv("MYSQL_HOST")
+		if host == "" {
+			panic(errors.New("mysql host is not defined"))
+		}
 	}
 
-	user := os.Getenv("MYSQL_USER")
 	if user == "" {
-		panic(errors.New("mysql user is not defined"))
+		user = os.Getenv("MYSQL_USER")
+		if user == "" {
+			panic(errors.New("mysql user is not defined"))
+		}
 	}
 
-	dsn := user + ":" + pwd + "@tcp(" + host + ")/" + dbname + "?charset=utf8&parseTime=True&loc=Local"
+	dsn := user + ":" + pwd + "@tcp(" + host + ")/" + name + "?charset=utf8&parseTime=True&loc=Local"
 
 	db, err := gorm.Open(mysql.New(mysql.Config{
 		DSN:                       dsn,   // data source name
@@ -143,5 +151,5 @@ func (f *Database) GetAllFiles() ([]BehaviorInfo, error) {
 }
 
 func init() {
-	newDatabase()
+	New("", "", "", "")
 }
