@@ -2,13 +2,9 @@ package factory
 
 import (
 	"fmt"
-	"net/url"
-	"sort"
-	"strconv"
 	"sync"
 	"time"
 
-	"github.com/fatih/color"
 	"github.com/pojol/gobot-driver/behavior"
 	"github.com/pojol/gobot-driver/bot"
 	"github.com/pojol/gobot-driver/database"
@@ -45,14 +41,13 @@ type TaskInfo struct {
 
 type Factory struct {
 	parm          Parm
-	reportHistory []*Report
+	reportHistory []Report
 
 	debugBots map[string]*bot.Bot
 
 	pipelineCache []TaskInfo
 	batches       []*Batch
 
-	colorer   *color.Color
 	batch     utils.SizeWaitGroup
 	batchDone chan interface{}
 	batchLock sync.Mutex
@@ -80,7 +75,6 @@ func Create(opts ...Option) (*Factory, error) {
 		parm:      p,
 		debugBots: make(map[string]*bot.Bot),
 		exit:      utils.NewSwitch(),
-		colorer:   color.New(),
 		batch:     utils.NewSizeWaitGroup(p.batchSize),
 		batchDone: make(chan interface{}, 1),
 	}
@@ -93,94 +87,15 @@ func Create(opts ...Option) (*Factory, error) {
 
 var Global *Factory
 
-func (f *Factory) pushReport(rep *Report, bot *bot.Bot) {
-	f.lock.Lock()
-	defer f.lock.Unlock()
-
-	rep.BotNum++
-	robotReport := bot.GetReport()
-
-	rep.ReqNum += len(robotReport)
-	for _, v := range robotReport {
-		if _, ok := rep.UrlMap[v.Api]; !ok {
-			rep.UrlMap[v.Api] = &urlDetail{}
-		}
-
-		rep.UrlMap[v.Api].ReqNum++
-		rep.UrlMap[v.Api].AvgNum += int64(v.Consume)
-		rep.UrlMap[v.Api].ReqSize += int64(v.ReqBody)
-		rep.UrlMap[v.Api].ResSize += int64(v.ResBody)
-		if v.Err != "" {
-			rep.ErrNum++
-			rep.UrlMap[v.Api].ErrNum++
-		}
-	}
-
-}
-
-// Report 输出报告
-func (f *Factory) Report(rep *Report) {
-
-	f.lock.Lock()
-	defer f.lock.Unlock()
-
-	fmt.Println("+--------------------------------------------------------------------------------------------------------+")
-	fmt.Printf("Req url%-33s Req count %-5s Average time %-5s Body req/res %-5s Succ rate %-10s\n", "", "", "", "", "")
-
-	arr := []string{}
-	for k := range rep.UrlMap {
-		arr = append(arr, k)
-	}
-	sort.Strings(arr)
-
-	var reqtotal int64
-
-	for _, sk := range arr {
-		v := rep.UrlMap[sk]
-		var avg string
-		if v.AvgNum == 0 {
-			avg = "0 ms"
-		} else {
-			avg = strconv.Itoa(int(v.AvgNum/int64(v.ReqNum))) + "ms"
-		}
-
-		succ := strconv.Itoa(v.ReqNum-v.ErrNum) + "/" + strconv.Itoa(v.ReqNum)
-
-		reqsize := strconv.Itoa(int(v.ReqSize/1024)) + "kb"
-		ressize := strconv.Itoa(int(v.ResSize/1024)) + "kb"
-
-		reqtotal += int64(v.ReqNum)
-
-		u, _ := url.Parse(sk)
-		if v.ErrNum != 0 {
-			f.colorer.Printf("%-40s %-15d %-18s %-18s %-10s\n", u.Path, v.ReqNum, avg, reqsize+" / "+ressize, utils.Red(succ))
-		} else {
-			fmt.Printf("%-40s %-15d %-18s %-18s %-10s\n", u.Path, v.ReqNum, avg, reqsize+" / "+ressize, succ)
-		}
-	}
-	fmt.Println("+--------------------------------------------------------------------------------------------------------+")
-
-	durations := int(time.Since(rep.BeginTime).Seconds())
-	if durations <= 0 {
-		durations = 1
-	}
-
-	qps := int(reqtotal / int64(durations))
-	duration := strconv.Itoa(durations) + "s"
-
-	rep.Tps = qps
-	rep.Dura = duration
-
-	if rep.ErrNum != 0 {
-		f.colorer.Printf("robot : %d req count : %d duration : %s qps : %d errors : %v\n", rep.BotNum, rep.ReqNum, duration, qps, utils.Red(rep.ErrNum))
-	} else {
-		fmt.Printf("robot : %d req count : %d duration : %s qps : %d errors : %d\n", rep.BotNum, rep.ReqNum, duration, qps, rep.ErrNum)
-	}
-
-}
-
-func (f *Factory) GetReport() []*Report {
+func (f *Factory) GetReport() []Report {
 	return f.reportHistory
+}
+
+func (f *Factory) AppendReport(rep Report) {
+	if len(f.reportHistory) >= f.parm.ReportLimit {
+		f.reportHistory = f.reportHistory[1:]
+	}
+	f.reportHistory = append(f.reportHistory, rep)
 }
 
 // Close 关闭机器人工厂
@@ -302,6 +217,9 @@ func (f *Factory) pushBatch(b *Batch) {
 
 func (f *Factory) popBatch() {
 	f.batchLock.Lock()
+	b := f.batches[0]
+	f.AppendReport(b.Report())
+	b.Close()
 	f.batches = f.batches[1:]
 	f.batchLock.Unlock()
 }
@@ -319,11 +237,6 @@ func (f *Factory) GetBatchInfo() []BatchInfo {
 /*
 func (f *Factory) router() {
 
-	rep := &Report{
-		ID:        strconv.Itoa((time.Now().YearDay() * 1000) + int(atomic.LoadInt64(&f.IncID))),
-		BeginTime: time.Now(),
-		UrlMap:    make(map[string]*urlDetail),
-	}
 
 	for {
 		select {
@@ -343,10 +256,7 @@ ext:
 	atomic.AddInt64(&f.IncID, 1)
 	// report
 	f.Report(rep)
-	if len(f.reportHistory) >= f.parm.ReportLimit {
-		f.reportHistory = f.reportHistory[1:]
-	}
-	f.reportHistory = append(f.reportHistory, rep)
+
 	f.running = false
 }
 */
