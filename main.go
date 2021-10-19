@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -10,7 +11,28 @@ import (
 	"github.com/pojol/gobot-driver/server"
 )
 
+var (
+	help bool
+
+	dbHost string
+	dbPwd  string
+	dbName string
+	dbUser string
+)
+
+func initFlag() {
+	flag.BoolVar(&help, "h", false, "this help")
+
+	flag.StringVar(&dbHost, "db_host", "127.0.0.1:3306", "set consul address")
+	flag.StringVar(&dbPwd, "db_pwd", "gobot", "set mysql password")
+	flag.StringVar(&dbName, "db_name", "gobot", "set mysql database name")
+	flag.StringVar(&dbUser, "db_user", "gobot", "set mysql user")
+
+}
+
 func main() {
+	initFlag()
+	flag.Parse()
 
 	_, err := factory.Create()
 	if err != nil {

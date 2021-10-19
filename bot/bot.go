@@ -284,7 +284,7 @@ func (b *Bot) run_children(parent *behavior.Tree, children []*behavior.Tree) {
 	}
 }
 
-func (b *Bot) Run(sw *utils.Switch, doneCh chan string, errCh chan ErrInfo) {
+func (b *Bot) Run(doneCh chan string, errch chan ErrInfo) {
 
 	go func() {
 		b.run_children(b.tree, b.tree.Children)

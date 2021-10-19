@@ -11,7 +11,7 @@
 
 
 ## 编辑器预览
-[![image.png](https://i.postimg.cc/9Mb241MK/image.png)](https://postimg.cc/WFdCCG0w)
+[![image.png](https://i.postimg.cc/RCdYzPHh/image.png)](https://postimg.cc/DmW6rP53)
 
 # 安装
 1. 安装 docker-compose

@@ -232,14 +232,7 @@ func TestLoop(t *testing.T) {
 	f.AddBehavior("behavior", []byte(compose))
 
 	for i := 0; i < 10; i++ {
-		f.Append(BatchInfo{
-			Batch: []BatchBotInfo{
-				{
-					Behavior: "behavior",
-					Num:      10,
-				},
-			},
-		})
+		f.AddTask("behavior", 10)
 	}
 
 	time.Sleep(time.Second * 2)
