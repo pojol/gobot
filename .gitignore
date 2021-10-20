@@ -7,3 +7,4 @@ plugins/json/build_plugin.sh
 build-linux.sh
 build-mac.sh
 main.exe
+editor/node_modules/

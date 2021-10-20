@@ -1,0 +1,207 @@
+<behavior>
+  <id>9fb47095-f1a4-4885-b58e-fa31a4e55724</id>
+  <ty>RootNode</ty>
+  <pos>
+    <x>0</x>
+    <y>0</y>
+  </pos>
+  <children>
+    <id>63014028-4013-4474-b0e2-956812940859</id>
+    <ty>LoopNode</ty>
+    <pos>
+      <x>-5</x>
+      <y>53</y>
+    </pos>
+    <children>
+      <id>6530d4a4-4e48-4884-bca9-82460c8c1edc</id>
+      <ty>SelectorNode</ty>
+      <pos>
+        <x>-15</x>
+        <y>123</y>
+      </pos>
+      <children>
+        <id>be495137-09e7-4135-89b1-c1fd912b3ec4</id>
+        <ty>ConditionNode</ty>
+        <pos>
+          <x>-70</x>
+          <y>170</y>
+        </pos>
+        <children>
+          <id>757fc3b1-61be-4df2-b5bc-821271f88b5a</id>
+          <ty>ActionNode</ty>
+          <pos>
+            <x>-85</x>
+            <y>240</y>
+          </pos>
+          <code>
+local parm = {
+  body = {},    -- request body
+  timeout = &#34;10s&#34;,
+  headers = {},
+}
+
+local url = &#34;http://127.0.0.1:6666/login/guest&#34;
+local http = require(&#34;http&#34;)
+
+function execute()
+
+  -- http post request
+  res, errmsg = http.post(url, parm)
+  if errmsg == nil then
+    body = json.decode(res[&#34;body&#34;])
+    merge(meta, body.Body)
+  end
+end
+</code>
+        </children>
+        <code>
+
+-- Write expression to return true or false
+function execute()
+
+    return meta.Token == &#34;&#34;
+
+end
+</code>
+      </children>
+      <children>
+        <id>1adab96f-f884-4171-bd60-30c04aeaf2f5</id>
+        <ty>ConditionNode</ty>
+        <pos>
+          <x>96</x>
+          <y>180</y>
+        </pos>
+        <children>
+          <id>811ecafa-58cc-4475-a265-4384448e3df6</id>
+          <ty>ActionNode</ty>
+          <pos>
+            <x>81</x>
+            <y>240</y>
+          </pos>
+          <children>
+            <id>2f347fe4-9110-45c1-b519-e17458e94176</id>
+            <ty>SequenceNode</ty>
+            <pos>
+              <x>65</x>
+              <y>298</y>
+            </pos>
+            <children>
+              <id>53ea97df-def8-4359-b09c-276498c737ef</id>
+              <ty>ActionNode</ty>
+              <pos>
+                <x>5</x>
+                <y>351</y>
+              </pos>
+              <code>
+local parm = {
+  body = {
+      Token = meta.Token
+  },    -- request body
+  timeout = &#34;10s&#34;,
+  headers = {},
+}
+
+local url = &#34;http://127.0.0.1:6666/base/hero.info&#34;
+local http = require(&#34;http&#34;)
+
+function execute()
+
+  -- http post request
+  res, errmsg = http.post(url, parm)
+  if errmsg == nil then
+    body = json.decode(res[&#34;body&#34;])
+    merge(meta, body.Body)
+  end
+
+end
+</code>
+            </children>
+            <children>
+              <id>64be51e8-4e7e-41ef-b8c5-2a436bf92885</id>
+              <ty>WaitNode</ty>
+              <pos>
+                <x>96</x>
+                <y>361</y>
+              </pos>
+              <wait>100</wait>
+            </children>
+            <children>
+              <id>cf82ce82-a0b8-46ea-9141-3f197d686e99</id>
+              <ty>LoopNode</ty>
+              <pos>
+                <x>157</x>
+                <y>356</y>
+              </pos>
+              <children>
+                <id>cb519324-d8fb-4519-ab3d-48c14dbe4b35</id>
+                <ty>ActionNode</ty>
+                <pos>
+                  <x>162</x>
+                  <y>431</y>
+                </pos>
+                <code>
+local parm = {
+  body = {
+      Token = meta.Token,
+      HeroID = &#34;joy&#34;
+  },    -- request body
+  timeout = &#34;10s&#34;,
+  headers = {},
+}
+
+local url = &#34;http://127.0.0.1:6666/base/hero.lvup&#34;
+local http = require(&#34;http&#34;)
+
+function execute()
+
+  -- http post request
+  res, errmsg = http.post(url, parm)
+  if errmsg == nil then
+    body = json.decode(res[&#34;body&#34;])
+    merge(meta, body.Body)
+  end
+
+end
+</code>
+              </children>
+              <loop>5</loop>
+            </children>
+          </children>
+          <code>
+local parm = {
+  body = {
+      Token = meta.Token
+  },    -- request body
+  timeout = &#34;10s&#34;,
+  headers = {},
+}
+
+local url = &#34;http://127.0.0.1:6666/base/acc.info&#34;
+local http = require(&#34;http&#34;)
+
+function execute()
+
+  -- http post request
+  res, errmsg = http.post(url, parm)
+  if errmsg == nil then
+    body = json.decode(res[&#34;body&#34;])
+    merge(meta, body.Body)
+  end
+
+end
+</code>
+        </children>
+        <code>
+
+-- Write expression to return true or false
+function execute()
+
+    return meta.Token ~= &#34;&#34;
+
+end
+</code>
+      </children>
+    </children>
+    <loop>5</loop>
+  </children>
+</behavior>
