@@ -20,7 +20,7 @@ export default class ActionTab extends React.Component {
       nod: {},
       node_ty: NodeTy.Action,
       code: "",
-      alias: "",
+      defaultAlias: "",
     };
   }
 
@@ -37,7 +37,7 @@ export default class ActionTab extends React.Component {
         this.setState({
           nod: target,
           code: target.code,
-          alias: target.alias,
+          defaultAlias: target.alias,
         });
       } else {
         this.setState({
@@ -63,7 +63,7 @@ export default class ActionTab extends React.Component {
         id: this.state.nod.id,
         ty: this.state.node_ty,
         code: this.state.code,
-        alias: this.state.alias,
+        alias: this.state.defaultAlias,
       },
       notify: true,
     });
@@ -84,7 +84,7 @@ export default class ActionTab extends React.Component {
   }
 
   onChangeAlias = (e) => {
-    this.setState({alias:e.target.value})
+    this.setState({defaultAlias:e.target.value})
   }
 
   render() {
@@ -107,7 +107,7 @@ export default class ActionTab extends React.Component {
         />
         <Space>
           <Tag color="#55acee">{nod.id}</Tag>
-          <Input placeholder="set alias" width={200} onChange={this.onChangeAlias}/>
+          <Input placeholder="set alias" width={200} value={this.state.defaultAlias} onChange={this.onChangeAlias}/>
           <Button onClick={this.applyClick}>Apply</Button>
         </Space>{" "}
       </div>
