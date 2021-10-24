@@ -23,6 +23,5 @@
   * [Config (配置项](/zh-cn/config/config.md)
 
 * Advance (进阶
-  * [Behavior tree node (行为树节点](/zh-cn/advance/tree.md)
   * [Script Layer (脚本层](/zh-cn/advance/script.md)
   * [Drive Layer (驱动层](/zh-cn/advance/api.md)
