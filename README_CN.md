@@ -2,7 +2,6 @@
 基于行为树的机器人编辑器框架，节点支持绑定脚本执行。
 
 
-[![](https://img.shields.io/badge/editor-code-2ca5e0?style=flat&logo=github)](https://github.com/pojol/gobot-editor)
 [![](https://img.shields.io/badge/%E6%96%87%E6%A1%A3-Doc-2ca5e0?style=flat&logo=github)](https://docs.gobot.fun/)
 
 # 在线试用
