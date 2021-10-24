@@ -1,3 +1,6 @@
 editor/node_modules/
 driver/main.exe
 driver/make.sh
+node_modules/
+logo.zip
+zh-cn/driver/main.exe
