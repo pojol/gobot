@@ -7,10 +7,10 @@
   * [Hello,gobot!](/zh-cn/hello/hello.md)
   
 * Edit (编辑页
-  * [TreeNode (行为树节点](/zh-cn/edit/drag.md)
+  * [NodeBar (行为树节点](/zh-cn/edit/drag.md)
   * [EditArea (编辑区](/zh-cn/edit/tree.md)
-  * [EditScript (脚本区](/zh-cn/edit/node.md)
-  * [EditDebug (调试区](/zh-cn/edit/debug.md)
+  * [ScriptArea (脚本区](/zh-cn/edit/node.md)
+  * [DebugArea (调试区](/zh-cn/edit/debug.md)
 
 * Home (行为树文件管理页
   * [Upload (文件上传](/zh-cn/home/upload.md)
