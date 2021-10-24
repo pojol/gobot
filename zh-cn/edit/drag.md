@@ -2,7 +2,7 @@
 
 > 将所需的节点拖拽到编辑视窗
 
-[![image.png](https://i.postimg.cc/MZMknZd7/image.png)](https://postimg.cc/jCb39TV2)
+![img](../../res/node_bar.png)
 
 * Control - 控制节点，主要用于控制行为树的节点运行逻辑
   * **Sequence** 依次运行该节点下的所有子节点

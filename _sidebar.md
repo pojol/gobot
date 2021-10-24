@@ -1,4 +1,4 @@
-<img src="logo/logo.png" height="100"/>
+<img src="res/logo.png" height="100"/>
 
 * Introduction
   * [**Introduction**](README.md)

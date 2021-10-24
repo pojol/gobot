@@ -1,4 +1,4 @@
-![logo](logo/logo.png)
+![logo](res/logo.png)
 
 > Low-code robot framework
 
