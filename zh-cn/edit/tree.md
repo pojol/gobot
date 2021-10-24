@@ -2,7 +2,7 @@
 
 > 编辑行为树的视窗
 
-[![image.png](https://i.postimg.cc/QNWPX4dS/image.png)](https://postimg.cc/Hjd3zt57)
+<img src="https://i.postimg.cc/QNWPX4dS/image.png" height="800" width="600"/>
 
 * 选中状态
   * 当节点被点击，边框有虚线包裹时代表该节点处于选中状态，只有选中状态的节点才可以进行内容的编辑
