@@ -8,3 +8,5 @@ build-linux.sh
 build-mac.sh
 main.exe
 editor/node_modules/
+node_modules/
+logo.zip

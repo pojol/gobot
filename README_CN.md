@@ -1,10 +1,9 @@
 # gobot editor
 基于行为树的机器人编辑器框架，节点支持绑定脚本执行。
 
-> 注: 当前版本为预览版本 
 
 [![](https://img.shields.io/badge/editor-code-2ca5e0?style=flat&logo=github)](https://github.com/pojol/gobot-editor)
-[![](https://img.shields.io/badge/%E4%B8%AD%E6%96%87-doc-2ca5e0?style=flat&logo=github)](https://docs.gobot.fun/)
+[![](https://img.shields.io/badge/%E6%96%87%E6%A1%A3-Doc-2ca5e0?style=flat&logo=github)](https://docs.gobot.fun/)
 
 # 在线试用
 尝试在[网站](http://1.117.168.37:7777/)上进行编辑 
@@ -77,17 +76,3 @@
         driver: bridge
     ```
 3. 运行命令 `docker-compose up -d` 运行成功后，访问 http://localhost:7777/ 即可进行 gobot 的编辑
-
-# API
-* `/file.txtUpload`
-* `/file.blobUpload`
-* `/file.remove`
-* `/file.list`
-* `/file.get`
-
-* `/bot.create`
-* `/bot.list`
-* `/bot.info`
-
-* `/debug.create`
-* `/debug.step`
