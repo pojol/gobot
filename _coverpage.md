@@ -1,6 +1,5 @@
 ![logo](logo/logo.png)
 
-
 > Low-code robot framework
 
 [Github](https://github.com/pojol/gobot)

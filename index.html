@@ -5,6 +5,13 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta charset="UTF-8">
   <link rel="stylesheet" href="//unpkg.com/docsify/themes/vue.css">
+  <!-- sidebar logo style -->
+  <style>
+    .app-name-link > img{
+      width: 50%;
+      height: 100%;
+    }
+  </style>
 </head>
 <body>
   <nav>
@@ -15,7 +22,10 @@
     window.$docsify = {
       loadSidebar: true,
       coverpage: true,
+      autoHeader: true,
+      topMargin: 20,
       themeColor: '#00796B',
+      repo: 'https://github.com/pojol/gobot',
     }
   </script>
   <script src="//unpkg.com/docsify/lib/docsify.min.js"></script>
