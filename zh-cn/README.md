@@ -24,4 +24,4 @@
 
 
 ### 示例图
-[![image.png](https://i.postimg.cc/9Mb241MK/image.png)](https://postimg.cc/WFdCCG0w)
+![img](../../res/preview.png)
