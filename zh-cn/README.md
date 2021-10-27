@@ -24,4 +24,4 @@
 
 
 ### 示例图
-![img](../../res/preview.png)
+![img](../res/preview.png)

@@ -7,4 +7,4 @@
 * Easily manage robot runtime status information (Metadata
 
 [Github](https://github.com/pojol/gobot)
-[Get Started](/zh-cn/hello/hello.md)
+[Get Started](/zh-cn/README.md)
