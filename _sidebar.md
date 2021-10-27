@@ -8,3 +8,4 @@
 * [Config (配置页](/zh-cn/config.md)
 * [Script Layer (脚本层](/zh-cn/advance/script.md)
 * [Drive Layer (驱动层](/zh-cn/advance/api.md)
+* [Q&A (常见问题](/zh-cn/qa.md)
