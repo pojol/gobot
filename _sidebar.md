@@ -1,4 +1,4 @@
-<img src="res/logo.png" height="100"/>
+<img src="res/logo.png"/>
 
 * [Introduction](README.md)
 * [Edit (编辑页](/zh-cn/edit.md)
