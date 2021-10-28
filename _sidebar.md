@@ -1,6 +1,7 @@
 <img src="res/logo.png"/>
 
-* [Introduction](README.md)
+* [Introduction (简介](/zh-cn/README.md)
+* [Install (安装](/zh-cn/install.md)
 * [Edit (编辑页](/zh-cn/edit.md)
 * [Home (行为树文件管理页](/zh-cn/home.md)
 * [Running (机器人运行中列表页](/zh-cn/running.md)
