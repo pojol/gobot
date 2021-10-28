@@ -8,6 +8,14 @@ Robot editor framework based on behavior tree, node supports binding script exec
 # Try it out
 Try the editor out [on website](http://1.117.168.37:7777/)
 
+# Feature
+* Easily edit robot behavior
+    * Write stateful test cases
+    * Write timed tasks
+    * ...
+* Support lua script node
+* Easily manage robot runtime status information (Metadata
+
 ## Preview
 [![image.png](https://i.postimg.cc/RCdYzPHh/image.png)](https://postimg.cc/DmW6rP53)
 
