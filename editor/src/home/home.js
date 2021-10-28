@@ -268,6 +268,39 @@ export default class BotList extends React.Component {
                 <Button icon={<DeleteOutlined />}>Delete</Button>
               </Popconfirm>
               </Tooltip>
+              <Tooltip
+          placement="topLeft"
+          title="Save the current behavior tree file to the local"
+        >
+          <Button
+            icon={<VerticalAlignBottomOutlined />}
+            onClick={()=>{
+              GetBehaviorBlob(
+                window.remote,
+                Api.FileGet,
+                record.name
+              ).then((blob) => {
+                // 创建一个blob的对象，把Json转化为字符串作为我们的值
+      var url = window.URL.createObjectURL(blob);
+
+      // 上面这个是创建一个blob的对象连链接，
+      // 创建一个链接元素，是属于 a 标签的链接元素，所以括号里才是a，
+      var link = document.createElement("a");
+
+      link.href = url;
+
+      // 把上面获得的blob的对象链接赋值给新创建的这个 a 链接
+      // 设置下载的属性（所以使用的是download），这个是a 标签的一个属性
+      link.setAttribute("download", "behaviorTree.xml");
+
+      // 使用js点击这个链接
+      link.click();
+              });
+            }}
+          >
+            Download
+          </Button>
+        </Tooltip>
             </Space>
           ),
         },

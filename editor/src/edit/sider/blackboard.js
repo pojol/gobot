@@ -75,9 +75,6 @@ export default class Blackboard extends React.Component {
     this.setState({ isModalVisible: true });
   };
 
-  saveClick = () => {
-    PubSub.publish(Topic.FileSave, "");
-  };
 
   render() {
     const isModalVisible = this.state.isModalVisible;
@@ -107,18 +104,6 @@ export default class Blackboard extends React.Component {
         >
           <Button icon={<CloudUploadOutlined />} onClick={this.uploadClick}>
             Upload
-          </Button>
-        </Tooltip>
-        <Divider type="vertical"></Divider>
-        <Tooltip
-          placement="topLeft"
-          title="Save the current behavior tree file to the local"
-        >
-          <Button
-            icon={<VerticalAlignBottomOutlined />}
-            onClick={this.saveClick}
-          >
-            Download
           </Button>
         </Tooltip>
 
