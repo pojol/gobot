@@ -64,6 +64,7 @@ export default class Blackboard extends React.Component {
 
   createClick = () => {
     PubSub.publish(Topic.Create, "");
+    this.setState({ metadata: JSON.parse("{}") });
   };
 
   stepClick = () => {

@@ -165,7 +165,7 @@ export default class GraphView extends React.Component {
       if (cells.length) {
         for (var i = 0; i < cells.length; i++) {
 
-          if (cells[i].getAttrs().type.toString() !== NodeTy.Root){
+          if (cells[i].getAttrs().type.toString() !== NodeTy.Root) {
 
             if (cells[i].getParent() == null) {
               graph.removeCell(cells[i])
@@ -228,7 +228,7 @@ export default class GraphView extends React.Component {
       });
     });
 
-    graph.on("node:removed", ({ node, index, options }) => {});
+    graph.on("node:removed", ({ node, index, options }) => { });
     graph.on("node:moved", ({ e, x, y, node, view: NodeView }) => {
       this.findNode(node.id, (nod) => {
         PubSub.publish(Topic.UpdateGraphParm, this.getNodInfo(node));
@@ -263,7 +263,7 @@ export default class GraphView extends React.Component {
     PubSub.subscribe(Topic.UpdateNodeParm, (topic: string, info: any) => {
       if (info.parm.ty === NodeTy.Action) {
         this.findNode(info.parm.id, (nod) => {
-          nod.setAttrs({ 
+          nod.setAttrs({
             label: { text: info.parm.alias },
           });
         });
@@ -311,6 +311,16 @@ export default class GraphView extends React.Component {
         });
       }
     });
+
+    PubSub.subscribe(Topic.Create, (topic: string, info: any) => {
+      this.refreshNodes((nod)=>{  // 
+        nod.setAttrs({
+          body: {
+            strokeWidth: 1,
+          },
+        });
+      })
+    })
   }
 
   connect(source: Node, target: Node) {
@@ -379,7 +389,7 @@ export default class GraphView extends React.Component {
       this.connect(parent, nod);
 
       if (IsScriptNode(child[i].ty)) {
-        nod.setAttrs({label:{text:child[i].alias}})
+        nod.setAttrs({ label: { text: child[i].alias } })
         PubSub.publish(Topic.UpdateNodeParm, {
           parm: {
             id: nod.id,
@@ -493,7 +503,7 @@ export default class GraphView extends React.Component {
   };
 
   findChild = (parent: Cell, id: String, callback: (nod: Cell) => void) => {
-    if (parent.id == id) {
+    if (parent.id === id) {
       callback(parent);
       return;
     } else {
@@ -516,7 +526,24 @@ export default class GraphView extends React.Component {
     }
   };
 
-  debug = () => {};
+  refreshNode = (parent: Cell, callback: (nod: Cell) => void) => {
+    callback(parent)
+    parent.eachChild((child, idx) => {
+      this.refreshNode(child, callback)
+    })
+  }
+
+  refreshNodes = (callback: (nod: Cell) => void) => {
+    var nods = this.graph.getRootNodes();
+    if (nods.length >= 0) {
+      callback(nods[0]);
+      nods[0].eachChild((child, idx) => {
+        this.refreshNode(child, callback)
+      })
+    }
+  }
+
+  debug = () => { };
 
   render() {
     return (
