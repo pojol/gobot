@@ -2,12 +2,21 @@
 Robot editor framework based on behavior tree, node supports binding script execution.
 
 
-[![](https://img.shields.io/badge/editor-code-2ca5e0?style=flat&logo=github)](https://github.com/pojol/gobot-editor)
- [![](https://img.shields.io/badge/%E4%B8%AD%E6%96%87-readme-2ca5e0?style=flat&logo=github)](https://github.com/pojol/gobot-driver/blob/master/README_CN.md)
+[![](https://img.shields.io/badge/%E6%96%87%E6%A1%A3-Doc-2ca5e0?style=flat&logo=github)](https://docs.gobot.fun/)
 
 
 # Try it out
 Try the editor out [on website](http://1.117.168.37:7777/)
+
+# Feature
+* Easily edit robot behavior
+    * Write stateful test cases
+    * Write timed tasks
+    * ...
+* Lua script node
+    * Support http module
+    * Support protobuf
+* Easily manage robot runtime status information (Metadata
 
 ## Preview
 [![image.png](https://i.postimg.cc/RCdYzPHh/image.png)](https://postimg.cc/DmW6rP53)
@@ -76,31 +85,3 @@ Try the editor out [on website](http://1.117.168.37:7777/)
         driver: bridge
     ```
 3. Run `docker-compose up -d`, now you can access gobot at http://localhost:7777/ from your host system.
-
-
-
-# API
-* `/file.txtUpload`
-* `/file.blobUpload`
-* `/file.remove`
-* `/file.list`
-* `/file.get`
-
-* `/bot.create`
-* `/bot.list`
-* `/bot.info`
-
-* `/debug.create`
-* `/debug.step`
-
-
-### Script
-* `http.post`
-* `http.get`
-* `http.put`
-
-* `json.encode`
-* `json.decode`
-
-* `proto.marshal`
-* `proto.unmarshal`
