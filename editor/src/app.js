@@ -11,7 +11,7 @@ import Topic from "./model/topic";
 import BotList from "./home/home";
 import TestReport from "./drive/report";
 import BotConfig from "./config/config";
-import { NodeTy } from "./model/node_type";
+import { NodeTy,IsScriptNode } from "./model/node_type";
 import EditPlane from "./edit/edit";
 import RunningList from "./runing/runing";
 
