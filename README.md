@@ -13,7 +13,9 @@ Try the editor out [on website](http://1.117.168.37:7777/)
     * Write stateful test cases
     * Write timed tasks
     * ...
-* Support lua script node
+* Lua script node
+    * Support http module
+    * Support protobuf
 * Easily manage robot runtime status information (Metadata
 
 ## Preview
