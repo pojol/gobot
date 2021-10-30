@@ -269,6 +269,7 @@ export default class GraphView extends React.Component {
         });
       } else if (info.parm.ty === NodeTy.Loop) {
         this.findNode(info.parm.id, (nod) => {
+          console.info("Topic.UpdateNodeParm", nod.id)
           nod.setAttrs({
             label: { text: this.getLoopLabel(info.parm.loop) },
           });

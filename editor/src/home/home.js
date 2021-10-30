@@ -82,9 +82,9 @@ function parseChildren(xmlnode, children) {
   nod.ty = xmlnode.getElementsByTagName("ty")[0].childNodes[0].nodeValue;
 
   if (nod.ty === NodeTy.Loop) {
-    nod.loop = xmlnode.getElementsByTagName("loop")[0].childNodes[0].nodeValue;
+    nod.loop = getValueByElement(xmlnode, "loop")
   } else if (nod.ty === NodeTy.Wait) {
-    nod.wait = xmlnode.getElementsByTagName("wait")[0].childNodes[0].nodeValue;
+    nod.wait = getValueByElement(xmlnode, "wait")
   } else if (IsScriptNode(nod.ty)) {
     nod.code = getValueByElement(xmlnode, "code");
     nod.alias = getValueByElement(xmlnode, "alias");
@@ -162,7 +162,7 @@ export default class BotList extends React.Component {
     this.state = {
       searchText: "",
       searchedColumn: "",
-      runs:{},
+      runs: {},
       columns: [
         {
           title: "Bot behavior file",
@@ -189,7 +189,7 @@ export default class BotList extends React.Component {
               onChange={(e) => {
                 var old = this.state.runs
                 old[record.name] = e
-                this.setState({runs:old})
+                this.setState({ runs: old })
               }}
             ></InputNumber>
           ),
@@ -199,28 +199,28 @@ export default class BotList extends React.Component {
           key: "action",
           render: (text, record) => (
             <Space>
-               <Tooltip
+              <Tooltip
                 placement="topLeft"
                 title="Drive a specified number of robots"
               >
-              <Button icon={<PlayCircleOutlined />} onClick={() => {
-                var num = this.state.runs[record.name]
-                if (num === undefined || num === 0) {
-                  message.warn("Please set the number of bot runs")
-                  return
-                }
-                
-                Post(window.remote, Api.BotCreate, { Name:record.name, Num:num }).then((json) => {
-                  if (json.Code !== 200) {
-                    message.error("run fail:" + String(json.Code) + " msg: " + json.Msg);
-                  } else {
-                    message.success("batch run succ");
+                <Button icon={<PlayCircleOutlined />} onClick={() => {
+                  var num = this.state.runs[record.name]
+                  if (num === undefined || num === 0) {
+                    message.warn("Please set the number of bot runs")
+                    return
                   }
-                });
-                
-              }}>
-                Run
-              </Button>
+
+                  Post(window.remote, Api.BotCreate, { Name: record.name, Num: num }).then((json) => {
+                    if (json.Code !== 200) {
+                      message.error("run fail:" + String(json.Code) + " msg: " + json.Msg);
+                    } else {
+                      message.success("batch run succ");
+                    }
+                  });
+
+                }}>
+                  Run
+                </Button>
               </Tooltip>
               <Tooltip
                 placement="topLeft"
@@ -245,62 +245,62 @@ export default class BotList extends React.Component {
                 placement="topLeft"
                 title="Delete the behavior file from the database"
               >
-              <Popconfirm
-                title="Are you sure to delete this bot?"
-                onConfirm={(e) => {
-                  Post(window.remote, Api.FileRemove, {
-                    Name: record.name,
-                  }).then((json) => {
-                    if (json.Code !== 200) {
-                      message.error(
-                        "run fail:" + String(json.Code) + " msg: " + json.Msg
-                      );
-                    } else {
-                      this.refreshBotList();
-                      message.success("bot delete succ");
-                    }
-                  });
-                }}
-                onCancel={(e) => {}}
-                okText="Yes"
-                cancelText="No"
-              >
-                <Button icon={<DeleteOutlined />}>Delete</Button>
-              </Popconfirm>
+                <Popconfirm
+                  title="Are you sure to delete this bot?"
+                  onConfirm={(e) => {
+                    Post(window.remote, Api.FileRemove, {
+                      Name: record.name,
+                    }).then((json) => {
+                      if (json.Code !== 200) {
+                        message.error(
+                          "run fail:" + String(json.Code) + " msg: " + json.Msg
+                        );
+                      } else {
+                        this.refreshBotList();
+                        message.success("bot delete succ");
+                      }
+                    });
+                  }}
+                  onCancel={(e) => { }}
+                  okText="Yes"
+                  cancelText="No"
+                >
+                  <Button icon={<DeleteOutlined />}>Delete</Button>
+                </Popconfirm>
               </Tooltip>
               <Tooltip
-          placement="topLeft"
-          title="Save the current behavior tree file to the local"
-        >
-          <Button
-            icon={<VerticalAlignBottomOutlined />}
-            onClick={()=>{
-              GetBehaviorBlob(
-                window.remote,
-                Api.FileGet,
-                record.name
-              ).then((blob) => {
-                // 创建一个blob的对象，把Json转化为字符串作为我们的值
-      var url = window.URL.createObjectURL(blob);
+                placement="topLeft"
+                title="Save the current behavior tree file to the local"
+              >
+                <Button
+                  icon={<VerticalAlignBottomOutlined />}
+                  onClick={() => {
+                    GetBehaviorBlob(
+                      window.remote,
+                      Api.FileGet,
+                      record.name
+                    ).then((blob) => {
+                      // 创建一个blob的对象，把Json转化为字符串作为我们的值
+                      var url = window.URL.createObjectURL(blob);
 
-      // 上面这个是创建一个blob的对象连链接，
-      // 创建一个链接元素，是属于 a 标签的链接元素，所以括号里才是a，
-      var link = document.createElement("a");
+                      // 上面这个是创建一个blob的对象连链接，
+                      // 创建一个链接元素，是属于 a 标签的链接元素，所以括号里才是a，
+                      var link = document.createElement("a");
 
-      link.href = url;
+                      link.href = url;
 
-      // 把上面获得的blob的对象链接赋值给新创建的这个 a 链接
-      // 设置下载的属性（所以使用的是download），这个是a 标签的一个属性
-      link.setAttribute("download", "behaviorTree.xml");
+                      // 把上面获得的blob的对象链接赋值给新创建的这个 a 链接
+                      // 设置下载的属性（所以使用的是download），这个是a 标签的一个属性
+                      link.setAttribute("download", "behaviorTree.xml");
 
-      // 使用js点击这个链接
-      link.click();
-              });
-            }}
-          >
-            Download
-          </Button>
-        </Tooltip>
+                      // 使用js点击这个链接
+                      link.click();
+                    });
+                  }}
+                >
+                  Download
+                </Button>
+              </Tooltip>
             </Space>
           ),
         },
@@ -400,9 +400,9 @@ export default class BotList extends React.Component {
     onFilter: (value, record) =>
       record[dataIndex]
         ? record[dataIndex]
-            .toString()
-            .toLowerCase()
-            .includes(value.toLowerCase())
+          .toString()
+          .toLowerCase()
+          .includes(value.toLowerCase())
         : "",
     onFilterDropdownVisibleChange: (visible) => {
       if (visible) {

@@ -35,15 +35,12 @@ function parseChildren(xmlnode, children) {
   nod.ty = xmlnode.getElementsByTagName("ty")[0].childNodes[0].nodeValue;
 
   if (nod.ty === NodeTy.Loop) {
-    nod.loop = xmlnode.getElementsByTagName("loop")[0].childNodes[0].nodeValue;
+    nod.loop = getValueByElement(xmlnode, "loop")
   } else if (nod.ty === NodeTy.Wait) {
-    nod.wait = xmlnode.getElementsByTagName("wait")[0].childNodes[0].nodeValue;
-  } else if (
-    nod.ty === NodeTy.Condition ||
-    nod.ty === NodeTy.Action ||
-    nod.ty === NodeTy.Assert
-  ) {
+    nod.wait = getValueByElement(xmlnode, "wait")
+  } else if (IsScriptNode(nod.ty)) {
     nod.code = getValueByElement(xmlnode, "code");
+    nod.alias = getValueByElement(xmlnode, "alias");
   }
 
   nod.pos = {
