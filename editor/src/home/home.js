@@ -23,6 +23,9 @@ import {
   VerticalAlignBottomOutlined,
   DeleteOutlined,
   PlayCircleOutlined,
+  CheckCircleTwoTone,
+  CloseCircleTwoTone,
+  ExclamationCircleTwoTone
 } from "@ant-design/icons";
 import Highlighter from "react-highlight-words";
 import Sider from "antd/lib/layout/Sider";
@@ -33,6 +36,7 @@ import { Post } from "../model/request";
 import { formatTimeStr } from "antd/lib/statistic/utils";
 import Api from "../model/api";
 import { NodeTy, IsScriptNode } from "../model/node_type";
+
 
 const { Dragger } = Upload;
 
@@ -304,6 +308,25 @@ export default class BotList extends React.Component {
             </Space>
           ),
         },
+        {
+          title: "Status",
+          dataIndex: "Status",
+          key: "Status",
+          render: (tags, record) => (
+            <>
+              {tags.map(tag => {
+                var color
+                if (tag === 'succ') {
+                  return <CheckCircleTwoTone twoToneColor="#52c41a" />
+                } else if (tag === 'fail') {
+                  return <CloseCircleTwoTone twoToneColor="#eb2f96" />
+                } else {
+                  return <ExclamationCircleTwoTone twoToneColor='#adb5bd'/>
+                }
+              })}
+            </>
+          ),
+        },
       ],
       botLst: [],
       batchLst: [],
@@ -329,6 +352,7 @@ export default class BotList extends React.Component {
           key: lst[i].Name,
           update: _upts,
           num: 1,
+          Status: ["succ","fail","normal"],
         });
       }
       this.setState({ botLst: botlist });
