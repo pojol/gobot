@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pojol/gobot-driver/mock"
+	"github.com/pojol/gobot/driver/mock"
 )
 
 var compose = `

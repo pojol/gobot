@@ -10,3 +10,4 @@ main.exe
 editor/node_modules/
 node_modules/
 logo.zip
+editor/build

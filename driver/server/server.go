@@ -7,11 +7,11 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
-	"github.com/pojol/gobot-driver/behavior"
-	"github.com/pojol/gobot-driver/bot"
-	"github.com/pojol/gobot-driver/database"
-	"github.com/pojol/gobot-driver/factory"
-	"github.com/pojol/gobot-driver/utils"
+	"github.com/pojol/gobot/driver/behavior"
+	"github.com/pojol/gobot/driver/bot"
+	"github.com/pojol/gobot/driver/database"
+	"github.com/pojol/gobot/driver/factory"
+	"github.com/pojol/gobot/driver/utils"
 )
 
 type Response struct {
