@@ -128,6 +128,7 @@ EXT:
 type behaviorInfo struct {
 	Name   string
 	Update int64
+	Status string
 }
 type BehaviorListRes struct {
 	Bots []behaviorInfo
@@ -189,6 +190,7 @@ func FileGetList(ctx echo.Context) error {
 		body.Bots = append(body.Bots, behaviorInfo{
 			Name:   v.Name,
 			Update: v.UpdateTime,
+			Status: v.Status,
 		})
 	}
 
@@ -338,7 +340,6 @@ func BotRun(ctx echo.Context) error {
 		goto EXT
 	}
 
-	fmt.Println("add task", req.Name)
 	err = factory.Global.AddTask(req.Name, int32(req.Num))
 	if err != nil {
 		res.Msg = err.Error()

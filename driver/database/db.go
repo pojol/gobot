@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pojol/gobot/driver/bot"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -15,6 +16,7 @@ type BehaviorInfo struct {
 	Name       string `gorm:"<-"`
 	Dat        []byte `gorm:"<-"`
 	UpdateTime int64  `gorm:"<-"`
+	Status     string `gorm:"<-"`
 }
 
 type BotTemplateConfig struct {
@@ -106,6 +108,7 @@ func (f *Database) UpsetFile(name string, byt []byte) error {
 	info := BehaviorInfo{
 		Name:       name,
 		Dat:        byt,
+		Status:     bot.BotStatusUnknow,
 		UpdateTime: time.Now().Unix(),
 	}
 
@@ -119,6 +122,10 @@ func (f *Database) UpsetFile(name string, byt []byte) error {
 	}
 
 	return res.Error
+}
+
+func (f *Database) UpdateState(name string, status string) error {
+	return f.db.Model(&BehaviorInfo{}).Where("name = ?", name).Update("Status", status).Error
 }
 
 func (f *Database) DelFile(name string) error {

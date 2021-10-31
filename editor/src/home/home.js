@@ -352,7 +352,7 @@ export default class BotList extends React.Component {
           key: lst[i].Name,
           update: _upts,
           num: 1,
-          Status: ["succ","fail","normal"],
+          Status: [lst[i].Status],
         });
       }
       this.setState({ botLst: botlist });
