@@ -220,6 +220,14 @@ func (f *Factory) popBatch() {
 	b := f.batches[0]
 	f.AppendReport(b.Report())
 	b.Close()
+
+	s := bot.BotStatusUnknow
+	if b.Report().ErrNum > 0 {
+		s = bot.BotStatusFail
+	} else {
+		s = bot.BotStatusSucc
+	}
+	database.Get().UpdateState(b.Name, s)
 	f.batches = f.batches[1:]
 	f.batchLock.Unlock()
 }

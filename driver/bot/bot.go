@@ -36,6 +36,12 @@ type Bot struct {
 	sync.Mutex
 }
 
+const (
+	BotStatusSucc   = "succ"
+	BotStatusFail   = "fail"
+	BotStatusUnknow = "unknow"
+)
+
 func (b *Bot) ID() string {
 	return b.id
 }
