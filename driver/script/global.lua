@@ -32,11 +32,6 @@ function print_table ( t )
     print()
 end
 
---[[
-    merge table
-    overwrite t2 to t1
-]]--
-table.print = print_table
 
 --[[
     merge table
@@ -65,3 +60,16 @@ meta = {
     Err = "",       -- debug log [err]
     Warn = "",      -- debug log [warn]
 }
+
+--[[
+    print table like:
+    table.print(meta)
+    
+    table: 0xc00005fe00 {
+        [Token] => ""
+        [Info] => ""
+        [Err] => ""
+        [Warn] => ""
+    }
+]]--
+table.print = print_table

@@ -120,6 +120,7 @@ func TestUtilsModule(t *testing.T) {
 	defer L.Close()
 
 	L.PreloadModule("utils", utilsMod.Loader)
+	L.DoFile("./global.lua")
 
 	L.DoString(`
 		local utils = require("utils")
@@ -127,6 +128,14 @@ func TestUtilsModule(t *testing.T) {
 		print("uuid", utils.uuid())
 		print("random", utils.random(100))
 
+		meta = {
+			Token = "",
+			Info = "",      -- debug log [info]
+			Err = "",       -- debug log [err]
+			Warn = "",      -- debug log [warn]
+		}
+
+		table.print(meta)
 	`)
 }
 
