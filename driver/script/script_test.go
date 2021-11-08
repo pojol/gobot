@@ -3,9 +3,11 @@ package script
 import (
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/pojol/gobot/driver/script/book"
@@ -108,6 +110,24 @@ func TestProtobufEncode(t *testing.T) {
 		fmt.Println(err.Error())
 	}
 
+}
+
+func TestUtilsModule(t *testing.T) {
+	utilsMod := UtilsModule{}
+	rand.Seed(time.Now().UnixNano())
+
+	L := lua.NewState()
+	defer L.Close()
+
+	L.PreloadModule("utils", utilsMod.Loader)
+
+	L.DoString(`
+		local utils = require("utils")
+		
+		print("uuid", utils.uuid())
+		print("random", utils.random(100))
+
+	`)
 }
 
 func TestProtobufDecode(t *testing.T) {

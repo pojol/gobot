@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math/rand"
 	"net/http"
 	"sync"
 	"time"
@@ -31,6 +32,7 @@ type Bot struct {
 
 	httpMod  *script.HttpModule
 	protoMod *script.ProtoModule
+	utilsMod *script.UtilsModule
 
 	L *lua.LState
 	sync.Mutex
@@ -90,10 +92,10 @@ func NewWithBehaviorTree(path string, bt *behavior.Tree, tmpl string) *Bot {
 		name:     tmpl,
 		httpMod:  script.NewHttpModule(&http.Client{}),
 		protoMod: &script.ProtoModule{},
+		utilsMod: &script.UtilsModule{},
 	}
 
-	// test
-	bot.L.DoString(`meta = { Token = "" }`)
+	rand.Seed(time.Now().UnixNano())
 
 	// 这里要对script目录进行一次检查，将lua脚本都载入进来
 	bot.L.DoFile(path + "global.lua")
@@ -101,6 +103,7 @@ func NewWithBehaviorTree(path string, bt *behavior.Tree, tmpl string) *Bot {
 
 	bot.L.PreloadModule("proto", bot.protoMod.Loader)
 	bot.L.PreloadModule("http", bot.httpMod.Loader)
+	bot.L.PreloadModule("utils", bot.utilsMod.Loader)
 
 	return bot
 }

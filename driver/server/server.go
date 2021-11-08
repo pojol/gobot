@@ -415,7 +415,6 @@ func DebugStep(ctx echo.Context) error {
 
 	s = b.RunStep()
 	body.Blackboard, err = b.GetMetadata()
-	fmt.Println("blackboard", body.Blackboard, err)
 	body.Cur = b.GetCurNodeID()
 	body.Prev = b.GetPrevNodeID()
 
