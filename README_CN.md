@@ -3,6 +3,8 @@
 
 
 [![](https://img.shields.io/badge/%E6%96%87%E6%A1%A3-Doc-2ca5e0?style=flat&logo=github)](https://docs.gobot.fun/)
+[![](https://img.shields.io/badge/Trello-Todo-2ca5e0?style=flat&logo=trello)](https://trello.com/b/8eDZ6h7n/)
+
 
 # 在线试用
 尝试在[网站](http://1.117.168.37:7777/)上进行编辑 

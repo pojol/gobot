@@ -3,6 +3,7 @@ Robot editor framework based on behavior tree, node supports binding script exec
 
 
 [![](https://img.shields.io/badge/%E6%96%87%E6%A1%A3-Doc-2ca5e0?style=flat&logo=github)](https://docs.gobot.fun/)
+[![](https://img.shields.io/badge/Trello-Todo-2ca5e0?style=flat&logo=trello)](https://trello.com/b/8eDZ6h7n/)
 
 
 # Try it out
@@ -85,3 +86,5 @@ Try the editor out [on website](http://1.117.168.37:7777/)
         driver: bridge
     ```
 3. Run `docker-compose up -d`, now you can access gobot at http://localhost:7777/ from your host system.
+
+# Script
