@@ -86,5 +86,3 @@ Try the editor out [on website](http://1.117.168.37:7777/)
         driver: bridge
     ```
 3. Run `docker-compose up -d`, now you can access gobot at http://localhost:7777/ from your host system.
-
-# Script
