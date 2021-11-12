@@ -27,13 +27,17 @@ var camelre = regexp.MustCompile(`_([a-z])`)
 
 // ToUpperCamelCase is an Option.NameFunc that converts strings from snake case to upper camel case.
 func ToUpperCamelCase(s string) string {
-	return strings.ToUpper(string(s[0])) + camelre.ReplaceAllStringFunc(s[1:len(s)], func(s string) string { return strings.ToUpper(s[1:len(s)]) })
+	return strings.ToUpper(string(s[0])) + camelre.ReplaceAllStringFunc(s[1:], func(s string) string { return strings.ToUpper(s[1:]) })
+}
+
+func CapitalizeFirstWord(s string) string {
+	return strings.ToUpper(string(s[0])) + s[1:]
 }
 
 // Map maps the lua table to the given struct pointer.
 func Table2Map(tbl *lua.LTable) (map[string]interface{}, error) {
 	opt := Option{
-		NameFunc: ToUpperCamelCase,
+		NameFunc: CapitalizeFirstWord,
 		TagName:  "gluamapper",
 	}
 	mp, ok := ToGoValue(tbl, opt).(map[string]interface{})
