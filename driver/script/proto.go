@@ -28,6 +28,7 @@ func (p *ProtoModule) Loader(l *lua.LState) int {
 
 func (p *ProtoModule) doMarshal(L *lua.LState, msgty string, jstr string) (lua.LString, error) {
 	var err error
+	var byt []byte
 
 	t := ggp.MessageType(msgty)
 	if t == nil {
@@ -36,14 +37,18 @@ func (p *ProtoModule) doMarshal(L *lua.LState, msgty string, jstr string) (lua.L
 	tptr := reflect.New(t.Elem())
 	tins := tptr.Interface().(proto.Message)
 
-	err = jsonpb.Unmarshal(bytes.NewBufferString(jstr), tins)
-	if err != nil {
-		return lua.LString(""), fmt.Errorf("jsonpb.unmarshal %w", err)
-	}
+	if jstr != "[]" {
+		err = jsonpb.Unmarshal(bytes.NewBufferString(jstr), tins)
+		if err != nil {
+			return lua.LString(""), fmt.Errorf(" jsonpb.unmarshal %v = %v %w", msgty, jstr, err)
+		}
 
-	byt, err := proto.Marshal(tins)
-	if err != nil {
-		return lua.LString(""), fmt.Errorf("proto.marshal %w", err)
+		byt, err = proto.Marshal(tins)
+		if err != nil {
+			return lua.LString(""), fmt.Errorf("proto.marshal %w", err)
+		}
+	} else {
+		byt = []byte("")
 	}
 
 	return lua.LString(byt), nil
