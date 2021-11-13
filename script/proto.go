@@ -9,7 +9,6 @@ import (
 
 	"github.com/gogo/protobuf/jsonpb"
 	ggp "github.com/gogo/protobuf/proto"
-	"github.com/golang/protobuf/proto"
 	lua "github.com/yuin/gopher-lua"
 )
 
@@ -35,7 +34,7 @@ func (p *ProtoModule) doMarshal(L *lua.LState, msgty string, jstr string) (lua.L
 		return lua.LString(""), fmt.Errorf("unknow proto message type %v", msgty)
 	}
 	tptr := reflect.New(t.Elem())
-	tins := tptr.Interface().(proto.Message)
+	tins := tptr.Interface().(ggp.Message)
 
 	if jstr != "[]" {
 		err = jsonpb.Unmarshal(bytes.NewBufferString(jstr), tins)
@@ -43,7 +42,7 @@ func (p *ProtoModule) doMarshal(L *lua.LState, msgty string, jstr string) (lua.L
 			return lua.LString(""), fmt.Errorf(" jsonpb.unmarshal %v = %v %w", msgty, jstr, err)
 		}
 
-		byt, err = proto.Marshal(tins)
+		byt, err = ggp.Marshal(tins)
 		if err != nil {
 			return lua.LString(""), fmt.Errorf("proto.marshal %w", err)
 		}
@@ -76,12 +75,12 @@ func (p *ProtoModule) doUnmarshal(L *lua.LState, msgty string, buf string) (lua.
 	}
 
 	tptr := reflect.New(t.Elem())
-	tins, ok := tptr.Interface().(proto.Message)
+	tins, ok := tptr.Interface().(ggp.Message)
 	if !ok {
 		return lua.LString(""), errors.New("msg type no proto.message")
 	}
 
-	err = proto.Unmarshal([]byte(buf), tins)
+	err = ggp.Unmarshal([]byte(buf), tins)
 	if err != nil {
 		return lua.LString(""), fmt.Errorf("proto.unmarshal %w", err)
 	}

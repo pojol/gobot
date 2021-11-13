@@ -415,6 +415,10 @@ func DebugStep(ctx echo.Context) error {
 
 	s = b.RunStep()
 	body.Blackboard, err = b.GetMetadata()
+	if err != nil {
+		code = ErrMetaData
+		goto EXT
+	}
 	body.Cur = b.GetCurNodeID()
 	body.Prev = b.GetPrevNodeID()
 

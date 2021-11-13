@@ -2,7 +2,6 @@ package script
 
 import (
 	"errors"
-	"fmt"
 	"math/rand"
 
 	"github.com/google/uuid"
@@ -37,7 +36,7 @@ func (u *UtilsModule) Random(l *lua.LState) int {
 
 	l.Push(v)
 	if err != nil {
-		l.Push(lua.LString(fmt.Sprintf("%s", err.Error())))
+		l.Push(lua.LString(err.Error()))
 	} else {
 		l.Push(lua.LNil)
 	}

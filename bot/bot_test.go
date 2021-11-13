@@ -12,15 +12,6 @@ import (
 	lua "github.com/yuin/gopher-lua"
 )
 
-type guestRes struct {
-	Token string
-}
-
-type infoRes struct {
-	Diamond int32
-	Gold    int32
-}
-
 func TestMain(m *testing.M) {
 	ms := mock.NewServer()
 	go ms.Start(":7777")
