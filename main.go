@@ -6,9 +6,9 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"github.com/pojol/gobot/driver/factory"
-	"github.com/pojol/gobot/driver/mock"
-	"github.com/pojol/gobot/driver/server"
+	"github.com/pojol/gobot/factory"
+	"github.com/pojol/gobot/mock"
+	"github.com/pojol/gobot/server"
 )
 
 var (

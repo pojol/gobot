@@ -10,9 +10,9 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/google/uuid"
-	"github.com/pojol/gobot/driver/behavior"
-	"github.com/pojol/gobot/driver/bot"
-	"github.com/pojol/gobot/driver/utils"
+	"github.com/pojol/gobot/behavior"
+	"github.com/pojol/gobot/bot"
+	"github.com/pojol/gobot/utils"
 )
 
 type BatchInfo struct {

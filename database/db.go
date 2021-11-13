@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pojol/gobot/driver/bot"
+	"github.com/pojol/gobot/bot"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )

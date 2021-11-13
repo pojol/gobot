@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pojol/gobot/driver/utils"
+	"github.com/pojol/gobot/utils"
 	lua "github.com/yuin/gopher-lua"
 )
 

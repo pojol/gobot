@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/gogo/protobuf/proto"
-	"github.com/pojol/gobot/driver/script/book"
+	"github.com/pojol/gobot/script/book"
 	lua "github.com/yuin/gopher-lua"
 )
 

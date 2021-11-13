@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/pojol/gobot/driver/behavior"
-	"github.com/pojol/gobot/driver/script"
-	"github.com/pojol/gobot/driver/utils"
+	"github.com/pojol/gobot/behavior"
+	"github.com/pojol/gobot/script"
+	"github.com/pojol/gobot/utils"
 	lua "github.com/yuin/gopher-lua"
 )
 
