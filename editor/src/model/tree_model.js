@@ -57,7 +57,7 @@ export default class TreeModel extends React.Component {
       } else if (childNode.ty === NodeTy.Assert && (childNode.code === "" || childNode.code === undefined)) {
         childNode.code = this.state.assertTmp;
       } else if (childNode.ty === NodeTy.Loop && childNode.loop === undefined) {
-        childNode.loop = 0;
+        childNode.loop = 1;
       } else if (childNode.ty === NodeTy.Wait && childNode.wait === undefined) {
         childNode.wait = 1;
       }
