@@ -106,6 +106,11 @@ export default class GraphView extends React.Component {
         pageBreak: false,
         pannable: true,
       },
+      mousewheel: {
+        enabled: true,
+        modifiers: ['ctrl', 'meta'],
+      },
+    
     });
 
     var root = new RootNode();
