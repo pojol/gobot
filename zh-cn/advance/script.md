@@ -5,6 +5,7 @@
 * Http
 * Json
 * Report
+* 将自己的脚本添加到行为树中
 
 ### Global
 ```lua
@@ -90,3 +91,9 @@ table, err = proto.ununmarshal("AddressBook", byt)
 ### Report
 ```lua
 ```
+
+
+### 将自己的脚本添加到行为树中
+> 在root节点下添加脚本节点，并将自己的脚本填写在其中就可以啦；
+
+![](../../res/preload.png)
