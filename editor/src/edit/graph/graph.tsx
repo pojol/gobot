@@ -108,7 +108,7 @@ export default class GraphView extends React.Component {
       },
       mousewheel: {
         enabled: true,
-        modifiers: ['ctrl', 'meta'],
+        modifiers: ['alt', 'meta'],
       },
     
     });
