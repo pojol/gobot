@@ -37,7 +37,10 @@ export default class TreeModel extends React.Component {
 
   addNode(parentid, childNode) {
     var syncinfo = (childNode) => {
-      window.tree.set(childNode.id, childNode);
+      // 如果存在旧的节点参数数据，在这个行为里应该使用旧的数据；
+      if (window.tree.get(childNode.id) === undefined) { 
+        window.tree.set(childNode.id, childNode);
+      }
     };
 
     console.info("add", childNode.ty, childNode.code)
@@ -54,7 +57,7 @@ export default class TreeModel extends React.Component {
       } else if (childNode.ty === NodeTy.Assert && (childNode.code === "" || childNode.code === undefined)) {
         childNode.code = this.state.assertTmp;
       } else if (childNode.ty === NodeTy.Loop && childNode.loop === undefined) {
-        childNode.loop = 0;
+        childNode.loop = 1;
       } else if (childNode.ty === NodeTy.Wait && childNode.wait === undefined) {
         childNode.wait = 1;
       }

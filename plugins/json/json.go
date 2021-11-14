@@ -3,8 +3,8 @@ package main
 import (
 	"encoding/json"
 
-	"github.com/pojol/gobot/driver/plugins"
-	"github.com/pojol/gobot/driver/serialization"
+	"github.com/pojol/gobot/plugins"
+	"github.com/pojol/gobot/serialization"
 )
 
 type jsonp struct {

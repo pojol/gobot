@@ -7,11 +7,11 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
-	"github.com/pojol/gobot/driver/behavior"
-	"github.com/pojol/gobot/driver/bot"
-	"github.com/pojol/gobot/driver/database"
-	"github.com/pojol/gobot/driver/factory"
-	"github.com/pojol/gobot/driver/utils"
+	"github.com/pojol/gobot/behavior"
+	"github.com/pojol/gobot/bot"
+	"github.com/pojol/gobot/database"
+	"github.com/pojol/gobot/factory"
+	"github.com/pojol/gobot/utils"
 )
 
 type Response struct {
@@ -415,7 +415,10 @@ func DebugStep(ctx echo.Context) error {
 
 	s = b.RunStep()
 	body.Blackboard, err = b.GetMetadata()
-	fmt.Println("blackboard", body.Blackboard, err)
+	if err != nil {
+		code = ErrMetaData
+		goto EXT
+	}
 	body.Cur = b.GetCurNodeID()
 	body.Prev = b.GetPrevNodeID()
 

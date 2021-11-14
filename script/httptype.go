@@ -66,7 +66,7 @@ func httpResponseIndex(L *lua.LState) int {
 
 func httpResponseHeaders(res *luaHttpResponse, L *lua.LState) int {
 	headers := L.NewTable()
-	for key, _ := range res.res.Header {
+	for key := range res.res.Header {
 		headers.RawSetString(key, lua.LString(res.res.Header.Get(key)))
 	}
 	L.Push(headers)

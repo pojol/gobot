@@ -32,8 +32,11 @@ function print_table ( t )
     print()
 end
 
-table.print = print_table
 
+--[[
+    merge table
+    overwrite t2 to t1
+]]--
 function merge(t1, t2)
     for k,v in pairs(t2) do
       if type(v) == "table" then
@@ -50,7 +53,23 @@ function merge(t1, t2)
 end
 
 
-function GetMeta()
+-- initialize the meta structure
+meta = {
+    Token = "",
+    Info = "",      -- debug log [info]
+    Err = "",       -- debug log [err]
+    Warn = "",      -- debug log [warn]
+}
+
+--[[
+    print table like:
     table.print(meta)
-    return json.encode(meta)
-end
+    
+    table: 0xc00005fe00 {
+        [Token] => ""
+        [Info] => ""
+        [Err] => ""
+        [Warn] => ""
+    }
+]]--
+table.print = print_table

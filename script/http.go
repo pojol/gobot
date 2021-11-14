@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pojol/gobot/driver/utils"
+	"github.com/pojol/gobot/utils"
 	lua "github.com/yuin/gopher-lua"
 )
 
@@ -111,11 +111,11 @@ func (h *HttpModule) doRequest(L *lua.LState, method string, url string, options
 		reqTimeout := options.RawGet(lua.LString("timeout"))
 		if reqTimeout != lua.LNil {
 			duration := time.Duration(0)
-			switch reqTimeout.(type) {
+			switch reqTimeout := reqTimeout.(type) {
 			case lua.LNumber:
-				duration = time.Second * time.Duration(int(reqTimeout.(lua.LNumber)))
+				duration = time.Second * time.Duration(int(reqTimeout))
 			case lua.LString:
-				duration, err = time.ParseDuration(string(reqTimeout.(lua.LString)))
+				duration, err = time.ParseDuration(string(reqTimeout))
 				if err != nil {
 					return nil, err
 				}
@@ -189,11 +189,4 @@ func (h *HttpModule) doRequestAndPush(L *lua.LState, method string, url string, 
 
 func (h *HttpModule) GetReport() []Report {
 	return h.repolst
-}
-
-func toTable(v lua.LValue) *lua.LTable {
-	if lv, ok := v.(*lua.LTable); ok {
-		return lv
-	}
-	return nil
 }

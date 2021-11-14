@@ -9,14 +9,11 @@ import (
 	"path/filepath"
 )
 
-const randFileNameLength = 12
-
 type UploadFile struct {
 	File     multipart.File
 	Header   *multipart.FileHeader
 	fileExt  string //file extensions
 	fileName string
-	fileSize int64
 }
 
 func NewUploadFile(file multipart.File, header *multipart.FileHeader) *UploadFile {
