@@ -2,21 +2,19 @@ import {
   Table,
   Tag,
   Space,
-  Checkbox,
   InputNumber,
-  Divider,
   Button,
   Upload,
   message,
   Input,
   Popconfirm,
   Tooltip,
+  Col,
+  Row,
+  Select,
 } from "antd";
 import * as React from "react";
 import {
-  MessageOutlined,
-  LikeOutlined,
-  StarOutlined,
   InboxOutlined,
   CloudDownloadOutlined,
   SearchOutlined,
@@ -28,17 +26,17 @@ import {
   ExclamationCircleTwoTone
 } from "@ant-design/icons";
 import Highlighter from "react-highlight-words";
-import Sider from "antd/lib/layout/Sider";
-import Config from "../model/config";
 import PubSub from "pubsub-js";
 import Topic from "../model/topic";
 import { Post } from "../model/request";
-import { formatTimeStr } from "antd/lib/statistic/utils";
 import Api from "../model/api";
 import { NodeTy, IsScriptNode } from "../model/node_type";
+import "./home.css";
+import { SaveAs } from "../utils/file";
 
 
 const { Dragger } = Upload;
+const { Option } = Select;
 
 function GetBehaviorBlob(url, methon, name) {
   return new Promise(function (resolve, reject) {
@@ -69,7 +67,7 @@ function GetBehaviorBlob(url, methon, name) {
 function getValueByElement(elem, tag) {
   for (var i = 0; i < elem.childNodes.length; i++) {
     if (elem.childNodes[i].nodeName === tag) {
-      if (elem.childNodes[i].childNodes.length == 0) {
+      if (elem.childNodes[i].childNodes.length === 0) {
         return ""
       } else {
         return elem.childNodes[i].childNodes[0].nodeValue;
@@ -167,14 +165,30 @@ export default class BotList extends React.Component {
       searchText: "",
       searchedColumn: "",
       runs: {},
+      selectedTags: [],
+      selectedRows: [],
       columns: [
         {
           title: "Bot behavior file",
           dataIndex: "name",
           key: "name",
-          filterSearch: true,
-          ...this.getColumnSearchProps("name"),
-          width: "30%",
+        },
+        {
+          title: "Tags",
+          dataIndex: "tags",
+          key: "tags",
+          render: tags => (
+            <>
+              {tags.map(tag => {
+                return (
+                  <Tag key={tag}>
+                    {tag}
+                  </Tag>
+                );
+              })}
+            </>
+          ),
+
         },
         {
           title: "UpdateTime",
@@ -183,13 +197,13 @@ export default class BotList extends React.Component {
           sorter: (a, b) => a.update > b.update,
         },
         {
-          title: "Num",
+          title: "Number of runs",
           dataIndex: "num",
           key: "num",
           render: (text, record) => (
             <InputNumber
               min={0}
-              max={100}
+              max={1000}
               defaultValue={0}
               onChange={(e) => {
                 var old = this.state.runs
@@ -200,134 +214,28 @@ export default class BotList extends React.Component {
           ),
         },
         {
-          title: "Action",
-          key: "action",
-          render: (text, record) => (
-            <Space>
-              <Tooltip
-                placement="topLeft"
-                title="Drive a specified number of robots"
-              >
-                <Button icon={<PlayCircleOutlined />} onClick={() => {
-                  var num = this.state.runs[record.name]
-                  if (num === undefined || num === 0) {
-                    message.warn("Please set the number of bot runs")
-                    return
-                  }
-
-                  Post(window.remote, Api.BotCreate, { Name: record.name, Num: num }).then((json) => {
-                    if (json.Code !== 200) {
-                      message.error("run fail:" + String(json.Code) + " msg: " + json.Msg);
-                    } else {
-                      message.success("batch run succ");
-                    }
-                  });
-
-                }}>
-                  Run
-                </Button>
-              </Tooltip>
-              <Tooltip
-                placement="topLeft"
-                title="Load the behavior file to the local for editing"
-              >
-                <Button
-                  icon={<CloudDownloadOutlined />}
-                  onClick={() => {
-                    GetBehaviorBlob(
-                      window.remote,
-                      Api.FileGet,
-                      record.name
-                    ).then((blob) => {
-                      LoadFile(record.name, blob);
-                    });
-                  }}
-                >
-                  Load
-                </Button>
-              </Tooltip>
-              <Tooltip
-                placement="topLeft"
-                title="Delete the behavior file from the database"
-              >
-                <Popconfirm
-                  title="Are you sure to delete this bot?"
-                  onConfirm={(e) => {
-                    Post(window.remote, Api.FileRemove, {
-                      Name: record.name,
-                    }).then((json) => {
-                      if (json.Code !== 200) {
-                        message.error(
-                          "run fail:" + String(json.Code) + " msg: " + json.Msg
-                        );
-                      } else {
-                        this.refreshBotList();
-                        message.success("bot delete succ");
-                      }
-                    });
-                  }}
-                  onCancel={(e) => { }}
-                  okText="Yes"
-                  cancelText="No"
-                >
-                  <Button icon={<DeleteOutlined />}>Delete</Button>
-                </Popconfirm>
-              </Tooltip>
-              <Tooltip
-                placement="topLeft"
-                title="Save the current behavior tree file to the local"
-              >
-                <Button
-                  icon={<VerticalAlignBottomOutlined />}
-                  onClick={() => {
-                    GetBehaviorBlob(
-                      window.remote,
-                      Api.FileGet,
-                      record.name
-                    ).then((blob) => {
-                      // 创建一个blob的对象，把Json转化为字符串作为我们的值
-                      var url = window.URL.createObjectURL(blob);
-
-                      // 上面这个是创建一个blob的对象连链接，
-                      // 创建一个链接元素，是属于 a 标签的链接元素，所以括号里才是a，
-                      var link = document.createElement("a");
-
-                      link.href = url;
-
-                      // 把上面获得的blob的对象链接赋值给新创建的这个 a 链接
-                      // 设置下载的属性（所以使用的是download），这个是a 标签的一个属性
-                      link.setAttribute("download", "behaviorTree.xml");
-
-                      // 使用js点击这个链接
-                      link.click();
-                    });
-                  }}
-                >
-                  Download
-                </Button>
-              </Tooltip>
-            </Space>
-          ),
-        },
-        {
           title: "Status",
-          dataIndex: "Status",
-          key: "Status",
-          render: (tags, record) => (
+          dataIndex: "status",
+          key: "status",
+          render: (status, record) => (
             <>
-              {tags.map(tag => {
-                var color
-                if (tag === 'succ') {
+              {status.map(s => {
+                if (s === 'succ') {
                   return <CheckCircleTwoTone twoToneColor="#52c41a" />
-                } else if (tag === 'fail') {
+                } else if (s === 'fail') {
                   return <CloseCircleTwoTone twoToneColor="#eb2f96" />
                 } else {
-                  return <ExclamationCircleTwoTone twoToneColor='#adb5bd'/>
+                  return <ExclamationCircleTwoTone twoToneColor='#adb5bd' />
                 }
               })}
             </>
           ),
         },
+        {
+          title: "Desc",
+          dataIndex: "desc",
+          key: "desc",
+        }
       ],
       botLst: [],
       batchLst: [],
@@ -345,6 +253,8 @@ export default class BotList extends React.Component {
   fillBotList(lst) {
     if (lst) {
       var botlist = [];
+      var tags = ["aa", "bb"]
+
       for (var i = 0; i < lst.length; i++) {
         var _upt = new Date(lst[i].Update * 1000);
         var _upts = _upt.toLocaleDateString() + " " + _upt.toLocaleTimeString();
@@ -352,11 +262,19 @@ export default class BotList extends React.Component {
           name: lst[i].Name,
           key: lst[i].Name,
           update: _upts,
-          num: 1,
-          Status: [lst[i].Status],
+          status: [lst[i].Status],
+          tags: ["aa", "bb"],
+          desc: lst[i].Desc
         });
       }
+
+      var children = []
+      for (i = 0; i < tags.length; i++) {
+        children.push(<Option key={tags[i]} value={tags[i]}>{tags[i]}</Option>)
+      }
+
       this.setState({ botLst: botlist });
+      this.setState({ selectedTags: children })
     }
   }
 
@@ -478,7 +396,7 @@ export default class BotList extends React.Component {
     var old = this.state.batchLst;
 
     for (var i = 0; i < old.length; i++) {
-      if (old[i].name == name) {
+      if (old[i].name === name) {
         old[i].cnt = cnt;
         flag = true;
       }
@@ -494,6 +412,92 @@ export default class BotList extends React.Component {
     this.setState({ batchLst: old });
   }
 
+  handleSelectChange = (tags) => {
+    
+  }
+
+
+  rowSelection = {
+    onChange: (selectedRowKeys, selectedRows) => {
+      this.setState({ selectedRows: selectedRows })
+      console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
+    }
+  }
+
+  handleBotLoad = e => {
+
+    if (this.state.selectedRows.length > 0) {
+      var row = this.state.selectedRows[0]
+      GetBehaviorBlob(
+        window.remote,
+        Api.FileGet,
+        row.name
+      ).then((blob) => {
+        LoadFile(row.name, blob);
+      });
+    }
+
+
+  }
+
+  handleBotRun = e => {
+
+    for (var i = 0; i < this.state.selectedRows.length; i++) {
+      var row = this.state.selectedRows[i]
+
+      var num = this.state.runs[row.name]
+      if (num === undefined || num === 0) {
+        message.warn("Please set the number of bot runs " + row.name)
+        continue
+      }
+
+      Post(window.remote, Api.BotCreate, { Name: row.name, Num: num }).then((json) => {
+        if (json.Code !== 200) {
+          message.error("run fail:" + String(json.Code) + " msg: " + json.Msg);
+        } else {
+          message.success("batch run succ");
+        }
+      });
+    }
+
+
+  }
+
+  handleBotDelete = e => {
+    for (var i = 0; i < this.state.selectedRows.length; i++) {
+      var row = this.state.selectedRows[i]
+      Post(window.remote, Api.FileRemove, {
+        Name: row.name,
+      }).then((json) => {
+        if (json.Code !== 200) {
+          message.error(
+            "run fail:" + String(json.Code) + " msg: " + json.Msg
+          );
+        } else {
+          this.refreshBotList();
+          message.success("bot delete succ");
+        }
+      });
+    }
+  }
+
+  handleBotDownload = e => {
+
+    for (var i = 0; i < this.state.selectedRows.length; i++) {
+      var row = this.state.selectedRows[i]
+
+      GetBehaviorBlob(
+        window.remote,
+        Api.FileGet,
+        row.name
+      ).then((blob) => {
+        // 创建一个blob的对象，把Json转化为字符串作为我们的值
+        SaveAs(blob, row.name)
+      });
+    }
+
+  }
+
   render() {
     var filepProps = {
       name: "file",
@@ -506,7 +510,7 @@ export default class BotList extends React.Component {
     };
 
     return (
-      <div>
+      <div >
         <Dragger {...filepProps}>
           <p className="ant-upload-drag-icon">
             <InboxOutlined />
@@ -515,7 +519,79 @@ export default class BotList extends React.Component {
             Click or drag file (*.xml) to this area to upload
           </p>
         </Dragger>
-        <Table columns={this.state.columns} dataSource={this.state.botLst} />
+
+        <div >
+          <Row>
+            <Col span={6}>
+              <Select
+                mode="multiple"
+                allowClear
+                style={{ width: '100%' }}
+                placeholder="Filter by tags"
+                onChange={this.handleSelectChange}
+              >
+                {this.state.selectedTags}
+              </Select>
+            </Col>
+            <Col span={6} offset={6}>
+              <Space >
+                <Tooltip
+                  placement="topLeft"
+                  title="Drive a specified number of robots"
+                >
+                  <Button icon={<PlayCircleOutlined />} onClick={this.handleBotRun}>
+                    Run
+                  </Button>
+                </Tooltip>
+                <Tooltip
+                  placement="topLeft"
+                  title="Load the behavior file to the local for editing"
+                >
+                  <Button
+                    icon={<CloudDownloadOutlined />}
+                    onClick={this.handleBotLoad}
+                  >
+                    Load
+                  </Button>
+                </Tooltip>
+                <Tooltip
+                  placement="topLeft"
+                  title="Delete the behavior file from the database"
+                >
+                  <Popconfirm
+                    title="Are you sure to delete this bot?"
+                    onConfirm={this.handleBotDelete}
+                    onCancel={(e) => { }}
+                    okText="Yes"
+                    cancelText="No"
+                  >
+                    <Button icon={<DeleteOutlined />}>Delete</Button>
+                  </Popconfirm>
+                </Tooltip>
+                <Tooltip
+                  placement="topLeft"
+                  title="Save the current behavior tree file to the local"
+                >
+                  <Button
+                    icon={<VerticalAlignBottomOutlined />}
+                    onClick={this.handleBotDownload}
+                  >
+                    Download
+                  </Button>
+                </Tooltip>
+              </Space>
+            </Col>
+          </Row>
+
+
+        </div>
+
+        <Table rowSelection={{
+          type: "checkbox",
+          ...this.rowSelection,
+        }}
+          columns={this.state.columns} dataSource={this.state.botLst} />
+
       </div>
     );
   }

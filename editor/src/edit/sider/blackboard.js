@@ -4,7 +4,6 @@ import PubSub from "pubsub-js";
 import { message, Divider, Button, Tooltip, Modal, Input } from "antd";
 import {
   CloudUploadOutlined,
-  VerticalAlignBottomOutlined,
 } from "@ant-design/icons";
 
 import Topic from "../../model/topic";
@@ -80,7 +79,7 @@ export default class Blackboard extends React.Component {
     const isModalVisible = this.state.isModalVisible;
 
     return (
-      <div class="offset">
+      <div className="offset">
         <Tooltip
           placement="topLeft"
           title="Create a bot based on the current behavior tree"
