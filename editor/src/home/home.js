@@ -33,6 +33,7 @@ import "./home.css";
 import { SaveAs } from "../utils/file";
 import { LoadBehaviorWithBlob, LoadBehaviorWithFile } from "../utils/tree";
 import HomeTagGroup from "./home_tags";
+import { set } from "@antv/util";
 
 const { Dragger } = Upload;
 const { Option } = Select;
@@ -41,11 +42,7 @@ export default class BotList extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      searchText: "",
-      searchedColumn: "",
       runs: {},
-      selectedTags: [],
-      selectedRows: [],
       columns: [
         {
           title: "Bot behavior file",
@@ -57,8 +54,8 @@ export default class BotList extends React.Component {
           dataIndex: "tags",
           key: "tags",
           render: (text, record) => (
-            <HomeTagGroup record={record} onChange={(tags)=> {
-              console.info("change tags", tags)
+            <HomeTagGroup record={record} onChange={(tags) => {
+              this.updateTags(record.name, tags)
             }} ></HomeTagGroup>
           ),
         },
@@ -109,8 +106,15 @@ export default class BotList extends React.Component {
           key: "desc",
         }
       ],
-      botLst: [],
+      Bots: [],
+
       batchLst: [],
+      botLst: [],               // 显示的 botlist
+
+      selectedTags: [],         // 可选的 tags
+      currentSelectedTags: [], // 当前选中的 tags
+
+      selectedRows: [],         // 选中的行
     };
   }
 
@@ -122,32 +126,98 @@ export default class BotList extends React.Component {
     this.refreshBotList();
   }
 
-  fillBotList(lst) {
-    if (lst) {
-      var botlist = [];
-      var tags = ["aa", "bb"]
+  fillBotList() {
 
-      for (var i = 0; i < lst.length; i++) {
-        var _upt = new Date(lst[i].Update * 1000);
+    var bots = this.state.Bots
+    var selectedTag = this.state.currentSelectedTags
+
+    var intags = (tags) => {
+
+      for (var i = 0; i < selectedTag.length; i++) {
+
+        for (var j = 0; j < tags.length; j++) {
+
+          if (selectedTag[i] === tags[j]) {
+            return true
+          }
+        }
+
+      }
+      return false
+    }
+
+    if (bots.length > 0) {
+      var botlist = [];
+      var tags = []
+
+      for (var i = 0; i < bots.length; i++) {
+
+        if (bots[i].tags) {
+          tags = bots[i].tags
+        }
+
+        if (selectedTag.length > 0) {
+
+          console.info("select filter tags", selectedTag, "bot tags", bots[i].tags)
+
+          if (tags.length > 0) {
+            if (!intags(tags)) {
+              continue
+            }
+          } else {
+            continue
+          }
+
+        }
+
+        var _upt = new Date(bots[i].Update * 1000);
         var _upts = _upt.toLocaleDateString() + " " + _upt.toLocaleTimeString();
         botlist.push({
-          name: lst[i].Name,
-          key: lst[i].Name,
+          name: bots[i].Name,
+          key: bots[i].Name,
           update: _upts,
-          status: [lst[i].Status],
-          tags: "",
-          desc: lst[i].Desc
+          status: [bots[i].Status],
+          tags: tags,
+          desc: bots[i].Desc
         });
       }
 
-      var children = []
-      for (i = 0; i < tags.length; i++) {
-        children.push(<Option key={tags[i]} value={tags[i]}>{tags[i]}</Option>)
+      this.setState({ botLst: botlist });
+    }
+
+  }
+
+  updateTags(name, tags) {
+    var bots = this.state.Bots
+    var tagSet = new Set()
+
+    console.info("update tags", name, tags)
+
+    for (var i = 0; i < bots.length; i++) {
+      if (bots[i].Name === name) {
+        bots[i].tags = tags   // update tags
+        // 同步给服务器
       }
 
-      this.setState({ botLst: botlist });
-      this.setState({ selectedTags: children })
+      if (bots[i].tags) {
+        for (var j = 0; j < bots[i].tags.length; j++) {
+          tagSet.add(bots[i].tags[j])
+        }
+      }
+
     }
+
+    var children = []
+    for (let tag of tagSet.keys()) {
+      children.push(<Option key={tag} value={tag}>{tag}</Option>)
+    }
+
+    // refresh tags
+    console.info("refresh tags", children)
+    this.setState({ selectedTags: children })
+
+    this.setState({ Bots: bots })
+    this.fillBotList()
   }
 
   refreshBotList() {
@@ -158,7 +228,9 @@ export default class BotList extends React.Component {
       if (json.Code !== 200) {
         message.error("run fail:" + String(json.Code) + " msg: " + json.Msg);
       } else {
-        this.fillBotList(json.Body.Bots);
+
+        this.setState({ Bots: json.Body.Bots })
+        this.fillBotList();
       }
     });
   }
@@ -167,101 +239,6 @@ export default class BotList extends React.Component {
     console.info(key);
   };
 
-  getColumnSearchProps = (dataIndex) => ({
-    filterDropdown: ({
-      setSelectedKeys,
-      selectedKeys,
-      confirm,
-      clearFilters,
-    }) => (
-      <div style={{ padding: 8 }}>
-        <Input
-          ref={(node) => {
-            this.searchInput = node;
-          }}
-          placeholder={`Search ${dataIndex}`}
-          value={selectedKeys[0]}
-          onChange={(e) =>
-            setSelectedKeys(e.target.value ? [e.target.value] : [])
-          }
-          onPressEnter={() =>
-            this.handleSearch(selectedKeys, confirm, dataIndex)
-          }
-          style={{ marginBottom: 8, display: "block" }}
-        />
-        <Space>
-          <Button
-            type="primary"
-            onClick={() => this.handleSearch(selectedKeys, confirm, dataIndex)}
-            icon={<SearchOutlined />}
-            size="small"
-            style={{ width: 90 }}
-          >
-            Search
-          </Button>
-          <Button
-            onClick={() => this.handleReset(clearFilters)}
-            size="small"
-            style={{ width: 90 }}
-          >
-            Reset
-          </Button>
-        </Space>
-      </div>
-    ),
-    filterIcon: (filtered) => (
-      <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
-    ),
-    onFilter: (value, record) =>
-      record[dataIndex]
-        ? record[dataIndex]
-          .toString()
-          .toLowerCase()
-          .includes(value.toLowerCase())
-        : "",
-    onFilterDropdownVisibleChange: (visible) => {
-      if (visible) {
-        setTimeout(() => this.searchInput.select(), 100);
-      }
-    },
-    render: (text) =>
-      this.state.searchedColumn === dataIndex ? (
-        <Highlighter
-          highlightStyle={{ backgroundColor: "#ffc069", padding: 0 }}
-          searchWords={[this.state.searchText]}
-          autoEscape
-          textToHighlight={text ? text.toString() : ""}
-        />
-      ) : (
-        text
-      ),
-  });
-
-  handleSearch = (selectedKeys, confirm, dataIndex) => {
-    confirm();
-    this.setState({
-      searchText: selectedKeys[0],
-      searchedColumn: dataIndex,
-    });
-  };
-
-  handleReset = (clearFilters) => {
-    clearFilters();
-    this.setState({ searchText: "" });
-  };
-
-  uploadOnChange = (info) => {
-    const { status } = info.file;
-    if (status !== "uploading") {
-      console.log(info.file, info.fileList);
-    }
-    if (status === "done") {
-      message.success(`${info.file.name} file uploaded successfully.`);
-      this.refreshBotList();
-    } else if (status === "error") {
-      message.error(`${info.file.name} file upload failed.`);
-    }
-  };
 
   refreshBatchInfo(name, cnt) {
     var flag = false;
@@ -285,6 +262,12 @@ export default class BotList extends React.Component {
   }
 
   handleSelectChange = (tags) => {
+
+    console.info("refresh bot lst", tags)
+
+    this.setState({ currentSelectedTags: tags }, () => {
+      this.fillBotList()
+    })
 
   }
 
