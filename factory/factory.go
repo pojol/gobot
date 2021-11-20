@@ -117,6 +117,15 @@ func (f *Factory) RmvBehavior(name string) {
 	}
 }
 
+func (f *Factory) UpdateBehaviorTags(name string, tags []string) []database.BehaviorInfo {
+	err := database.Get().UpdateTags(name, tags)
+	if err != nil {
+		fmt.Println("UpdateBehaviorTags", err.Error())
+	}
+
+	return f.GetBehaviors()
+}
+
 func (f *Factory) GetBehaviors() []database.BehaviorInfo {
 	lst, err := database.Get().GetAllFiles()
 	if err != nil {

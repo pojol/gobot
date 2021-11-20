@@ -13,10 +13,11 @@ import (
 
 type BehaviorInfo struct {
 	gorm.Model
-	Name       string `gorm:"<-"`
-	Dat        []byte `gorm:"<-"`
-	UpdateTime int64  `gorm:"<-"`
-	Status     string `gorm:"<-"`
+	Name       string   `gorm:"<-"`
+	Dat        []byte   `gorm:"<-"`
+	UpdateTime int64    `gorm:"<-"`
+	Status     string   `gorm:"<-"`
+	Tags       []string `gorm:"<-"`
 }
 
 type BotTemplateConfig struct {
@@ -126,6 +127,10 @@ func (f *Database) UpsetFile(name string, byt []byte) error {
 
 func (f *Database) UpdateState(name string, status string) error {
 	return f.db.Model(&BehaviorInfo{}).Where("name = ?", name).Update("Status", status).Error
+}
+
+func (f *Database) UpdateTags(name string, tags []string) error {
+	return f.db.Model(&BehaviorInfo{}).Where("name = ?", name).Update("Tags", tags).Error
 }
 
 func (f *Database) DelFile(name string) error {
