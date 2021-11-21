@@ -219,16 +219,21 @@ func (f *Factory) taskLoop() {
 }
 
 func (f *Factory) pushBatch(b *Batch) {
+	fmt.Println("push batch", b.ID, b.Name)
+
 	f.batchLock.Lock()
 	f.batches = append(f.batches, b)
 	f.batchLock.Unlock()
 }
 
 func (f *Factory) popBatch() {
+
 	f.batchLock.Lock()
 	b := f.batches[0]
 	f.AppendReport(b.Report())
 	b.Close()
+
+	fmt.Println("pop batch", b.ID, b.Name)
 
 	s := bot.BotStatusUnknow
 	if b.Report().ErrNum > 0 {

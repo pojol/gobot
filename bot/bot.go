@@ -296,6 +296,17 @@ func (b *Bot) run_children(parent *behavior.Tree, children []*behavior.Tree) {
 func (b *Bot) Run(doneCh chan string, errch chan ErrInfo) {
 
 	go func() {
+
+		defer func() {
+			if err := recover(); err != nil {
+				fmt.Println("run err", err)
+				errch <- ErrInfo{
+					ID:  b.id,
+					Err: err.(error),
+				}
+			}
+		}()
+
 		b.run_children(b.tree, b.tree.Children)
 		doneCh <- b.id
 	}()
