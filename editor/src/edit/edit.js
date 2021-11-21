@@ -1,11 +1,6 @@
-import React, { StrictMode } from "react";
-import ReactJson from "react-json-view";
+import React from "react";
 import PubSub from "pubsub-js";
-import { message, Divider, Button, Tooltip, Modal, Input } from "antd";
-import {
-  CloudUploadOutlined,
-  VerticalAlignBottomOutlined,
-} from "@ant-design/icons";
+
 import SplitPane, { Pane } from "react-split-pane";
 
 import GraphView from "./graph/graph";
@@ -37,7 +32,6 @@ export default class EditPlane extends React.Component {
       <div>
         <SplitPane
           split="vertical"
-          minSize={500}
           defaultSize="60%"
           minSize={400}
           onDragFinished={this.onEditDragFinished}

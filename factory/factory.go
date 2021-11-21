@@ -117,6 +117,15 @@ func (f *Factory) RmvBehavior(name string) {
 	}
 }
 
+func (f *Factory) UpdateBehaviorTags(name string, tags []byte) []database.BehaviorInfo {
+	err := database.Get().UpdateTags(name, tags)
+	if err != nil {
+		fmt.Println("UpdateBehaviorTags", err.Error())
+	}
+
+	return f.GetBehaviors()
+}
+
 func (f *Factory) GetBehaviors() []database.BehaviorInfo {
 	lst, err := database.Get().GetAllFiles()
 	if err != nil {
@@ -210,16 +219,21 @@ func (f *Factory) taskLoop() {
 }
 
 func (f *Factory) pushBatch(b *Batch) {
+	fmt.Println("push batch", b.ID, b.Name)
+
 	f.batchLock.Lock()
 	f.batches = append(f.batches, b)
 	f.batchLock.Unlock()
 }
 
 func (f *Factory) popBatch() {
+
 	f.batchLock.Lock()
 	b := f.batches[0]
 	f.AppendReport(b.Report())
 	b.Close()
+
+	fmt.Println("pop batch", b.ID, b.Name)
 
 	s := bot.BotStatusUnknow
 	if b.Report().ErrNum > 0 {

@@ -67,6 +67,7 @@ func CreateBatch(scriptPath, name string, num int, tbyt []byte, bwg *utils.SizeW
 		bots:    make(map[string]*bot.Bot),
 	}
 
+	fmt.Println("create", num, "bot")
 	for i := 0; i < num; i++ {
 		b.pipeline <- bot.NewWithBehaviorTree(scriptPath, tree, name)
 	}
@@ -95,13 +96,16 @@ func (b *Batch) push(bot *bot.Bot) {
 	b.bwg.Add()
 	atomic.AddInt32(&b.CurNum, 1)
 
+	fmt.Println("push", b.Name)
+
 	b.bots[bot.ID()] = bot
 }
 
 func (b *Batch) pop(id string) {
 	b.bwg.Done()
 
-	if atomic.LoadInt32(&b.CurNum) == b.TotalNum {
+	atomic.AddInt32(&b.CurNum, -1)
+	if atomic.LoadInt32(&b.CurNum) == 0 {
 		b.done <- 1
 	}
 }

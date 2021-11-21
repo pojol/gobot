@@ -1,12 +1,6 @@
 import React from "react";
 import {
-  Input,
-  Divider,
-  Button,
-  AutoComplete,
   Tabs,
-  Tooltip,
-  Modal,
 } from "antd";
 import PubSub from "pubsub-js";
 import Topic from "../../model/topic";
@@ -14,16 +8,10 @@ import ActionTab from "./edit_action";
 import LoopTab from "./edit_loop";
 import WaitTab from "./edit_wait";
 import ConditionTab from "./edit_condition";
-import { formatTimeStr } from "antd/lib/statistic/utils";
 import AssertTab from "./edit_assert";
-import {
-  CloudUploadOutlined,
-  VerticalAlignBottomOutlined,
-} from "@ant-design/icons";
 import { NodeTy } from "../../model/node_type";
 
 const { TabPane } = Tabs;
-const { TextArea } = Input;
 
 export default class Edit extends React.Component {
   constructor(props) {
@@ -48,7 +36,7 @@ export default class Edit extends React.Component {
       return;
     }
 
-    if (ty === NodeTy.Sequence || ty == NodeTy.Selector) {
+    if (ty === NodeTy.Sequence || ty === NodeTy.Selector) {
       return;
     }
 

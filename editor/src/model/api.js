@@ -8,12 +8,9 @@ const Api = {
 
     //
     FileGet : "file.get",
-    
-    // 
     FileList : "file.list",
-
-    //
     FileRemove : "file.remove",
+    FileSetTags : "file.setTags",
 
     /*
         Debug
@@ -30,5 +27,3 @@ const Api = {
 
 
 export default Api;
-
-

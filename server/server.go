@@ -14,12 +14,6 @@ import (
 	"github.com/pojol/gobot/utils"
 )
 
-type Response struct {
-	Code int
-	Msg  string
-	Body interface{}
-}
-
 type Err int32
 
 const (
@@ -33,6 +27,7 @@ const (
 	ErrCantFindBot
 	ErrCreateBot
 	ErrEmptyBatch
+	ErrTagsFormat
 )
 
 var errmap map[Err]string = map[Err]string{
@@ -125,22 +120,6 @@ EXT:
 	return nil
 }
 
-type behaviorInfo struct {
-	Name   string
-	Update int64
-	Status string
-}
-type BehaviorListRes struct {
-	Bots []behaviorInfo
-}
-
-type FileRemoveReq struct {
-	Name string
-}
-type FileRemoveRes struct {
-	Bots []behaviorInfo
-}
-
 func FileRemove(ctx echo.Context) error {
 	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
 	code := Succ
@@ -187,10 +166,14 @@ func FileGetList(ctx echo.Context) error {
 
 	info := factory.Global.GetBehaviors()
 	for _, v := range info {
+		tags := []string{}
+		json.Unmarshal(v.TagDat, &tags)
+
 		body.Bots = append(body.Bots, behaviorInfo{
 			Name:   v.Name,
 			Update: v.UpdateTime,
 			Status: v.Status,
+			Tags:   tags,
 		})
 	}
 
@@ -202,12 +185,53 @@ func FileGetList(ctx echo.Context) error {
 	return nil
 }
 
-type FindBehaviorReq struct {
-	Name string
-}
+func FileSetTags(ctx echo.Context) error {
+	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
+	code := Succ
+	res := &Response{}
+	req := &SetBehaviorTagsReq{}
+	body := &SetBehaviorTagsRes{}
+	var info []database.BehaviorInfo
+	var jdat []byte
 
-type FindBehaviorRes struct {
-	Info database.BehaviorInfo
+	bts, err := ioutil.ReadAll(ctx.Request().Body)
+	if err != nil {
+		fmt.Println(err.Error())
+		goto EXT
+	}
+
+	err = json.Unmarshal(bts, &req)
+	if err != nil {
+		code = ErrJsonInvalid
+		fmt.Println(err.Error())
+		goto EXT
+	}
+
+	jdat, err = json.Marshal(req.NewTags)
+	if err != nil {
+		code = ErrTagsFormat
+		goto EXT
+	}
+
+	info = factory.Global.UpdateBehaviorTags(req.Name, jdat)
+	for _, v := range info {
+		tags := []string{}
+		json.Unmarshal(v.TagDat, &tags)
+		body.Bots = append(body.Bots, behaviorInfo{
+			Name:   v.Name,
+			Update: v.UpdateTime,
+			Status: v.Status,
+			Tags:   tags,
+		})
+	}
+
+EXT:
+	res.Code = int(code)
+	res.Msg = errmap[code]
+	res.Body = body
+
+	ctx.JSON(http.StatusOK, res)
+	return nil
 }
 
 func FileGetBlob(ctx echo.Context) error {
@@ -236,32 +260,6 @@ func FileGetBlob(ctx echo.Context) error {
 EXT:
 	ctx.Blob(http.StatusOK, "text/plain;charset=utf-8", info.Dat)
 	return nil
-}
-
-type ReportApiInfo struct {
-	Api        string
-	ReqNum     int
-	ErrNum     int
-	ConsumeNum int64
-
-	ReqSize int64
-	ResSize int64
-}
-
-type ReportInfo struct {
-	ID        string
-	Name      string
-	BotNum    int
-	ReqNum    int
-	ErrNum    int
-	Tps       int
-	Dura      string
-	BeginTime string
-	Apilst    []ReportApiInfo
-}
-
-type ReportRes struct {
-	Info []ReportInfo
 }
 
 func GetReport(ctx echo.Context) error {
@@ -301,14 +299,6 @@ func GetReport(ctx echo.Context) error {
 
 	ctx.JSON(http.StatusOK, res)
 	return nil
-}
-
-type RunRequest struct {
-	Name string
-	Num  int
-}
-
-type RunResponse struct {
 }
 
 func BotRun(ctx echo.Context) error {
@@ -353,10 +343,6 @@ EXT:
 	return nil
 }
 
-type BotListResponse struct {
-	Lst []factory.BatchInfo
-}
-
 func BotList(ctx echo.Context) error {
 	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
 	res := &Response{}
@@ -370,16 +356,6 @@ func BotList(ctx echo.Context) error {
 
 	ctx.JSON(http.StatusOK, res)
 	return nil
-}
-
-type StepRequest struct {
-	BotID string
-}
-
-type StepResponse struct {
-	Prev       string
-	Cur        string
-	Blackboard string
 }
 
 func DebugStep(ctx echo.Context) error {
@@ -441,14 +417,10 @@ EXT:
 	return nil
 }
 
-type createDebugBotResponse struct {
-	BotID string
-}
-
 func DebugCreate(ctx echo.Context) error {
 	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
 	res := &Response{}
-	body := &createDebugBotResponse{}
+	body := &CreateDebugBotResponse{}
 	code := Succ
 	var b *bot.Bot
 
@@ -499,6 +471,7 @@ func Route(e *echo.Echo) {
 
 	e.POST("/file.list", FileGetList)
 	e.POST("/file.get", FileGetBlob)
+	e.POST("/file.setTags", FileSetTags)
 
 	e.POST("/bot.create", BotRun) // 创建一批bot
 	e.POST("/bot.list", BotList)

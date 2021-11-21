@@ -1,21 +1,15 @@
 import React from "react";
-import { render } from "react-dom";
 
 import PubSub from "pubsub-js";
 import Topic from "../../model/topic";
-import ReactJson from "react-json-view";
 
 import { Controlled as CodeMirror } from "react-codemirror2";
 import "codemirror/lib/codemirror.css";
 import "codemirror/theme/solarized.css";
 import "codemirror/mode/lua/lua";
 
-import { Input, Tag, Button, AutoComplete, Tabs, message, Space } from "antd";
-import { formatTimeStr } from "antd/lib/statistic/utils";
-import Form from "antd/lib/form/Form";
-const { TextArea } = Input;
+import { Tag, Button, message, Space } from "antd";
 
-const { Search } = Input;
 
 export default class ConditionTab extends React.Component {
   constructor(props) {
@@ -31,7 +25,7 @@ export default class ConditionTab extends React.Component {
     PubSub.subscribe(Topic.NodeEditorClick, (topic, dat) => {
       var obj = window.tree.get(dat.id);
 
-      if (obj !== undefined && obj.ty == this.state.node_ty) {
+      if (obj !== undefined && obj.ty === this.state.node_ty) {
         let target = { ...obj };
         delete target.pos;
         delete target.children;
