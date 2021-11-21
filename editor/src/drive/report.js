@@ -1,5 +1,4 @@
-import { Table, Tag, Space, Checkbox, Slider, Divider, Tabs,message ,Button} from "antd";
-import { ClockCircleOutlined } from "@ant-design/icons";
+import { Table, Tag, Tabs,message} from "antd";
 import * as React from "react";
 import ApiChart from "./chart_tree";
 import PubSub from "pubsub-js";

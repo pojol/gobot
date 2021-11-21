@@ -1,6 +1,5 @@
 import React from "react";
 import {
-  Input,
   Tag,
   InputNumber,
   Row,
@@ -12,7 +11,6 @@ import {
 } from "antd";
 import PubSub from "pubsub-js";
 import Topic from "../../model/topic";
-import ReactJson from "react-json-view";
 
 const Min = 0;
 const Max = 1000;
@@ -31,7 +29,7 @@ export default class LoopTab extends React.Component {
     PubSub.subscribe(Topic.NodeEditorClick, (topic, dat) => {
       var obj = window.tree.get(dat.id);
 
-      if (obj !== undefined && obj.ty == this.state.node_ty) {
+      if (obj !== undefined && obj.ty === this.state.node_ty) {
         let target = { ...obj };
         delete target.pos;
         delete target.children;

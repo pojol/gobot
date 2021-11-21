@@ -1,7 +1,6 @@
 import React from "react";
 import PubSub from "pubsub-js";
 import Topic from "./topic";
-import { append } from "@antv/x6/lib/util/dom/elem";
 import { message } from "antd";
 import OBJ2XML from "object-to-xml";
 import Config from "./config";
@@ -116,7 +115,7 @@ export default class TreeModel extends React.Component {
     var flag = false;
 
     for (var i = 0; i < parent.children.length; i++) {
-      if (parent.children[i].id == findid) {
+      if (parent.children[i].id === findid) {
         parent.children[i].children.push(child);
         flag = true;
         callback(child);
@@ -125,7 +124,7 @@ export default class TreeModel extends React.Component {
     }
 
     if (!flag) {
-      for (var i = 0; i < parent.children.length; i++) {
+      for (i = 0; i < parent.children.length; i++) {
         this.addChild(findid, parent.children[i], child, callback);
       }
     }
