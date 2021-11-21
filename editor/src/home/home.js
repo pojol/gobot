@@ -123,7 +123,6 @@ export default class BotList extends React.Component {
       this.refreshBotList();
     });
 
-    this.refreshBotList();
   }
 
   fillBotList() {
@@ -132,34 +131,28 @@ export default class BotList extends React.Component {
     var selectedTag = this.state.currentSelectedTags
 
     var intags = (tags) => {
-
       for (var i = 0; i < selectedTag.length; i++) {
-
         for (var j = 0; j < tags.length; j++) {
-
           if (selectedTag[i] === tags[j]) {
             return true
           }
         }
-
       }
       return false
     }
 
     if (bots.length > 0) {
       var botlist = [];
-      var tags = []
-
+      
       for (var i = 0; i < bots.length; i++) {
+        var tags = []
 
-        if (bots[i].tags) {
-          tags = bots[i].tags
+        if (bots[i].Tags) {
+          tags = bots[i].Tags
         }
 
         if (selectedTag.length > 0) {
-
-          console.info("select filter tags", selectedTag, "bot tags", bots[i].tags)
-
+          console.info("select filter tags", selectedTag, "bot tags", bots[i].Tags)
           if (tags.length > 0) {
             if (!intags(tags)) {
               continue
@@ -167,7 +160,6 @@ export default class BotList extends React.Component {
           } else {
             continue
           }
-
         }
 
         var _upt = new Date(bots[i].Update * 1000);
@@ -195,13 +187,24 @@ export default class BotList extends React.Component {
 
     for (var i = 0; i < bots.length; i++) {
       if (bots[i].Name === name) {
-        bots[i].tags = tags   // update tags
+        bots[i].Tags = tags   // update tags
         // 同步给服务器
+        Post(window.remote, Api.FileSetTags, {
+          Name : name,
+          NewTags : tags,
+        }).then((json)=>{
+          if (json.Code !== 200) {
+            message.error("updaet tags fail:" + String(json.Code) + " msg: " + json.Msg);
+          } else {
+            message.success("update tags succ!")
+          }
+        })
       }
 
-      if (bots[i].tags) {
-        for (var j = 0; j < bots[i].tags.length; j++) {
-          tagSet.add(bots[i].tags[j])
+      if (bots[i].Tags) {
+        for (var j = 0; j < bots[i].Tags.length; j++) {
+          console.info("add tag", bots[i].Tags[j])
+          tagSet.add(bots[i].Tags[j])
         }
       }
 
@@ -220,6 +223,27 @@ export default class BotList extends React.Component {
     this.fillBotList()
   }
 
+  updateAllTags() {
+    var bots = this.state.Bots
+    var tagSet = new Set()
+
+    for (var i = 0; i < bots.length; i++) {
+      if (bots[i].Tags) {
+        for (var j = 0; j < bots[i].Tags.length; j++) {
+          tagSet.add(bots[i].Tags[j])
+        }
+      }
+    }
+
+    var children = []
+    for (let tag of tagSet.keys()) {
+      children.push(<Option key={tag} value={tag}>{tag}</Option>)
+    }
+
+    console.info("selected tags", children)
+    this.setState({ selectedTags: children })
+  }
+
   refreshBotList() {
     this.setState({ botLst: [] });
     this.setState({ batchLst: [] });
@@ -228,9 +252,11 @@ export default class BotList extends React.Component {
       if (json.Code !== 200) {
         message.error("run fail:" + String(json.Code) + " msg: " + json.Msg);
       } else {
-
-        this.setState({ Bots: json.Body.Bots })
-        this.fillBotList();
+        console.info("refresh bots", json.Body.Bots)
+        this.setState({ Bots: json.Body.Bots }, ()=>{
+          this.updateAllTags()
+          this.fillBotList();
+        })
       }
     });
   }

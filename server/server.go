@@ -27,6 +27,7 @@ const (
 	ErrCantFindBot
 	ErrCreateBot
 	ErrEmptyBatch
+	ErrTagsFormat
 )
 
 var errmap map[Err]string = map[Err]string{
@@ -165,11 +166,14 @@ func FileGetList(ctx echo.Context) error {
 
 	info := factory.Global.GetBehaviors()
 	for _, v := range info {
+		tags := []string{}
+		json.Unmarshal(v.TagDat, &tags)
+
 		body.Bots = append(body.Bots, behaviorInfo{
 			Name:   v.Name,
 			Update: v.UpdateTime,
 			Status: v.Status,
-			Tags:   v.Tags,
+			Tags:   tags,
 		})
 	}
 
@@ -188,6 +192,7 @@ func FileSetTags(ctx echo.Context) error {
 	req := &SetBehaviorTagsReq{}
 	body := &SetBehaviorTagsRes{}
 	var info []database.BehaviorInfo
+	var jdat []byte
 
 	bts, err := ioutil.ReadAll(ctx.Request().Body)
 	if err != nil {
@@ -197,17 +202,26 @@ func FileSetTags(ctx echo.Context) error {
 
 	err = json.Unmarshal(bts, &req)
 	if err != nil {
+		code = ErrJsonInvalid
 		fmt.Println(err.Error())
 		goto EXT
 	}
 
-	info = factory.Global.UpdateBehaviorTags(req.Name, req.NewTags)
+	jdat, err = json.Marshal(req.NewTags)
+	if err != nil {
+		code = ErrTagsFormat
+		goto EXT
+	}
+
+	info = factory.Global.UpdateBehaviorTags(req.Name, jdat)
 	for _, v := range info {
+		tags := []string{}
+		json.Unmarshal(v.TagDat, &tags)
 		body.Bots = append(body.Bots, behaviorInfo{
 			Name:   v.Name,
 			Update: v.UpdateTime,
 			Status: v.Status,
-			Tags:   v.Tags,
+			Tags:   tags,
 		})
 	}
 

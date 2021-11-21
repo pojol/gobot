@@ -16,7 +16,7 @@ export default class HomeTagGroup extends React.Component {
     };
 
     componentDidMount() {
-        console.info(this.props)
+        console.info("init tag group", this.props)
         this.setState({tags : this.props.record.tags})
     }
 

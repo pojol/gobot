@@ -17,6 +17,7 @@ type behaviorInfo struct {
 	Update int64
 	Status string
 	Tags   []string
+	Desc   string
 }
 
 type BehaviorListRes struct {

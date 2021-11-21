@@ -117,7 +117,7 @@ func (f *Factory) RmvBehavior(name string) {
 	}
 }
 
-func (f *Factory) UpdateBehaviorTags(name string, tags []string) []database.BehaviorInfo {
+func (f *Factory) UpdateBehaviorTags(name string, tags []byte) []database.BehaviorInfo {
 	err := database.Get().UpdateTags(name, tags)
 	if err != nil {
 		fmt.Println("UpdateBehaviorTags", err.Error())
