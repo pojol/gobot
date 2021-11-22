@@ -253,10 +253,12 @@ export default class BotList extends React.Component {
         message.error("run fail:" + String(json.Code) + " msg: " + json.Msg);
       } else {
         console.info("refresh bots", json.Body.Bots)
-        this.setState({ Bots: json.Body.Bots }, ()=>{
-          this.updateAllTags()
-          this.fillBotList();
-        })
+        if (json.Body.Bots) {
+          this.setState({ Bots: json.Body.Bots }, ()=>{
+            this.updateAllTags()
+            this.fillBotList();
+          })
+        }
       }
     });
   }
