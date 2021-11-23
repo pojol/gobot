@@ -98,8 +98,10 @@ func NewWithBehaviorTree(path string, bt *behavior.Tree, tmpl string) *Bot {
 	rand.Seed(time.Now().UnixNano())
 
 	// 这里要对script目录进行一次检查，将lua脚本都载入进来
-	bot.L.DoFile(path + "global.lua")
-	bot.L.DoFile(path + "json.lua")
+	preScripts := utils.GetDirectoryFiels(path, ".lua")
+	for _, v := range preScripts {
+		bot.L.DoFile(path + v)
+	}
 
 	bot.L.PreloadModule("proto", bot.protoMod.Loader)
 	bot.L.PreloadModule("http", bot.httpMod.Loader)
