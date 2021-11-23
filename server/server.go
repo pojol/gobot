@@ -93,10 +93,6 @@ func FileTextUpload(ctx echo.Context) error {
 	}
 
 	upload = utils.NewUploadFile(f, header)
-	if upload.GetFileExt() != ".xml" {
-		code = ErrJsonInvalid
-		goto EXT
-	}
 	fbyte = upload.ReadBytes()
 	if len(fbyte) == 0 {
 		code = ErrContentRead
