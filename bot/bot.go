@@ -100,7 +100,10 @@ func NewWithBehaviorTree(path string, bt *behavior.Tree, tmpl string) *Bot {
 	// 这里要对script目录进行一次检查，将lua脚本都载入进来
 	preScripts := utils.GetDirectoryFiels(path, ".lua")
 	for _, v := range preScripts {
-		bot.L.DoFile(path + v)
+		err := bot.L.DoFile(path + v)
+		if err != nil {
+			fmt.Println("load script", path+v, err.Error())
+		}
 	}
 
 	bot.L.PreloadModule("proto", bot.protoMod.Loader)
