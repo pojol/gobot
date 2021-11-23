@@ -4,8 +4,9 @@ import PubSub from "pubsub-js";
 import SplitPane, { Pane } from "react-split-pane";
 
 import GraphView from "./graph/graph";
-import Edit from "./sider/edit_tab";
-import Blackboard from "./sider/blackboard";
+import Edit from "./node/edit_tab";
+import Blackboard from "./response/blackboard";
+import ChangeView from "./meta/change";
 
 import Topic from "../model/topic";
 
@@ -36,7 +37,20 @@ export default class EditPlane extends React.Component {
           minSize={400}
           onDragFinished={this.onEditDragFinished}
         >
-          <GraphView />
+          <SplitPane
+            split="horizontal"
+            defaultSize={640}
+            minSize={100}
+            onDragFinished={this.onCodeDragFinished}
+          >
+            <Pane minSize={200} maxSize={1000} defaultSize="70%">
+              <GraphView />
+            </Pane>
+            <Pane minSize={200} maxSize={1000} defaultSize="30%">
+              <ChangeView />
+            </Pane>
+          </SplitPane>
+         
 
           <SplitPane
             split="horizontal"

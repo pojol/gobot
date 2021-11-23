@@ -41,6 +41,8 @@ export default class GraphView extends React.Component {
   componentDidMount() {
     // 新建画布
     const graph = new Graph({
+      width:780,
+      height:620,
       container: this.container,
       highlighting: {
         magnetAvailable: magnetAvailabilityHighlighter,
@@ -264,6 +266,7 @@ export default class GraphView extends React.Component {
       animation: true,
     });
     this.graph = graph;
+
 
     PubSub.subscribe(Topic.UpdateNodeParm, (topic: string, info: any) => {
       if (info.parm.ty === NodeTy.Action) {
