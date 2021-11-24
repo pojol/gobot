@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/pojol/gobot/utils"
@@ -52,15 +51,15 @@ func (h *HttpModule) Loader(L *lua.LState) int {
 }
 
 func (h *HttpModule) get(L *lua.LState) int {
-	return h.doRequestAndPush(L, "get", L.ToString(1), L.ToTable(2))
+	return h.doRequestAndPush(L, "GET", L.ToString(1), L.ToTable(2))
 }
 
 func (h *HttpModule) post(L *lua.LState) int {
-	return h.doRequestAndPush(L, "post", L.ToString(1), L.ToTable(2))
+	return h.doRequestAndPush(L, "POST", L.ToString(1), L.ToTable(2))
 }
 
 func (h *HttpModule) put(L *lua.LState) int {
-	return h.doRequestAndPush(L, "put", L.ToString(1), L.ToTable(2))
+	return h.doRequestAndPush(L, "PUT", L.ToString(1), L.ToTable(2))
 }
 
 func (h *HttpModule) request(L *lua.LState) int {
@@ -68,7 +67,7 @@ func (h *HttpModule) request(L *lua.LState) int {
 }
 
 func (h *HttpModule) doRequest(L *lua.LState, method string, url string, options *lua.LTable) (*lua.LUserData, error) {
-	req, err := http.NewRequest(strings.ToUpper(method), url, nil)
+	req, err := http.NewRequest(method, url, nil)
 	var reqlen, reslen int
 	if err != nil {
 		return nil, err
