@@ -22,7 +22,7 @@ export default class Blackboard extends React.Component {
   }
 
   componentDidMount() {
-    PubSub.subscribe(Topic.Blackboard, (topic, info) => {
+    PubSub.subscribe(Topic.UpdateBlackboard, (topic, info) => {
       try {
         var blackboard = JSON.parse(info);
         this.setState({ metadata: blackboard });
@@ -116,7 +116,7 @@ export default class Blackboard extends React.Component {
             onChange={this.behaviorNameChange}
           />
         </Modal>
-        <Divider> Metadata </Divider>
+        <Divider> Blackboard </Divider>
         <div>
           <ReactJson
             src={this.state.metadata}

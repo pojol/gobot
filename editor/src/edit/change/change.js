@@ -20,7 +20,7 @@ export default class ChangeView extends React.Component {
   }
 
   componentDidMount() {
-    PubSub.subscribe(Topic.Blackboard, (topic, info) => {
+    PubSub.subscribe(Topic.UpdateChange, (topic, info) => {
       try {
         var blackboard = JSON.parse(info);
         this.setState({ metadata: blackboard });

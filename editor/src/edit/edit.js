@@ -5,8 +5,8 @@ import SplitPane, { Pane } from "react-split-pane";
 
 import GraphView from "./graph/graph";
 import Edit from "./node/edit_tab";
-import Blackboard from "./response/blackboard";
-import ChangeView from "./meta/change";
+import Blackboard from "./blackboard/blackboard";
+import ChangeView from "./change/change";
 
 import Topic from "../model/topic";
 
