@@ -38,7 +38,7 @@ export default class AssertTab extends React.Component {
       }
     });
 
-    PubSub.subscribe(Topic.EditPlaneResize, (topic, h) =>{
+    PubSub.subscribe(Topic.EditPlaneCodeMetaResize, (topic, h) =>{
       var nh = h - 100
       this.state.editor.setSize("auto",nh.toString())
     })

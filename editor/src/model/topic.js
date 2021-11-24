@@ -29,7 +29,9 @@ const Topic = {
 
     ReportSelect : "topic_report_select",
 
-    EditPlaneResize : "topic_plane_resize",
+    EditPlaneCodeMetaResize : "topic_plane_code&meta_resize",
+    EditPlaneEditCodeResize : "topic_plane_edit&code_resize",
+    EditPlaneEditChangeResize : "topic_plane_edit&change_resize",
 }
 
 /*
