@@ -11,7 +11,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/pojol/gobot/behavior"
-	"github.com/pojol/gobot/script"
+	script "github.com/pojol/gobot/script/module"
 	"github.com/pojol/gobot/utils"
 	lua "github.com/yuin/gopher-lua"
 )
@@ -30,9 +30,10 @@ type Bot struct {
 	prev *behavior.Tree
 	cur  *behavior.Tree
 
-	httpMod  *script.HttpModule
-	protoMod *script.ProtoModule
-	utilsMod *script.UtilsModule
+	httpMod   *script.HttpModule
+	protoMod  *script.ProtoModule
+	utilsMod  *script.UtilsModule
+	base64Mod *script.Base64Module
 
 	L *lua.LState
 	sync.Mutex
@@ -85,17 +86,23 @@ func (b *Bot) GetPrevNodeID() string {
 func NewWithBehaviorTree(path string, bt *behavior.Tree, tmpl string) *Bot {
 
 	bot := &Bot{
-		id:       uuid.New().String(),
-		tree:     bt,
-		cur:      bt,
-		L:        lua.NewState(),
-		name:     tmpl,
-		httpMod:  script.NewHttpModule(&http.Client{}),
-		protoMod: &script.ProtoModule{},
-		utilsMod: &script.UtilsModule{},
+		id:        uuid.New().String(),
+		tree:      bt,
+		cur:       bt,
+		L:         lua.NewState(),
+		name:      tmpl,
+		httpMod:   script.NewHttpModule(&http.Client{}),
+		protoMod:  &script.ProtoModule{},
+		utilsMod:  &script.UtilsModule{},
+		base64Mod: &script.Base64Module{},
 	}
 
 	rand.Seed(time.Now().UnixNano())
+
+	bot.L.PreloadModule("proto", bot.protoMod.Loader)
+	bot.L.PreloadModule("http", bot.httpMod.Loader)
+	bot.L.PreloadModule("utils", bot.utilsMod.Loader)
+	bot.L.PreloadModule("base64", bot.base64Mod.Loader)
 
 	// 这里要对script目录进行一次检查，将lua脚本都载入进来
 	preScripts := utils.GetDirectoryFiels(path, ".lua")
@@ -105,10 +112,6 @@ func NewWithBehaviorTree(path string, bt *behavior.Tree, tmpl string) *Bot {
 			fmt.Println("load script", path+v, err.Error())
 		}
 	}
-
-	bot.L.PreloadModule("proto", bot.protoMod.Loader)
-	bot.L.PreloadModule("http", bot.httpMod.Loader)
-	bot.L.PreloadModule("utils", bot.utilsMod.Loader)
 
 	return bot
 }

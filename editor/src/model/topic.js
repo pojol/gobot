@@ -15,7 +15,8 @@ const Topic = {
     Upload : "topic_upload",    // 上传行为树模版文件
     Create : "topic_create",    // 基于某个模版，创建一个可运行的 Bot
     Step : "topic_step",        // 单步运行某个 Bot
-    Blackboard : "topic_blackboard",    // 将运行 Bot 返回的数据写入到 blackboard
+    UpdateBlackboard : "topic_update_blackboard",    // 将运行 Bot 返回的数据写入到 blackboard
+    UpdateChange : "topic_update_change",
     Focus: "topic_focus", // 加亮显示当前运行到的某个 Node
 
     ConfigUpdate : "topic_config_update",   // 配置项更新
@@ -29,7 +30,9 @@ const Topic = {
 
     ReportSelect : "topic_report_select",
 
-    EditPlaneResize : "topic_plane_resize",
+    EditPlaneCodeMetaResize : "topic_plane_code&meta_resize",
+    EditPlaneEditCodeResize : "topic_plane_edit&code_resize",
+    EditPlaneEditChangeResize : "topic_plane_edit&change_resize",
 }
 
 /*

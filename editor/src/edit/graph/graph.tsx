@@ -10,6 +10,7 @@ import WaitNode from "../../shape/shape_wait";
 import AssertNode from "../../shape/shap_assert";
 import { NodeTy, IsScriptNode } from "../../model/node_type";
 
+
 import "./graph.css";
 import { message } from "antd";
 import PubSub from "pubsub-js";
@@ -31,16 +32,26 @@ const magnetAvailabilityHighlighter = {
 // 在节点上绑定数据
 // 打印出树状结构
 // 将信息传递给不同的view （ ant -> graph node -> node metadata
+type Rect  = {
+  width : number,
+  height : number,
+}
 
 export default class GraphView extends React.Component {
   graph: Graph;
   container: HTMLElement;
   dnd: any;
   stencilContainer: HTMLDivElement;
+  rect : Rect = {
+    width : 780,
+    height : 620
+  }
 
   componentDidMount() {
     // 新建画布
     const graph = new Graph({
+      width:this.rect.width,
+      height:this.rect.height,
       container: this.container,
       highlighting: {
         magnetAvailable: magnetAvailabilityHighlighter,
@@ -265,6 +276,7 @@ export default class GraphView extends React.Component {
     });
     this.graph = graph;
 
+
     PubSub.subscribe(Topic.UpdateNodeParm, (topic: string, info: any) => {
       if (info.parm.ty === NodeTy.Action) {
         this.findNode(info.parm.id, (nod) => {
@@ -326,6 +338,15 @@ export default class GraphView extends React.Component {
           },
         });
       })
+    })
+
+    PubSub.subscribe(Topic.EditPlaneEditCodeResize, (topic: string, w: number) => {
+      this.rect.width = w
+      this.graph.resize(w, this.rect.height)
+    })
+    PubSub.subscribe(Topic.EditPlaneEditChangeResize, (topic: string, h: number) => {
+      this.rect.height = h-20
+      this.graph.resize(this.rect.width, h -20)
     })
   }
 
