@@ -20,7 +20,7 @@ Try the editor out [on website](http://1.117.168.37:7777/)
 * Easily manage robot runtime status information (Metadata
 
 ## Preview
-[![image.png](https://i.postimg.cc/RCdYzPHh/image.png)](https://postimg.cc/DmW6rP53)
+[![image.png](https://i.postimg.cc/FFcBHwg5/image.png)](https://postimg.cc/5j43P7Rn)
 
 # Install
 1. Install docker-compose

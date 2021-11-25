@@ -18,7 +18,7 @@
 * 轻易的管理机器人的状态数据（元素据
 
 ## 编辑器预览
-[![image.png](https://i.postimg.cc/RCdYzPHh/image.png)](https://postimg.cc/DmW6rP53)
+[![image.png](https://i.postimg.cc/FFcBHwg5/image.png)](https://postimg.cc/5j43P7Rn)
 
 # 安装
 1. 安装 docker-compose
