@@ -43,8 +43,8 @@ export default class GraphView extends React.Component {
   dnd: any;
   stencilContainer: HTMLDivElement;
   rect : Rect = {
-    width : 780,
-    height : 620
+    width : document.body.clientWidth*0.6,
+    height : document.body.clientHeight*0.7-15,
   }
 
   componentDidMount() {

@@ -79,7 +79,7 @@ export default class Blackboard extends React.Component {
     const isModalVisible = this.state.isModalVisible;
 
     return (
-      <div className="offset">
+      <div>
         <Tooltip
           placement="topLeft"
           title="Create a bot based on the current behavior tree"

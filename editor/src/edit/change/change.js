@@ -77,7 +77,7 @@ export default class ChangeView extends React.Component {
     const isModalVisible = this.state.isModalVisible;
 
     return (
-      <div className="offset">
+      <div>
         <Divider> Change </Divider>
         <div>
           <ReactJson
