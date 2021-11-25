@@ -11,16 +11,18 @@ Try the editor out [on website](http://1.117.168.37:7777/)
 
 # Feature
 * Easily edit robot behavior
-    * Write stateful test cases
-    * Write timed tasks
-    * ...
-* Lua script node
-    * Support http module
-    * Support protobuf
-* Easily manage robot runtime status information (Metadata
+* Easily management robot
+* Support Lua script
+* Convenient debugging environment
 
 ## Preview
 [![image.png](https://i.postimg.cc/FFcBHwg5/image.png)](https://postimg.cc/5j43P7Rn)
+
+## Script interface
+||||||||
+|-|-|-|-|-|-|-|
+|[http](https://docs.gobot.fun/#/zh-cn/advance/script).get|http.post|http.put|[proto]().marshal|proto.unmarshal|[utils]().random|utils.uuid|
+|[base64]().encode|base64.decode|[meta]()|[merge]()|[json]().encode|json.decode|more ...|
 
 # Install
 1. Install docker-compose
