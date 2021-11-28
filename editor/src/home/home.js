@@ -63,7 +63,7 @@ export default class BotList extends React.Component {
           title: "UpdateTime",
           dataIndex: "update",
           key: "update",
-          sorter: (a, b) => a.update > b.update,
+          //sorter: (a, b) => a.update > b.update,
         },
         {
           title: "Number of runs",
