@@ -10,7 +10,6 @@
 * [Script Layer (脚本层](/zh-cn/advance/README.md)
     * [Http](/zh-cn/advance/script_http.md)
     * [Protobuf](/zh-cn/advance/script_protobuf.md)
-    * [Json](/zh-cn/advance/script_json.md)
     * [Base64](/zh-cn/advance/script_base64.md)
     * [Utils](/zh-cn/advance/script_utils.md)
     * [Global](/zh-cn/advance/script_global.md)

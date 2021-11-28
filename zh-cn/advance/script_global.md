@@ -1,5 +1,6 @@
 # Global
 
+* Json
 
 ```lua
 -- merge table overwrite t2 to t1
@@ -18,4 +19,19 @@ meta = {
     LogInfo = "",
     LogErr = "",
 }
+```
+
+
+### Json
+```lua
+-- 
+jstr = json.encode({
+    Name = "joy",
+    Age = 3,
+})
+
+--[[
+
+]]--
+json.decode(jstr)
 ```
