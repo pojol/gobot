@@ -3,8 +3,9 @@
 > Low-code robot framework
 
 * Easily edit robot behavior
-* Support lua script node
-* Easily manage robot runtime status information (Metadata
+* Easily management robot
+* Support Lua script
+* Convenient debugging environment
 
 [Github](https://github.com/pojol/gobot)
 [Get Started](/zh-cn/README.md)
