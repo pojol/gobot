@@ -14,5 +14,6 @@
     * [Utils](/zh-cn/advance/script_utils.md)
     * [Global](/zh-cn/advance/script_global.md)
     * [添加自己的脚本](/zh-cn/advance/script_append.md)
+    * [捕获协议结构](/zh-cn/advance/script_api.md)
 * [Drive Layer (驱动层](/zh-cn/advance/api.md)
 * [Q&A (常见问题](/zh-cn/qa.md)
