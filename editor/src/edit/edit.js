@@ -47,14 +47,13 @@ export default class EditPlane extends React.Component {
             minSize={100}
             onDragFinished={this.onEditChangeDrap}
           >
-            <Pane minSize={200} maxSize={1000}>
+            <Pane minSize={200} maxSize={1000} defaultSize="70%">
               <GraphView />
             </Pane>
-            <Pane minSize={100} maxSize={700} defaultSize={300}>
+            <Pane minSize={100} maxSize={700} defaultSize="30%">
               <ChangeView />
             </Pane>
           </SplitPane>
-         
 
           <SplitPane
             split="horizontal"

@@ -1,4 +1,4 @@
-import {  Layout, Tabs } from "antd";
+import { Layout, Tabs } from "antd";
 import * as React from "react";
 import "antd/dist/antd.css";
 import "./app.css";
@@ -44,34 +44,33 @@ export default class App extends React.Component {
 
   render() {
     return (
-      <Layout>
-        <Layout>
-          <Tabs
-            defaultActiveKey="Edit"
-            activeKey={this.state.tab}
-            onChange={this.changeTab}
-          >
-            <TabPane tab="Edit" key="Edit">
-              <EditPlane />
-              <TreeModel />
-            </TabPane>
-            <TabPane tab="Home" key="Home">
-              <BotList />
-            </TabPane>
-            <TabPane tab="Running" key="Running">
-              <RunningList/>
-            </TabPane>
-            <TabPane tab="Report" key="Report">
-              <Layout>
-                <TestReport />
-              </Layout>
-            </TabPane>
-            <TabPane tab="Config" key="Config">
-              <BotConfig />
-            </TabPane>
-          </Tabs>
-        </Layout>
-      </Layout>
+      <dev className="site-layout-content">
+        <Tabs
+          defaultActiveKey="Edit"
+          activeKey={this.state.tab}
+          onChange={this.changeTab}
+        >
+          <TabPane tab="Edit" key="Edit">
+            <EditPlane />
+            <TreeModel />
+          </TabPane>
+          <TabPane tab="Home" key="Home">
+            <BotList />
+          </TabPane>
+          <TabPane tab="Running" key="Running">
+            <RunningList />
+          </TabPane>
+          <TabPane tab="Report" key="Report">
+            <Layout>
+              <TestReport />
+            </Layout>
+          </TabPane>
+          <TabPane tab="Config" key="Config">
+            <BotConfig />
+          </TabPane>
+        </Tabs>
+      </dev>
+
     );
   }
 }

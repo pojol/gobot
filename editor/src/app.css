@@ -1,7 +1,6 @@
 .site-layout-content {
-    min-height: 1280px;
-    padding: 24px;
     background: #fff;
+    overflow: auto;
   }
   #components-layout-demo-top .logo {
     float: left;

@@ -78,17 +78,15 @@ export default class ChangeView extends React.Component {
 
     return (
       <div>
-        <Divider> Change </Divider>
-        <div>
-          <ReactJson
-            src={this.state.metadata}
-            theme={"rjv-default"}
-            enableClipboard={false}
-            displayDataTypes={false}
-            edit={false}
-            add={false}
-          ></ReactJson>
-        </div>
+        <ReactJson
+          name="Change"
+          src={this.state.metadata}
+          theme={"rjv-default"}
+          enableClipboard={false}
+          displayDataTypes={false}
+          edit={false}
+          add={false}
+        ></ReactJson>
       </div>
     );
   }

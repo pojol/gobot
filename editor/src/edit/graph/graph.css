@@ -1,8 +1,6 @@
 .app {
   font-family: sans-serif;
-  padding: 0;
   display: flex;
-  padding: 16px 8px;
 }
 
 .app-stencil {
