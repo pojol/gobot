@@ -12,6 +12,13 @@ width: 100%;
 width: 100%;
 }
 
+.paneMeta {
+flex: 1 1 0%;
+position: relative;
+outline: none;
+overflow: scroll;
+}
+
 .Resizer {
 background: #000;
 opacity: 0.3;

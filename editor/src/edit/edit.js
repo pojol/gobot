@@ -1,4 +1,4 @@
-import React from "react";
+import * as React from 'react';
 import PubSub from "pubsub-js";
 
 import SplitPane, { Pane } from "react-split-pane";
@@ -15,7 +15,8 @@ import "./edit.css";
 export default class EditPlane extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {};
+    this.state = {
+    };
   }
 
   componentDidMount() {}
@@ -33,6 +34,11 @@ export default class EditPlane extends React.Component {
   };
 
   render() {
+
+    const divStyle = {
+      overflow : "scroll"
+    }
+
     return (
       <div>
         <SplitPane
@@ -45,6 +51,7 @@ export default class EditPlane extends React.Component {
             split="horizontal"
             defaultSize="70%"
             minSize={100}
+            pane2Style= {divStyle}
             onDragFinished={this.onEditChangeDrap}
           >
             <Pane minSize={200} maxSize={1000} defaultSize="70%">
@@ -59,12 +66,13 @@ export default class EditPlane extends React.Component {
             split="horizontal"
             defaultSize={500}
             minSize={100}
+            pane2Style= {divStyle}
             onDragFinished={this.onCodeMetaDrag}
           >
             <Pane minSize={200} maxSize={1000} defaultSize="50%">
               <Edit />
             </Pane>
-            <Pane minSize={200} maxSize={1000} defaultSize="50%">
+            <Pane minSize={200} maxSize={1000} defaultSize="50%" >
               <Blackboard />
             </Pane>
           </SplitPane>
