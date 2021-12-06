@@ -40,7 +40,7 @@ export default class EditPlane extends React.Component {
     }
 
     return (
-      <div>
+      <div className="container">
         <SplitPane
           split="vertical"
           defaultSize="60%"

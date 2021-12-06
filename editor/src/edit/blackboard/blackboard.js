@@ -125,6 +125,7 @@ export default class Blackboard extends React.Component {
           edit={false}
           add={false}
         ></ReactJson>
+
       </div>
     );
   }
