@@ -23,11 +23,23 @@ export default class App extends React.Component {
     };
   }
 
+  resizeHandler = () => {
+    let resizeTimer;
+    if (!resizeTimer) {
+      resizeTimer = setTimeout(() => {
+        resizeTimer = null
+        PubSub.publish(Topic.WindowResize, {});
+      }, 100)
+    }
+  }
+
   componentDidMount() {
     PubSub.subscribe(Topic.FileLoad, (topic, info) => {
       this.setState({ tab: "Edit" });
       PubSub.publish(Topic.FileLoadGraph, info.Tree);
     });
+
+    window.addEventListener('resize', this.resizeHandler, false)
   }
 
   changeTab = (e) => {

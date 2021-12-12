@@ -32,9 +32,9 @@ const magnetAvailabilityHighlighter = {
 // 在节点上绑定数据
 // 打印出树状结构
 // 将信息传递给不同的view （ ant -> graph node -> node metadata
-type Rect  = {
-  width : number,
-  height : number,
+type Rect = {
+  width: number,
+  height: number,
 }
 
 export default class GraphView extends React.Component {
@@ -42,16 +42,16 @@ export default class GraphView extends React.Component {
   container: HTMLElement;
   dnd: any;
   stencilContainer: HTMLDivElement;
-  rect : Rect = {
-    width : document.body.clientWidth*0.6,
-    height : document.body.clientHeight*0.7-15,
+  rect: Rect = {
+    width: document.body.clientWidth * 0.6,
+    height: document.body.clientHeight * 0.7 - 15,
   }
 
   componentDidMount() {
     // 新建画布
     const graph = new Graph({
-      width:this.rect.width,
-      height:this.rect.height,
+      width: this.rect.width,
+      height: this.rect.height,
       container: this.container,
       highlighting: {
         magnetAvailable: magnetAvailabilityHighlighter,
@@ -121,7 +121,7 @@ export default class GraphView extends React.Component {
         enabled: true,
         modifiers: ['alt', 'meta'],
       },
-    
+
     });
 
     var root = new RootNode();
@@ -331,7 +331,7 @@ export default class GraphView extends React.Component {
     });
 
     PubSub.subscribe(Topic.Create, (topic: string, info: any) => {
-      this.refreshNodes((nod)=>{  // 
+      this.refreshNodes((nod) => {  // 
         nod.setAttrs({
           body: {
             strokeWidth: 1,
@@ -345,8 +345,16 @@ export default class GraphView extends React.Component {
       this.graph.resize(w, this.rect.height)
     })
     PubSub.subscribe(Topic.EditPlaneEditChangeResize, (topic: string, h: number) => {
-      this.rect.height = h-20
-      this.graph.resize(this.rect.width, h -20)
+      this.rect.height = h - 20
+      this.graph.resize(this.rect.width, h - 20)
+    })
+
+    PubSub.subscribe(Topic.WindowResize, (topic: string, h: number) => {
+      this.rect.width = document.body.clientWidth * 0.6
+      this.rect.height = document.body.clientHeight * 0.7 - 15
+
+      console.info("resize", this.rect)
+      this.graph.resize(this.rect.width, this.rect.height)
     })
   }
 
