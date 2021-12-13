@@ -33,6 +33,10 @@ export default class EditPlane extends React.Component {
     PubSub.publish(Topic.EditPlaneCodeMetaResize, e);
   };
 
+  onChange = (e) =>{
+    console.info("on change ", e)
+  }
+
   render() {
 
     const divStyle = {

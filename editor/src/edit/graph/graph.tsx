@@ -29,12 +29,11 @@ const magnetAvailabilityHighlighter = {
   },
 };
 
-// 在节点上绑定数据
-// 打印出树状结构
-// 将信息传递给不同的view （ ant -> graph node -> node metadata
 type Rect = {
-  width: number,
-  height: number,
+  wratio: number,
+  woffset : number,
+  hratio: number,
+  hoffset : number,
 }
 
 export default class GraphView extends React.Component {
@@ -43,15 +42,17 @@ export default class GraphView extends React.Component {
   dnd: any;
   stencilContainer: HTMLDivElement;
   rect: Rect = {
-    width: document.body.clientWidth * 0.6,
-    height: document.body.clientHeight * 0.7 - 15,
+    wratio: 0.6,
+    woffset: 0,
+    hratio: 0.69,
+    hoffset : 0,
   }
 
   componentDidMount() {
     // 新建画布
     const graph = new Graph({
-      width: this.rect.width,
-      height: this.rect.height,
+      width: document.body.clientWidth * this.rect.wratio,
+      height:document.body.clientHeight *  this.rect.hratio,
       container: this.container,
       highlighting: {
         magnetAvailable: magnetAvailabilityHighlighter,
@@ -341,20 +342,43 @@ export default class GraphView extends React.Component {
     })
 
     PubSub.subscribe(Topic.EditPlaneEditCodeResize, (topic: string, w: number) => {
-      this.rect.width = w
-      this.graph.resize(w, this.rect.height)
+      
+      let woffset = (document.body.clientWidth - w) / document.body.clientWidth
+      this.rect.wratio = 1- woffset
+      this.rect.woffset = w
+      this.graph.resize(document.body.clientWidth * this.rect.wratio, document.body.clientHeight * this.rect.hratio)
+
     })
     PubSub.subscribe(Topic.EditPlaneEditChangeResize, (topic: string, h: number) => {
-      this.rect.height = h - 20
-      this.graph.resize(this.rect.width, h - 20)
+      
+      let hoffset = (document.body.clientHeight - h) / document.body.clientHeight
+      this.rect.hratio = 1-hoffset
+      this.rect.hoffset = h
+      this.graph.resize(document.body.clientWidth * this.rect.wratio, document.body.clientHeight * this.rect.hratio)
+    
     })
 
-    PubSub.subscribe(Topic.WindowResize, (topic: string, h: number) => {
-      this.rect.width = document.body.clientWidth * 0.6
-      this.rect.height = document.body.clientHeight * 0.7 - 15
+    PubSub.subscribe(Topic.WindowResize, (topic: string, e: number) => {
+      console.info("resize", this.rect, e)
+      console.info("width", document.body.clientWidth, "height", document.body.clientHeight)
+      let w, h = 0
+      if (this.rect.woffset !== 0) {
+        let woffset = (document.body.clientWidth - this.rect.woffset) / document.body.clientWidth
+        let wratio = 1-woffset
+        w = document.body.clientWidth * wratio
+      } else {
+        w = document.body.clientWidth * this.rect.wratio
+      }
 
-      console.info("resize", this.rect)
-      this.graph.resize(this.rect.width, this.rect.height)
+      if (this.rect.hoffset !== 0) {
+        let hoffset = (document.body.clientHeight - this.rect.hoffset) / document.body.clientHeight
+        let hratio = 1-hoffset
+        h = document.body.clientHeight * hratio
+      } else {
+        h = document.body.clientHeight * this.rect.hratio
+      }
+
+      this.graph.resize(w, h)
     })
   }
 
