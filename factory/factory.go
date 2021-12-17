@@ -47,6 +47,7 @@ type Factory struct {
 
 	pipelineCache []TaskInfo
 	batches       []*Batch
+	lru           database.LRUCache
 
 	batch     utils.SizeWaitGroup
 	batchDone chan interface{}
@@ -77,6 +78,7 @@ func Create(opts ...Option) (*Factory, error) {
 		exit:      utils.NewSwitch(),
 		batch:     utils.NewSizeWaitGroup(p.batchSize),
 		batchDone: make(chan interface{}, 1),
+		lru:       database.Constructor(100),
 	}
 
 	go f.taskLoop()
@@ -104,10 +106,15 @@ func (f *Factory) Close() {
 }
 
 func (f *Factory) AddBehavior(name string, byt []byte) {
+	f.lock.Lock()
+	defer f.lock.Unlock()
+
 	err := database.Get().UpsetFile(name, byt)
 	if err != nil {
 		fmt.Println("AddBehavior ", err.Error())
 	}
+
+	f.lru.Put(name, byt)
 }
 
 func (f *Factory) RmvBehavior(name string) {
@@ -150,12 +157,24 @@ func (f *Factory) AddTask(name string, cnt int32) error {
 }
 
 func (f *Factory) CreateTask(name string, num int, bwg *utils.SizeWaitGroup) *Batch {
-	info, err := database.Get().FindFile(name)
-	if err != nil {
-		return nil
+
+	var dat []byte
+
+	ok, byt := f.lru.Get(name)
+	if ok {
+		dat = byt.([]byte)
+
+	} else {
+		info, err := database.Get().FindFile(name)
+		if err != nil {
+			return nil
+		}
+
+		dat = info.Dat
+		f.lru.Put(name, info.Dat)
 	}
 
-	return CreateBatch(f.parm.ScriptPath, name, num, info.Dat, bwg, f.batchDone)
+	return CreateBatch(f.parm.ScriptPath, name, num, dat, bwg, f.batchDone)
 }
 
 func (f *Factory) CreateDebugBot(name string, fbyt []byte) *bot.Bot {
