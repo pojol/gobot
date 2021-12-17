@@ -19,10 +19,11 @@
 [![image.png](https://i.postimg.cc/FFcBHwg5/image.png)](https://postimg.cc/5j43P7Rn)
 
 ## 脚本接口
-||||||||
-|-|-|-|-|-|-|-|
-|[http](https://docs.gobot.fun/#/zh-cn/advance/script_http).get|http.post|http.put|[proto](https://docs.gobot.fun/#/zh-cn/advance/script_protobuf).marshal|proto.unmarshal|[utils](https://docs.gobot.fun/#/zh-cn/advance/script_utils).random|utils.uuid|
-|[base64](https://docs.gobot.fun/#/zh-cn/advance/script_base64).encode|base64.decode|[meta](https://docs.gobot.fun/#/zh-cn/advance/script_utils)|[merge](https://docs.gobot.fun/#/zh-cn/advance/script_utils)|[json](https://docs.gobot.fun/#/zh-cn/advance/script_utils).encode|json.decode|more ...|
+* [http](https://docs.gobot.fun/#/zh-cn/advance/script_http)
+* [proto](https://docs.gobot.fun/#/zh-cn/advance/script_protobuf)
+* [utils](https://docs.gobot.fun/#/zh-cn/advance/script_utils)
+* [base64](https://docs.gobot.fun/#/zh-cn/advance/script_base64)
+* [json](https://docs.gobot.fun/#/zh-cn/advance/script_utils)
 
 # 安装
 1. 安装 docker-compose
