@@ -9,6 +9,9 @@ import LoopNode from "../../shape/shape_loop";
 import WaitNode from "../../shape/shape_wait";
 import AssertNode from "../../shape/shap_assert";
 import { NodeTy, IsScriptNode } from "../../model/node_type";
+import { Button } from 'antd';
+import { PlusSquareOutlined,MinusSquareOutlined,RedoOutlined } from '@ant-design/icons';
+
 
 
 import "./graph.css";
@@ -609,6 +612,12 @@ export default class GraphView extends React.Component {
       <div className="app">
         <div className="app-stencil" ref={this.refStencil} />
         <div className="app-content" ref={this.refContainer} />
+        <div className="app-zoom">
+        <Button icon={<PlusSquareOutlined />}  />
+        <Button icon={<RedoOutlined />}  />
+        <Button icon={<MinusSquareOutlined />}  />
+        </div>
+
       </div>
     );
   }

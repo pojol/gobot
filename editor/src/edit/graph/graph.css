@@ -1,6 +1,7 @@
 .app {
   font-family: sans-serif;
   display: flex;
+  position: relative;
 }
 
 .app-stencil {
@@ -11,11 +12,21 @@
 
 .app-content {
   flex: 1;
+  z-index: 1;
   height: auto;
   margin-left: 8px;
   margin-right: 8px;
   box-shadow: 0 0 10px 1px #e9e9e9;
 }
+
+.app-zoom {
+  position: absolute;
+  z-index: 10;
+  width: 32px;
+  height: 100px;
+  right:180px;
+}
+
 
 .dnd-wrap {
   width: 200px;
