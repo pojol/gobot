@@ -1,4 +1,4 @@
-import { Layout, Tabs } from "antd";
+import { Layout, Tabs, Tag } from "antd";
 import * as React from "react";
 import "antd/dist/antd.css";
 import "./app.css";
@@ -57,6 +57,9 @@ export default class App extends React.Component {
   render() {
     return (
       <dev className="site-layout-content">
+                <dev className="ver">
+          <Tag color="#108ee9">v0.0.12</Tag>
+        </dev>
         <Tabs
           defaultActiveKey="Edit"
           activeKey={this.state.tab}
@@ -81,6 +84,7 @@ export default class App extends React.Component {
             <BotConfig />
           </TabPane>
         </Tabs>
+
       </dev>
 
     );

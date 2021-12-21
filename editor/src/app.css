@@ -4,3 +4,9 @@
     height:100%;
   }
   
+.ver {
+  position: absolute;
+  z-index: 10;
+  right:0px;
+  margin-top: 10px;
+}
