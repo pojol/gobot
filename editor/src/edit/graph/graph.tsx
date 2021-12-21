@@ -607,15 +607,27 @@ export default class GraphView extends React.Component {
 
   debug = () => { };
 
+  ClickZoomIn = () => {
+    this.graph.zoomTo(this.graph.zoom()*1.2)
+  }
+
+  ClickZoomOut = () => {
+    this.graph.zoomTo(this.graph.zoom()*0.8)
+  }
+
+  ClickZoomReset = () => {
+    this.graph.zoomTo(1)
+  }
+
   render() {
     return (
       <div className="app">
         <div className="app-stencil" ref={this.refStencil} />
         <div className="app-content" ref={this.refContainer} />
         <div className="app-zoom">
-        <Button icon={<PlusSquareOutlined />}  />
-        <Button icon={<RedoOutlined />}  />
-        <Button icon={<MinusSquareOutlined />}  />
+        <Button icon={<PlusSquareOutlined />} onClick={this.ClickZoomIn} />
+        <Button icon={<RedoOutlined />} onClick={this.ClickZoomReset} />
+        <Button icon={<MinusSquareOutlined />}  onClick={this.ClickZoomOut}/>
         </div>
 
       </div>
