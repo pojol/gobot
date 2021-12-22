@@ -101,6 +101,7 @@ type StepResponse struct {
 	Prev       string
 	Cur        string
 	Blackboard string
+	Change     string
 }
 
 // debug.create

@@ -55,23 +55,33 @@ func (b *Bot) Name() string {
 	return b.name
 }
 
-func (b *Bot) GetMetadata() (string, error) {
+func (b *Bot) GetMetadata() (string, string, error) {
 
 	if b.preloadErr != "" {
-		return b.preloadErr, nil
+		return b.preloadErr, "", nil
 	}
 
 	meta, err := utils.Table2Map(b.L.GetGlobal("meta").(*lua.LTable))
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
-	bty, err := json.Marshal(&meta)
+	metabyt, err := json.Marshal(&meta)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
-	return string(bty), nil
+	change, err := utils.Table2Map(b.L.GetGlobal("change").(*lua.LTable))
+	if err != nil {
+		return "", "", err
+	}
+
+	changebyt, err := json.Marshal(&change)
+	if err != nil {
+		return "", "", err
+	}
+
+	return string(metabyt), string(changebyt), nil
 
 }
 

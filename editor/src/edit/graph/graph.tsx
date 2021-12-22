@@ -10,7 +10,7 @@ import WaitNode from "../../shape/shape_wait";
 import AssertNode from "../../shape/shap_assert";
 import { NodeTy, IsScriptNode } from "../../model/node_type";
 import { Button } from 'antd';
-import { PlusSquareOutlined,MinusSquareOutlined,RedoOutlined } from '@ant-design/icons';
+import { ZoomInOutlined ,ZoomOutOutlined,AimOutlined } from '@ant-design/icons';
 
 
 
@@ -625,9 +625,9 @@ export default class GraphView extends React.Component {
         <div className="app-stencil" ref={this.refStencil} />
         <div className="app-content" ref={this.refContainer} />
         <div className="app-zoom">
-        <Button icon={<PlusSquareOutlined />} onClick={this.ClickZoomIn} />
-        <Button icon={<RedoOutlined />} onClick={this.ClickZoomReset} />
-        <Button icon={<MinusSquareOutlined />}  onClick={this.ClickZoomOut}/>
+        <Button icon={<ZoomInOutlined />} onClick={this.ClickZoomIn} />
+        <Button icon={<AimOutlined />} onClick={this.ClickZoomReset} />
+        <Button icon={<ZoomOutOutlined />}  onClick={this.ClickZoomOut}/>
         </div>
 
       </div>
