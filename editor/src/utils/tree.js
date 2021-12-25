@@ -70,7 +70,10 @@ function LoadBehaviorWithBlob(url, methon, name) {
                 }
             })
             .then((response) => {
-                resolve(response);
+                resolve({
+                    name:name,
+                    blob:response
+                });
             })
             .catch((err) => {
                 reject({ status: -1 });

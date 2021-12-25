@@ -25,6 +25,8 @@ type Bot struct {
 	id   string
 	name string
 
+	preloadErr string
+
 	tree *behavior.Tree
 
 	prev *behavior.Tree
@@ -53,19 +55,33 @@ func (b *Bot) Name() string {
 	return b.name
 }
 
-func (b *Bot) GetMetadata() (string, error) {
+func (b *Bot) GetMetadata() (string, string, error) {
+
+	if b.preloadErr != "" {
+		return b.preloadErr, "", nil
+	}
 
 	meta, err := utils.Table2Map(b.L.GetGlobal("meta").(*lua.LTable))
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
-	bty, err := json.Marshal(&meta)
+	metabyt, err := json.Marshal(&meta)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
-	return string(bty), nil
+	change, err := utils.Table2Map(b.L.GetGlobal("change").(*lua.LTable))
+	if err != nil {
+		return "", "", err
+	}
+
+	changebyt, err := json.Marshal(&change)
+	if err != nil {
+		return "", "", err
+	}
+
+	return string(metabyt), string(changebyt), nil
 
 }
 
@@ -109,7 +125,7 @@ func NewWithBehaviorTree(path string, bt *behavior.Tree, tmpl string) *Bot {
 	for _, v := range preScripts {
 		err := bot.L.DoFile(path + v)
 		if err != nil {
-			fmt.Println("load script", path+v, err.Error())
+			bot.preloadErr = fmt.Sprintf("load script %v err : %v", path+v, err.Error())
 		}
 	}
 

@@ -33,6 +33,8 @@ const Topic = {
     EditPlaneCodeMetaResize : "topic_plane_code&meta_resize",
     EditPlaneEditCodeResize : "topic_plane_edit&code_resize",
     EditPlaneEditChangeResize : "topic_plane_edit&change_resize",
+
+    WindowResize : "topic_window_resize",
 }
 
 /*

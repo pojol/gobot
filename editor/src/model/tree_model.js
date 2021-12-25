@@ -280,20 +280,15 @@ export default class TreeModel extends React.Component {
             PubSub.publish(Topic.UpdateBlackboard, json.Body.Blackboard);
           } else {
 
-            let change, blackboard
+            let changestr, metastr
             let meta = JSON.parse(json.Body.Blackboard)
-
-            if (meta.Change) {
-              change = JSON.stringify(meta.Change)
-              meta.Change = {}
-            } else {
-              change = "{}"
-            }
+            let change = JSON.parse(json.Body.Change)
             
-            blackboard = JSON.stringify(meta)
+            metastr = JSON.stringify(meta)
+            changestr = JSON.stringify(change)
 
-            PubSub.publish(Topic.UpdateBlackboard, blackboard);
-            PubSub.publish(Topic.UpdateChange, change)
+            PubSub.publish(Topic.UpdateBlackboard, metastr);
+            PubSub.publish(Topic.UpdateChange, changestr)
             PubSub.publish(Topic.Focus, {
               Cur: json.Body.Cur,
               Prev: json.Body.Prev,

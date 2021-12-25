@@ -9,6 +9,9 @@ import LoopNode from "../../shape/shape_loop";
 import WaitNode from "../../shape/shape_wait";
 import AssertNode from "../../shape/shap_assert";
 import { NodeTy, IsScriptNode } from "../../model/node_type";
+import { Button } from 'antd';
+import { ZoomInOutlined ,ZoomOutOutlined,AimOutlined } from '@ant-design/icons';
+
 
 
 import "./graph.css";
@@ -29,12 +32,11 @@ const magnetAvailabilityHighlighter = {
   },
 };
 
-// 在节点上绑定数据
-// 打印出树状结构
-// 将信息传递给不同的view （ ant -> graph node -> node metadata
-type Rect  = {
-  width : number,
-  height : number,
+type Rect = {
+  wratio: number,
+  woffset : number,
+  hratio: number,
+  hoffset : number,
 }
 
 export default class GraphView extends React.Component {
@@ -42,16 +44,18 @@ export default class GraphView extends React.Component {
   container: HTMLElement;
   dnd: any;
   stencilContainer: HTMLDivElement;
-  rect : Rect = {
-    width : 780,
-    height : 620
+  rect: Rect = {
+    wratio: 0.6,
+    woffset: 0,
+    hratio: 0.69,
+    hoffset : 0,
   }
 
   componentDidMount() {
     // 新建画布
     const graph = new Graph({
-      width:this.rect.width,
-      height:this.rect.height,
+      width: document.body.clientWidth * this.rect.wratio,
+      height:document.body.clientHeight *  this.rect.hratio,
       container: this.container,
       highlighting: {
         magnetAvailable: magnetAvailabilityHighlighter,
@@ -121,7 +125,7 @@ export default class GraphView extends React.Component {
         enabled: true,
         modifiers: ['alt', 'meta'],
       },
-    
+
     });
 
     var root = new RootNode();
@@ -331,7 +335,7 @@ export default class GraphView extends React.Component {
     });
 
     PubSub.subscribe(Topic.Create, (topic: string, info: any) => {
-      this.refreshNodes((nod)=>{  // 
+      this.refreshNodes((nod) => {  // 
         nod.setAttrs({
           body: {
             strokeWidth: 1,
@@ -341,12 +345,43 @@ export default class GraphView extends React.Component {
     })
 
     PubSub.subscribe(Topic.EditPlaneEditCodeResize, (topic: string, w: number) => {
-      this.rect.width = w
-      this.graph.resize(w, this.rect.height)
+      
+      let woffset = (document.body.clientWidth - w) / document.body.clientWidth
+      this.rect.wratio = 1- woffset
+      this.rect.woffset = w
+      this.graph.resize(document.body.clientWidth * this.rect.wratio, document.body.clientHeight * this.rect.hratio)
+
     })
     PubSub.subscribe(Topic.EditPlaneEditChangeResize, (topic: string, h: number) => {
-      this.rect.height = h-20
-      this.graph.resize(this.rect.width, h -20)
+      
+      let hoffset = (document.body.clientHeight - h) / document.body.clientHeight
+      this.rect.hratio = 1-hoffset
+      this.rect.hoffset = h
+      this.graph.resize(document.body.clientWidth * this.rect.wratio, document.body.clientHeight * this.rect.hratio)
+    
+    })
+
+    PubSub.subscribe(Topic.WindowResize, (topic: string, e: number) => {
+      console.info("resize", this.rect, e)
+      console.info("width", document.body.clientWidth, "height", document.body.clientHeight)
+      let w, h = 0
+      if (this.rect.woffset !== 0) {
+        let woffset = (document.body.clientWidth - this.rect.woffset) / document.body.clientWidth
+        let wratio = 1-woffset
+        w = document.body.clientWidth * wratio
+      } else {
+        w = document.body.clientWidth * this.rect.wratio
+      }
+
+      if (this.rect.hoffset !== 0) {
+        let hoffset = (document.body.clientHeight - this.rect.hoffset) / document.body.clientHeight
+        let hratio = 1-hoffset
+        h = document.body.clientHeight * hratio
+      } else {
+        h = document.body.clientHeight * this.rect.hratio
+      }
+
+      this.graph.resize(w, h)
     })
   }
 
@@ -572,11 +607,29 @@ export default class GraphView extends React.Component {
 
   debug = () => { };
 
+  ClickZoomIn = () => {
+    this.graph.zoomTo(this.graph.zoom()*1.2)
+  }
+
+  ClickZoomOut = () => {
+    this.graph.zoomTo(this.graph.zoom()*0.8)
+  }
+
+  ClickZoomReset = () => {
+    this.graph.zoomTo(1)
+  }
+
   render() {
     return (
       <div className="app">
         <div className="app-stencil" ref={this.refStencil} />
         <div className="app-content" ref={this.refContainer} />
+        <div className="app-zoom">
+        <Button icon={<ZoomInOutlined />} onClick={this.ClickZoomIn} />
+        <Button icon={<AimOutlined />} onClick={this.ClickZoomReset} />
+        <Button icon={<ZoomOutOutlined />}  onClick={this.ClickZoomOut}/>
+        </div>
+
       </div>
     );
   }

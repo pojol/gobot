@@ -77,18 +77,16 @@ export default class ChangeView extends React.Component {
     const isModalVisible = this.state.isModalVisible;
 
     return (
-      <div className="offset">
-        <Divider> Change </Divider>
-        <div>
-          <ReactJson
-            src={this.state.metadata}
-            theme={"rjv-default"}
-            enableClipboard={false}
-            displayDataTypes={false}
-            edit={false}
-            add={false}
-          ></ReactJson>
-        </div>
+      <div>
+        <ReactJson
+          name="Change"
+          src={this.state.metadata}
+          theme={"rjv-default"}
+          enableClipboard={false}
+          displayDataTypes={false}
+          edit={false}
+          add={false}
+        ></ReactJson>
       </div>
     );
   }

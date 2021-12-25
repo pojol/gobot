@@ -1,4 +1,4 @@
-import {  Layout, Tabs } from "antd";
+import { Layout, Tabs, Tag } from "antd";
 import * as React from "react";
 import "antd/dist/antd.css";
 import "./app.css";
@@ -23,11 +23,23 @@ export default class App extends React.Component {
     };
   }
 
+  resizeHandler = () => {
+    let resizeTimer;
+    if (!resizeTimer) {
+      resizeTimer = setTimeout(() => {
+        resizeTimer = null
+        PubSub.publish(Topic.WindowResize, {});
+      }, 100)
+    }
+  }
+
   componentDidMount() {
     PubSub.subscribe(Topic.FileLoad, (topic, info) => {
       this.setState({ tab: "Edit" });
       PubSub.publish(Topic.FileLoadGraph, info.Tree);
     });
+
+    window.addEventListener('resize', this.resizeHandler, false)
   }
 
   changeTab = (e) => {
@@ -44,34 +56,37 @@ export default class App extends React.Component {
 
   render() {
     return (
-      <Layout>
-        <Layout>
-          <Tabs
-            defaultActiveKey="Edit"
-            activeKey={this.state.tab}
-            onChange={this.changeTab}
-          >
-            <TabPane tab="Edit" key="Edit">
-              <EditPlane />
-              <TreeModel />
-            </TabPane>
-            <TabPane tab="Home" key="Home">
-              <BotList />
-            </TabPane>
-            <TabPane tab="Running" key="Running">
-              <RunningList/>
-            </TabPane>
-            <TabPane tab="Report" key="Report">
-              <Layout>
-                <TestReport />
-              </Layout>
-            </TabPane>
-            <TabPane tab="Config" key="Config">
-              <BotConfig />
-            </TabPane>
-          </Tabs>
-        </Layout>
-      </Layout>
+      <dev className="site-layout-content">
+                <dev className="ver">
+          <Tag color="#108ee9">v0.0.12</Tag>
+        </dev>
+        <Tabs
+          defaultActiveKey="Edit"
+          activeKey={this.state.tab}
+          onChange={this.changeTab}
+        >
+          <TabPane tab="Edit" key="Edit">
+            <EditPlane />
+            <TreeModel />
+          </TabPane>
+          <TabPane tab="Home" key="Home">
+            <BotList />
+          </TabPane>
+          <TabPane tab="Running" key="Running">
+            <RunningList />
+          </TabPane>
+          <TabPane tab="Report" key="Report">
+            <Layout>
+              <TestReport />
+            </Layout>
+          </TabPane>
+          <TabPane tab="Config" key="Config">
+            <BotConfig />
+          </TabPane>
+        </Tabs>
+
+      </dev>
+
     );
   }
 }

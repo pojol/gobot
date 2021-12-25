@@ -16,7 +16,7 @@ function execute()
 
     -- http post request
     res, errmsg = http.post(url, parm)
-    if errmsg ~= nil then
+    if errmsg == nil then
         body = json.decode(res["body"])
         merge(meta, body.Body)
     end

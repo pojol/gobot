@@ -116,17 +116,16 @@ export default class Blackboard extends React.Component {
             onChange={this.behaviorNameChange}
           />
         </Modal>
-        <Divider> Blackboard </Divider>
-        <div>
-          <ReactJson
-            src={this.state.metadata}
-            theme={"rjv-default"}
-            enableClipboard={false}
-            displayDataTypes={false}
-            edit={false}
-            add={false}
-          ></ReactJson>
-        </div>
+        <ReactJson
+          name="Blackboard"
+          src={this.state.metadata}
+          theme={"rjv-default"}
+          enableClipboard={false}
+          displayDataTypes={false}
+          edit={false}
+          add={false}
+        ></ReactJson>
+
       </div>
     );
   }

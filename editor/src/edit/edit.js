@@ -1,4 +1,4 @@
-import React from "react";
+import * as React from 'react';
 import PubSub from "pubsub-js";
 
 import SplitPane, { Pane } from "react-split-pane";
@@ -15,7 +15,8 @@ import "./edit.css";
 export default class EditPlane extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {};
+    this.state = {
+    };
   }
 
   componentDidMount() {}
@@ -32,9 +33,18 @@ export default class EditPlane extends React.Component {
     PubSub.publish(Topic.EditPlaneCodeMetaResize, e);
   };
 
+  onChange = (e) =>{
+    console.info("on change ", e)
+  }
+
   render() {
+
+    const divStyle = {
+      overflow : "scroll"
+    }
+
     return (
-      <div>
+      <div className="container">
         <SplitPane
           split="vertical"
           defaultSize="60%"
@@ -43,29 +53,30 @@ export default class EditPlane extends React.Component {
         >
           <SplitPane
             split="horizontal"
-            defaultSize={640}
+            defaultSize="70%"
             minSize={100}
+            pane2Style= {divStyle}
             onDragFinished={this.onEditChangeDrap}
           >
             <Pane minSize={200} maxSize={1000} defaultSize="70%">
               <GraphView />
             </Pane>
-            <Pane minSize={200} maxSize={1000} defaultSize="30%">
+            <Pane minSize={100} maxSize={700} defaultSize="30%">
               <ChangeView />
             </Pane>
           </SplitPane>
-         
 
           <SplitPane
             split="horizontal"
             defaultSize={500}
             minSize={100}
+            pane2Style= {divStyle}
             onDragFinished={this.onCodeMetaDrag}
           >
             <Pane minSize={200} maxSize={1000} defaultSize="50%">
               <Edit />
             </Pane>
-            <Pane minSize={200} maxSize={1000} defaultSize="50%">
+            <Pane minSize={200} maxSize={1000} defaultSize="50%" >
               <Blackboard />
             </Pane>
           </SplitPane>

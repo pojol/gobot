@@ -10,15 +10,20 @@
 尝试在[网站](http://1.117.168.37:7777/)上进行编辑 
 
 # 特性
-* 轻易的编辑机器人的行为
-    * 编写有状态的测试用例
-    * 编写定时任务
-    * ...
-* 支持执行 Lua 脚本的节点
-* 轻易的管理机器人的状态数据（元素据
+* 方便的机器人行为编辑
+* 方便的机器人管理
+* 支持 Lua 脚本节点
+* 方便的调试机器人行为
 
 ## 编辑器预览
 [![image.png](https://i.postimg.cc/FFcBHwg5/image.png)](https://postimg.cc/5j43P7Rn)
+
+## 脚本接口
+* [http](https://docs.gobot.fun/#/zh-cn/advance/script_http)
+* [proto](https://docs.gobot.fun/#/zh-cn/advance/script_protobuf)
+* [utils](https://docs.gobot.fun/#/zh-cn/advance/script_utils)
+* [base64](https://docs.gobot.fun/#/zh-cn/advance/script_base64)
+* [json](https://docs.gobot.fun/#/zh-cn/advance/script_utils)
 
 # 安装
 1. 安装 docker-compose

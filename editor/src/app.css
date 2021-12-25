@@ -1,16 +1,12 @@
 .site-layout-content {
-    min-height: 1280px;
-    padding: 24px;
     background: #fff;
+    overflow: auto;
+    height:100%;
   }
-  #components-layout-demo-top .logo {
-    float: left;
-    width: 120px;
-    height: 31px;
-    margin: 16px 24px 16px 0;
-    background: rgba(255, 255, 255, 0.3);
-  }
-  .ant-row-rtl #components-layout-demo-top .logo {
-    float: right;
-    margin: 16px 0 16px 24px;
-  }
+  
+.ver {
+  position: absolute;
+  z-index: 10;
+  right:0px;
+  margin-top: 10px;
+}

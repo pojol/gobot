@@ -63,7 +63,7 @@ export default class BotList extends React.Component {
           title: "UpdateTime",
           dataIndex: "update",
           key: "update",
-          sorter: (a, b) => a.update > b.update,
+          //sorter: (a, b) => a.update > b.update,
         },
         {
           title: "Number of runs",
@@ -72,7 +72,7 @@ export default class BotList extends React.Component {
           render: (text, record) => (
             <InputNumber
               min={0}
-              max={1000}
+              max={100000}
               defaultValue={0}
               onChange={(e) => {
                 var old = this.state.runs
@@ -315,8 +315,8 @@ export default class BotList extends React.Component {
         window.remote,
         Api.FileGet,
         row.name
-      ).then((blob) => {
-        var tree = LoadBehaviorWithFile(row.name, blob);
+      ).then((file) => {
+        var tree = LoadBehaviorWithFile(row.name, file.blob);
         if (tree !== null) {
           PubSub.publish(Topic.FileLoad, {
             Name: row.name,
@@ -381,9 +381,9 @@ export default class BotList extends React.Component {
         window.remote,
         Api.FileGet,
         row.name
-      ).then((blob) => {
+      ).then((file) => {
         // 创建一个blob的对象，把Json转化为字符串作为我们的值
-        SaveAs(blob, row.name)
+        SaveAs(file.blob, file.name)
       });
     }
 
