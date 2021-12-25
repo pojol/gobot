@@ -116,7 +116,7 @@ export default class Blackboard extends React.Component {
         </Space>
 
         <ReactJson
-          name="Blackboard"
+          name="Bot metadata"
           src={this.state.metadata}
           theme={"rjv-default"}
           enableClipboard={false}

@@ -16,7 +16,7 @@ Try the editor out [on website](http://1.117.168.37:7777/)
 * Convenient debugging environment
 
 ## Preview
-[![image.png](https://i.postimg.cc/FFcBHwg5/image.png)](https://postimg.cc/5j43P7Rn)
+[![image.png](https://i.postimg.cc/mrbSNKmS/image.png)](https://postimg.cc/CRQDwrTZ)
 
 ## Script interface
 * [http](https://docs.gobot.fun/#/zh-cn/advance/script_http)

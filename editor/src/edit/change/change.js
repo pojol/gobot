@@ -79,7 +79,7 @@ export default class ChangeView extends React.Component {
     return (
       <div>
         <ReactJson
-          name="Change"
+          name="Step change"
           src={this.state.metadata}
           theme={"rjv-default"}
           enableClipboard={false}

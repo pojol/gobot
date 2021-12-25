@@ -16,7 +16,7 @@
 * 方便的调试机器人行为
 
 ## 编辑器预览
-[![image.png](https://i.postimg.cc/FFcBHwg5/image.png)](https://postimg.cc/5j43P7Rn)
+[![image.png](https://i.postimg.cc/mrbSNKmS/image.png)](https://postimg.cc/CRQDwrTZ)
 
 ## 脚本接口
 * [http](https://docs.gobot.fun/#/zh-cn/advance/script_http)
