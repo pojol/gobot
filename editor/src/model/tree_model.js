@@ -188,15 +188,19 @@ export default class TreeModel extends React.Component {
       message.success("config update succ");
     });
 
-    PubSub.subscribe(Topic.NodeAdd, (topic, linkinfo) => {
-      this.addNode(linkinfo.parent, linkinfo.child);
+    PubSub.subscribe(Topic.NodeAdd, (topic, nodeinfo) => {
+      this.addNode(nodeinfo.parent, nodeinfo.child);
     });
 
     PubSub.subscribe(Topic.NodeRmv, (topic, nodeid) => {
       this.rmvNode(nodeid);
     });
 
-    PubSub.subscribe(Topic.LinkRmv, (topic, nodeid) => {
+    PubSub.subscribe(Topic.LinkConnect, (topic, linkinfo) => {
+      this.addNode(linkinfo.parent, linkinfo.child);
+    });
+
+    PubSub.subscribe(Topic.LinkDisconnect, (topic, nodeid) => {
       this.rmvLink(nodeid);
     });
 

@@ -10,7 +10,7 @@ import WaitNode from "../../shape/shape_wait";
 import AssertNode from "../../shape/shap_assert";
 import { NodeTy, IsScriptNode } from "../../model/node_type";
 import { Button } from 'antd';
-import { ZoomInOutlined ,ZoomOutOutlined,AimOutlined } from '@ant-design/icons';
+import { ZoomInOutlined, ZoomOutOutlined, AimOutlined } from '@ant-design/icons';
 
 
 
@@ -34,9 +34,9 @@ const magnetAvailabilityHighlighter = {
 
 type Rect = {
   wratio: number,
-  woffset : number,
+  woffset: number,
   hratio: number,
-  hoffset : number,
+  hoffset: number,
 }
 
 export default class GraphView extends React.Component {
@@ -48,14 +48,14 @@ export default class GraphView extends React.Component {
     wratio: 0.6,
     woffset: 0,
     hratio: 0.69,
-    hoffset : 0,
+    hoffset: 0,
   }
 
   componentDidMount() {
     // 新建画布
     const graph = new Graph({
       width: document.body.clientWidth * this.rect.wratio,
-      height:document.body.clientHeight *  this.rect.hratio,
+      height: document.body.clientHeight * this.rect.hratio,
       container: this.container,
       highlighting: {
         magnetAvailable: magnetAvailabilityHighlighter,
@@ -130,11 +130,8 @@ export default class GraphView extends React.Component {
 
     var root = new RootNode();
     graph.addNode(root);
-
-    PubSub.publish(Topic.NodeAdd, {
-      parent: root.id,
-      child: this.getNodInfo(root),
-    });
+    PubSub.publish(Topic.NodeAdd, root);
+    PubSub.publish(Topic.LinkConnect, { parent: root.id, child: this.getNodInfo(root) });
 
     const stencil = new Stencil({
       title: "Components",
@@ -206,7 +203,7 @@ export default class GraphView extends React.Component {
 
       this.findNode(edge.getTargetCellId(), (child) => {
         //var ts = child.removeFromParent( { deep : false } );  // options 没用？
-        PubSub.publish(Topic.LinkRmv, child.id);
+        PubSub.publish(Topic.LinkDisconnect, child.id);
         child.getParent()?.removeChild(edge);
         //var ts = child.removeFromParent({ deep: false });
         //this.graph.addCell(ts);
@@ -223,7 +220,7 @@ export default class GraphView extends React.Component {
         if (source !== null && target !== null) {
           edge.setZIndex(0)
           source.addChild(target);
-          this.connect(source, target);
+          PubSub.publish(Topic.LinkConnect, { parent: source, child: target });
         }
       }
     });
@@ -246,6 +243,8 @@ export default class GraphView extends React.Component {
           text: "",
         },
       });
+
+      PubSub.publish(Topic.NodeAdd, node);
     });
 
     graph.on("node:removed", ({ node, index, options }) => { });
@@ -345,20 +344,20 @@ export default class GraphView extends React.Component {
     })
 
     PubSub.subscribe(Topic.EditPlaneEditCodeResize, (topic: string, w: number) => {
-      
+
       let woffset = (document.body.clientWidth - w) / document.body.clientWidth
-      this.rect.wratio = 1- woffset
+      this.rect.wratio = 1 - woffset
       this.rect.woffset = w
       this.graph.resize(document.body.clientWidth * this.rect.wratio, document.body.clientHeight * this.rect.hratio)
 
     })
     PubSub.subscribe(Topic.EditPlaneEditChangeResize, (topic: string, h: number) => {
-      
+
       let hoffset = (document.body.clientHeight - h) / document.body.clientHeight
-      this.rect.hratio = 1-hoffset
+      this.rect.hratio = 1 - hoffset
       this.rect.hoffset = h
       this.graph.resize(document.body.clientWidth * this.rect.wratio, document.body.clientHeight * this.rect.hratio)
-    
+
     })
 
     PubSub.subscribe(Topic.WindowResize, (topic: string, e: number) => {
@@ -367,7 +366,7 @@ export default class GraphView extends React.Component {
       let w, h = 0
       if (this.rect.woffset !== 0) {
         let woffset = (document.body.clientWidth - this.rect.woffset) / document.body.clientWidth
-        let wratio = 1-woffset
+        let wratio = 1 - woffset
         w = document.body.clientWidth * wratio
       } else {
         w = document.body.clientWidth * this.rect.wratio
@@ -375,7 +374,7 @@ export default class GraphView extends React.Component {
 
       if (this.rect.hoffset !== 0) {
         let hoffset = (document.body.clientHeight - this.rect.hoffset) / document.body.clientHeight
-        let hratio = 1-hoffset
+        let hratio = 1 - hoffset
         h = document.body.clientHeight * hratio
       } else {
         h = document.body.clientHeight * this.rect.hratio
@@ -384,15 +383,7 @@ export default class GraphView extends React.Component {
       this.graph.resize(w, h)
     })
   }
-
-  connect(source: Node, target: Node) {
-    var nodinfo = {
-      parent: source.id,
-      child: this.getNodInfo(target),
-    };
-    PubSub.publish(Topic.NodeAdd, nodinfo);
-  }
-
+  
   getLoopLabel(val: Number) {
     var tlab = "";
     if (val !== 0) {
@@ -430,6 +421,8 @@ export default class GraphView extends React.Component {
         y: child[i].pos.y,
       });
       this.graph.addNode(nod);
+      PubSub.publish(Topic.NodeAdd, nod);
+
       this.graph.addEdge(
         new Shape.Edge({
           attrs: {
@@ -448,7 +441,7 @@ export default class GraphView extends React.Component {
         })
       );
       parent.addChild(nod);
-      this.connect(parent, nod);
+      PubSub.publish(Topic.LinkConnect, { parent: parent, child: nod });
 
       if (IsScriptNode(child[i].ty)) {
         nod.setAttrs({ label: { text: child[i].alias } })
@@ -496,10 +489,9 @@ export default class GraphView extends React.Component {
       y: jsontree.pos.y,
     });
     this.graph.addNode(root);
-    PubSub.publish(Topic.NodeAdd, {
-      parent: root.id,
-      child: this.getNodInfo(root),
-    });
+
+    PubSub.publish(Topic.NodeAdd, root);
+    PubSub.publish(Topic.LinkConnect, { parent: root.id, child: this.getNodInfo(root) });
 
     if (jsontree.children && jsontree.children.length) {
       this.redrawChild(root, jsontree.children);
@@ -608,11 +600,11 @@ export default class GraphView extends React.Component {
   debug = () => { };
 
   ClickZoomIn = () => {
-    this.graph.zoomTo(this.graph.zoom()*1.2)
+    this.graph.zoomTo(this.graph.zoom() * 1.2)
   }
 
   ClickZoomOut = () => {
-    this.graph.zoomTo(this.graph.zoom()*0.8)
+    this.graph.zoomTo(this.graph.zoom() * 0.8)
   }
 
   ClickZoomReset = () => {
@@ -625,9 +617,9 @@ export default class GraphView extends React.Component {
         <div className="app-stencil" ref={this.refStencil} />
         <div className="app-content" ref={this.refContainer} />
         <div className="app-zoom">
-        <Button icon={<ZoomInOutlined />} onClick={this.ClickZoomIn} />
-        <Button icon={<AimOutlined />} onClick={this.ClickZoomReset} />
-        <Button icon={<ZoomOutOutlined />}  onClick={this.ClickZoomOut}/>
+          <Button icon={<ZoomInOutlined />} onClick={this.ClickZoomIn} />
+          <Button icon={<AimOutlined />} onClick={this.ClickZoomReset} />
+          <Button icon={<ZoomOutOutlined />} onClick={this.ClickZoomOut} />
         </div>
 
       </div>
