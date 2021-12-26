@@ -6,14 +6,22 @@
 [![](https://img.shields.io/badge/Trello-Todo-2ca5e0?style=flat&logo=trello)](https://trello.com/b/8eDZ6h7n/)
 
 
-# 在线试用
-尝试在[网站](http://1.117.168.37:7777/)上进行编辑 
+# 工具的目标是什么？
+1. 使用 bot 进行复杂逻辑（有状态）的测试
+    * 如游戏业务中 创建角色→发送邮件→使用道具→进行战斗 ...
+    * 如社交业务中 创建多个角色 → 互相发现|添加好友 → 点赞|评论 ...
+2. 尽可能的简单，只需要拖拽行为树节点 + 少量的脚本编辑
 
 # 特性
-* 方便的机器人行为编辑
-* 方便的机器人管理
-* 支持 Lua 脚本节点
-* 方便的调试机器人行为
+* 使用 behavior tree 编排 bot 的运行逻辑 
+* 使用 lua script 控制 bot 的执行逻辑
+* 每个 bot 都拥有一个 meta 数据结构，用于存储整个测试流程的上下文
+* 使用 tag + filter 管理 bot 行为文件
+* 拥有直观的调试窗口和环境，可以单步查看节点逻辑的执行情况
+
+# 在线试用
+在[网站](http://1.117.168.37:7777/)上进行体验
+
 
 ## 编辑器预览
 [![image.png](https://i.postimg.cc/mrbSNKmS/image.png)](https://postimg.cc/CRQDwrTZ)

@@ -5,18 +5,27 @@ Robot editor framework based on behavior tree, node supports binding script exec
 [![](https://img.shields.io/badge/%E6%96%87%E6%A1%A3-Doc-2ca5e0?style=flat&logo=github)](https://docs.gobot.fun/)
 [![](https://img.shields.io/badge/Trello-Todo-2ca5e0?style=flat&logo=trello)](https://trello.com/b/8eDZ6h7n/)
 
+[中文](https://github.com/pojol/gobot/blob/master/README_CN.md)
+
+# What is the goal of the tool ?
+1. Use bots for complex logic (stateful) testing
+    * For example, in the game business, create a character → send an email → use items → fight ...
+    * For example, create multiple roles in social business → discover each other | add friends → like | comment ...
+2. Keep it simple
+
+# Feature
+* Use behavior tree to arrange bot's running logic
+* Use lua script to control the execution logic of bot
+* Each bot has a meta data structure to store the context of the entire test process
+* Use tag + filter to manage bot behavior files
+* With an intuitive debugging window and environment, you can view the execution of the node logic in a single step
 
 # Try it out
 Try the editor out [on website](http://1.117.168.37:7777/)
 
-# Feature
-* Easily edit robot behavior
-* Easily management robot
-* Support Lua script
-* Convenient debugging environment
-
 ## Preview
 [![image.png](https://i.postimg.cc/mrbSNKmS/image.png)](https://postimg.cc/CRQDwrTZ)
+
 
 ## Script interface
 * [http](https://docs.gobot.fun/#/zh-cn/advance/script_http)
