@@ -12,13 +12,101 @@ export default class TreeModel extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      tree: {},
+      root: {}, //  root 记录节点的链路关系， window(map 记录节点的细节
+      childrenlst: [],
       botid: "",
       behaviorTreeName: "",
       httpCodeTmp: Config.httpCode,
       assertTmp: Config.assertCode,
       conditionTmp: Config.conditionCode,
     };
+  }
+
+  initNode = (nod) => {
+    // init
+    if (nod.ty === NodeTy.Action && (nod.code === "" || nod.code === undefined)) {
+      nod.code = this.state.httpCodeTmp;
+    } else if (nod.ty === NodeTy.Condition && (nod.code === "" || nod.code === undefined)) {
+      childNode.code = this.state.conditionTmp;
+    } else if (nod.ty === NodeTy.Assert && (nod.code === "" || nod.code === undefined)) {
+      nod.code = this.state.assertTmp;
+    } else if (nod.ty === NodeTy.Loop && nod.loop === undefined) {
+      nod.loop = 1;
+    } else if (nod.ty === NodeTy.Wait && nod.wait === undefined) {
+      nod.wait = 1;
+    }
+  }
+
+  /*!
+
+    // relation info
+    {
+      id : string,
+      children : []
+    }
+
+    // node info
+    {
+      id : string // node id
+      ty : string // node type
+      pos : {
+        x : number,
+        y : number,
+      },
+      code : "",
+      wait : 0,
+      loop : 0,
+      children : []
+    }
+
+  */
+
+  addNode = (nod) => {
+    if (nod.ty === NodeTy.Root) {
+      this.setState({ root: nod.id })
+    } else {
+      let lst = this.state.childrenlst
+      this.initNode(nod)
+      lst.push(nod)
+      window.tree.set(nod.id, nod);
+      this.setState({childrenlst : lst})
+    }
+  }
+
+  rmvNode = (id) => {
+    // root
+    this.findNode(id, this.state.tree, (parent, nod) => {
+      parent.children.forEach(function (child, index, arr) {
+        if (child.id === nod.id) {
+          arr.splice(index, 1);
+          if (window.tree.has(nod.id)) {
+            window.tree.delete(nod.id);
+          }
+        }
+      });
+    });
+
+    // children list
+    this.state.childrenlst.forEach(children => {
+      this.findNode(children.id, this.state.tree, (parent, nod) => {
+        parent.children.forEach(function (child, index, arr) {
+          if (child.id === nod.id) {
+            arr.splice(index, 1);
+            if (window.tree.has(nod.id)) {
+              window.tree.delete(nod.id);
+            }
+          }
+        });
+      });
+    });
+  }
+
+  connectLink = (parentid, child) => {
+
+  }
+
+  disconnectLink = (parentid, child) => {
+
   }
 
   findNode = (id, parent, callback) => {
@@ -34,19 +122,16 @@ export default class TreeModel extends React.Component {
     }
   };
 
-  addNode(parentid, childNode) {
+  addNode2(parentid, childNode) {
     var syncinfo = (childNode) => {
-      // 如果存在旧的节点参数数据，在这个行为里应该使用旧的数据；
-      if (window.tree.get(childNode.id) === undefined) { 
+      if (window.tree.get(childNode.id) === undefined) {
         window.tree.set(childNode.id, childNode);
       }
     };
 
-    console.info("add", childNode.ty, childNode.code)
-
     if (parentid === childNode.id) {
       // root
-      this.setState({ tree: childNode }, () => {});
+      this.setState({ tree: childNode }, () => { });
     } else {
       // init
       if (childNode.ty === NodeTy.Action && (childNode.code === "" || childNode.code === undefined)) {
@@ -166,7 +251,7 @@ export default class TreeModel extends React.Component {
   componentWillMount() {
     window.tree = new Map(); // 主要维护的是 editor 节点编辑后的数据
     this.setState({ tree: {} }); // 主要维护的是 graph 中节点的数据
-    
+
     var remote = localStorage.remoteAddr
     if (remote === undefined || remote === "") {
       localStorage.remoteAddr = Config.driveAddr;
@@ -287,7 +372,7 @@ export default class TreeModel extends React.Component {
             let changestr, metastr
             let meta = JSON.parse(json.Body.Blackboard)
             let change = JSON.parse(json.Body.Change)
-            
+
             metastr = JSON.stringify(meta)
             changestr = JSON.stringify(change)
 
@@ -330,7 +415,7 @@ export default class TreeModel extends React.Component {
     });
   }
 
-  componentDidMount() {}
+  componentDidMount() { }
 
   render() {
     return <div></div>;

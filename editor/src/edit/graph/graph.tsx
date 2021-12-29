@@ -130,7 +130,8 @@ export default class GraphView extends React.Component {
 
     var root = new RootNode();
     graph.addNode(root);
-    PubSub.publish(Topic.NodeAdd, root);
+
+    PubSub.publish(Topic.NodeAdd, this.getNodInfo(root));
     PubSub.publish(Topic.LinkConnect, { parent: root.id, child: this.getNodInfo(root) });
 
     const stencil = new Stencil({
@@ -244,7 +245,7 @@ export default class GraphView extends React.Component {
         },
       });
 
-      PubSub.publish(Topic.NodeAdd, node);
+      PubSub.publish(Topic.NodeAdd, this.getNodInfo(root));
     });
 
     graph.on("node:removed", ({ node, index, options }) => { });
@@ -421,7 +422,7 @@ export default class GraphView extends React.Component {
         y: child[i].pos.y,
       });
       this.graph.addNode(nod);
-      PubSub.publish(Topic.NodeAdd, nod);
+      PubSub.publish(Topic.NodeAdd, this.getNodInfo(nod));
 
       this.graph.addEdge(
         new Shape.Edge({
@@ -490,7 +491,7 @@ export default class GraphView extends React.Component {
     });
     this.graph.addNode(root);
 
-    PubSub.publish(Topic.NodeAdd, root);
+    PubSub.publish(Topic.NodeAdd, this.getNodInfo(root));
     PubSub.publish(Topic.LinkConnect, { parent: root.id, child: this.getNodInfo(root) });
 
     if (jsontree.children && jsontree.children.length) {
@@ -609,6 +610,10 @@ export default class GraphView extends React.Component {
 
   ClickZoomReset = () => {
     this.graph.zoomTo(1)
+  }
+
+  publish = (topic:string, parent:Node, child:Node) => {
+
   }
 
   render() {
