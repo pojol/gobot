@@ -22,4 +22,5 @@
 
 
 ### 示例图
-[![botgif.gif](https://i.postimg.cc/q70JTdNN/botgif.gif)](https://postimg.cc/cv9yR2MW)
+<img src="https://i.postimg.cc/q70JTdNN/botgif.gif" width = "1000" height = "600" alt="botgif" align=center />
+
