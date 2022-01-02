@@ -22,4 +22,4 @@
 
 
 ### 示例图
-![img](../res/preview.png)
+[![botgif.gif](https://i.postimg.cc/q70JTdNN/botgif.gif)](https://postimg.cc/cv9yR2MW)
