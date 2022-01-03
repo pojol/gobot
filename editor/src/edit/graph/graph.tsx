@@ -132,7 +132,6 @@ export default class GraphView extends React.Component {
     graph.addNode(root);
 
     PubSub.publish(Topic.NodeAdd, this.getNodInfo(root));
-    PubSub.publish(Topic.LinkConnect, { parent: root.id, child: this.getNodInfo(root) });
 
     const stencil = new Stencil({
       title: "Components",
@@ -221,7 +220,7 @@ export default class GraphView extends React.Component {
         if (source !== null && target !== null) {
           edge.setZIndex(0)
           source.addChild(target);
-          PubSub.publish(Topic.LinkConnect, { parent: source, child: target });
+          PubSub.publish(Topic.LinkConnect, { parent: source.id, child: target.id });
         }
       }
     });
@@ -235,7 +234,7 @@ export default class GraphView extends React.Component {
 
     graph.on("node:added", ({ node, index, options }) => {
       var ty = node.getAttrs().type.toString();
-      if (ty === NodeTy.Selector || ty === NodeTy.Sequence || ty === NodeTy.Root) {
+      if (ty === NodeTy.Root) {
         return;
       }
 
@@ -245,7 +244,7 @@ export default class GraphView extends React.Component {
         },
       });
 
-      PubSub.publish(Topic.NodeAdd, this.getNodInfo(root));
+      PubSub.publish(Topic.NodeAdd, this.getNodInfo(node));
     });
 
     graph.on("node:removed", ({ node, index, options }) => { });
@@ -442,7 +441,7 @@ export default class GraphView extends React.Component {
         })
       );
       parent.addChild(nod);
-      PubSub.publish(Topic.LinkConnect, { parent: parent, child: nod });
+      PubSub.publish(Topic.LinkConnect, { parent: parent.id, child: nod.id });
 
       if (IsScriptNode(child[i].ty)) {
         nod.setAttrs({ label: { text: child[i].alias } })
@@ -492,7 +491,6 @@ export default class GraphView extends React.Component {
     this.graph.addNode(root);
 
     PubSub.publish(Topic.NodeAdd, this.getNodInfo(root));
-    PubSub.publish(Topic.LinkConnect, { parent: root.id, child: this.getNodInfo(root) });
 
     if (jsontree.children && jsontree.children.length) {
       this.redrawChild(root, jsontree.children);
@@ -610,10 +608,6 @@ export default class GraphView extends React.Component {
 
   ClickZoomReset = () => {
     this.graph.zoomTo(1)
-  }
-
-  publish = (topic:string, parent:Node, child:Node) => {
-
   }
 
   render() {
