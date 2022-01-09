@@ -45,14 +45,12 @@ export default class Edit extends React.Component {
   }
 
   componentDidMount() {
-    PubSub.subscribe(Topic.NodeAdd, (topic, dat) => {
-      this.changeTab(dat.child.ty, dat.child.id);
-    });
 
     PubSub.subscribe(Topic.NodeClick, (topic, dat) => {
       this.changeTab(dat.type, dat.id);
       PubSub.publish(Topic.NodeEditorClick, dat);
     });
+    
   }
 
   render() {

@@ -7,17 +7,16 @@ export default class HomeTagGroup extends React.Component {
 
     constructor(props) {
         super(props)
+        this.state = {
+            tags: [],
+            inputVisible: false,
+            inputValue: '',
+        };
     }
-
-    state = {
-        tags: [],
-        inputVisible: false,
-        inputValue: '',
-    };
 
     componentDidMount() {
         console.info("init tag group", this.props)
-        this.setState({tags : this.props.record.tags})
+        this.setState({ tags: this.props.record.tags })
     }
 
     handleClose = removedTag => {
