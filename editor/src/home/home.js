@@ -5,7 +5,6 @@ import {
   Button,
   Upload,
   message,
-  Input,
   Popconfirm,
   Tooltip,
   Col,
@@ -16,7 +15,6 @@ import React, { } from 'react';
 import {
   InboxOutlined,
   CloudDownloadOutlined,
-  SearchOutlined,
   VerticalAlignBottomOutlined,
   DeleteOutlined,
   PlayCircleOutlined,
@@ -24,7 +22,6 @@ import {
   CloseCircleTwoTone,
   ExclamationCircleTwoTone
 } from "@ant-design/icons";
-import Highlighter from "react-highlight-words";
 import PubSub from "pubsub-js";
 import Topic from "../model/topic";
 import { Post } from "../model/request";
@@ -33,7 +30,6 @@ import "./home.css";
 import { SaveAs } from "../utils/file";
 import { LoadBehaviorWithBlob, LoadBehaviorWithFile } from "../utils/tree";
 import HomeTagGroup from "./home_tags";
-import { set } from "@antv/util";
 
 const { Dragger } = Upload;
 const { Option } = Select;

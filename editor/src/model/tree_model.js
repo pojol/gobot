@@ -6,7 +6,7 @@ import OBJ2XML from "object-to-xml";
 import Config from "./config";
 import { Post, PostBlob } from "./request";
 import Api from "./api";
-import { NodeTy, IsScriptNode } from "./node_type";
+import { NodeTy } from "./node_type";
 
 
 /*!
@@ -109,7 +109,7 @@ export default class TreeModel extends React.Component {
   }
 
   addNode = (nod) => {
-
+    console.info("add", nod.id)
     if (nod.ty === NodeTy.Root) {
       this.setState({ rootid: nod.id })
     }
@@ -146,16 +146,40 @@ export default class TreeModel extends React.Component {
     */
   }
 
+  filterTree = (nods, id) => {
+    var newtree = nods.filter(n => n.id == id)
+    newtree.forEach(n => n.children && (n.children = this.filterTree(n.children)))
+    return newtree
+  }
+
+  findTree = (nods, id) => {
+
+    for (var i = 0; i < nods.length; i++) {
+
+      if (nods[i].id === id) {
+        return nods[i]
+      }
+
+      if (nods[i].chlidren) {
+        var res = this.findTree(nods[i].children, id)
+        if (res) {
+          return res
+        }
+      }
+
+    }
+
+
+  }
+
   link = (parentid, childid) => {
 
-    let onods = this.state.nods
     let children
+    let onods = this.state.nods
 
-    console.info("link", parentid, "<=", childid)
+    for (let i = 0; i < onods.length; i++) {
 
-    for (var i = 0; i < onods.length; i++) {
-
-      if (onods[i].id == childid) {
+      if (onods[i].id === childid) {
         children = onods[i]
         onods.splice(i, 1)
         break
@@ -167,11 +191,11 @@ export default class TreeModel extends React.Component {
         children = innerChildren
 
       })
+
     }
 
-    console.info("link children", children)
     if (children) {
-      for (var i = 0; i < onods.length; i++) {
+      for (let i = 0; i < onods.length; i++) {
 
         if (onods[i].id === parentid) {
           onods[i].children.push(children)
@@ -186,6 +210,7 @@ export default class TreeModel extends React.Component {
 
     console.info("link", onods)
     this.setState({ nods: onods })
+
   }
 
   unLink = (childid) => {
@@ -194,7 +219,7 @@ export default class TreeModel extends React.Component {
 
     for (var i = 0; i < onods.length; i++) {
 
-      if (onods[i].id == childid) {
+      if (onods[i].id === childid) {
         children = onods[i]
         onods.splice(i, 1)
         break
@@ -220,7 +245,7 @@ export default class TreeModel extends React.Component {
 
       for (var i = 0; i < parent.children.length; i++) {
 
-        if (parent.children[i].id == id) {
+        if (parent.children[i].id === id) {
           callback(parent, parent.children[i], i)
           break
         }
@@ -364,7 +389,7 @@ export default class TreeModel extends React.Component {
 
     PubSub.subscribe(Topic.FileLoad, (topic, info) => {
       window.tree = new Map();
-      this.setState({ tree: {}, behaviorTreeName: info.Name });
+      this.setState({ nods: [], rootid: "", behaviorTreeName: info.Name });
     });
 
     PubSub.subscribe(Topic.Create, (topic, info) => {
@@ -375,8 +400,6 @@ export default class TreeModel extends React.Component {
         name = tree.id
         console.info("debug bot name", name)
       }
-
-      console.info("debug", tree)
 
       var xmltree = {
         behavior: tree,

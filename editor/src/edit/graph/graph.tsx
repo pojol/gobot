@@ -232,12 +232,7 @@ export default class GraphView extends React.Component {
       });
     });
 
-    graph.on("node:added", ({ node, index, options }) => {
-      var ty = node.getAttrs().type.toString();
-      if (ty === NodeTy.Root) {
-        return;
-      }
-
+    graph.on("node:added", ({ node, index, options }) => {  
       node.setAttrs({
         label: {
           text: "",
@@ -421,7 +416,7 @@ export default class GraphView extends React.Component {
         y: child[i].pos.y,
       });
       this.graph.addNode(nod);
-      PubSub.publish(Topic.NodeAdd, this.getNodInfo(nod));
+      //PubSub.publish(Topic.NodeAdd, this.getNodInfo(nod));
 
       this.graph.addEdge(
         new Shape.Edge({
@@ -490,7 +485,7 @@ export default class GraphView extends React.Component {
     });
     this.graph.addNode(root);
 
-    PubSub.publish(Topic.NodeAdd, this.getNodInfo(root));
+    //PubSub.publish(Topic.NodeAdd, this.getNodInfo(root));
 
     if (jsontree.children && jsontree.children.length) {
       this.redrawChild(root, jsontree.children);
