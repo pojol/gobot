@@ -44,6 +44,8 @@ export default class GraphView extends React.Component {
   container: HTMLElement;
   dnd: any;
   stencilContainer: HTMLDivElement;
+  private history: Graph.HistoryManager;
+
   rect: Rect = {
     wratio: 0.6,
     woffset: 0,
@@ -127,11 +129,13 @@ export default class GraphView extends React.Component {
       },
 
     });
+    this.history = graph.history
 
     var root = new RootNode();
     graph.addNode(root);
 
     PubSub.publish(Topic.NodeAdd, this.getNodInfo(root));
+    this.history.clean()
 
     const stencil = new Stencil({
       title: "Components",
@@ -196,10 +200,16 @@ export default class GraphView extends React.Component {
       return false;
     });
 
+    graph.bindKey('ctrl+z', () => {
+      // this.history.undo()
+    })
+
     graph.on("edge:removed", ({ edge, options }) => {
       if (!options.ui) {
         return;
       }
+
+      console.info("edge:removed")
 
       this.findNode(edge.getTargetCellId(), (child) => {
         //var ts = child.removeFromParent( { deep : false } );  // options 没用？
@@ -215,6 +225,8 @@ export default class GraphView extends React.Component {
     graph.on("edge:connected", ({ isNew, edge }) => {
       const source = edge.getSourceNode();
       const target = edge.getTargetNode();
+
+      console.info("edge:connected")
 
       if (isNew) {
         if (source !== null && target !== null) {
@@ -239,10 +251,14 @@ export default class GraphView extends React.Component {
         },
       });
 
+      console.info("node:added", node)
+
       PubSub.publish(Topic.NodeAdd, this.getNodInfo(node));
     });
 
-    graph.on("node:removed", ({ node, index, options }) => { });
+    graph.on("node:removed", ({ node, index, options }) => {
+      console.info("node:removed")
+     });
     graph.on("node:moved", ({ e, x, y, node, view: NodeView }) => {
       this.findNode(node.id, (nod) => {
         PubSub.publish(Topic.UpdateGraphParm, this.getNodInfo(node));
@@ -305,6 +321,8 @@ export default class GraphView extends React.Component {
       if (jsontree.id !== "") {
         this.redraw(jsontree);
       }
+
+      this.history.clean()
     });
 
     PubSub.subscribe(Topic.Focus, (topic: string, info: any) => {

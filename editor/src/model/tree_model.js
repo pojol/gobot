@@ -109,7 +109,6 @@ export default class TreeModel extends React.Component {
   }
 
   addNode = (nod) => {
-    console.info("add", nod.id)
     if (nod.ty === NodeTy.Root) {
       this.setState({ rootid: nod.id })
     }
@@ -208,7 +207,6 @@ export default class TreeModel extends React.Component {
       }
     }
 
-    console.info("link", onods)
     this.setState({ nods: onods })
 
   }
@@ -258,8 +256,6 @@ export default class TreeModel extends React.Component {
   };
 
   fillData(org, info, graph, edit) {
-
-    console.info("fill", info)
 
     if (graph) {
       org.pos = info.pos
