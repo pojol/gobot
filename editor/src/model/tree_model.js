@@ -6,13 +6,39 @@ import OBJ2XML from "object-to-xml";
 import Config from "./config";
 import { Post, PostBlob } from "./request";
 import Api from "./api";
-import { NodeTy, IsScriptNode } from "./node_type";
+import { NodeTy } from "./node_type";
+
+
+/*!
+
+  // relation info
+  {
+    id : string,
+    children : []
+  }
+
+  // node info
+  {
+    id : string // node id
+    ty : string // node type
+    pos : {
+      x : number,
+      y : number,
+    },
+    code : "",
+    wait : 0,
+    loop : 0,
+    children : []
+  }
+
+*/
 
 export default class TreeModel extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      tree: {},
+      rootid: "",
+      nods: [], //  root 记录节点的链路关系， window(map 记录节点的细节
       botid: "",
       behaviorTreeName: "",
       httpCodeTmp: Config.httpCode,
@@ -21,152 +47,297 @@ export default class TreeModel extends React.Component {
     };
   }
 
-  findNode = (id, parent, callback) => {
-    if (parent.children && parent.children.length) {
-      for (let nod of parent.children) {
-        if (nod.id === id) {
-          callback(parent, nod);
-          break;
+  _getRelationInfo(parentChildren, children) {
+
+    var cinfo = {
+      id: children.id,
+      children: []
+    }
+
+    parentChildren.push(cinfo)
+
+    if (children.children && children.children.length) {
+      children.children.forEach(cc => {
+        this._getRelationInfo(cinfo.children, cc)
+      })
+    }
+
+  }
+
+  getRelationInfo(nod) {
+    var rinfo = {
+      id: nod.id,
+      children: []
+    }
+
+    if (nod.chlidren && nod.children.length) {
+      nod.children.forEach(children => {
+        this._getRelationInfo(rinfo.children, children)
+      });
+    }
+
+    return rinfo
+  }
+
+  setNode(nod) {
+    // init
+    if (nod.ty === NodeTy.Action && (nod.code === "" || nod.code === undefined)) {
+      nod.code = this.state.httpCodeTmp;
+    } else if (nod.ty === NodeTy.Condition && (nod.code === "" || nod.code === undefined)) {
+      nod.code = this.state.conditionTmp;
+    } else if (nod.ty === NodeTy.Assert && (nod.code === "" || nod.code === undefined)) {
+      nod.code = this.state.assertTmp;
+    } else if (nod.ty === NodeTy.Loop && nod.loop === undefined) {
+      nod.loop = 1;
+    } else if (nod.ty === NodeTy.Wait && nod.wait === undefined) {
+      nod.wait = 1;
+    }
+
+    window.tree.set(nod.id, nod)
+  }
+
+  syncMapInfo(nod) {
+
+    this.setNode(nod)
+
+    if (nod.children && nod.children.length) {
+      nod.children.forEach(children => {
+        this.syncMapInfo(children)
+      })
+    }
+
+  }
+
+  addNode = (nod) => {
+    if (nod.ty === NodeTy.Root) {
+      this.setState({ rootid: nod.id })
+    }
+
+    let rinfo = this.getRelationInfo(nod)
+    this.syncMapInfo(nod)
+
+    let olst = this.state.nods
+    olst.push(rinfo)
+
+    this.setState({ nods: olst })
+  }
+
+  rmvNode = (id) => {
+
+    if (id === this.state.rootid) {
+      return
+    }
+
+    /*
+    this.state.nods.forEach(children => {
+      this.findNode(children.id, this.state.tree, (parent, nod) => {
+        parent.children.forEach(function (child, index, arr) {
+          if (child.id === nod.id) {
+            arr.splice(index, 1);
+            if (window.tree.has(nod.id)) {
+              window.tree.delete(nod.id);
+            }
+            console.info("remove node", nod.id)
+          }
+        });
+      });
+    });
+    */
+  }
+
+  filterTree = (nods, id) => {
+    var newtree = nods.filter(n => n.id == id)
+    newtree.forEach(n => n.children && (n.children = this.filterTree(n.children)))
+    return newtree
+  }
+
+  findTree = (nods, id) => {
+
+    for (var i = 0; i < nods.length; i++) {
+
+      if (nods[i].id === id) {
+        return nods[i]
+      }
+
+      if (nods[i].chlidren) {
+        var res = this.findTree(nods[i].children, id)
+        if (res) {
+          return res
+        }
+      }
+
+    }
+
+
+  }
+
+  link = (parentid, childid) => {
+
+    let children
+    let onods = this.state.nods
+
+    for (let i = 0; i < onods.length; i++) {
+
+      if (onods[i].id === childid) {
+        children = onods[i]
+        onods.splice(i, 1)
+        break
+      }
+
+      this.findNode(childid, onods[i], (parent, innerChildren, idx) => {
+
+        parent.children.splice(idx, 1)
+        children = innerChildren
+
+      })
+
+    }
+
+    if (children) {
+      for (let i = 0; i < onods.length; i++) {
+
+        if (onods[i].id === parentid) {
+          onods[i].children.push(children)
+          break
         }
 
-        this.findNode(id, nod, callback);
+        this.findNode(parentid, onods[i], (_, parent) => {
+          parent.children.push(children)
+        })
       }
+    }
+
+    this.setState({ nods: onods })
+
+  }
+
+  unLink = (childid) => {
+    let onods = this.state.nods
+    let children
+
+    for (var i = 0; i < onods.length; i++) {
+
+      if (onods[i].id === childid) {
+        children = onods[i]
+        onods.splice(i, 1)
+        break
+      }
+
+      this.findNode(childid, onods[i], (innerParent, innerChildren, idx) => {
+        innerParent.children.splice(idx, 1)
+        children = innerChildren
+      })
+
+    }
+
+    if (children) {
+      onods.push(children)
+    }
+
+    this.setState({ nods: onods })
+  }
+
+  findNode = (id, parent, callback) => {
+
+    if (parent.children && parent.children.length) {
+
+      for (var i = 0; i < parent.children.length; i++) {
+
+        if (parent.children[i].id === id) {
+          callback(parent, parent.children[i], i)
+          break
+        }
+
+        this.findNode(id, parent.children[i], callback)
+
+      }
+
     }
   };
 
-  addNode(parentid, childNode) {
-    var syncinfo = (childNode) => {
-      // 如果存在旧的节点参数数据，在这个行为里应该使用旧的数据；
-      if (window.tree.get(childNode.id) === undefined) { 
-        window.tree.set(childNode.id, childNode);
-      }
-    };
+  fillData(org, info, graph, edit) {
 
-    console.info("add", childNode.ty, childNode.code)
+    if (graph) {
+      org.pos = info.pos
+    }
 
-    if (parentid === childNode.id) {
-      // root
-      this.setState({ tree: childNode }, () => {});
-    } else {
-      // init
-      if (childNode.ty === NodeTy.Action && (childNode.code === "" || childNode.code === undefined)) {
-        childNode.code = this.state.httpCodeTmp;
-      } else if (childNode.ty === NodeTy.Condition && (childNode.code === "" || childNode.code === undefined)) {
-        childNode.code = this.state.conditionTmp;
-      } else if (childNode.ty === NodeTy.Assert && (childNode.code === "" || childNode.code === undefined)) {
-        childNode.code = this.state.assertTmp;
-      } else if (childNode.ty === NodeTy.Loop && childNode.loop === undefined) {
-        childNode.loop = 1;
-      } else if (childNode.ty === NodeTy.Wait && childNode.wait === undefined) {
-        childNode.wait = 1;
-      }
-
-      if (this.state.tree.id === parentid) {
-        var old = this.state.tree;
-        old.children.push(childNode);
-        this.setState({ tree: old }, () => {
-          syncinfo(childNode);
-        });
-      } else {
-        this.addChild(parentid, this.state.tree, childNode, (findChild) => {
-          syncinfo(childNode);
-        });
+    if (edit) {
+      if (info.ty === NodeTy.Action) {
+        org.code = info.code
+        org.alias = info.alias
+      } else if (info.ty === NodeTy.Assert || info.ty === NodeTy.Condition) {
+        org.code = info.code
+      } else if (info.ty === NodeTy.Loop) {
+        org.loop = info.loop
+      } else if (info.ty === NodeTy.Wait) {
+        org.wait = info.wait
       }
     }
+
+    org.ty = info.ty
+
   }
 
-  rmvNode(id) {
-    this.findNode(id, this.state.tree, (parent, nod) => {
-      parent.children.forEach(function (child, index, arr) {
-        if (child.id === nod.id) {
-          arr.splice(index, 1);
-          if (window.tree.has(nod.id)) {
-            window.tree.delete(nod.id);
-          }
-        }
-      });
-    });
-  }
+  updateGraphInfo(graphinfo) {
 
-  rmvLink(id) {
-    this.findNode(id, this.state.tree, (parent, nod) => {
-      parent.children.forEach(function (child, index, arr) {
-        if (child.id === nod.id) {
-          arr.splice(index, 1);
-        }
-      });
-    });
-  }
+    let tnode = window.tree.get(graphinfo.id)
+    this.fillData(tnode, graphinfo, true, false)
 
-  updateGraphInfo(graphinfo, notify) {
-    this.findNode(graphinfo.id, this.state.tree, (parent, nod) => {
-      nod.pos = graphinfo.pos;
-    });
+    window.tree.set(tnode.id, tnode)
+
   }
 
   updateEditInfo(editinfo, notify) {
-    window.tree.set(editinfo.id, editinfo);
+
+    let tnode = window.tree.get(editinfo.id)
+
+    this.fillData(tnode, editinfo, false, true)
+
     if (notify) {
       message.success("apply info succ");
     }
+
+    window.tree.set(editinfo.id, tnode);
   }
 
-  addChild = (findid, parent, child, callback) => {
-    var flag = false;
+  foreachRelation(parent) {
 
     for (var i = 0; i < parent.children.length; i++) {
-      if (parent.children[i].id === findid) {
-        parent.children[i].children.push(child);
-        flag = true;
-        callback(child);
-        break;
-      }
-    }
 
-    if (!flag) {
-      for (i = 0; i < parent.children.length; i++) {
-        this.addChild(findid, parent.children[i], child, callback);
+      if (window.tree.has(parent.children[i].id)) {
+        this.fillData(parent.children[i], window.tree.get(parent.children[i].id), true, true)
       }
-    }
-  };
-
-  syncNode = (parent, callback) => {
-    for (var i = 0; i < parent.children.length; i++) {
-      callback(parent.children[i]);
 
       if (parent.children[i].children && parent.children[i].children.length) {
-        this.syncNode(parent.children[i], callback);
+        this.foreachRelation(parent.children[i])
       }
+
     }
-  };
+
+  }
 
   getTree() {
-    var tree = this.state.tree;
 
-    if (tree.children && tree.children.length) {
-      this.syncNode(tree, (nod) => {
-        var tar = window.tree.get(nod.id);
-
-        if (window.tree.has(nod.id)) {
-          if (IsScriptNode(nod.ty)) {
-            nod.code = tar.code;
-            nod.alias = tar.alias;
-          } else if (nod.ty === NodeTy.Loop) {
-            nod.loop = tar.loop;
-          } else if (nod.ty === NodeTy.Wait) {
-            nod.wait = tar.wait;
-          }
-        }
-      });
+    let root
+    for (var i = 0; i < this.state.nods.length; i++) {
+      if (this.state.nods[i].id === this.state.rootid) {
+        root = this.state.nods[i]
+        break
+      }
     }
 
-    return tree;
+    this.fillData(root, window.tree.get(root.id), true, false)
+    if (root && root.children.length) {
+      this.foreachRelation(root)
+    }
+
+    return root
   }
 
   componentWillMount() {
     window.tree = new Map(); // 主要维护的是 editor 节点编辑后的数据
     this.setState({ tree: {} }); // 主要维护的是 graph 中节点的数据
-    
+
     var remote = localStorage.remoteAddr
     if (remote === undefined || remote === "") {
       localStorage.remoteAddr = Config.driveAddr;
@@ -188,16 +359,20 @@ export default class TreeModel extends React.Component {
       message.success("config update succ");
     });
 
-    PubSub.subscribe(Topic.NodeAdd, (topic, linkinfo) => {
-      this.addNode(linkinfo.parent, linkinfo.child);
+    PubSub.subscribe(Topic.NodeAdd, (topic, nodeinfo) => {
+      this.addNode(nodeinfo);
     });
 
     PubSub.subscribe(Topic.NodeRmv, (topic, nodeid) => {
       this.rmvNode(nodeid);
     });
 
-    PubSub.subscribe(Topic.LinkRmv, (topic, nodeid) => {
-      this.rmvLink(nodeid);
+    PubSub.subscribe(Topic.LinkConnect, (topic, linkinfo) => {
+      this.link(linkinfo.parent, linkinfo.child);
+    });
+
+    PubSub.subscribe(Topic.LinkDisconnect, (topic, nodeid) => {
+      this.unLink(nodeid);
     });
 
     PubSub.subscribe(Topic.UpdateNodeParm, (topic, info) => {
@@ -210,7 +385,7 @@ export default class TreeModel extends React.Component {
 
     PubSub.subscribe(Topic.FileLoad, (topic, info) => {
       window.tree = new Map();
-      this.setState({ tree: {}, behaviorTreeName: info.Name });
+      this.setState({ nods: [], rootid: "", behaviorTreeName: info.Name });
     });
 
     PubSub.subscribe(Topic.Create, (topic, info) => {
@@ -283,7 +458,7 @@ export default class TreeModel extends React.Component {
             let changestr, metastr
             let meta = JSON.parse(json.Body.Blackboard)
             let change = JSON.parse(json.Body.Change)
-            
+
             metastr = JSON.stringify(meta)
             changestr = JSON.stringify(change)
 
@@ -326,7 +501,7 @@ export default class TreeModel extends React.Component {
     });
   }
 
-  componentDidMount() {}
+  componentDidMount() { }
 
   render() {
     return <div></div>;
