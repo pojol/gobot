@@ -35,6 +35,32 @@ Try the editor out [on website](http://1.117.168.37:7777/)
 * [json](https://docs.gobot.fun/#/zh-cn/advance/script_utils)
 
 
+## Http request sample
+```lua
+-- lua script
+local http = require("http")
+
+reqTable = {
+    body = {},       -- post body
+    timeout = "10s", -- http timeout
+    headers = {},    -- http headers
+}
+
+res, err = http.post("url", reqTable)
+
+--[[
+    res                 -- userdata
+    res["body"]         -- http response body
+    res["body_size"]    -- body size
+    res["headers"]      -- http headers
+    res["cookies"]      -- http cookies
+    res["status_code"]  -- http status code
+    res["url"]          -- request url
+
+    err                 -- error message
+]]--
+```
+
 # Install
 1. Install docker-compose
     ```shell
