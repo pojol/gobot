@@ -201,7 +201,7 @@ export default class GraphView extends React.Component {
     });
 
     graph.bindKey('ctrl+z', () => {
-      // this.history.undo()
+      //PubSub.publish(Topic.Undo,{})
     })
 
     graph.on("edge:removed", ({ edge, options }) => {
@@ -314,13 +314,13 @@ export default class GraphView extends React.Component {
       }
     });
 
-    PubSub.subscribe(Topic.FileLoadGraph, (topic: string, jsontree: any) => {
+    PubSub.subscribe(Topic.FileLoadGraph, (topic: string, treearr: Array<any>) => {
       // 通过 json 重绘画布
       this.graph.clearCells();
 
-      if (jsontree.id !== "") {
-        this.redraw(jsontree);
-      }
+      treearr.forEach(element => {
+        this.redraw(element);
+      });
 
       this.history.clean()
     });

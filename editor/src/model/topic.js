@@ -7,12 +7,15 @@ const Topic = {
     NodeRmv : "topic_node_remove",
     LinkConnect : "topic_link_connect",
     LinkDisconnect : "topic_link_disconnect",
+    HistoryClean : "topic_history_clean",
 
     UpdateNodeParm : "topic_update_model_parm",
     UpdateGraphParm : "topic_update_graph_parm",
 
     NodeClick : "topic_node_click",
     NodeEditorClick : "topic_node_editor_click",
+
+    Undo : "topic_undo",
 
     // debug
     Upload : "topic_upload",    // 上传行为树模版文件

@@ -33,6 +33,14 @@ import { NodeTy } from "./node_type";
 
 */
 
+const Cmd = {
+  ADD: "nod_add",
+  RMV: "nod_rmv",
+  Update: "nod_update",
+  Link: "node_link",
+  Unlink: "node_unlink",
+}
+
 export default class TreeModel extends React.Component {
   constructor(props) {
     super(props);
@@ -44,6 +52,7 @@ export default class TreeModel extends React.Component {
       httpCodeTmp: Config.httpCode,
       assertTmp: Config.assertCode,
       conditionTmp: Config.conditionCode,
+      history: [],
     };
   }
 
@@ -118,8 +127,10 @@ export default class TreeModel extends React.Component {
 
     let olst = this.state.nods
     olst.push(rinfo)
+    let ohistory = this.state.history
+    ohistory.push({ "cmd": Cmd.RMV, "parm": nod.id })
 
-    this.setState({ nods: olst })
+    this.setState({ nods: olst, history: ohistory })
   }
 
   rmvNode = (id) => {
@@ -128,11 +139,15 @@ export default class TreeModel extends React.Component {
       return
     }
 
-    /*
     this.state.nods.forEach(children => {
       this.findNode(children.id, this.state.tree, (parent, nod) => {
         parent.children.forEach(function (child, index, arr) {
           if (child.id === nod.id) {
+
+            let ohistory = this.state.history
+            this.foreachRelation(child)
+            ohistory.push({ "cmd": Cmd.ADD, "parm": child })
+
             arr.splice(index, 1);
             if (window.tree.has(nod.id)) {
               window.tree.delete(nod.id);
@@ -142,13 +157,7 @@ export default class TreeModel extends React.Component {
         });
       });
     });
-    */
-  }
 
-  filterTree = (nods, id) => {
-    var newtree = nods.filter(n => n.id == id)
-    newtree.forEach(n => n.children && (n.children = this.filterTree(n.children)))
-    return newtree
   }
 
   findTree = (nods, id) => {
@@ -334,6 +343,41 @@ export default class TreeModel extends React.Component {
     return root
   }
 
+  getAllTree() {
+
+    let nods = []
+
+    for (var i = 0; i < this.state.nods.length; i++) {
+      var nod = this.state.nods[i]
+      this.fillData(nod, window.tree.get(nod.id), true, false)
+
+      if (nod.children && nod.children.length) {
+        this.foreachRelation(nod)
+      }
+
+      nods.push(nod)
+    }
+
+    return nods
+  }
+
+  undo() {
+    let ohistory = this.state.history
+    if (ohistory.length) {
+
+      let h = ohistory.shift()
+      if (h.cmd === Cmd.ADD) {
+        this.addNode(h.parm)
+      } else if (h.cmd === Cmd.RMV) {
+        this.rmvNode(h.parm)
+      }
+
+      PubSub.publish(Topic.FileLoadGraph, this.getAllTree())
+      this.setState({ history: ohistory })
+    }
+
+  }
+
   componentWillMount() {
     window.tree = new Map(); // 主要维护的是 editor 节点编辑后的数据
     this.setState({ tree: {} }); // 主要维护的是 graph 中节点的数据
@@ -382,6 +426,14 @@ export default class TreeModel extends React.Component {
     PubSub.subscribe(Topic.UpdateGraphParm, (topic, info) => {
       this.updateGraphInfo(info, false);
     });
+
+    PubSub.subscribe(Topic.Undo, () => {
+      this.undo()
+    })
+
+    PubSub.subscribe(Topic.HistoryClean, () => {
+
+    })
 
     PubSub.subscribe(Topic.FileLoad, (topic, info) => {
       window.tree = new Map();
