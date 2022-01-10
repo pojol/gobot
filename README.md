@@ -45,6 +45,7 @@ reqTable = {
     headers = {},    -- http headers
 }
 
+-- .post .put .getß
 res, err = http.post("url", reqTable)
 
 --[[
