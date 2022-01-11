@@ -44,7 +44,6 @@ export default class GraphView extends React.Component {
   container: HTMLElement;
   dnd: any;
   stencilContainer: HTMLDivElement;
-  private history: Graph.HistoryManager;
 
   rect: Rect = {
     wratio: 0.6,
@@ -129,13 +128,12 @@ export default class GraphView extends React.Component {
       },
 
     });
-    this.history = graph.history
 
     var root = new RootNode();
     graph.addNode(root);
 
     PubSub.publish(Topic.NodeAdd, this.getNodInfo(root));
-    this.history.clean()
+    PubSub.publish(Topic.HistoryClean, {})
 
     const stencil = new Stencil({
       title: "Components",
@@ -201,7 +199,7 @@ export default class GraphView extends React.Component {
     });
 
     graph.bindKey('ctrl+z', () => {
-      //PubSub.publish(Topic.Undo,{})
+      PubSub.publish(Topic.Undo, {})
     })
 
     graph.on("edge:removed", ({ edge, options }) => {
@@ -244,7 +242,7 @@ export default class GraphView extends React.Component {
       });
     });
 
-    graph.on("node:added", ({ node, index, options }) => {  
+    graph.on("node:added", ({ node, index, options }) => {
       node.setAttrs({
         label: {
           text: "",
@@ -257,8 +255,7 @@ export default class GraphView extends React.Component {
     });
 
     graph.on("node:removed", ({ node, index, options }) => {
-      console.info("node:removed")
-     });
+    });
     graph.on("node:moved", ({ e, x, y, node, view: NodeView }) => {
       this.findNode(node.id, (nod) => {
         PubSub.publish(Topic.UpdateGraphParm, this.getNodInfo(node));
@@ -322,7 +319,7 @@ export default class GraphView extends React.Component {
         this.redraw(element);
       });
 
-      this.history.clean()
+      PubSub.publish(Topic.HistoryClean, {})
     });
 
     PubSub.subscribe(Topic.Focus, (topic: string, info: any) => {
@@ -396,7 +393,7 @@ export default class GraphView extends React.Component {
       this.graph.resize(w, h)
     })
   }
-  
+
   getLoopLabel(val: Number) {
     var tlab = "";
     if (val !== 0) {
@@ -408,106 +405,120 @@ export default class GraphView extends React.Component {
     return tlab;
   }
 
-  redrawChild(parent: Node, child: any) {
-    for (var i = 0; i < child.length; i++) {
+  redrawChild(parent: any, child: any) {
       var nod: Node;
-      if (child[i].ty === NodeTy.Selector) {
-        nod = new SelectorNode({ id: child[i].id });
-      } else if (child[i].ty === NodeTy.Sequence) {
-        nod = new SequenceNode({ id: child[i].id });
-      } else if (child[i].ty === NodeTy.Condition) {
-        nod = new ConditionNode({ id: child[i].id });
-      } else if (child[i].ty === NodeTy.Action) {
-        nod = new ActionNode({ id: child[i].id });
-      } else if (child[i].ty === NodeTy.Loop) {
-        nod = new LoopNode({ id: child[i].id });
-      } else if (child[i].ty === NodeTy.Assert) {
-        nod = new AssertNode({ id: child[i].id });
-      } else if (child[i].ty === NodeTy.Wait) {
-        nod = new WaitNode({ id: child[i].id });
+      if (child.ty === NodeTy.Selector) {
+        nod = new SelectorNode({ id: child.id });
+      } else if (child.ty === NodeTy.Sequence) {
+        nod = new SequenceNode({ id: child.id });
+      } else if (child.ty === NodeTy.Condition) {
+        nod = new ConditionNode({ id: child.id });
+      } else if (child.ty === NodeTy.Action) {
+        nod = new ActionNode({ id: child.id });
+      } else if (child.ty === NodeTy.Loop) {
+        nod = new LoopNode({ id: child.id });
+      } else if (child.ty === NodeTy.Assert) {
+        nod = new AssertNode({ id: child.id });
+      } else if (child.ty === NodeTy.Wait) {
+        nod = new WaitNode({ id: child.id });
       } else {
-        message.warn("未知的节点类型" + child[i].ty);
-        break;
+        message.warn("未知的节点类型" + child.ty);
+        return;
       }
+
       nod.setPosition({
-        x: child[i].pos.x,
-        y: child[i].pos.y,
+        x: child.pos.x,
+        y: child.pos.y,
       });
       this.graph.addNode(nod);
       //PubSub.publish(Topic.NodeAdd, this.getNodInfo(nod));
 
-      this.graph.addEdge(
-        new Shape.Edge({
-          attrs: {
-            line: {
-              stroke: "#a0a0a0",
-              strokeWidth: 1,
-              targetMarker: {
-                name: "classic",
-                size: 3,
+      if (parent) {
+        this.graph.addEdge(
+          new Shape.Edge({
+            attrs: {
+              line: {
+                stroke: "#a0a0a0",
+                strokeWidth: 1,
+                targetMarker: {
+                  name: "classic",
+                  size: 3,
+                },
               },
             },
-          },
-          zIndex: 0,
-          source: parent,
-          target: nod,
-        })
-      );
-      parent.addChild(nod);
-      PubSub.publish(Topic.LinkConnect, { parent: parent.id, child: nod.id });
+            zIndex: 0,
+            source: parent,
+            target: nod,
+          })
+        );
+        parent.addChild(nod);
+        PubSub.publish(Topic.LinkConnect, { parent: parent.id, child: nod.id });
+      }
+      
 
-      if (IsScriptNode(child[i].ty)) {
-        nod.setAttrs({ label: { text: child[i].alias } })
+      if (IsScriptNode(child.ty)) {
+        nod.setAttrs({ label: { text: child.alias } })
         PubSub.publish(Topic.UpdateNodeParm, {
           parm: {
             id: nod.id,
-            ty: child[i].ty,
-            code: child[i].code,
-            alias: child[i].alias,
+            ty: child.ty,
+            code: child.code,
+            alias: child.alias,
           },
           notify: false,
         });
-      } else if (child[i].ty === NodeTy.Loop) {
-        nod.setAttrs({ label: { text: this.getLoopLabel(child[i].loop) } });
+      } else if (child.ty === NodeTy.Loop) {
+        nod.setAttrs({ label: { text: this.getLoopLabel(child.loop) } });
         PubSub.publish(Topic.UpdateNodeParm, {
           parm: {
             id: nod.id,
-            ty: child[i].ty,
-            loop: child[i].loop,
+            ty: child.ty,
+            loop: child.loop,
           },
           notify: false,
         });
-      } else if (child[i].ty === NodeTy.Wait) {
-        nod.setAttrs({ label: { text: child[i].wait.toString() + " ms" } });
+      } else if (child.ty === NodeTy.Wait) {
+        nod.setAttrs({ label: { text: child.wait.toString() + " ms" } });
         PubSub.publish(Topic.UpdateNodeParm, {
           parm: {
             id: nod.id,
-            ty: child[i].ty,
-            wait: child[i].wait,
+            ty: child.ty,
+            wait: child.wait,
           },
           notify: false,
         });
       }
 
-      if (child[i].children && child[i].children.length) {
-        this.redrawChild(nod, child[i].children);
+      if (child.children && child.children.length) {
+        for (var i = 0; i < child.children.length; i++) {
+          this.redrawChild(nod, child.children[i]);
+        }
       }
-    }
   }
 
   redraw(jsontree: any) {
-    var root = new RootNode();
-    root.setPosition({
-      x: jsontree.pos.x,
-      y: jsontree.pos.y,
-    });
-    this.graph.addNode(root);
 
-    //PubSub.publish(Topic.NodeAdd, this.getNodInfo(root));
+    if (jsontree.ty === NodeTy.Root) {
 
-    if (jsontree.children && jsontree.children.length) {
-      this.redrawChild(root, jsontree.children);
+      var root = new RootNode();
+      root.setPosition({
+        x: jsontree.pos.x,
+        y: jsontree.pos.y,
+      });
+      this.graph.addNode(root);
+  
+      if (jsontree.children && jsontree.children.length) {
+        for (var i = 0; i<jsontree.children.length;i++){
+          this.redrawChild(root, jsontree.children[i]);
+        }
+      }
+
+    } else {
+
+      this.redrawChild(null, jsontree)
+
     }
+
   }
 
   setLabel(id: String, name: String) {

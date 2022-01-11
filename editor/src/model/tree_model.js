@@ -139,24 +139,39 @@ export default class TreeModel extends React.Component {
       return
     }
 
-    this.state.nods.forEach(children => {
-      this.findNode(children.id, this.state.tree, (parent, nod) => {
-        parent.children.forEach(function (child, index, arr) {
-          if (child.id === nod.id) {
+    let rmvnod
+    let nnods = this.state.nods
+    let ohistory = this.state.history
 
-            let ohistory = this.state.history
-            this.foreachRelation(child)
-            ohistory.push({ "cmd": Cmd.ADD, "parm": child })
+    for (var i = 0; i < nnods.length; i++) {
 
-            arr.splice(index, 1);
-            if (window.tree.has(nod.id)) {
-              window.tree.delete(nod.id);
-            }
-            console.info("remove node", nod.id)
+      if (nnods[i].id === id) {
+        rmvnod = nnods[i]
+        nnods.splice(i, 1)
+        break
+      }
+
+      this.findNode(id, nnods[i], (parent, children, idx) => {
+        parent.children.splice(idx, 1)
+        rmvnod = children
+      })
+
+      if (rmvnod) {
+        this.fillData(rmvnod, window.tree.get(rmvnod.id), true, true)
+        this.foreachRelation(rmvnod)
+        console.info("add rmv node", rmvnod)
+
+        ohistory.push({ "cmd": Cmd.ADD, "parm": rmvnod })
+
+        this.walk(rmvnod, (nod)=>{
+          if (window.tree.has(nod.id)) {
+            window.tree.delete(nod.id);
           }
-        });
-      });
-    });
+        })
+      }
+
+      this.setState({ nods: nnods, history: ohistory })
+    }
 
   }
 
@@ -264,6 +279,20 @@ export default class TreeModel extends React.Component {
     }
   };
 
+  walk = (tree, callback) => {
+
+    if (tree.children && tree.children.length) {
+
+      for (var i = 0; i<tree.children.length;i++) {
+        callback(tree.children[i])
+
+        this.walk(tree.children[i], callback)
+      }
+
+    }
+
+  }
+
   fillData(org, info, graph, edit) {
 
     if (graph) {
@@ -366,13 +395,19 @@ export default class TreeModel extends React.Component {
     if (ohistory.length) {
 
       let h = ohistory.shift()
+
+      console.info("undo", h)
+
       if (h.cmd === Cmd.ADD) {
         this.addNode(h.parm)
       } else if (h.cmd === Cmd.RMV) {
         this.rmvNode(h.parm)
       }
 
-      PubSub.publish(Topic.FileLoadGraph, this.getAllTree())
+      console.info("nods", this.state.nods)
+      let mtree = this.getAllTree()
+      console.info("redraw", mtree)
+      PubSub.publish(Topic.FileLoadGraph, mtree)
       this.setState({ history: ohistory })
     }
 
@@ -432,7 +467,7 @@ export default class TreeModel extends React.Component {
     })
 
     PubSub.subscribe(Topic.HistoryClean, () => {
-
+      this.setState({ history: [] })
     })
 
     PubSub.subscribe(Topic.FileLoad, (topic, info) => {
