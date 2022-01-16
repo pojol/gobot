@@ -79,7 +79,7 @@ export default class TreeModel extends React.Component {
       children: []
     }
 
-    if (nod.chlidren && nod.children.length) {
+    if (nod.children && nod.children.length) {
       nod.children.forEach(children => {
         this._getRelationInfo(rinfo.children, children)
       });
@@ -139,7 +139,7 @@ export default class TreeModel extends React.Component {
       return
     }
 
-    let rmvnod
+    let rmvnod, rmvparent
     let nnods = this.state.nods
     let ohistory = this.state.history
 
@@ -153,15 +153,18 @@ export default class TreeModel extends React.Component {
 
       this.findNode(id, nnods[i], (parent, children, idx) => {
         parent.children.splice(idx, 1)
+        rmvparent = parent
         rmvnod = children
       })
 
       if (rmvnod) {
         this.fillData(rmvnod, window.tree.get(rmvnod.id), true, true)
         this.foreachRelation(rmvnod)
-        console.info("add rmv node", rmvnod)
 
-        ohistory.push({ "cmd": Cmd.ADD, "parm": rmvnod })
+        ohistory.push([
+          {"cmd" : Cmd.ADD, "parm": rmvnod},
+          {"cmd" : Cmd.Link, "parm" : [rmvparent.id, rmvnod.id]}
+        ])
 
         this.walk(rmvnod, (nod)=>{
           if (window.tree.has(nod.id)) {
@@ -378,7 +381,7 @@ export default class TreeModel extends React.Component {
 
     for (var i = 0; i < this.state.nods.length; i++) {
       var nod = this.state.nods[i]
-      this.fillData(nod, window.tree.get(nod.id), true, false)
+      this.fillData(nod, window.tree.get(nod.id), true, true)
 
       if (nod.children && nod.children.length) {
         this.foreachRelation(nod)
@@ -396,15 +399,16 @@ export default class TreeModel extends React.Component {
 
       let h = ohistory.shift()
 
-      console.info("undo", h)
-
-      if (h.cmd === Cmd.ADD) {
-        this.addNode(h.parm)
-      } else if (h.cmd === Cmd.RMV) {
-        this.rmvNode(h.parm)
+      for (var i = 0; i < h.length; i++) {
+        if (h[i].cmd === Cmd.ADD) {
+          this.addNode(h[i].parm)
+        } else if (h[i].cmd === Cmd.RMV) {
+          this.rmvNode(h[i].parm)
+        } else if (h[i].cmd == Cmd.Link) {
+          this.link(h[i].parm[0], h[i].parm[1])
+        }
       }
 
-      console.info("nods", this.state.nods)
       let mtree = this.getAllTree()
       console.info("redraw", mtree)
       PubSub.publish(Topic.FileLoadGraph, mtree)
@@ -481,7 +485,6 @@ export default class TreeModel extends React.Component {
 
       if (name === undefined || name === "") {
         name = tree.id
-        console.info("debug bot name", name)
       }
 
       var xmltree = {
