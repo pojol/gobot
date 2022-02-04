@@ -59,7 +59,7 @@ export default class App extends React.Component {
     return (
       <dev className="site-layout-content">
                 <dev className="ver">
-          <Tag color="#108ee9">v0.0.12</Tag>
+          <Tag color="#108ee9">v0.1.0</Tag>
         </dev>
         <Tabs
           defaultActiveKey="Edit"
