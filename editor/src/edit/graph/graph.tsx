@@ -9,8 +9,8 @@ import LoopNode from "../../shape/shape_loop";
 import WaitNode from "../../shape/shape_wait";
 import AssertNode from "../../shape/shap_assert";
 import { NodeTy, IsScriptNode } from "../../model/node_type";
-import { Button } from 'antd';
-import { ZoomInOutlined ,ZoomOutOutlined,AimOutlined } from '@ant-design/icons';
+import { Button, Tooltip } from 'antd';
+import { ZoomInOutlined, ZoomOutOutlined, AimOutlined, UndoOutlined } from '@ant-design/icons';
 
 
 
@@ -34,9 +34,9 @@ const magnetAvailabilityHighlighter = {
 
 type Rect = {
   wratio: number,
-  woffset : number,
+  woffset: number,
   hratio: number,
-  hoffset : number,
+  hoffset: number,
 }
 
 export default class GraphView extends React.Component {
@@ -44,18 +44,19 @@ export default class GraphView extends React.Component {
   container: HTMLElement;
   dnd: any;
   stencilContainer: HTMLDivElement;
+
   rect: Rect = {
     wratio: 0.6,
     woffset: 0,
     hratio: 0.69,
-    hoffset : 0,
+    hoffset: 0,
   }
 
   componentDidMount() {
     // 新建画布
     const graph = new Graph({
       width: document.body.clientWidth * this.rect.wratio,
-      height:document.body.clientHeight *  this.rect.hratio,
+      height: document.body.clientHeight * this.rect.hratio,
       container: this.container,
       highlighting: {
         magnetAvailable: magnetAvailabilityHighlighter,
@@ -131,10 +132,8 @@ export default class GraphView extends React.Component {
     var root = new RootNode();
     graph.addNode(root);
 
-    PubSub.publish(Topic.NodeAdd, {
-      parent: root.id,
-      child: this.getNodInfo(root),
-    });
+    PubSub.publish(Topic.NodeAdd, [this.getNodInfo(root), true, false]);
+    PubSub.publish(Topic.HistoryClean, {})
 
     const stencil = new Stencil({
       title: "Components",
@@ -152,32 +151,24 @@ export default class GraphView extends React.Component {
       target: graph,
       collapsable: true,
       stencilGraphWidth: 180,
-      stencilGraphHeight: 100,
+      stencilGraphHeight: 400,
       groups: [
         {
           name: "group1",
-          title: "Control",
-        },
-        {
-          name: "group2",
-          title: "Condition",
-        },
-        {
-          name: "group3",
-          title: "Script",
-        },
-        {
-          name: "group4",
-          title: "Decorator",
-        },
+          title: "Normal",
+        }
       ],
     });
     this.stencilContainer.appendChild(stencil.container);
 
-    stencil.load([new SelectorNode(), new SequenceNode()], "group1");
-    stencil.load([new ConditionNode(), new AssertNode()], "group2");
-    stencil.load([new ActionNode()], "group3");
-    stencil.load([new LoopNode(), new WaitNode()], "group4");
+    stencil.load([new SelectorNode()
+      , new SequenceNode()
+      , new ConditionNode()
+      , new AssertNode()
+      , new ActionNode()
+      , new LoopNode()
+      , new WaitNode()], "group1");
+
 
     graph.bindKey("del", () => {
       const cells = this.graph.getSelectedCells();
@@ -199,14 +190,20 @@ export default class GraphView extends React.Component {
       return false;
     });
 
+    graph.bindKey('ctrl+z', () => {
+      PubSub.publish(Topic.Undo, {})
+    })
+
     graph.on("edge:removed", ({ edge, options }) => {
       if (!options.ui) {
         return;
       }
 
+      console.info("edge:removed")
+
       this.findNode(edge.getTargetCellId(), (child) => {
         //var ts = child.removeFromParent( { deep : false } );  // options 没用？
-        PubSub.publish(Topic.LinkRmv, child.id);
+        PubSub.publish(Topic.LinkDisconnect, child.id);
         child.getParent()?.removeChild(edge);
         //var ts = child.removeFromParent({ deep: false });
         //this.graph.addCell(ts);
@@ -223,7 +220,7 @@ export default class GraphView extends React.Component {
         if (source !== null && target !== null) {
           edge.setZIndex(0)
           source.addChild(target);
-          this.connect(source, target);
+          PubSub.publish(Topic.LinkConnect, { parent: source.id, child: target.id });
         }
       }
     });
@@ -236,19 +233,20 @@ export default class GraphView extends React.Component {
     });
 
     graph.on("node:added", ({ node, index, options }) => {
-      var ty = node.getAttrs().type.toString();
-      if (ty === NodeTy.Selector || ty === NodeTy.Sequence || ty === NodeTy.Root) {
-        return;
+
+      let silent = false
+      let build = true
+
+      if (options.others !== undefined) {
+        silent = options.others.silent
+        build = options.others.build
       }
 
-      node.setAttrs({
-        label: {
-          text: "",
-        },
-      });
+      PubSub.publish(Topic.NodeAdd, [this.getNodInfo(node), build, silent]);
+
     });
 
-    graph.on("node:removed", ({ node, index, options }) => { });
+
     graph.on("node:moved", ({ e, x, y, node, view: NodeView }) => {
       this.findNode(node.id, (nod) => {
         PubSub.publish(Topic.UpdateGraphParm, this.getNodInfo(node));
@@ -290,7 +288,6 @@ export default class GraphView extends React.Component {
         });
       } else if (info.parm.ty === NodeTy.Loop) {
         this.findNode(info.parm.id, (nod) => {
-          console.info("Topic.UpdateNodeParm", nod.id)
           nod.setAttrs({
             label: { text: this.getLoopLabel(info.parm.loop) },
           });
@@ -304,18 +301,33 @@ export default class GraphView extends React.Component {
       }
     });
 
-    PubSub.subscribe(Topic.FileLoadGraph, (topic: string, jsontree: any) => {
-      // 通过 json 重绘画布
+    PubSub.subscribe(Topic.FileLoadRedraw, (topic: string, treearr: Array<any>) => {
       this.graph.clearCells();
+      console.info("redraw by undo")
 
-      if (jsontree.id !== "") {
-        this.redraw(jsontree);
-      }
+      treearr.forEach(element => {
+        this.redraw(element, false);
+      });
+    });
+
+    PubSub.subscribe(Topic.FileLoadDraw, (topic: string, treearr: Array<any>) => {
+      this.graph.clearCells();
+      console.info("redraw by file")
+
+      treearr.forEach(element => {
+        this.redraw(element, true);
+      });
+
+      PubSub.publish(Topic.HistoryClean, {})
     });
 
     PubSub.subscribe(Topic.Focus, (topic: string, info: any) => {
+
+      console.info("focus", info)
+
       if (info.Cur !== "") {
         this.findNode(info.Cur, (nod) => {
+          console.info("setattrs", nod.id)
           nod.setAttrs({
             body: {
               strokeWidth: 3,
@@ -345,29 +357,27 @@ export default class GraphView extends React.Component {
     })
 
     PubSub.subscribe(Topic.EditPlaneEditCodeResize, (topic: string, w: number) => {
-      
+
       let woffset = (document.body.clientWidth - w) / document.body.clientWidth
-      this.rect.wratio = 1- woffset
+      this.rect.wratio = 1 - woffset
       this.rect.woffset = w
       this.graph.resize(document.body.clientWidth * this.rect.wratio, document.body.clientHeight * this.rect.hratio)
 
     })
     PubSub.subscribe(Topic.EditPlaneEditChangeResize, (topic: string, h: number) => {
-      
+
       let hoffset = (document.body.clientHeight - h) / document.body.clientHeight
-      this.rect.hratio = 1-hoffset
+      this.rect.hratio = 1 - hoffset
       this.rect.hoffset = h
       this.graph.resize(document.body.clientWidth * this.rect.wratio, document.body.clientHeight * this.rect.hratio)
-    
+
     })
 
     PubSub.subscribe(Topic.WindowResize, (topic: string, e: number) => {
-      console.info("resize", this.rect, e)
-      console.info("width", document.body.clientWidth, "height", document.body.clientHeight)
       let w, h = 0
       if (this.rect.woffset !== 0) {
         let woffset = (document.body.clientWidth - this.rect.woffset) / document.body.clientWidth
-        let wratio = 1-woffset
+        let wratio = 1 - woffset
         w = document.body.clientWidth * wratio
       } else {
         w = document.body.clientWidth * this.rect.wratio
@@ -375,7 +385,7 @@ export default class GraphView extends React.Component {
 
       if (this.rect.hoffset !== 0) {
         let hoffset = (document.body.clientHeight - this.rect.hoffset) / document.body.clientHeight
-        let hratio = 1-hoffset
+        let hratio = 1 - hoffset
         h = document.body.clientHeight * hratio
       } else {
         h = document.body.clientHeight * this.rect.hratio
@@ -383,14 +393,6 @@ export default class GraphView extends React.Component {
 
       this.graph.resize(w, h)
     })
-  }
-
-  connect(source: Node, target: Node) {
-    var nodinfo = {
-      parent: source.id,
-      child: this.getNodInfo(target),
-    };
-    PubSub.publish(Topic.NodeAdd, nodinfo);
   }
 
   getLoopLabel(val: Number) {
@@ -404,32 +406,36 @@ export default class GraphView extends React.Component {
     return tlab;
   }
 
-  redrawChild(parent: Node, child: any) {
-    for (var i = 0; i < child.length; i++) {
-      var nod: Node;
-      if (child[i].ty === NodeTy.Selector) {
-        nod = new SelectorNode({ id: child[i].id });
-      } else if (child[i].ty === NodeTy.Sequence) {
-        nod = new SequenceNode({ id: child[i].id });
-      } else if (child[i].ty === NodeTy.Condition) {
-        nod = new ConditionNode({ id: child[i].id });
-      } else if (child[i].ty === NodeTy.Action) {
-        nod = new ActionNode({ id: child[i].id });
-      } else if (child[i].ty === NodeTy.Loop) {
-        nod = new LoopNode({ id: child[i].id });
-      } else if (child[i].ty === NodeTy.Assert) {
-        nod = new AssertNode({ id: child[i].id });
-      } else if (child[i].ty === NodeTy.Wait) {
-        nod = new WaitNode({ id: child[i].id });
-      } else {
-        message.warn("未知的节点类型" + child[i].ty);
-        break;
-      }
-      nod.setPosition({
-        x: child[i].pos.x,
-        y: child[i].pos.y,
-      });
-      this.graph.addNode(nod);
+  redrawChild(parent: any, child: any, build: boolean) {
+    var nod: Node;
+    if (child.ty === NodeTy.Selector) {
+      nod = new SelectorNode({ id: child.id });
+    } else if (child.ty === NodeTy.Sequence) {
+      nod = new SequenceNode({ id: child.id });
+    } else if (child.ty === NodeTy.Condition) {
+      nod = new ConditionNode({ id: child.id });
+    } else if (child.ty === NodeTy.Action) {
+      nod = new ActionNode({ id: child.id });
+    } else if (child.ty === NodeTy.Loop) {
+      nod = new LoopNode({ id: child.id });
+    } else if (child.ty === NodeTy.Assert) {
+      nod = new AssertNode({ id: child.id });
+    } else if (child.ty === NodeTy.Wait) {
+      nod = new WaitNode({ id: child.id });
+    } else {
+      message.warn("未知的节点类型" + child.ty);
+      return;
+    }
+
+    nod.setPosition({
+      x: child.pos.x,
+      y: child.pos.y,
+    });
+    // this.graph.addNode(nod, { "silent": true }); 这样使用会导致浏览器卡死
+    this.graph.addNode(nod, { "others": { "build": build, "silent": true } })
+    //PubSub.publish(Topic.NodeAdd, this.getNodInfo(nod));
+
+    if (parent) {
       this.graph.addEdge(
         new Shape.Edge({
           attrs: {
@@ -447,63 +453,78 @@ export default class GraphView extends React.Component {
           target: nod,
         })
       );
+
       parent.addChild(nod);
-      this.connect(parent, nod);
+      PubSub.publish(Topic.LinkConnect, { parent: parent.id, child: nod.id });
+    }
 
-      if (IsScriptNode(child[i].ty)) {
-        nod.setAttrs({ label: { text: child[i].alias } })
-        PubSub.publish(Topic.UpdateNodeParm, {
-          parm: {
-            id: nod.id,
-            ty: child[i].ty,
-            code: child[i].code,
-            alias: child[i].alias,
-          },
-          notify: false,
-        });
-      } else if (child[i].ty === NodeTy.Loop) {
-        nod.setAttrs({ label: { text: this.getLoopLabel(child[i].loop) } });
-        PubSub.publish(Topic.UpdateNodeParm, {
-          parm: {
-            id: nod.id,
-            ty: child[i].ty,
-            loop: child[i].loop,
-          },
-          notify: false,
-        });
-      } else if (child[i].ty === NodeTy.Wait) {
-        nod.setAttrs({ label: { text: child[i].wait.toString() + " ms" } });
-        PubSub.publish(Topic.UpdateNodeParm, {
-          parm: {
-            id: nod.id,
-            ty: child[i].ty,
-            wait: child[i].wait,
-          },
-          notify: false,
-        });
-      }
 
-      if (child[i].children && child[i].children.length) {
-        this.redrawChild(nod, child[i].children);
+    if (IsScriptNode(child.ty)) {
+      nod.setAttrs({ label: { text: child.alias } })
+      PubSub.publish(Topic.UpdateNodeParm, {
+        parm: {
+          id: nod.id,
+          ty: child.ty,
+          code: child.code,
+          alias: child.alias,
+        },
+        notify: false,
+      });
+    } else if (child.ty === NodeTy.Loop) {
+      nod.setAttrs({ label: { text: this.getLoopLabel(child.loop) } });
+      PubSub.publish(Topic.UpdateNodeParm, {
+        parm: {
+          id: nod.id,
+          ty: child.ty,
+          loop: child.loop,
+        },
+        notify: false,
+      });
+    } else if (child.ty === NodeTy.Wait) {
+      nod.setAttrs({ label: { text: child.wait.toString() + " ms" } });
+      PubSub.publish(Topic.UpdateNodeParm, {
+        parm: {
+          id: nod.id,
+          ty: child.ty,
+          wait: child.wait,
+        },
+        notify: false,
+      });
+    } else if (child.ty === NodeTy.Sequence) {
+      nod.setAttrs({ label: { text: "seq" } });
+    } else if (child.ty === NodeTy.Selector) {
+      nod.setAttrs({ label: { text: "sel" } });
+    }
+
+    if (child.children && child.children.length) {
+      for (var i = 0; i < child.children.length; i++) {
+        this.redrawChild(nod, child.children[i], build);
       }
     }
   }
 
-  redraw(jsontree: any) {
-    var root = new RootNode();
-    root.setPosition({
-      x: jsontree.pos.x,
-      y: jsontree.pos.y,
-    });
-    this.graph.addNode(root);
-    PubSub.publish(Topic.NodeAdd, {
-      parent: root.id,
-      child: this.getNodInfo(root),
-    });
+  redraw(jsontree: any, build: boolean) {
 
-    if (jsontree.children && jsontree.children.length) {
-      this.redrawChild(root, jsontree.children);
+    if (jsontree.ty === NodeTy.Root) {
+
+      var root = new RootNode({ "id": jsontree.id });
+      root.setPosition({
+        x: jsontree.pos.x,
+        y: jsontree.pos.y,
+      });
+
+      this.graph.addNode(root, { "others": { "build": build, "silent": true } });
+
+      if (jsontree.children && jsontree.children.length) {
+        for (var i = 0; i < jsontree.children.length; i++) {
+          this.redrawChild(root, jsontree.children[i], build);
+        }
+      }
+
+    } else {
+      this.redrawChild(null, jsontree, build)
     }
+
   }
 
   setLabel(id: String, name: String) {
@@ -608,15 +629,19 @@ export default class GraphView extends React.Component {
   debug = () => { };
 
   ClickZoomIn = () => {
-    this.graph.zoomTo(this.graph.zoom()*1.2)
+    this.graph.zoomTo(this.graph.zoom() * 1.2)
   }
 
   ClickZoomOut = () => {
-    this.graph.zoomTo(this.graph.zoom()*0.8)
+    this.graph.zoomTo(this.graph.zoom() * 0.8)
   }
 
   ClickZoomReset = () => {
     this.graph.zoomTo(1)
+  }
+
+  ClickUndo = () => {
+    PubSub.publish(Topic.Undo, {})
   }
 
   render() {
@@ -625,9 +650,30 @@ export default class GraphView extends React.Component {
         <div className="app-stencil" ref={this.refStencil} />
         <div className="app-content" ref={this.refContainer} />
         <div className="app-zoom">
-        <Button icon={<ZoomInOutlined />} onClick={this.ClickZoomIn} />
-        <Button icon={<AimOutlined />} onClick={this.ClickZoomReset} />
-        <Button icon={<ZoomOutOutlined />}  onClick={this.ClickZoomOut}/>
+          <Tooltip
+            placement="leftTop"
+            title="ZoomIn"
+          >
+            <Button icon={<ZoomInOutlined />} onClick={this.ClickZoomIn} />
+          </Tooltip>
+          <Tooltip
+            placement="leftTop"
+            title="Reset"
+          >
+            <Button icon={<AimOutlined />} onClick={this.ClickZoomReset} />
+          </Tooltip>
+          <Tooltip
+            placement="leftTop"
+            title="ZoomOut"
+          >
+            <Button icon={<ZoomOutOutlined />} onClick={this.ClickZoomOut} />
+          </Tooltip>
+          <Tooltip
+            placement="leftTop"
+            title="Undo [ ctrl+z ]"
+          >
+            <Button icon={<UndoOutlined />} onClick={this.ClickUndo} />
+          </Tooltip>
         </div>
 
       </div>

@@ -1,7 +1,7 @@
 import React from "react";
 import ReactJson from "react-json-view";
 import PubSub from "pubsub-js";
-import { message, Divider, Button, Tooltip, Modal, Input } from "antd";
+import { message, Button, Tooltip, Modal, Input,Space } from "antd";
 import {
   CloudUploadOutlined,
 } from "@ant-design/icons";
@@ -80,44 +80,43 @@ export default class Blackboard extends React.Component {
 
     return (
       <div className="offset">
-        <Tooltip
-          placement="topLeft"
-          title="Create a bot based on the current behavior tree"
-        >
-          <Button onClick={this.createClick}>Create</Button>
-        </Tooltip>
+        <Space direction="vertical">
+        <Space>
+          <Tooltip
+            placement="topLeft"
+            title="Create a bot based on the current behavior tree"
+          >
+            <Button onClick={this.createClick}>Create</Button>
+          </Tooltip>
+          <Tooltip
+            placement="topLeft"
+            title="View the runtime of the behavior tree"
+          >
+            <Button onClick={this.stepClick}>Step</Button>
+          </Tooltip>
+          <Tooltip
+            placement="topLeft"
+            title="Upload the behavior tree file to the server"
+          >
+            <Button icon={<CloudUploadOutlined />} onClick={this.uploadClick}>
+              Upload
+            </Button>
+          </Tooltip>
 
-        <Divider type="vertical"></Divider>
-        <Tooltip
-          placement="topLeft"
-          title="View the runtime of the behavior tree"
-        >
-          <Button onClick={this.stepClick}>Step</Button>
-        </Tooltip>
-        <Divider type="vertical"></Divider>
-        <Divider type="vertical"></Divider>
-        <Divider type="vertical"></Divider>
-        <Tooltip
-          placement="topLeft"
-          title="Upload the behavior tree file to the server"
-        >
-          <Button icon={<CloudUploadOutlined />} onClick={this.uploadClick}>
-            Upload
-          </Button>
-        </Tooltip>
+          <Modal
+            visible={isModalVisible}
+            onOk={this.modalHandleOk}
+            onCancel={this.modalHandleCancel}
+          >
+            <Input
+              placeholder="input behavior file name"
+              onChange={this.behaviorNameChange}
+            />
+          </Modal>
+        </Space>
 
-        <Modal
-          visible={isModalVisible}
-          onOk={this.modalHandleOk}
-          onCancel={this.modalHandleCancel}
-        >
-          <Input
-            placeholder="input behavior file name"
-            onChange={this.behaviorNameChange}
-          />
-        </Modal>
         <ReactJson
-          name="Blackboard"
+          name="Bot metadata"
           src={this.state.metadata}
           theme={"rjv-default"}
           enableClipboard={false}
@@ -125,7 +124,8 @@ export default class Blackboard extends React.Component {
           edit={false}
           add={false}
         ></ReactJson>
-
+        </Space>
+        
       </div>
     );
   }

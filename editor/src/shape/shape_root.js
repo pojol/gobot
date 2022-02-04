@@ -14,7 +14,7 @@ RootNode.config({
       borderRadius: 4,
     },
     label: {
-      text: "Root"
+      text: "root"
     },
     type : "RootNode"
   },

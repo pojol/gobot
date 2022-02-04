@@ -1,54 +1,45 @@
 import { IsScriptNode, NodeTy } from "../model/node_type";
 
-
-
-function getValueByElement(elem, tag) {
-    for (var i = 0; i < elem.childNodes.length; i++) {
-        if (elem.childNodes[i].nodeName === tag) {
-            if (elem.childNodes[i].childNodes.length === 0) {
-                return ""
-            } else {
-                return elem.childNodes[i].childNodes[0].nodeValue;
-            }
-        }
-    }
-    return undefined;
-}
-
-function parseChildren(xmlnode, children) {
+function parseChildren(childrenNodes, children) {
     var nod = {};
+    var childrens = []
 
-    nod.id = xmlnode.getElementsByTagName("id")[0].childNodes[0].nodeValue;
-    nod.ty = xmlnode.getElementsByTagName("ty")[0].childNodes[0].nodeValue;
-
-    if (nod.ty === NodeTy.Loop) {
-        nod.loop = getValueByElement(xmlnode, "loop")
-    } else if (nod.ty === NodeTy.Wait) {
-        nod.wait = getValueByElement(xmlnode, "wait")
-    } else if (IsScriptNode(nod.ty)) {
-        nod.code = getValueByElement(xmlnode, "code");
-        nod.alias = getValueByElement(xmlnode, "alias");
-    }
-
-    nod.pos = {
-        x: parseInt(
-            xmlnode.getElementsByTagName("pos")[0].getElementsByTagName("x")[0]
-                .childNodes[0].nodeValue
-        ),
-        y: parseInt(
-            xmlnode.getElementsByTagName("pos")[0].getElementsByTagName("y")[0]
-                .childNodes[0].nodeValue
-        ),
-    };
+    childrenNodes.forEach(children => {
+        if (children.nodeName === "id") {
+            nod.id = children.childNodes[0].nodeValue
+        } else if (children.nodeName === "ty") {
+            nod.ty = children.childNodes[0].nodeValue
+        } else if (children.nodeName === "pos") {
+            nod.pos = {}
+            children.childNodes.forEach(pos => {
+                if (pos.nodeName === "x") {
+                    nod.pos.x = parseInt(pos.childNodes[0].nodeValue)
+                } else if(pos.nodeName === "y") {
+                    nod.pos.y = parseInt(pos.childNodes[0].nodeValue)
+                }
+            })
+        } else if (children.nodeName === "children") {
+            childrens.push(children.childNodes)
+        } else if (children.nodeName === "loop") {
+            nod.loop = parseInt(children.childNodes[0].nodeValue)
+        } else if (children.nodeName === "wait") {
+            nod.wait = parseInt(children.childNodes[0].nodeValue)
+        } else if (children.nodeName === "code") {
+            nod.code = children.childNodes[0].nodeValue
+        } else if (children.nodeName === "alias") {
+            if (children.childNodes && children.childNodes.length) {
+                nod.alias = children.childNodes[0].nodeValue
+            } 
+        }
+    })
 
     nod.children = [];
     children.push(nod);
 
-    for (var i = 0; i < xmlnode.childNodes.length; i++) {
-        if (xmlnode.childNodes[i].nodeName === "children") {
-            parseChildren(xmlnode.childNodes[i], nod.children);
-        }
-    }
+    console.info(nod.id, nod.ty, childrens)
+    childrens.forEach(c => {
+        parseChildren(c, nod.children)
+    })
 }
 
 
@@ -71,8 +62,8 @@ function LoadBehaviorWithBlob(url, methon, name) {
             })
             .then((response) => {
                 resolve({
-                    name:name,
-                    blob:response
+                    name: name,
+                    blob: response
                 });
             })
             .catch((err) => {
@@ -87,42 +78,53 @@ function LoadBehaviorWithFile(name, blob) {
     let tree = {};
 
     reader.onload = function (ev) {
-      var context = reader.result;
-      try {
-        let parser = new DOMParser();
-        let xmlDoc = parser.parseFromString(context, "text/xml");
-        
-        var root = xmlDoc.getElementsByTagName("behavior")[0];
-        if (root) {
-          tree.id = root.getElementsByTagName("id")[0].childNodes[0].nodeValue;
-          tree.ty = root.getElementsByTagName("ty")[0].childNodes[0].nodeValue;
-          tree.pos = {
-            x: parseInt(
-              root.getElementsByTagName("pos")[0].getElementsByTagName("x")[0]
-                .childNodes[0].nodeValue
-            ),
-            y: parseInt(
-              root.getElementsByTagName("pos")[0].getElementsByTagName("y")[0]
-                .childNodes[0].nodeValue
-            ),
-          };
-          tree.children = [];
-          if (root.getElementsByTagName("children")[0].hasChildNodes()) {
-            parseChildren(
-              root.getElementsByTagName("children")[0],
-              tree.children
-            );
-          }
+        var context = reader.result;
+        try {
+            let parser = new DOMParser();
+            let xmlDoc = parser.parseFromString(context, "text/xml");
+
+            var root = xmlDoc.getElementsByTagName("behavior")[0];
+            var children = undefined
+            if (root) {
+
+                root.childNodes.forEach(nod => {
+                    if (nod.nodeName === "id") {
+                        tree.id = nod.childNodes[0].nodeValue
+                    } else if (nod.nodeName === "ty") {
+                        tree.ty = nod.childNodes[0].nodeValue
+                    } else if (nod.nodeName === "pos") {
+                        tree.pos = {}
+                        nod.childNodes.forEach(pos => {
+                            if (pos.nodeName === "x") {
+                                tree.pos.x = parseInt(pos.childNodes[0].nodeValue)
+                            } else if(pos.nodeName === "y") {
+                                tree.pos.y = parseInt(pos.childNodes[0].nodeValue)
+                            }
+                        })
+                    } else if (nod.nodeName === "children") {
+                        children = nod.childNodes
+                    }
+                })
+                tree.children = [];
+
+                console.info("root", tree)
+
+                if (children !== undefined) {
+                    parseChildren(
+                        children,
+                        tree.children
+                    );
+                }
+            }
+
+        } catch (err) {
+            console.info(err)
+            return null
         }
-  
-      } catch (err) {
-        console.info(err)
-        return null
-      }
     };
-  
+
     reader.readAsText(blob);
     return tree
-  }
+}
 
-  export {LoadBehaviorWithBlob, LoadBehaviorWithFile}
+export { LoadBehaviorWithBlob, LoadBehaviorWithFile }

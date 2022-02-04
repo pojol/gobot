@@ -1,10 +1,7 @@
 import React from "react";
 import ReactJson from "react-json-view";
 import PubSub from "pubsub-js";
-import { message, Divider, Button, Tooltip, Modal, Input } from "antd";
-import {
-  CloudUploadOutlined,
-} from "@ant-design/icons";
+import { message } from "antd";
 
 import Topic from "../../model/topic";
 import "./change.css";
@@ -34,12 +31,8 @@ export default class ChangeView extends React.Component {
     });
   }
 
-  showModal = () => {
-    this.setState({ isModalVisible: true });
-  };
 
   modalHandleOk = () => {
-    this.setState({ isModalVisible: false });
     if (this.state.behaviorName !== "") {
       PubSub.publish(Topic.Upload, this.state.behaviorName);
     } else {
@@ -51,9 +44,7 @@ export default class ChangeView extends React.Component {
     this.setState({ behaviorName: e.target.value });
   };
 
-  modalHandleCancel = () => {
-    this.setState({ isModalVisible: false });
-  };
+
 
   debugClick = () => {
     PubSub.publish(Topic.Run, "");
@@ -64,22 +55,12 @@ export default class ChangeView extends React.Component {
     this.setState({ metadata: JSON.parse("{}") });
   };
 
-  stepClick = () => {
-    PubSub.publish(Topic.Step, "");
-  };
-
-  uploadClick = () => {
-    this.setState({ isModalVisible: true });
-  };
-
-
   render() {
-    const isModalVisible = this.state.isModalVisible;
 
     return (
       <div>
         <ReactJson
-          name="Change"
+          name="Step change"
           src={this.state.metadata}
           theme={"rjv-default"}
           enableClipboard={false}
