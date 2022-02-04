@@ -1,5 +1,5 @@
 # gobot
-Test robot framework based on behavior tree, supports binding script execution.
+Gobot is a stateful api testing tool that supports graph editing, api calling, and binding script execution.
 
 [![](https://img.shields.io/badge/%E6%96%87%E6%A1%A3-Doc-2ca5e0?style=flat&logo=github)](https://docs.gobot.fun/)
 [![](https://img.shields.io/badge/Trello-Todo-2ca5e0?style=flat&logo=trello)](https://trello.com/b/8eDZ6h7n/)
@@ -45,7 +45,7 @@ reqTable = {
     headers = {},    -- http headers
 }
 
--- .post .put .getß
+-- .post .put .get
 res, err = http.post("url", reqTable)
 
 --[[

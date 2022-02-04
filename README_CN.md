@@ -1,6 +1,5 @@
 # gobot editor
-基于行为树的机器人编辑器框架，节点支持绑定脚本执行。
-
+Gobot是一个有状态的api测试工具，支持图形编辑、api调用、绑定脚本执行。
 
 [![](https://img.shields.io/badge/%E6%96%87%E6%A1%A3-Doc-2ca5e0?style=flat&logo=github)](https://docs.gobot.fun/)
 [![](https://img.shields.io/badge/Trello-Todo-2ca5e0?style=flat&logo=trello)](https://trello.com/b/8eDZ6h7n/)
@@ -32,6 +31,34 @@
 * [utils](https://docs.gobot.fun/#/zh-cn/advance/script_utils)
 * [base64](https://docs.gobot.fun/#/zh-cn/advance/script_base64)
 * [json](https://docs.gobot.fun/#/zh-cn/advance/script_utils)
+
+
+## Http请求例子
+```lua
+-- lua script
+local http = require("http")
+
+reqTable = {
+    body = {},       -- 消息内容
+    timeout = "10s", -- http 请求超时时间
+    headers = {},    -- http 消息头
+}
+
+-- .post .put .get
+res, err = http.post("url", reqTable)
+
+--[[
+    res                 -- userdata
+    res["body"]         -- http 回复内容
+    res["body_size"]    -- 回复内容大小
+    res["headers"]      -- http 消息头
+    res["cookies"]      -- http cookies
+    res["status_code"]  -- http 状态码
+    res["url"]          -- 请求地址
+
+    err                 -- 错误信息
+]]--
+```
 
 # 安装
 1. 安装 docker-compose
