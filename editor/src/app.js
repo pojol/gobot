@@ -37,7 +37,7 @@ export default class App extends React.Component {
     PubSub.subscribe(Topic.FileLoad, (topic, info) => {
       this.setState({ tab: "Edit" });
 
-      PubSub.publish(Topic.FileLoadGraph, [info.Tree]);
+      PubSub.publish(Topic.FileLoadDraw, [info.Tree]);
     });
 
     window.addEventListener('resize', this.resizeHandler, false)

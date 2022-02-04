@@ -9,8 +9,8 @@ import LoopNode from "../../shape/shape_loop";
 import WaitNode from "../../shape/shape_wait";
 import AssertNode from "../../shape/shap_assert";
 import { NodeTy, IsScriptNode } from "../../model/node_type";
-import { Button } from 'antd';
-import { ZoomInOutlined, ZoomOutOutlined, AimOutlined } from '@ant-design/icons';
+import { Button, Tooltip } from 'antd';
+import { ZoomInOutlined, ZoomOutOutlined, AimOutlined, UndoOutlined } from '@ant-design/icons';
 
 
 
@@ -132,7 +132,7 @@ export default class GraphView extends React.Component {
     var root = new RootNode();
     graph.addNode(root);
 
-    PubSub.publish(Topic.NodeAdd, this.getNodInfo(root));
+    PubSub.publish(Topic.NodeAdd, [this.getNodInfo(root), true, false]);
     PubSub.publish(Topic.HistoryClean, {})
 
     const stencil = new Stencil({
@@ -151,32 +151,24 @@ export default class GraphView extends React.Component {
       target: graph,
       collapsable: true,
       stencilGraphWidth: 180,
-      stencilGraphHeight: 100,
+      stencilGraphHeight: 400,
       groups: [
         {
           name: "group1",
-          title: "Control",
-        },
-        {
-          name: "group2",
-          title: "Condition",
-        },
-        {
-          name: "group3",
-          title: "Script",
-        },
-        {
-          name: "group4",
-          title: "Decorator",
-        },
+          title: "Normal",
+        }
       ],
     });
     this.stencilContainer.appendChild(stencil.container);
 
-    stencil.load([new SelectorNode(), new SequenceNode()], "group1");
-    stencil.load([new ConditionNode(), new AssertNode()], "group2");
-    stencil.load([new ActionNode()], "group3");
-    stencil.load([new LoopNode(), new WaitNode()], "group4");
+    stencil.load([new SelectorNode()
+      , new SequenceNode()
+      , new ConditionNode()
+      , new AssertNode()
+      , new ActionNode()
+      , new LoopNode()
+      , new WaitNode()], "group1");
+
 
     graph.bindKey("del", () => {
       const cells = this.graph.getSelectedCells();
@@ -224,8 +216,6 @@ export default class GraphView extends React.Component {
       const source = edge.getSourceNode();
       const target = edge.getTargetNode();
 
-      console.info("edge:connected")
-
       if (isNew) {
         if (source !== null && target !== null) {
           edge.setZIndex(0)
@@ -243,19 +233,20 @@ export default class GraphView extends React.Component {
     });
 
     graph.on("node:added", ({ node, index, options }) => {
-      node.setAttrs({
-        label: {
-          text: "",
-        },
-      });
 
-      console.info("node:added", node)
+      let silent = false
+      let build = true
 
-      PubSub.publish(Topic.NodeAdd, this.getNodInfo(node));
+      if (options.others !== undefined) {
+        silent = options.others.silent
+        build = options.others.build
+      }
+
+      PubSub.publish(Topic.NodeAdd, [this.getNodInfo(node), build, silent]);
+
     });
 
-    graph.on("node:removed", ({ node, index, options }) => {
-    });
+
     graph.on("node:moved", ({ e, x, y, node, view: NodeView }) => {
       this.findNode(node.id, (nod) => {
         PubSub.publish(Topic.UpdateGraphParm, this.getNodInfo(node));
@@ -297,7 +288,6 @@ export default class GraphView extends React.Component {
         });
       } else if (info.parm.ty === NodeTy.Loop) {
         this.findNode(info.parm.id, (nod) => {
-          console.info("Topic.UpdateNodeParm", nod.id)
           nod.setAttrs({
             label: { text: this.getLoopLabel(info.parm.loop) },
           });
@@ -311,20 +301,33 @@ export default class GraphView extends React.Component {
       }
     });
 
-    PubSub.subscribe(Topic.FileLoadGraph, (topic: string, treearr: Array<any>) => {
-      // 通过 json 重绘画布
+    PubSub.subscribe(Topic.FileLoadRedraw, (topic: string, treearr: Array<any>) => {
       this.graph.clearCells();
+      console.info("redraw by undo")
 
       treearr.forEach(element => {
-        this.redraw(element);
+        this.redraw(element, false);
+      });
+    });
+
+    PubSub.subscribe(Topic.FileLoadDraw, (topic: string, treearr: Array<any>) => {
+      this.graph.clearCells();
+      console.info("redraw by file")
+
+      treearr.forEach(element => {
+        this.redraw(element, true);
       });
 
       PubSub.publish(Topic.HistoryClean, {})
     });
 
     PubSub.subscribe(Topic.Focus, (topic: string, info: any) => {
+
+      console.info("focus", info)
+
       if (info.Cur !== "") {
         this.findNode(info.Cur, (nod) => {
+          console.info("setattrs", nod.id)
           nod.setAttrs({
             body: {
               strokeWidth: 3,
@@ -371,8 +374,6 @@ export default class GraphView extends React.Component {
     })
 
     PubSub.subscribe(Topic.WindowResize, (topic: string, e: number) => {
-      console.info("resize", this.rect, e)
-      console.info("width", document.body.clientWidth, "height", document.body.clientHeight)
       let w, h = 0
       if (this.rect.woffset !== 0) {
         let woffset = (document.body.clientWidth - this.rect.woffset) / document.body.clientWidth
@@ -405,118 +406,123 @@ export default class GraphView extends React.Component {
     return tlab;
   }
 
-  redrawChild(parent: any, child: any) {
-      var nod: Node;
-      if (child.ty === NodeTy.Selector) {
-        nod = new SelectorNode({ id: child.id });
-      } else if (child.ty === NodeTy.Sequence) {
-        nod = new SequenceNode({ id: child.id });
-      } else if (child.ty === NodeTy.Condition) {
-        nod = new ConditionNode({ id: child.id });
-      } else if (child.ty === NodeTy.Action) {
-        nod = new ActionNode({ id: child.id });
-      } else if (child.ty === NodeTy.Loop) {
-        nod = new LoopNode({ id: child.id });
-      } else if (child.ty === NodeTy.Assert) {
-        nod = new AssertNode({ id: child.id });
-      } else if (child.ty === NodeTy.Wait) {
-        nod = new WaitNode({ id: child.id });
-      } else {
-        message.warn("未知的节点类型" + child.ty);
-        return;
-      }
+  redrawChild(parent: any, child: any, build: boolean) {
+    var nod: Node;
+    if (child.ty === NodeTy.Selector) {
+      nod = new SelectorNode({ id: child.id });
+    } else if (child.ty === NodeTy.Sequence) {
+      nod = new SequenceNode({ id: child.id });
+    } else if (child.ty === NodeTy.Condition) {
+      nod = new ConditionNode({ id: child.id });
+    } else if (child.ty === NodeTy.Action) {
+      nod = new ActionNode({ id: child.id });
+    } else if (child.ty === NodeTy.Loop) {
+      nod = new LoopNode({ id: child.id });
+    } else if (child.ty === NodeTy.Assert) {
+      nod = new AssertNode({ id: child.id });
+    } else if (child.ty === NodeTy.Wait) {
+      nod = new WaitNode({ id: child.id });
+    } else {
+      message.warn("未知的节点类型" + child.ty);
+      return;
+    }
 
-      nod.setPosition({
-        x: child.pos.x,
-        y: child.pos.y,
-      });
-      this.graph.addNode(nod);
-      //PubSub.publish(Topic.NodeAdd, this.getNodInfo(nod));
+    nod.setPosition({
+      x: child.pos.x,
+      y: child.pos.y,
+    });
+    // this.graph.addNode(nod, { "silent": true }); 这样使用会导致浏览器卡死
+    this.graph.addNode(nod, { "others": { "build": build, "silent": true } })
+    //PubSub.publish(Topic.NodeAdd, this.getNodInfo(nod));
 
-      if (parent) {
-        this.graph.addEdge(
-          new Shape.Edge({
-            attrs: {
-              line: {
-                stroke: "#a0a0a0",
-                strokeWidth: 1,
-                targetMarker: {
-                  name: "classic",
-                  size: 3,
-                },
+    if (parent) {
+      this.graph.addEdge(
+        new Shape.Edge({
+          attrs: {
+            line: {
+              stroke: "#a0a0a0",
+              strokeWidth: 1,
+              targetMarker: {
+                name: "classic",
+                size: 3,
               },
             },
-            zIndex: 0,
-            source: parent,
-            target: nod,
-          })
-        );
-        parent.addChild(nod);
-        PubSub.publish(Topic.LinkConnect, { parent: parent.id, child: nod.id });
-      }
-      
+          },
+          zIndex: 0,
+          source: parent,
+          target: nod,
+        })
+      );
 
-      if (IsScriptNode(child.ty)) {
-        nod.setAttrs({ label: { text: child.alias } })
-        PubSub.publish(Topic.UpdateNodeParm, {
-          parm: {
-            id: nod.id,
-            ty: child.ty,
-            code: child.code,
-            alias: child.alias,
-          },
-          notify: false,
-        });
-      } else if (child.ty === NodeTy.Loop) {
-        nod.setAttrs({ label: { text: this.getLoopLabel(child.loop) } });
-        PubSub.publish(Topic.UpdateNodeParm, {
-          parm: {
-            id: nod.id,
-            ty: child.ty,
-            loop: child.loop,
-          },
-          notify: false,
-        });
-      } else if (child.ty === NodeTy.Wait) {
-        nod.setAttrs({ label: { text: child.wait.toString() + " ms" } });
-        PubSub.publish(Topic.UpdateNodeParm, {
-          parm: {
-            id: nod.id,
-            ty: child.ty,
-            wait: child.wait,
-          },
-          notify: false,
-        });
-      }
+      parent.addChild(nod);
+      PubSub.publish(Topic.LinkConnect, { parent: parent.id, child: nod.id });
+    }
 
-      if (child.children && child.children.length) {
-        for (var i = 0; i < child.children.length; i++) {
-          this.redrawChild(nod, child.children[i]);
-        }
+
+    if (IsScriptNode(child.ty)) {
+      nod.setAttrs({ label: { text: child.alias } })
+      PubSub.publish(Topic.UpdateNodeParm, {
+        parm: {
+          id: nod.id,
+          ty: child.ty,
+          code: child.code,
+          alias: child.alias,
+        },
+        notify: false,
+      });
+    } else if (child.ty === NodeTy.Loop) {
+      nod.setAttrs({ label: { text: this.getLoopLabel(child.loop) } });
+      PubSub.publish(Topic.UpdateNodeParm, {
+        parm: {
+          id: nod.id,
+          ty: child.ty,
+          loop: child.loop,
+        },
+        notify: false,
+      });
+    } else if (child.ty === NodeTy.Wait) {
+      nod.setAttrs({ label: { text: child.wait.toString() + " ms" } });
+      PubSub.publish(Topic.UpdateNodeParm, {
+        parm: {
+          id: nod.id,
+          ty: child.ty,
+          wait: child.wait,
+        },
+        notify: false,
+      });
+    } else if (child.ty === NodeTy.Sequence) {
+      nod.setAttrs({ label: { text: "seq" } });
+    } else if (child.ty === NodeTy.Selector) {
+      nod.setAttrs({ label: { text: "sel" } });
+    }
+
+    if (child.children && child.children.length) {
+      for (var i = 0; i < child.children.length; i++) {
+        this.redrawChild(nod, child.children[i], build);
       }
+    }
   }
 
-  redraw(jsontree: any) {
+  redraw(jsontree: any, build: boolean) {
 
     if (jsontree.ty === NodeTy.Root) {
 
-      var root = new RootNode();
+      var root = new RootNode({ "id": jsontree.id });
       root.setPosition({
         x: jsontree.pos.x,
         y: jsontree.pos.y,
       });
-      this.graph.addNode(root);
-  
+
+      this.graph.addNode(root, { "others": { "build": build, "silent": true } });
+
       if (jsontree.children && jsontree.children.length) {
-        for (var i = 0; i<jsontree.children.length;i++){
-          this.redrawChild(root, jsontree.children[i]);
+        for (var i = 0; i < jsontree.children.length; i++) {
+          this.redrawChild(root, jsontree.children[i], build);
         }
       }
 
     } else {
-
-      this.redrawChild(null, jsontree)
-
+      this.redrawChild(null, jsontree, build)
     }
 
   }
@@ -634,15 +640,40 @@ export default class GraphView extends React.Component {
     this.graph.zoomTo(1)
   }
 
+  ClickUndo = () => {
+    PubSub.publish(Topic.Undo, {})
+  }
+
   render() {
     return (
       <div className="app">
         <div className="app-stencil" ref={this.refStencil} />
         <div className="app-content" ref={this.refContainer} />
         <div className="app-zoom">
-          <Button icon={<ZoomInOutlined />} onClick={this.ClickZoomIn} />
-          <Button icon={<AimOutlined />} onClick={this.ClickZoomReset} />
-          <Button icon={<ZoomOutOutlined />} onClick={this.ClickZoomOut} />
+          <Tooltip
+            placement="leftTop"
+            title="ZoomIn"
+          >
+            <Button icon={<ZoomInOutlined />} onClick={this.ClickZoomIn} />
+          </Tooltip>
+          <Tooltip
+            placement="leftTop"
+            title="Reset"
+          >
+            <Button icon={<AimOutlined />} onClick={this.ClickZoomReset} />
+          </Tooltip>
+          <Tooltip
+            placement="leftTop"
+            title="ZoomOut"
+          >
+            <Button icon={<ZoomOutOutlined />} onClick={this.ClickZoomOut} />
+          </Tooltip>
+          <Tooltip
+            placement="leftTop"
+            title="Undo [ ctrl+z ]"
+          >
+            <Button icon={<UndoOutlined />} onClick={this.ClickUndo} />
+          </Tooltip>
         </div>
 
       </div>

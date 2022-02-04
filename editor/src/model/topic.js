@@ -33,7 +33,9 @@ const Topic = {
 
     FileSave : "topic_file_save",
     FileLoad : "topic_file_load",
-    FileLoadGraph : "topic_file_load_graph",
+
+    FileLoadDraw: "topic_file_load_draw",
+    FileLoadRedraw : "topic_file_load_graph",
 
     ReportSelect : "topic_report_select",
 

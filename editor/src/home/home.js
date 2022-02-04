@@ -312,6 +312,7 @@ export default class BotList extends React.Component {
         Api.FileGet,
         row.name
       ).then((file) => {
+
         var tree = LoadBehaviorWithFile(row.name, file.blob);
         if (tree !== null) {
           PubSub.publish(Topic.FileLoad, {

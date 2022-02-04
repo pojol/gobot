@@ -55,11 +55,6 @@ export default class ChangeView extends React.Component {
     this.setState({ metadata: JSON.parse("{}") });
   };
 
-  stepClick = () => {
-    PubSub.publish(Topic.Step, "");
-  };
-
-
   render() {
 
     return (
