@@ -203,7 +203,7 @@ export default class GraphView extends React.Component {
 
       this.findNode(edge.getTargetCellId(), (child) => {
         //var ts = child.removeFromParent( { deep : false } );  // options 没用？
-        PubSub.publish(Topic.LinkDisconnect, child.id);
+        PubSub.publish(Topic.LinkDisconnect, [child.id, false]);
         child.getParent()?.removeChild(edge);
         //var ts = child.removeFromParent({ deep: false });
         //this.graph.addCell(ts);
@@ -220,7 +220,7 @@ export default class GraphView extends React.Component {
         if (source !== null && target !== null) {
           edge.setZIndex(0)
           source.addChild(target);
-          PubSub.publish(Topic.LinkConnect, { parent: source.id, child: target.id });
+          PubSub.publish(Topic.LinkConnect, [{ parent: source.id, child: target.id }, false]);
         }
       }
     });
@@ -455,7 +455,7 @@ export default class GraphView extends React.Component {
       );
 
       parent.addChild(nod);
-      PubSub.publish(Topic.LinkConnect, { parent: parent.id, child: nod.id });
+      PubSub.publish(Topic.LinkConnect, [{ parent: parent.id, child: nod.id }, true]);
     }
 
 

@@ -211,6 +211,7 @@ export default class TreeModel extends React.Component {
 
     let children
     let onods = this.state.nods
+    let ohistory = this.state.history
 
     for (let i = 0; i < onods.length; i++) {
 
@@ -221,6 +222,14 @@ export default class TreeModel extends React.Component {
       }
 
       this.findNode(childid, onods[i], (parent, innerChildren, idx) => {
+
+        if (!silent) {
+          let cmd = [
+            { "cmd": Cmd.unLink, "parm": [innerChildren.id] }
+          ]
+          console.info("history push", cmd)
+          ohistory.push(cmd)
+        }
 
         parent.children.splice(idx, 1)
         children = innerChildren
@@ -247,9 +256,10 @@ export default class TreeModel extends React.Component {
 
   }
 
-  unLink = (childid) => {
+  unLink = (childid, silent) => {
     let onods = this.state.nods
     let children
+    let ohistory = this.state.history
 
     for (var i = 0; i < onods.length; i++) {
 
@@ -260,6 +270,15 @@ export default class TreeModel extends React.Component {
       }
 
       this.findNode(childid, onods[i], (innerParent, innerChildren, idx) => {
+
+        if (!silent) {
+          let cmd = [
+            { "cmd": Cmd.Link, "parm": [innerParent.id, innerChildren.id] }
+          ]
+          console.info("history push", cmd)
+          ohistory.push(cmd)
+        }
+
         innerParent.children.splice(idx, 1)
         children = innerChildren
       })
@@ -416,13 +435,15 @@ export default class TreeModel extends React.Component {
           this.rmvNode(h[i].parm, true)
         } else if (h[i].cmd == Cmd.Link) {
           this.link(h[i].parm[0], h[i].parm[1], true)
+        } else if (h[i].cmd === Cmd.Unlink) {
+          this.Unlink(h[i].parm[0], true)
         }
       }
 
       let mtree = this.getAllTree()
-      
+
       //console.info("new tree", JSON.stringify(mtree))
-      
+
       PubSub.publish(Topic.FileLoadRedraw, mtree)
       this.setState({ history: ohistory })
     }
@@ -470,11 +491,18 @@ export default class TreeModel extends React.Component {
     });
 
     PubSub.subscribe(Topic.LinkConnect, (topic, linkinfo) => {
-      this.link(linkinfo.parent, linkinfo.child);
+
+      let info = linkinfo[0]
+      let silent = linkinfo[1]
+
+      this.link(info.parent, info.child, silent);
     });
 
-    PubSub.subscribe(Topic.LinkDisconnect, (topic, nodeid) => {
-      this.unLink(nodeid);
+    PubSub.subscribe(Topic.LinkDisconnect, (topic, info) => {
+      let nodid = info[0]
+      let silent = info[1]
+
+      this.unLink(nodid, silent);
     });
 
     PubSub.subscribe(Topic.UpdateNodeParm, (topic, info) => {

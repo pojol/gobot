@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 
 	"github.com/labstack/echo/v4"
 	"github.com/pojol/gobot/behavior"
@@ -264,29 +265,36 @@ func GetReport(ctx echo.Context) error {
 	body := &ReportRes{}
 
 	rep := factory.Global.GetReport()
-	for _, v := range rep {
-		info := ReportInfo{
-			ID:        v.ID,
-			Name:      v.Name,
-			BotNum:    v.BotNum,
-			ReqNum:    v.ReqNum,
-			ErrNum:    v.ErrNum,
-			Tps:       v.Tps,
-			Dura:      v.Dura,
-			BeginTime: v.BeginTime.Format("2006-01-02 15:04:05"),
-		}
+	if len(rep) > 0 {
+		for i := len(rep) - 1; i >= 0; i -= 1 {
+			info := ReportInfo{
+				ID:        rep[i].ID,
+				Name:      rep[i].Name,
+				BotNum:    rep[i].BotNum,
+				ReqNum:    rep[i].ReqNum,
+				ErrNum:    rep[i].ErrNum,
+				Tps:       rep[i].Tps,
+				Dura:      rep[i].Dura,
+				BeginTime: rep[i].BeginTime.Local().Format("2006-01-02 15:04:05"),
+			}
 
-		for api, detail := range v.UrlMap {
-			info.Apilst = append(info.Apilst, ReportApiInfo{
-				Api:        api,
-				ReqNum:     detail.ReqNum,
-				ConsumeNum: detail.AvgNum,
-				ReqSize:    detail.ReqSize,
-				ResSize:    detail.ResSize,
-				ErrNum:     detail.ErrNum,
-			})
+			for api, detail := range rep[i].UrlMap {
+				u, err := url.Parse(api)
+				fmtapi := ""
+				if err == nil {
+					fmtapi = u.Path
+				}
+				info.Apilst = append(info.Apilst, ReportApiInfo{
+					Api:        fmtapi,
+					ReqNum:     detail.ReqNum,
+					ConsumeNum: detail.AvgNum,
+					ReqSize:    detail.ReqSize,
+					ResSize:    detail.ResSize,
+					ErrNum:     detail.ErrNum,
+				})
+			}
+			body.Info = append(body.Info, info)
 		}
-		body.Info = append(body.Info, info)
 	}
 
 	res.Code = int(Succ)
