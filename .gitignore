@@ -11,3 +11,5 @@ editor/node_modules/
 node_modules/
 logo.zip
 editor/build
+editor/dockerbuild.sh
+editor/yarn-error.log
