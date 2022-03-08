@@ -8,4 +8,4 @@
 * Convenient debugging environment
 
 [Github](https://github.com/pojol/gobot)
-[Get Started](/zh-cn/README.md)
+[Get Started](/README.md)

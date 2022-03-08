@@ -1,7 +1,7 @@
 # Home (行为树文件管理页
 > Bot（行为树）管理
 
-![img](../res/home.png)
+![img](../../res/home.png)
 
 1. 过滤器 - 通过`tag`的过滤`筛选`出想要的bot列表
 2. Run - 运行`选中`的bot
