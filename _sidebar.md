@@ -1,6 +1,6 @@
 <img src="res/logo.png"/>
 
-* [Introduction (简介](/zh-cn/README.md)
+* [Introduction (简介](/README.md)
 * [Install (安装](/zh-cn/install.md)
 * [Hello, gobot](/zh-cn/hello.md)
 * [编辑器](/zh-cn/edit/README.md)
