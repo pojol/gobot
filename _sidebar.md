@@ -13,6 +13,10 @@
     * [API列表](/zh-cn/driver/api.md)
 * [脚本层](/zh-cn/script/README.md)
     * [Http](/zh-cn/script/http.md)
+    * [Protobuf](/zh-cn/script/protobuf.md)
+    * [Prefab](/zh-cn/script/append.md)
+    * [Global](/zh-cn/script/global.md)
+    * [Utils](/zh-cn/script/utils.md)
 * [Q&A (常见问题](/zh-cn/qa.md)
 
 
