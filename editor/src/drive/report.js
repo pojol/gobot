@@ -4,6 +4,7 @@ import ApiChart from "./chart_tree";
 import PubSub from "pubsub-js";
 import Topic from "../model/topic";
 import { Post } from "../model/request";
+import Api from "../model/api";
 
 const { TabPane } = Tabs;
 
@@ -89,10 +90,9 @@ export default class TestReport extends React.Component {
     this.setState({data:newdata})
   }
 
-
   refresh() {
     this.setState({data:[]})
-    Post(window.remote, "get.report", {}).then((json) => {
+    Post(window.remote, Api.ReportInfo, {}).then((json) => {
       if (json.Code !== 200) {
         message.error("run fail:" + String(json.Code) + " msg: " + json.Msg);
       } else {

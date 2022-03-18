@@ -139,7 +139,7 @@ export default class BotList extends React.Component {
 
     if (bots.length > 0) {
       var botlist = [];
-      
+
       for (var i = 0; i < bots.length; i++) {
         var tags = []
 
@@ -186,9 +186,9 @@ export default class BotList extends React.Component {
         bots[i].Tags = tags   // update tags
         // 同步给服务器
         Post(window.remote, Api.FileSetTags, {
-          Name : name,
-          NewTags : tags,
-        }).then((json)=>{
+          Name: name,
+          NewTags: tags,
+        }).then((json) => {
           if (json.Code !== 200) {
             message.error("updaet tags fail:" + String(json.Code) + " msg: " + json.Msg);
           } else {
@@ -250,7 +250,7 @@ export default class BotList extends React.Component {
       } else {
         console.info("refresh bots", json.Body.Bots)
         if (json.Body.Bots) {
-          this.setState({ Bots: json.Body.Bots }, ()=>{
+          this.setState({ Bots: json.Body.Bots }, () => {
             this.updateAllTags()
             this.fillBotList();
           })
@@ -335,11 +335,17 @@ export default class BotList extends React.Component {
 
       var num = this.state.runs[row.name]
       if (num === undefined || num === 0) {
-        message.warn("Please set the number of bot runs " + row.name)
+        Post(window.remote, Api.BotRun, {Name : row.name}).then((json)=>{
+          if (json.Code !== 200) {
+            message.error("running fail:" + String(json.Code) + " msg: " + json.Msg);
+          } else {
+            message.success("running succ");
+          }
+        })
         continue
       }
 
-      Post(window.remote, Api.BotCreate, { Name: row.name, Num: num }).then((json) => {
+      Post(window.remote, Api.BotCreateBatch, { Name: row.name, Num: num }).then((json) => {
         if (json.Code !== 200) {
           message.error("run fail:" + String(json.Code) + " msg: " + json.Msg);
         } else {
@@ -391,7 +397,6 @@ export default class BotList extends React.Component {
       name: "file",
       multiple: true,
       action: window.remote + Api.FileTxtUpload,
-      onChange: this.uploadOnChange,
       onDrop(e) {
         console.log("Dropped files", e.dataTransfer.files);
       },
@@ -424,7 +429,7 @@ export default class BotList extends React.Component {
             <Col span={6} offset={6}>
               <Space >
                 <Tooltip
-                  placement="topLeft"
+                  placement="bottomLeft"
                   title="Drive a specified number of robots"
                 >
                   <Button icon={<PlayCircleOutlined />} onClick={this.handleBotRun}>
@@ -432,7 +437,7 @@ export default class BotList extends React.Component {
                   </Button>
                 </Tooltip>
                 <Tooltip
-                  placement="topLeft"
+                  placement="bottomLeft"
                   title="Load the behavior file to the local for editing"
                 >
                   <Button
@@ -443,7 +448,7 @@ export default class BotList extends React.Component {
                   </Button>
                 </Tooltip>
                 <Tooltip
-                  placement="topLeft"
+                  placement="bottomLeft"
                   title="Delete the behavior file from the database"
                 >
                   <Popconfirm
@@ -457,7 +462,7 @@ export default class BotList extends React.Component {
                   </Popconfirm>
                 </Tooltip>
                 <Tooltip
-                  placement="topLeft"
+                  placement="bottomLeft"
                   title="Save the current behavior tree file to the local"
                 >
                   <Button

@@ -3,26 +3,30 @@
 
 const Api = {
     //
-    FileBlobUpload : "file.blobUpload",
-    FileTxtUpload : "file.txtUpload",
-
-    //
-    FileGet : "file.get",
-    FileList : "file.list",
-    FileRemove : "file.remove",
-    FileSetTags : "file.setTags",
+    FileBlobUpload: "file.uploadBlob",
+    FileTxtUpload: "file.uploadTxt",
+    FileGet: "file.get",
+    FileList: "file.list",
+    FileRemove: "file.remove",
+    FileSetTags: "file.setTags",
 
     /*
         Debug
     */
-   DebugCreate : "debug.create",
-   DebugStep : "debug.step",
+    DebugCreate: "debug.create",
+    DebugStep: "debug.step",
 
     /*
         Bot
     */
-   BotCreate : "bot.create",
-   BotList : "bot.list",
+    BotRun: "bot.run",
+    BotCreateBatch: "bot.batch",
+    BotList: "bot.list",
+
+    /*
+        Report
+    */
+    ReportInfo: "report.info"
 }
 
 

@@ -2,7 +2,6 @@ package bot
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"math/rand"
 	"net/http"
@@ -172,7 +171,7 @@ func (b *Bot) run_assert(nod *behavior.Tree, next bool) (bool, error) {
 		return true, nil
 	}
 
-	return false, errors.New("assert failed")
+	return false, fmt.Errorf("node %v assert failed", nod.ID)
 }
 
 func (b *Bot) run_sequence(nod *behavior.Tree, next bool) (bool, error) {
@@ -311,10 +310,15 @@ func (b *Bot) run_nod(nod *behavior.Tree, next bool) (bool, error) {
 	return ok, err
 }
 
-func (b *Bot) run_children(parent *behavior.Tree, children []*behavior.Tree) {
+func (b *Bot) run_children(parent *behavior.Tree, children []*behavior.Tree) error {
+	var err error
 	for k := range children {
-		b.run_nod(children[k], true)
+		_, err = b.run_nod(children[k], true)
+		if err != nil {
+			break
+		}
 	}
+	return err
 }
 
 func (b *Bot) Run(doneCh chan string, errch chan ErrInfo) {
@@ -335,6 +339,18 @@ func (b *Bot) Run(doneCh chan string, errch chan ErrInfo) {
 		doneCh <- b.id
 	}()
 
+}
+
+func (b *Bot) RunByBlock() error {
+
+	defer func() {
+		if err := recover(); err != nil {
+			fmt.Println("run err", err)
+		}
+	}()
+
+	err := b.run_children(b.tree, b.tree.Children)
+	return err
 }
 
 func (b *Bot) GetReport() []script.Report {
