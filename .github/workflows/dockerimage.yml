@@ -9,11 +9,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-
-    - name: Get version
-      id: get_version
-      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
-
     - name: Set up Go
       uses: actions/setup-go@v2
       with:
@@ -35,4 +30,4 @@ jobs:
         context: .
         file: ./Dockerfile
         push: true
-        tags: braidgo/gobot-driver:v${{ steps.get_version.outputs.VERSION }}
+        tags: braidgo/gobot-driver:v${{ github.run_id }}.${{ github.run_number }}
