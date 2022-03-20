@@ -16,7 +16,7 @@ jobs:
     
     - name: Build gobot
       run: go build -o bot_linux
-        
+
     - name: Login
       uses: docker/login-action@v1
       with:
