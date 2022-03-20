@@ -9,4 +9,7 @@ WORKDIR /home/bot
 
 EXPOSE 8888
 
+RUN ls
+RUN pwd
+
 ENTRYPOINT ./bot_linux $0 $@
