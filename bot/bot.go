@@ -135,9 +135,13 @@ func (b *Bot) run_selector(nod *behavior.Tree, next bool) (bool, error) {
 
 	if next {
 		for k := range nod.Children {
-			ok, _ := b.run_nod(nod.Children[k], true)
+			ok, err := b.run_nod(nod.Children[k], true)
 			if ok {
 				break
+			}
+
+			if err != nil {
+				return false, err
 			}
 		}
 	}
@@ -177,9 +181,13 @@ func (b *Bot) run_assert(nod *behavior.Tree, next bool) (bool, error) {
 func (b *Bot) run_sequence(nod *behavior.Tree, next bool) (bool, error) {
 	if next {
 		for k := range nod.Children {
-			ok, _ := b.run_nod(nod.Children[k], true)
+			ok, err := b.run_nod(nod.Children[k], true)
 			if !ok {
 				break
+			}
+
+			if err != nil {
+				return false, err
 			}
 		}
 	}
