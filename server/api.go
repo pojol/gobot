@@ -78,13 +78,21 @@ type ReportRes struct {
 	Info []ReportInfo
 }
 
-// bot.create
-type RunRequest struct {
+// bot.batch
+type BotBatchCreateRequest struct {
 	Name string
 	Num  int
 }
 
-type RunResponse struct {
+type BotBatchCreateResponse struct {
+}
+
+// bot.run
+type BotRunRequest struct {
+	Name string
+}
+
+type BotRunResponse struct {
 }
 
 // bot.list

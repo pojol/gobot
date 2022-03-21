@@ -2,7 +2,6 @@ package bot
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"math/rand"
 	"net/http"
@@ -136,7 +135,12 @@ func (b *Bot) run_selector(nod *behavior.Tree, next bool) (bool, error) {
 
 	if next {
 		for k := range nod.Children {
-			ok, _ := b.run_nod(nod.Children[k], true)
+			ok, err := b.run_nod(nod.Children[k], true)
+
+			if err != nil {
+				return false, err
+			}
+
 			if ok {
 				break
 			}
@@ -166,19 +170,27 @@ func (b *Bot) run_assert(nod *behavior.Tree, next bool) (bool, error) {
 
 	if lua.LVAsBool(v) {
 		if next {
-			b.run_children(nod, nod.Children)
+			err = b.run_children(nod, nod.Children)
+			if err != nil {
+				return false, err
+			}
 		}
 
 		return true, nil
 	}
 
-	return false, errors.New("assert failed")
+	return false, fmt.Errorf("node %v assert failed", nod.ID)
 }
 
 func (b *Bot) run_sequence(nod *behavior.Tree, next bool) (bool, error) {
 	if next {
 		for k := range nod.Children {
-			ok, _ := b.run_nod(nod.Children[k], true)
+			ok, err := b.run_nod(nod.Children[k], true)
+
+			if err != nil {
+				return false, err
+			}
+
 			if !ok {
 				break
 			}
@@ -209,7 +221,10 @@ func (b *Bot) run_condition(nod *behavior.Tree, next bool) (bool, error) {
 
 	if lua.LVAsBool(v) {
 		if next {
-			b.run_children(nod, nod.Children)
+			err = b.run_children(nod, nod.Children)
+			if err != nil {
+				return false, err
+			}
 		}
 
 		return true, nil
@@ -222,7 +237,10 @@ func (b *Bot) run_wait(nod *behavior.Tree, next bool) (bool, error) {
 	time.Sleep(time.Millisecond * time.Duration(nod.Wait))
 
 	if next {
-		b.run_children(nod, nod.Children)
+		err := b.run_children(nod, nod.Children)
+		if err != nil {
+			return false, err
+		}
 	}
 
 	return true, nil
@@ -230,10 +248,15 @@ func (b *Bot) run_wait(nod *behavior.Tree, next bool) (bool, error) {
 
 func (b *Bot) run_loop(nod *behavior.Tree, next bool) (bool, error) {
 
+	var err error
+
 	if nod.Loop == 0 {
 		for {
 			if next {
-				b.run_children(nod, nod.Children)
+				err = b.run_children(nod, nod.Children)
+				if err != nil {
+					goto ext
+				}
 			}
 			time.Sleep(time.Millisecond)
 		}
@@ -241,13 +264,17 @@ func (b *Bot) run_loop(nod *behavior.Tree, next bool) (bool, error) {
 
 		if next {
 			for i := 0; i < int(nod.Loop); i++ {
-				b.run_children(nod, nod.Children)
+				err = b.run_children(nod, nod.Children)
+				if err != nil {
+					goto ext
+				}
 				time.Sleep(time.Millisecond)
 			}
 		}
 	}
 
-	return true, nil
+ext:
+	return true, err
 }
 
 func (b *Bot) run_script(nod *behavior.Tree, next bool) (bool, error) {
@@ -271,7 +298,10 @@ func (b *Bot) run_script(nod *behavior.Tree, next bool) (bool, error) {
 	// mergo.MergeWithOverwrite(&b.metadata, t)
 
 	if next {
-		b.run_children(nod, nod.Children)
+		err = b.run_children(nod, nod.Children)
+		if err != nil {
+			return false, err
+		}
 	}
 
 	return true, nil
@@ -286,7 +316,7 @@ func (b *Bot) run_nod(nod *behavior.Tree, next bool) (bool, error) {
 	case behavior.SELETE:
 		ok, err = b.run_selector(nod, next)
 	case behavior.SEQUENCE:
-		ok, _ = b.run_sequence(nod, next)
+		ok, err = b.run_sequence(nod, next)
 	case behavior.CONDITION:
 		ok, err = b.run_condition(nod, next)
 	case behavior.WAIT:
@@ -311,10 +341,17 @@ func (b *Bot) run_nod(nod *behavior.Tree, next bool) (bool, error) {
 	return ok, err
 }
 
-func (b *Bot) run_children(parent *behavior.Tree, children []*behavior.Tree) {
+func (b *Bot) run_children(parent *behavior.Tree, children []*behavior.Tree) error {
+	var err error
+
 	for k := range children {
-		b.run_nod(children[k], true)
+		_, err = b.run_nod(children[k], true)
+		if err != nil {
+			break
+		}
 	}
+
+	return err
 }
 
 func (b *Bot) Run(doneCh chan string, errch chan ErrInfo) {
@@ -323,7 +360,7 @@ func (b *Bot) Run(doneCh chan string, errch chan ErrInfo) {
 
 		defer func() {
 			if err := recover(); err != nil {
-				fmt.Println("run err", err)
+				fmt.Println("run panic", err)
 				errch <- ErrInfo{
 					ID:  b.id,
 					Err: err.(error),
@@ -331,10 +368,31 @@ func (b *Bot) Run(doneCh chan string, errch chan ErrInfo) {
 			}
 		}()
 
-		b.run_children(b.tree, b.tree.Children)
+		err := b.run_children(b.tree, b.tree.Children)
+		if err != nil {
+			fmt.Println("run err", err)
+			errch <- ErrInfo{
+				ID:  b.id,
+				Err: err,
+			}
+		}
+
 		doneCh <- b.id
 	}()
 
+}
+
+func (b *Bot) RunByBlock() error {
+
+	defer func() {
+		if err := recover(); err != nil {
+			fmt.Println("run panic", err)
+		}
+	}()
+
+	err := b.run_children(b.tree, b.tree.Children)
+	fmt.Println("run block err", err)
+	return err
 }
 
 func (b *Bot) GetReport() []script.Report {

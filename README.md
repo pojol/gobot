@@ -3,6 +3,7 @@ Gobot is a stateful api testing tool that supports graph editing, api calling, a
 
 [![](https://img.shields.io/badge/%E6%96%87%E6%A1%A3-Doc-2ca5e0?style=flat&logo=github)](https://docs.gobot.fun/)
 [![](https://img.shields.io/badge/Trello-Todo-2ca5e0?style=flat&logo=trello)](https://trello.com/b/8eDZ6h7n/)
+[![CI](https://github.com/pojol/gobot/actions/workflows/dockerimage.yml/badge.svg?branch=develop)](https://github.com/pojol/gobot/actions/workflows/dockerimage.yml)
 
 [中文](https://github.com/pojol/gobot/blob/master/README_CN.md)
 

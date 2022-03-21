@@ -18,8 +18,11 @@ import (
 type Err int32
 
 const (
-	Succ Err = 200 + iota
-	ErrContentRead
+	Succ           Err = 200
+	Fail           Err = 1000
+	ErrContentRead     = 1000 + iota
+	ErrWrongInput
+	ErrJsonUnmarshal
 	ErrJsonInvalid
 	ErrPluginLoad
 	ErrMetaData
@@ -29,18 +32,21 @@ const (
 	ErrCreateBot
 	ErrEmptyBatch
 	ErrTagsFormat
+	ErrRunningErr
 )
 
 var errmap map[Err]string = map[Err]string{
-	ErrContentRead: "failed to read request content",
-	ErrJsonInvalid: "wrong file format",
-	ErrPluginLoad:  "failed to plugin load",
-	ErrMetaData:    "failed to get meta data",
-	ErrEnd:         "run to the end",
-	ErrBreak:       "run to the break",
-	ErrCantFindBot: "can't find bot",
-	ErrCreateBot:   "failed to create bot, the behavior tree file needs to be uploaded to the server before creation",
-	ErrEmptyBatch:  "empty batch info",
+	ErrContentRead:   "failed to read request content",
+	ErrJsonInvalid:   "wrong file format",
+	ErrJsonUnmarshal: "json unmarshal err",
+	ErrWrongInput:    "bad request parameter",
+	ErrPluginLoad:    "failed to plugin load",
+	ErrMetaData:      "failed to get meta data",
+	ErrEnd:           "run to the end",
+	ErrBreak:         "run to the break",
+	ErrCantFindBot:   "can't find bot",
+	ErrCreateBot:     "failed to create bot, the behavior tree file needs to be uploaded to the server before creation",
+	ErrEmptyBatch:    "empty batch info",
 }
 
 func FileBlobUpload(ctx echo.Context) error {
@@ -308,7 +314,60 @@ func GetReport(ctx echo.Context) error {
 func BotRun(ctx echo.Context) error {
 	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
 	res := &Response{}
-	req := &RunRequest{}
+	req := &BotRunRequest{}
+	code := Succ
+	var info database.BehaviorInfo
+	var tree *behavior.Tree
+	var b *bot.Bot
+
+	bts, err := ioutil.ReadAll(ctx.Request().Body)
+	if err != nil {
+		code = ErrContentRead
+		fmt.Println(err.Error())
+		goto EXT
+	}
+
+	err = json.Unmarshal(bts, &req)
+	if err != nil {
+		code = ErrJsonUnmarshal
+		fmt.Println(err.Error())
+		goto EXT
+	}
+
+	if req.Name == "" {
+		code = ErrWrongInput
+		goto EXT
+	}
+
+	info, err = factory.Global.FindBehavior(req.Name)
+	if err != nil {
+		code = Fail
+		goto EXT
+	}
+
+	tree, err = behavior.New(info.Dat)
+	if err != nil {
+		code = Fail
+		goto EXT
+	}
+	b = bot.NewWithBehaviorTree("script/", tree, req.Name)
+	err = b.RunByBlock()
+	if err != nil {
+		code = ErrRunningErr
+		errmap[code] = err.Error()
+	}
+
+EXT:
+	res.Code = int(code)
+	res.Msg = errmap[code]
+	ctx.JSON(http.StatusOK, res)
+	return nil
+}
+
+func BotCreateBatch(ctx echo.Context) error {
+	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
+	res := &Response{}
+	req := &BotBatchCreateRequest{}
 	code := Succ
 
 	var err error
@@ -467,23 +526,19 @@ func ReqPrint() echo.MiddlewareFunc {
 
 func Route(e *echo.Echo) {
 
-	//e.Use(ReqPrint())
-
-	e.POST("/file.txtUpload", FileTextUpload)
-	e.POST("/file.blobUpload", FileBlobUpload)
+	e.POST("/file.uploadTxt", FileTextUpload)
+	e.POST("/file.uploadBlob", FileBlobUpload)
 	e.POST("/file.remove", FileRemove)
-
 	e.POST("/file.list", FileGetList)
 	e.POST("/file.get", FileGetBlob)
 	e.POST("/file.setTags", FileSetTags)
 
-	e.POST("/bot.create", BotRun) // 创建一批bot
+	e.POST("/bot.run", BotRun)
+	e.POST("/bot.batch", BotCreateBatch) // 创建一批bot
 	e.POST("/bot.list", BotList)
-	//e.POST("/bot.list")
-	//e.POST("/bot.info")	// 获取所有运行时的bot信息（保留100个  运行中 | 已终止 | 有错误
 
 	e.POST("/debug.create", DebugCreate) // 创建一个 edit 中的bot 实例、
 	e.POST("/debug.step", DebugStep)     // 单步运行 edit 中的bot
 
-	e.POST("/get.report", GetReport)
+	e.POST("/report.info", GetReport)
 }

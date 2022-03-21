@@ -1,0 +1,33 @@
+name: gobot ci
+
+on:
+  [push]
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.17
+    
+    - name: Build gobot
+      run: go build -o bot_linux
+
+    - name: Login
+      uses: docker/login-action@v1
+      with:
+        username: ${{ secrets.DOCKERHUB_NAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+      
+    - name: Build and push
+      id: docker_build
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        file: ./Dockerfile
+        push: true
+        tags: braidgo/gobot-driver:v${{ github.run_id }}.${{ github.run_number }}
