@@ -1,8 +1,9 @@
 FROM alpine
 
-COPY ./bot_linux /
-COPY ./script/* /script/
+COPY ./bot_linux /home/
+COPY ./script/* /home/script/
 
+WORKDIR /home
 
 # RUN go env -w GOPROXY=https://goproxy.cn
 
