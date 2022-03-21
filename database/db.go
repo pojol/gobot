@@ -2,6 +2,7 @@ package database
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"sync"
 	"time"
@@ -93,6 +94,13 @@ func New(pwd, name, host, user string) {
 	bf = &Database{
 		db: db,
 	}
+
+	f, err := bf.GetAllFiles()
+	if err != nil {
+		panic(err.Error())
+	}
+
+	fmt.Println("mysql", name, "init succ", "have bots ", len(f))
 }
 
 func Get() *Database {
