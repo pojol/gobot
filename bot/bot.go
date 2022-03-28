@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"net"
 	"net/http"
 	"sync"
 	"time"
@@ -101,12 +102,20 @@ func (b *Bot) GetPrevNodeID() string {
 func NewWithBehaviorTree(path string, bt *behavior.Tree, tmpl string) *Bot {
 
 	bot := &Bot{
-		id:        uuid.New().String(),
-		tree:      bt,
-		cur:       bt,
-		L:         lua.NewState(),
-		name:      tmpl,
-		httpMod:   script.NewHttpModule(&http.Client{}),
+		id:   uuid.New().String(),
+		tree: bt,
+		cur:  bt,
+		L:    lua.NewState(),
+		name: tmpl,
+		httpMod: script.NewHttpModule(&http.Client{
+			Transport: &http.Transport{
+				DialContext: (&net.Dialer{
+					Timeout: 5 * time.Second,
+				}).DialContext,
+				DisableKeepAlives: true,
+			},
+			Timeout: 5 * time.Second,
+		}),
 		protoMod:  &script.ProtoModule{},
 		utilsMod:  &script.UtilsModule{},
 		base64Mod: &script.Base64Module{},
