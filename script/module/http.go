@@ -187,5 +187,11 @@ func (h *HttpModule) doRequestAndPush(L *lua.LState, method string, url string, 
 }
 
 func (h *HttpModule) GetReport() []Report {
-	return h.repolst
+
+	rep := []Report{}
+	rep = append(rep, h.repolst...)
+
+	h.repolst = h.repolst[:0]
+
+	return rep
 }

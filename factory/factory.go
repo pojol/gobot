@@ -49,8 +49,6 @@ type Factory struct {
 	batches       []*Batch
 	lru           database.LRUCache
 
-	batch     utils.SizeWaitGroup
-	batchDone chan interface{}
 	batchLock sync.Mutex
 
 	lock sync.Mutex
@@ -76,8 +74,6 @@ func Create(opts ...Option) (*Factory, error) {
 		parm:      p,
 		debugBots: make(map[string]*bot.Bot),
 		exit:      utils.NewSwitch(),
-		batch:     utils.NewSizeWaitGroup(p.batchSize),
-		batchDone: make(chan interface{}, 1),
 		lru:       database.Constructor(100),
 	}
 
@@ -156,7 +152,7 @@ func (f *Factory) AddTask(name string, cnt int32) error {
 	return nil
 }
 
-func (f *Factory) CreateTask(name string, num int, bwg *utils.SizeWaitGroup) *Batch {
+func (f *Factory) CreateTask(name string, num int) *Batch {
 
 	var dat []byte
 
@@ -174,7 +170,7 @@ func (f *Factory) CreateTask(name string, num int, bwg *utils.SizeWaitGroup) *Ba
 		f.lru.Put(name, info.Dat)
 	}
 
-	return CreateBatch(f.parm.ScriptPath, name, num, dat, bwg, f.batchDone)
+	return CreateBatch(f.parm.ScriptPath, name, num, dat)
 }
 
 func (f *Factory) CreateDebugBot(name string, fbyt []byte) *bot.Bot {
@@ -216,22 +212,12 @@ func (f *Factory) taskLoop() {
 			info := f.pipelineCache[0]
 			f.pipelineCache = f.pipelineCache[1:]
 
-			batchLen := len(f.batches)
-			if batchLen >= f.parm.batchSize {
-				time.Sleep(time.Millisecond * 10)
-				f.lock.Unlock()
-				continue
-			}
-
-			f.pushBatch(f.CreateTask(info.Name, int(info.Num), &f.batch))
+			b := f.CreateTask(info.Name, int(info.Num))
+			f.pushBatch(b)
+			<-b.BatchDone
+			f.popBatch()
 		}
 		f.lock.Unlock()
-
-		select {
-		case <-f.batchDone:
-			f.popBatch()
-		default:
-		}
 
 		time.Sleep(time.Millisecond)
 	}

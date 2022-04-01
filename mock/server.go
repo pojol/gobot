@@ -5,8 +5,10 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"net/http"
+	"sync"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 )
 
@@ -61,19 +63,12 @@ type MockResponse struct {
 	Body interface{}
 }
 
-var accmap map[string]*MockAcc
-
-var strlst = []string{"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k"}
+var accmap = sync.Map{}
 
 func createAcc() *MockAcc {
 
-	token := ""
-	for i := 0; i < 6; i++ {
-		token += strlst[rand.Intn(len(strlst))]
-	}
-
 	acc := &MockAcc{
-		Token:   token,
+		Token:   uuid.New().String(),
 		Diamond: 50,
 		Gold:    100,
 		Heros: []heroInfo{
@@ -82,8 +77,7 @@ func createAcc() *MockAcc {
 		},
 	}
 
-	accmap[token] = acc
-
+	accmap.Store(acc.Token, acc)
 	return acc
 }
 
@@ -107,6 +101,9 @@ func routeAccInfo(ctx echo.Context) error {
 	accinfo := accInfoReq{}
 	var res MockResponse
 	var body accInfoRes
+	var accPtr *MockAcc
+	var mapval interface{}
+	var ok bool
 
 	bts, err := ioutil.ReadAll(ctx.Request().Body)
 	if err != nil {
@@ -122,18 +119,21 @@ func routeAccInfo(ctx echo.Context) error {
 		goto ext
 	}
 
-	if _, ok := accmap[accinfo.Token]; ok {
-		body = accInfoRes{
-			Token:   accinfo.Token,
-			Diamond: accmap[accinfo.Token].Diamond,
-			Gold:    accmap[accinfo.Token].Gold,
-		}
-		res.Body = body
-		res.Code = 200
-	} else {
+	mapval, ok = accmap.Load(accinfo.Token)
+	if !ok {
 		res.Code = 400
 		res.Msg = "can't find acc" + accinfo.Token
+		goto ext
 	}
+
+	accPtr = mapval.(*MockAcc)
+	body = accInfoRes{
+		Token:   accinfo.Token,
+		Diamond: accPtr.Diamond,
+		Gold:    accPtr.Gold,
+	}
+	res.Body = body
+	res.Code = 200
 
 ext:
 	ctx.JSON(http.StatusOK, res)
@@ -143,6 +143,9 @@ ext:
 func routeHeroInfo(ctx echo.Context) error {
 	var heroinfo heroInfoReq
 	var res MockResponse
+	var accPtr *MockAcc
+	var mapval interface{}
+	var ok bool
 
 	bts, err := ioutil.ReadAll(ctx.Request().Body)
 	if err != nil {
@@ -158,16 +161,20 @@ func routeHeroInfo(ctx echo.Context) error {
 		goto ext
 	}
 
-	if _, ok := accmap[heroinfo.Token]; ok {
-		res.Body = heroInfoRes{
-			Token: heroinfo.Token,
-			Heros: accmap[heroinfo.Token].Heros,
-		}
-		res.Code = 200
-	} else {
+	mapval, ok = accmap.Load(heroinfo.Token)
+	if !ok {
 		res.Code = 400
-		res.Msg = "can't find acc : " + heroinfo.Token
+		res.Msg = "can't find acc" + heroinfo.Token
+		goto ext
 	}
+
+	accPtr = mapval.(*MockAcc)
+	res.Body = heroInfoRes{
+		Token: accPtr.Token,
+		Heros: accPtr.Heros,
+	}
+	res.Code = 200
+
 ext:
 	ctx.JSON(http.StatusOK, res)
 	return nil
@@ -176,6 +183,10 @@ ext:
 func routeHeroLvup(ctx echo.Context) error {
 	lvup := lvupReq{}
 	var res MockResponse
+	var accPtr *MockAcc
+	var mapval interface{}
+	var ok bool
+	flag := false
 
 	bts, err := ioutil.ReadAll(ctx.Request().Body)
 	if err != nil {
@@ -191,33 +202,32 @@ func routeHeroLvup(ctx echo.Context) error {
 		goto ext
 	}
 
-	if _, ok := accmap[lvup.Token]; ok {
-
-		flag := false
-
-		for k := range accmap[lvup.Token].Heros {
-			if accmap[lvup.Token].Heros[k].ID == lvup.HeroID {
-				accmap[lvup.Token].Heros[k].Lv++
-				flag = true
-				break
-			}
-		}
-
-		if !flag {
-			res.Code = 400
-			res.Msg = "can't find hero token " + lvup.Token + " hero " + lvup.HeroID
-			goto ext
-		}
-
-		res.Code = 200
-		res.Body = lvupRes{
-			Token: lvup.Token,
-			Heros: accmap[lvup.Token].Heros,
-		}
-
-	} else {
+	mapval, ok = accmap.Load(lvup.Token)
+	if !ok {
 		res.Code = 400
-		res.Msg = "can't find acc : " + lvup.Token
+		res.Msg = "can't find acc" + lvup.Token
+		goto ext
+	}
+	accPtr = mapval.(*MockAcc)
+
+	for k := range accPtr.Heros {
+		if accPtr.Heros[k].ID == lvup.HeroID {
+			accPtr.Heros[k].Lv++
+			flag = true
+			break
+		}
+	}
+
+	if !flag {
+		res.Code = 400
+		res.Msg = "can't find hero token " + lvup.Token + " hero " + lvup.HeroID
+		goto ext
+	}
+
+	res.Code = 200
+	res.Body = lvupRes{
+		Token: lvup.Token,
+		Heros: accPtr.Heros,
 	}
 
 ext:
@@ -227,7 +237,6 @@ ext:
 
 func NewServer() *echo.Echo {
 
-	accmap = make(map[string]*MockAcc)
 	rand.Seed(time.Now().UnixNano())
 
 	mock := echo.New()

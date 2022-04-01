@@ -14,7 +14,7 @@ import (
 
 func TestMain(m *testing.M) {
 	ms := mock.NewServer()
-	go ms.Start(":7777")
+	go ms.Start(":6666")
 
 	defer ms.Close()
 	os.Exit(m.Run())
@@ -26,64 +26,61 @@ type Metadata struct {
 
 var compose = `
 <behavior>
-  <id>20913145-5f7e-4b0c-babc-4e94e7c4d6ad</id>
+  <id>14bcccc7-f3e0-41db-b4e1-df8ac960f178</id>
   <ty>RootNode</ty>
   <pos>
     <x>0</x>
     <y>0</y>
   </pos>
   <children>
-    <id>6258e521-4d7a-4427-a467-d102daf6ab9e</id>
+    <id>63014028-4013-4474-b0e2-956812940859</id>
     <ty>LoopNode</ty>
     <pos>
       <x>-5</x>
-      <y>66</y>
+      <y>63</y>
     </pos>
     <children>
-      <id>1291d5c2-5964-4b98-82d1-bb106f0e9c57</id>
+      <id>6530d4a4-4e48-4884-bca9-82460c8c1edc</id>
       <ty>SelectorNode</ty>
       <pos>
-        <x>-15</x>
-        <y>125</y>
+        <x>-5</x>
+        <y>143</y>
       </pos>
       <children>
-        <id>743186ab-655b-47c8-a986-44ae49adf33b</id>
+        <id>be495137-09e7-4135-89b1-c1fd912b3ec4</id>
         <ty>ConditionNode</ty>
         <pos>
-          <x>-70</x>
-          <y>171</y>
+          <x>-50</x>
+          <y>190</y>
         </pos>
         <children>
-          <id>e3e32962-edcb-4dc1-add2-f934ff8bb87e</id>
+          <id>757fc3b1-61be-4df2-b5bc-821271f88b5a</id>
           <ty>ActionNode</ty>
           <pos>
-            <x>-85</x>
-            <y>222</y>
+            <x>-60</x>
+            <y>250</y>
           </pos>
           <code>
 local parm = {
-  body = {
-      Token = meta.Token
-  },    -- request body
+  body = {},    -- request body
   timeout = &#34;10s&#34;,
   headers = {},
 }
 
-local url = &#34;http://127.0.0.1:7777/login/guest&#34;
+local url = &#34;http://127.0.0.1:6666/login/guest&#34;
 local http = require(&#34;http&#34;)
 
 function execute()
 
   -- http post request
   res, errmsg = http.post(url, parm)
-  print(url,errmsg)
   if errmsg == nil then
     body = json.decode(res[&#34;body&#34;])
     merge(meta, body.Body)
   end
-  table.print(meta)
 end
 </code>
+          <alias>login/guest</alias>
         </children>
         <code>
 
@@ -94,34 +91,35 @@ function execute()
 
 end
 </code>
+        <alias></alias>
       </children>
       <children>
-        <id>262cf484-5075-4971-885b-f9f74c9b1e92</id>
+        <id>1adab96f-f884-4171-bd60-30c04aeaf2f5</id>
         <ty>ConditionNode</ty>
         <pos>
-          <x>95</x>
-          <y>171</y>
+          <x>86</x>
+          <y>190</y>
         </pos>
         <children>
-          <id>01f48591-3b97-46b9-a86c-df10a4d009c6</id>
+          <id>811ecafa-58cc-4475-a265-4384448e3df6</id>
           <ty>ActionNode</ty>
           <pos>
-            <x>80</x>
-            <y>222</y>
+            <x>76</x>
+            <y>240</y>
           </pos>
           <children>
-            <id>f7bbb512-d239-4d5a-881b-7c445a47abc7</id>
+            <id>2f347fe4-9110-45c1-b519-e17458e94176</id>
             <ty>SequenceNode</ty>
             <pos>
-              <x>70</x>
-              <y>302</y>
+              <x>66</x>
+              <y>338</y>
             </pos>
             <children>
-              <id>2796bf91-a0f8-4be1-92fc-b164500b7cf0</id>
+              <id>53ea97df-def8-4359-b09c-276498c737ef</id>
               <ty>ActionNode</ty>
               <pos>
-                <x>15</x>
-                <y>347</y>
+                <x>0</x>
+                <y>401</y>
               </pos>
               <code>
 local parm = {
@@ -132,44 +130,44 @@ local parm = {
   headers = {},
 }
 
-local url = &#34;http://127.0.0.1:7777/base/hero.info&#34;
+local url = &#34;http://127.0.0.1:6666/base/hero.info&#34;
 local http = require(&#34;http&#34;)
 
 function execute()
 
   -- http post request
   res, errmsg = http.post(url, parm)
-  print(url,errmsg)
   if errmsg == nil then
     body = json.decode(res[&#34;body&#34;])
     merge(meta, body.Body)
   end
-  table.print(meta)
+
 end
 </code>
+              <alias>base/hero.info</alias>
             </children>
             <children>
-              <id>b620b162-f5d5-41b4-ab5f-65436792d4b4</id>
+              <id>64be51e8-4e7e-41ef-b8c5-2a436bf92885</id>
               <ty>WaitNode</ty>
               <pos>
-                <x>100</x>
-                <y>347</y>
+                <x>86</x>
+                <y>401</y>
               </pos>
               <wait>100</wait>
             </children>
             <children>
-              <id>2eda6249-b555-42cb-b6b1-accce15c4f34</id>
+              <id>cf82ce82-a0b8-46ea-9141-3f197d686e99</id>
               <ty>LoopNode</ty>
               <pos>
-                <x>161</x>
-                <y>342</y>
+                <x>167</x>
+                <y>401</y>
               </pos>
               <children>
-                <id>3c6a6691-be4d-42b3-a909-451ab741309d</id>
+                <id>cb519324-d8fb-4519-ab3d-48c14dbe4b35</id>
                 <ty>ActionNode</ty>
                 <pos>
-                  <x>166</x>
-                  <y>419</y>
+                  <x>177</x>
+                  <y>476</y>
                 </pos>
                 <code>
 local parm = {
@@ -181,23 +179,23 @@ local parm = {
   headers = {},
 }
 
-local url = &#34;http://127.0.0.1:7777/base/hero.lvup&#34;
+local url = &#34;http://127.0.0.1:6666/base/hero.lvup&#34;
 local http = require(&#34;http&#34;)
 
 function execute()
 
   -- http post request
   res, errmsg = http.post(url, parm)
-  print(url,errmsg)
   if errmsg == nil then
     body = json.decode(res[&#34;body&#34;])
     merge(meta, body.Body)
   end
-  table.print(meta)
+
 end
 </code>
+                <alias>base/hero.lvup</alias>
               </children>
-              <loop>2</loop>
+              <loop>5</loop>
             </children>
           </children>
           <code>
@@ -209,21 +207,21 @@ local parm = {
   headers = {},
 }
 
-local url = &#34;http://127.0.0.1:7777/base/acc.info&#34;
+local url = &#34;http://127.0.0.1:6666/base/acc.info&#34;
 local http = require(&#34;http&#34;)
 
 function execute()
 
   -- http post request
   res, errmsg = http.post(url, parm)
-  print(url,errmsg)
   if errmsg == nil then
     body = json.decode(res[&#34;body&#34;])
     merge(meta, body.Body)
   end
-  GetMeta()
+
 end
 </code>
+          <alias>base/acc.info</alias>
         </children>
         <code>
 
@@ -234,11 +232,13 @@ function execute()
 
 end
 </code>
+        <alias></alias>
       </children>
     </children>
-    <loop>3</loop>
+    <loop>5</loop>
   </children>
 </behavior>
+
 
 `
 
@@ -251,10 +251,27 @@ func TestLoad(t *testing.T) {
 	assert.Equal(t, err, nil)
 
 	bot = NewWithBehaviorTree("../script/", tree, "test")
+	defer bot.Close()
+
 	for i := 0; i < 20; i++ {
 		bot.RunStep()
 		fmt.Println(bot.GetMetadata())
 	}
+}
+
+func TestPool(t *testing.T) {
+	var tree *behavior.Tree
+	var bot *Bot
+
+	tree, err := behavior.New([]byte(compose))
+	assert.Equal(t, err, nil)
+
+	bot = NewWithBehaviorTree("../script/", tree, "test")
+	defer bot.Close()
+
+	err = bot.RunByBlock()
+
+	assert.Equal(t, err, nil)
 }
 
 var luastruct = `

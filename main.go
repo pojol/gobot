@@ -3,6 +3,10 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
+	"net/http"
+
+	_ "net/http/pprof"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -34,6 +38,12 @@ func main() {
 	initFlag()
 	flag.Parse()
 
+	defer func() {
+		if err := recover(); err != nil {
+			fmt.Println("main panic:", err)
+		}
+	}()
+
 	_, err := factory.Create()
 	if err != nil {
 		panic(err)
@@ -41,6 +51,10 @@ func main() {
 
 	ms := mock.NewServer()
 	go ms.Start(":6666")
+
+	go func() {
+		http.ListenAndServe(":6060", nil)
+	}()
 
 	e := echo.New()
 	e.Use(middleware.CORS())

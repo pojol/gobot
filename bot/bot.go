@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
-	"net"
-	"net/http"
 	"sync"
 	"time"
 
@@ -32,13 +30,8 @@ type Bot struct {
 	prev *behavior.Tree
 	cur  *behavior.Tree
 
-	httpMod   *script.HttpModule
-	protoMod  *script.ProtoModule
-	utilsMod  *script.UtilsModule
-	base64Mod *script.Base64Module
-
-	L *lua.LState
 	sync.Mutex
+	bs *botState
 }
 
 const (
@@ -61,7 +54,7 @@ func (b *Bot) GetMetadata() (string, string, error) {
 		return b.preloadErr, "", nil
 	}
 
-	meta, err := utils.Table2Map(b.L.GetGlobal("meta").(*lua.LTable))
+	meta, err := utils.Table2Map(b.bs.L.GetGlobal("meta").(*lua.LTable))
 	if err != nil {
 		return "", "", err
 	}
@@ -71,7 +64,7 @@ func (b *Bot) GetMetadata() (string, string, error) {
 		return "", "", err
 	}
 
-	change, err := utils.Table2Map(b.L.GetGlobal("change").(*lua.LTable))
+	change, err := utils.Table2Map(b.bs.L.GetGlobal("change").(*lua.LTable))
 	if err != nil {
 		return "", "", err
 	}
@@ -105,34 +98,18 @@ func NewWithBehaviorTree(path string, bt *behavior.Tree, tmpl string) *Bot {
 		id:   uuid.New().String(),
 		tree: bt,
 		cur:  bt,
-		L:    lua.NewState(),
+		bs:   luaPool.Get(),
 		name: tmpl,
-		httpMod: script.NewHttpModule(&http.Client{
-			Transport: &http.Transport{
-				DialContext: (&net.Dialer{
-					Timeout: 5 * time.Second,
-				}).DialContext,
-				DisableKeepAlives: true,
-			},
-			Timeout: 5 * time.Second,
-		}),
-		protoMod:  &script.ProtoModule{},
-		utilsMod:  &script.UtilsModule{},
-		base64Mod: &script.Base64Module{},
 	}
 
 	rand.Seed(time.Now().UnixNano())
 
-	bot.L.PreloadModule("proto", bot.protoMod.Loader)
-	bot.L.PreloadModule("http", bot.httpMod.Loader)
-	bot.L.PreloadModule("utils", bot.utilsMod.Loader)
-	bot.L.PreloadModule("base64", bot.base64Mod.Loader)
-
 	// 这里要对script目录进行一次检查，将lua脚本都载入进来
 	preScripts := utils.GetDirectoryFiels(path, ".lua")
 	for _, v := range preScripts {
-		err := bot.L.DoFile(path + v)
+		err := DoFile(bot.bs.L, path+v)
 		if err != nil {
+			fmt.Println("err", err.Error())
 			bot.preloadErr = fmt.Sprintf("load script %v err : %v", path+v, err.Error())
 		}
 	}
@@ -161,21 +138,21 @@ func (b *Bot) run_selector(nod *behavior.Tree, next bool) (bool, error) {
 
 func (b *Bot) run_assert(nod *behavior.Tree, next bool) (bool, error) {
 
-	err := b.L.DoString(nod.Code)
+	err := DoString(b.bs.L, nod.Code)
 	if err != nil {
 		return false, err
 	}
 
-	err = b.L.CallByParam(lua.P{
-		Fn:      b.L.GetGlobal("execute"),
+	err = b.bs.L.CallByParam(lua.P{
+		Fn:      b.bs.L.GetGlobal("execute"),
 		NRet:    1,
 		Protect: true,
 	})
 	if err != nil {
 		return false, err
 	}
-	v := b.L.Get(-1)
-	b.L.Pop(1)
+	v := b.bs.L.Get(-1)
+	b.bs.L.Pop(1)
 
 	if lua.LVAsBool(v) {
 		if next {
@@ -211,13 +188,13 @@ func (b *Bot) run_sequence(nod *behavior.Tree, next bool) (bool, error) {
 
 func (b *Bot) run_condition(nod *behavior.Tree, next bool) (bool, error) {
 
-	err := b.L.DoString(nod.Code)
+	err := DoString(b.bs.L, nod.Code)
 	if err != nil {
 		return false, err
 	}
 
-	err = b.L.CallByParam(lua.P{
-		Fn:      b.L.GetGlobal("execute"),
+	err = b.bs.L.CallByParam(lua.P{
+		Fn:      b.bs.L.GetGlobal("execute"),
 		NRet:    1,
 		Protect: true,
 	})
@@ -225,8 +202,8 @@ func (b *Bot) run_condition(nod *behavior.Tree, next bool) (bool, error) {
 		return false, err
 	}
 
-	v := b.L.Get(-1)
-	b.L.Pop(1)
+	v := b.bs.L.Get(-1)
+	b.bs.L.Pop(1)
 
 	if lua.LVAsBool(v) {
 		if next {
@@ -288,21 +265,21 @@ ext:
 
 func (b *Bot) run_script(nod *behavior.Tree, next bool) (bool, error) {
 
-	err := b.L.DoString(nod.Code)
+	err := DoString(b.bs.L, nod.Code)
 	if err != nil {
 		return false, err
 	}
 
-	err = b.L.CallByParam(lua.P{
-		Fn:      b.L.GetGlobal("execute"),
+	err = b.bs.L.CallByParam(lua.P{
+		Fn:      b.bs.L.GetGlobal("execute"),
 		NRet:    1,
 		Protect: true,
 	})
 	if err != nil {
 		return false, err
 	}
-	//v := b.L.Get(-1)
-	b.L.Pop(1)
+	//v := b.bs.L.Get(-1)
+	b.bs.L.Pop(1)
 
 	// mergo.MergeWithOverwrite(&b.metadata, t)
 
@@ -400,16 +377,19 @@ func (b *Bot) RunByBlock() error {
 	}()
 
 	err := b.run_children(b.tree, b.tree.Children)
-	fmt.Println("run block err", err)
+	if err != nil {
+		fmt.Println("run block err", err)
+	}
+
 	return err
 }
 
 func (b *Bot) GetReport() []script.Report {
-	return b.httpMod.GetReport()
+	return b.bs.httpMod.GetReport()
 }
 
 func (b *Bot) Close() {
-	b.L.Close()
+	luaPool.Put(b.bs)
 }
 
 type State int32

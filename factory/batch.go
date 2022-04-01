@@ -24,27 +24,33 @@ type BatchInfo struct {
 }
 
 type Batch struct {
-	ID       string
-	Name     string
-	CurNum   int32
-	TotalNum int32
-	Errors   int32
+	ID        string
+	Name      string
+	cursorNum int32
+	CurNum    int32
+	TotalNum  int32
+	BatchNum  int32
+	Errors    int32
+
+	tree *behavior.Tree
+	path string
 
 	bots    map[string]*bot.Bot
 	colorer *color.Color
 	rep     *Report
 
-	bwg     *utils.SizeWaitGroup
-	bwgDone chan interface{}
+	bwg  utils.SizeWaitGroup
+	exit *utils.Switch
 
-	pipeline chan *bot.Bot
-	done     chan interface{}
+	pipeline  chan *bot.Bot
+	done      chan interface{}
+	BatchDone chan interface{}
 
 	botDoneCh chan string
 	botErrCh  chan bot.ErrInfo
 }
 
-func CreateBatch(scriptPath, name string, num int, tbyt []byte, bwg *utils.SizeWaitGroup, done chan interface{}) *Batch {
+func CreateBatch(scriptPath, name string, num int, tbyt []byte) *Batch {
 
 	tree, err := behavior.New(tbyt)
 	if err != nil {
@@ -54,12 +60,16 @@ func CreateBatch(scriptPath, name string, num int, tbyt []byte, bwg *utils.SizeW
 	b := &Batch{
 		ID:        uuid.New().String(),
 		Name:      name,
+		path:      scriptPath,
 		CurNum:    0,
+		BatchNum:  512,
 		TotalNum:  int32(num),
-		bwg:       bwg,
-		bwgDone:   done,
+		bwg:       utils.NewSizeWaitGroup(512),
+		exit:      utils.NewSwitch(),
+		tree:      tree,
 		pipeline:  make(chan *bot.Bot, num),
 		done:      make(chan interface{}, 1),
+		BatchDone: make(chan interface{}, 1),
 		botDoneCh: make(chan string),
 		botErrCh:  make(chan bot.ErrInfo),
 
@@ -68,11 +78,9 @@ func CreateBatch(scriptPath, name string, num int, tbyt []byte, bwg *utils.SizeW
 	}
 
 	fmt.Println("create", num, "bot")
-	for i := 0; i < num; i++ {
-		b.pipeline <- bot.NewWithBehaviorTree(scriptPath, tree, name)
-	}
-
 	go b.loop()
+	b.run()
+
 	return b
 }
 
@@ -94,18 +102,19 @@ func (b *Batch) Report() Report {
 
 func (b *Batch) push(bot *bot.Bot) {
 	b.bwg.Add()
-	atomic.AddInt32(&b.CurNum, 1)
-
-	fmt.Println("push", b.Name)
+	atomic.AddInt32(&b.cursorNum, 1)
 
 	b.bots[bot.ID()] = bot
 }
 
 func (b *Batch) pop(id string) {
 	b.bwg.Done()
+	atomic.AddInt32(&b.CurNum, 1)
+	atomic.AddInt32(&b.cursorNum, -1)
 
-	atomic.AddInt32(&b.CurNum, -1)
-	if atomic.LoadInt32(&b.CurNum) == 0 {
+	b.bots[id].Close()
+
+	if atomic.LoadInt32(&b.cursorNum) == 0 && atomic.LoadInt32(&b.CurNum) >= b.TotalNum {
 		b.done <- 1
 	}
 }
@@ -141,7 +150,37 @@ func (b *Batch) loop() {
 	}
 ext:
 	b.record()
-	b.bwgDone <- 1
+	b.exit.Done()
+	b.BatchDone <- 1
+}
+
+func (b *Batch) run() {
+
+	go func() {
+
+		for {
+
+			if b.exit.HasOpend() {
+				break
+			}
+
+			var curbatchnum int32
+			last := b.TotalNum - atomic.LoadInt32(&b.CurNum)
+			if b.BatchNum < last {
+				curbatchnum = b.BatchNum
+			} else {
+				curbatchnum = last
+			}
+			for i := 0; i < int(curbatchnum); i++ {
+				b.pipeline <- bot.NewWithBehaviorTree(b.path, b.tree, b.Name)
+			}
+
+			b.bwg.Wait()
+			time.Sleep(time.Millisecond * 100)
+		}
+
+	}()
+
 }
 
 func (b *Batch) Close() {
