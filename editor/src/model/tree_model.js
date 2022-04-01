@@ -589,7 +589,15 @@ export default class TreeModel extends React.Component {
       Post(window.remote, Api.DebugStep, { BotID: this.state.botid }).then(
         (json) => {
           if (json.Code !== 200) {
-            message.warn(json.Msg);
+            if (json.Code === 1008) {
+              message.success("the end")
+
+              let change = JSON.parse(json.Body.Change)
+              let changestr = JSON.stringify(change)
+              PubSub.publish(Topic.UpdateChange, changestr)
+            } else {
+              message.warn(json.Msg);
+            }
             PubSub.publish(Topic.UpdateBlackboard, json.Body.Blackboard);
           } else {
 

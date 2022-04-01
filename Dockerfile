@@ -14,5 +14,6 @@ RUN echo -e "https://mirrors.ustc.edu.cn/alpine/latest-stable/main\nhttps://mirr
     echo "Asia/Shanghai" >  /etc/timezone
 
 EXPOSE 8888
+EXPOSE 6060
 
 ENTRYPOINT ./bot_linux $0 $@
