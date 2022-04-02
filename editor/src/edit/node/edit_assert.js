@@ -8,6 +8,9 @@ import "codemirror/mode/lua/lua";
 
 import { Tag, Button, message, Space } from "antd";
 
+import moment from 'moment';
+import lanMap from "../../config/lan";
+
 export default class AssertTab extends React.Component {
   constructor(props) {
     super(props);
@@ -95,7 +98,7 @@ export default class AssertTab extends React.Component {
 
         <Space>
           <Tag color="#55acee">{nod.id}</Tag>
-          <Button onClick={this.applyClick}>Apply</Button>
+          <Button onClick={this.applyClick}>{lanMap["app.edit.tab.apply"][moment.locale()]}</Button>
         </Space>
       </div>
     );

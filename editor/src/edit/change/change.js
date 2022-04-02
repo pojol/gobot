@@ -6,6 +6,9 @@ import { message } from "antd";
 import Topic from "../../model/topic";
 import "./change.css";
 
+import moment from 'moment';
+import lanMap from "../../config/lan";
+
 export default class ChangeView extends React.Component {
   constructor(props) {
     super(props);
@@ -60,7 +63,7 @@ export default class ChangeView extends React.Component {
     return (
       <div>
         <ReactJson
-          name="Step change"
+          name={lanMap["app.edit.changejson"][moment.locale()]}
           src={this.state.metadata}
           theme={"rjv-default"}
           enableClipboard={false}

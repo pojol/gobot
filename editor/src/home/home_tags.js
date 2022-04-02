@@ -3,6 +3,9 @@ import { Tag, Input } from 'antd';
 import { TweenOneGroup } from 'rc-tween-one';
 import { PlusOutlined } from '@ant-design/icons';
 
+import moment from 'moment';
+import lanMap from "../config/lan";
+
 export default class HomeTagGroup extends React.Component {
 
     constructor(props) {
@@ -110,7 +113,7 @@ export default class HomeTagGroup extends React.Component {
                 )}
                 {!inputVisible && (
                     <Tag onClick={this.showInput} className="site-tag-plus">
-                        <PlusOutlined /> New Tag
+                        <PlusOutlined /> {lanMap["app.home.tag"][moment.locale()]}
                     </Tag>
                 )}
             </>

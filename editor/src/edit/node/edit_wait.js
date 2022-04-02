@@ -12,6 +12,10 @@ import {
 import PubSub from "pubsub-js";
 import Topic from "../../model/topic";
 
+
+import moment from 'moment';
+import lanMap from "../../config/lan";
+
 const Min = 1;
 const Max = 60 * 60 * 1000; // 1 hour
 
@@ -104,7 +108,7 @@ export default class WaitTab extends React.Component {
         </Row>
         <Space>
           <Tag color="#55acee">{nod.id}</Tag>
-          <Button onClick={this.applyClick}>Apply</Button>
+          <Button onClick={this.applyClick}>{lanMap["app.edit.tab.apply"][moment.locale()]}</Button>
         </Space>{" "}
       </div>
     );

@@ -1,4 +1,4 @@
-import { Layout, Tabs, Tag } from "antd";
+import { Layout, Tabs, Tag, Radio } from "antd";
 import * as React from "react";
 import "antd/dist/antd.css";
 import "./app.css";
@@ -11,15 +11,21 @@ import BotConfig from "./config/config";
 import EditPlane from "./edit/edit";
 import RunningList from "./runing/runing";
 
+import enUS from 'antd/lib/locale/en_US';
+import zhCN from 'antd/lib/locale/zh_CN';
+import moment from 'moment';
+import 'moment/locale/zh-cn';
+import lanMap from "./config/lan";
+
 const { TabPane } = Tabs;
-
-
+moment.locale('en');
 
 export default class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       tab: "Edit",
+      locale: enUS,
     };
   }
 
@@ -55,33 +61,52 @@ export default class App extends React.Component {
     });
   };
 
+  changeLocale = e => {
+    const localeValue = e.target.value;
+    this.setState({ locale: localeValue });
+    
+    moment.locale(localeValue.locale);
+    
+    console.info("moment=>",moment.locale())
+  };
+
   render() {
+    const { locale } = this.state;
+
     return (
       <dev className="site-layout-content">
-                <dev className="ver">
+        <dev className="ver">
           <Tag color="#108ee9">v0.1.2</Tag>
+          <Radio.Group value={locale} onChange={this.changeLocale}>
+            <Radio.Button key="en" value={enUS}>
+              English
+            </Radio.Button>
+            <Radio.Button key="cn" value={zhCN}>
+              中文
+            </Radio.Button>
+          </Radio.Group>
         </dev>
         <Tabs
           defaultActiveKey="Edit"
           activeKey={this.state.tab}
           onChange={this.changeTab}
         >
-          <TabPane tab="Edit" key="Edit">
+          <TabPane tab={lanMap["app.tab.edit"][moment.locale()]} key="Edit">
             <EditPlane />
             <TreeModel />
           </TabPane>
-          <TabPane tab="Home" key="Home">
+          <TabPane tab={lanMap["app.tab.home"][moment.locale()]} key="Home">
             <BotList />
           </TabPane>
-          <TabPane tab="Running" key="Running">
+          <TabPane tab={lanMap["app.tab.running"][moment.locale()]} key="Running">
             <RunningList />
           </TabPane>
-          <TabPane tab="Report" key="Report">
+          <TabPane tab={lanMap["app.tab.report"][moment.locale()]} key="Report">
             <Layout>
               <TestReport />
             </Layout>
           </TabPane>
-          <TabPane tab="Config" key="Config">
+          <TabPane tab={lanMap["app.tab.config"][moment.locale()]} key="Config">
             <BotConfig />
           </TabPane>
         </Tabs>

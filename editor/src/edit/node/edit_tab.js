@@ -11,6 +11,10 @@ import ConditionTab from "./edit_condition";
 import AssertTab from "./edit_assert";
 import { NodeTy } from "../../model/node_type";
 
+import moment from 'moment';
+import lanMap from "../../config/lan";
+
+
 const { TabPane } = Tabs;
 
 export default class Edit extends React.Component {
@@ -58,19 +62,19 @@ export default class Edit extends React.Component {
     return (
       <div>
         <Tabs activeKey={this.state.tab_key} size="small">
-          <TabPane tab="Condition" key={NodeTy.Condition} disabled={true}>
+          <TabPane tab={lanMap["app.edit.tab.condition"][moment.locale()]} key={NodeTy.Condition} disabled={true}>
             <ConditionTab />
           </TabPane>
-          <TabPane tab="Script" key={NodeTy.Action} disabled={true}>
+          <TabPane tab={lanMap["app.edit.tab.script"][moment.locale()]} key={NodeTy.Action} disabled={true}>
             <ActionTab />
           </TabPane>
-          <TabPane tab="Loop" key={NodeTy.Loop} disabled={true}>
+          <TabPane tab={lanMap["app.edit.tab.loop"][moment.locale()]} key={NodeTy.Loop} disabled={true}>
             <LoopTab />
           </TabPane>
-          <TabPane tab="Wait" key={NodeTy.Wait} disabled={true}>
+          <TabPane tab={lanMap["app.edit.tab.wait"][moment.locale()]} key={NodeTy.Wait} disabled={true}>
             <WaitTab />
           </TabPane>
-          <TabPane tab="Assert" key={NodeTy.Assert} disabled={true}>
+          <TabPane tab={lanMap["app.edit.tab.assert"][moment.locale()]} key={NodeTy.Assert} disabled={true}>
             <AssertTab />
           </TabPane>
         </Tabs>

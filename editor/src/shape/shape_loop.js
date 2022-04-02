@@ -10,7 +10,7 @@ LoopNode.config({
     },
     body: {
       fill: "#f5f5f5",
-      stroke: "#f50",
+      stroke: "#DDDDDD",
       strokeWidth: 1,
     },
     label: {
