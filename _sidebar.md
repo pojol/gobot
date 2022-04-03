@@ -17,6 +17,7 @@
     * [Prefab](/zh-cn/script/append.md)
     * [Global](/zh-cn/script/global.md)
     * [Utils](/zh-cn/script/utils.md)
+* [行为树 *](/zh-cn/behavior.md)
 * [Q&A (常见问题](/zh-cn/qa.md)
 
 
