@@ -12,6 +12,7 @@
 * [驱动端](/zh-cn/driver/README.md)
     * [API列表](/zh-cn/driver/api.md)
 * [脚本层](/zh-cn/script/README.md)
+    * [Meta *](/zh-cn/script/meta.md)
     * [Http](/zh-cn/script/http.md)
     * [Protobuf](/zh-cn/script/protobuf.md)
     * [Prefab](/zh-cn/script/append.md)
