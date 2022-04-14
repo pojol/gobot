@@ -12,6 +12,10 @@ import {
 import PubSub from "pubsub-js";
 import Topic from "../../model/topic";
 
+
+import moment from 'moment';
+import lanMap from "../../config/lan";
+
 const Min = 0;
 const Max = 1000;
 
@@ -110,7 +114,7 @@ export default class LoopTab extends React.Component {
 
         <Space>
           <Tag color="#55acee">{nod.id}</Tag>
-          <Button onClick={this.applyClick}>Apply</Button>
+          <Button onClick={this.applyClick}>{lanMap["app.edit.tab.apply"][moment.locale()]}</Button>
         </Space>
       </div>
     );

@@ -1,7 +1,6 @@
 # gobot editor
 Gobot是一个有状态的api测试工具，支持图形编辑、api调用、绑定脚本执行。
 
-[![](https://img.shields.io/badge/%E6%96%87%E6%A1%A3-Doc-2ca5e0?style=flat&logo=github)](https://docs.gobot.fun/)
 [![](https://img.shields.io/badge/Trello-Todo-2ca5e0?style=flat&logo=trello)](https://trello.com/b/8eDZ6h7n/)
 [![CI](https://github.com/pojol/gobot/actions/workflows/dockerimage.yml/badge.svg?branch=develop)](https://github.com/pojol/gobot/actions/workflows/dockerimage.yml)
 
@@ -18,8 +17,8 @@ Gobot是一个有状态的api测试工具，支持图形编辑、api调用、绑
 * 使用 tag + filter 管理 bot 行为文件
 * 拥有直观的调试窗口和环境，可以单步查看节点逻辑的执行情况
 
-# 在线试用
-在[网站](http://1.117.168.37:7777/)上进行体验
+# [在线试用](http://1.117.168.37:7777) <--
+# [文档](https://pojol.gitee.io/gobot/#/) <--
 
 
 ## 编辑器预览

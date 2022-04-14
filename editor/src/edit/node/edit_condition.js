@@ -10,6 +10,8 @@ import "codemirror/mode/lua/lua";
 
 import { Tag, Button, message, Space } from "antd";
 
+import moment from 'moment';
+import lanMap from "../../config/lan";
 
 export default class ConditionTab extends React.Component {
   constructor(props) {
@@ -99,7 +101,7 @@ export default class ConditionTab extends React.Component {
 
         <Space>
           <Tag color="#55acee">{nod.id}</Tag>
-          <Button onClick={this.applyClick}>Apply</Button>
+          <Button onClick={this.applyClick}>{lanMap["app.edit.tab.apply"][moment.locale()]}</Button>
         </Space>
       </div>
     );

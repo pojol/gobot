@@ -31,6 +31,9 @@ import { SaveAs } from "../utils/file";
 import { LoadBehaviorWithBlob, LoadBehaviorWithFile } from "../utils/tree";
 import HomeTagGroup from "./home_tags";
 
+import moment from 'moment';
+import lanMap from "../config/lan";
+
 const { Dragger } = Upload;
 const { Option } = Select;
 
@@ -41,7 +44,7 @@ export default class BotList extends React.Component {
       runs: {},
       columns: [
         {
-          title: "Bot behavior file",
+          title: "Behavior tree files",
           dataIndex: "name",
           key: "name",
         },
@@ -409,7 +412,7 @@ export default class BotList extends React.Component {
             <InboxOutlined />
           </p>
           <p className="ant-upload-text">
-            Click or drag file (*.xml) to this area to upload
+            {lanMap["app.home.drop"][moment.locale()]}
           </p>
         </Dragger>
 
@@ -420,7 +423,7 @@ export default class BotList extends React.Component {
                 mode="multiple"
                 allowClear
                 style={{ width: '100%' }}
-                placeholder="Filter by tags"
+                placeholder={lanMap["app.home.filter"][moment.locale()]}
                 onChange={this.handleSelectChange}
               >
                 {this.state.selectedTags}
@@ -430,46 +433,46 @@ export default class BotList extends React.Component {
               <Space >
                 <Tooltip
                   placement="bottomLeft"
-                  title="Drive a specified number of robots"
+                  title={lanMap["app.home.run.desc"][moment.locale()]}
                 >
                   <Button icon={<PlayCircleOutlined />} onClick={this.handleBotRun}>
-                    Run
+                  {lanMap["app.home.run"][moment.locale()]}
                   </Button>
                 </Tooltip>
                 <Tooltip
                   placement="bottomLeft"
-                  title="Load the behavior file to the local for editing"
+                  title={lanMap["app.home.load.desc"][moment.locale()]}
                 >
                   <Button
                     icon={<CloudDownloadOutlined />}
                     onClick={this.handleBotLoad}
                   >
-                    Load
+                    {lanMap["app.home.load"][moment.locale()]}
                   </Button>
                 </Tooltip>
                 <Tooltip
                   placement="bottomLeft"
-                  title="Delete the behavior file from the database"
+                  title= {lanMap["app.home.delete.desc"][moment.locale()]}
                 >
                   <Popconfirm
-                    title="Are you sure to delete this bot?"
+                    title={lanMap["app.home.delete.confirm"][moment.locale()]}
                     onConfirm={this.handleBotDelete}
                     onCancel={(e) => { }}
                     okText="Yes"
                     cancelText="No"
                   >
-                    <Button icon={<DeleteOutlined />}>Delete</Button>
+                    <Button icon={<DeleteOutlined />}> {lanMap["app.home.delete"][moment.locale()]}</Button>
                   </Popconfirm>
                 </Tooltip>
                 <Tooltip
                   placement="bottomLeft"
-                  title="Save the current behavior tree file to the local"
+                  title={lanMap["app.home.download.desc"][moment.locale()]}
                 >
                   <Button
                     icon={<VerticalAlignBottomOutlined />}
                     onClick={this.handleBotDownload}
                   >
-                    Download
+                    {lanMap["app.home.download"][moment.locale()]}
                   </Button>
                 </Tooltip>
               </Space>

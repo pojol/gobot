@@ -1,17 +1,23 @@
 import React from "react";
 import ReactJson from "react-json-view";
 import PubSub from "pubsub-js";
-import { message } from "antd";
+import { Input, message } from "antd";
 
 import Topic from "../../model/topic";
 import "./change.css";
+
+import moment from 'moment';
+import lanMap from "../../config/lan";
+import { ClockCircleOutlined } from '@ant-design/icons';
+
+const { TextArea } = Input;
+
 
 export default class ChangeView extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      metadata: {
-      },
+      metadata: "",
       behaviorName: "",
     };
   }
@@ -19,8 +25,7 @@ export default class ChangeView extends React.Component {
   componentDidMount() {
     PubSub.subscribe(Topic.UpdateChange, (topic, info) => {
       try {
-        var blackboard = JSON.parse(info);
-        this.setState({ metadata: blackboard });
+        this.setState({ metadata: info });
       } catch (err) {
         message.warning("blackboard parse info err");
       }
@@ -59,15 +64,13 @@ export default class ChangeView extends React.Component {
 
     return (
       <div>
-        <ReactJson
-          name="Step change"
-          src={this.state.metadata}
-          theme={"rjv-default"}
-          enableClipboard={false}
-          displayDataTypes={false}
-          edit={false}
-          add={false}
-        ></ReactJson>
+        <TextArea
+          value={this.state.metadata}
+          bordered={false}
+          placeholder=""
+          disabled={true}
+          autoSize={{ minRows: 10 }}
+        />
       </div>
     );
   }

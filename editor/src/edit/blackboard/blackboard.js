@@ -6,6 +6,9 @@ import {
   CloudUploadOutlined,
 } from "@ant-design/icons";
 
+import moment from 'moment';
+import lanMap from "../../config/lan";
+
 import Topic from "../../model/topic";
 import "./blackboard.css";
 
@@ -84,22 +87,22 @@ export default class Blackboard extends React.Component {
         <Space>
           <Tooltip
             placement="topLeft"
-            title="Create a bot based on the current behavior tree"
+            title={lanMap["app.edit.blackboard.create.desc"][moment.locale()]}
           >
-            <Button onClick={this.createClick}>Create</Button>
+            <Button onClick={this.createClick}>{lanMap["app.edit.blackboard.create"][moment.locale()]}</Button>
           </Tooltip>
           <Tooltip
             placement="topLeft"
-            title="View the runtime of the behavior tree"
+            title={lanMap["app.edit.blackboard.step.desc"][moment.locale()]}
           >
-            <Button onClick={this.stepClick}>Step</Button>
+            <Button onClick={this.stepClick}>{lanMap["app.edit.blackboard.step"][moment.locale()]}</Button>
           </Tooltip>
           <Tooltip
             placement="topLeft"
-            title="Upload the behavior tree file to the server"
+            title={lanMap["app.edit.blackboard.upload.desc"][moment.locale()]}
           >
             <Button icon={<CloudUploadOutlined />} onClick={this.uploadClick}>
-              Upload
+            {lanMap["app.edit.blackboard.upload"][moment.locale()]}
             </Button>
           </Tooltip>
 
@@ -116,7 +119,7 @@ export default class Blackboard extends React.Component {
         </Space>
 
         <ReactJson
-          name="Bot metadata"
+          name={lanMap["app.edit.blackboardJson"][moment.locale()]}
           src={this.state.metadata}
           theme={"rjv-default"}
           enableClipboard={false}

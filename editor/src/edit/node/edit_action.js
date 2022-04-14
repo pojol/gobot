@@ -9,6 +9,8 @@ import "codemirror/mode/lua/lua";
 import { Input, Button, message, Tag, Space } from "antd";
 import { NodeTy } from "../../model/node_type";
 
+import moment from 'moment';
+import lanMap from "../../config/lan";
 
 export default class ActionTab extends React.Component {
   constructor(props) {
@@ -105,7 +107,7 @@ export default class ActionTab extends React.Component {
         <Space>
           <Tag color="#55acee">{nod.id}</Tag>
           <Input placeholder="set alias" width={200} value={this.state.defaultAlias} onChange={this.onChangeAlias}/>
-          <Button onClick={this.applyClick}>Apply</Button>
+          <Button onClick={this.applyClick}>{lanMap["app.edit.tab.apply"][moment.locale()]}</Button>
         </Space>{" "}
       </div>
     );
