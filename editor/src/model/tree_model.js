@@ -1,7 +1,7 @@
 import React from "react";
 import PubSub from "pubsub-js";
 import Topic from "./topic";
-import { message } from "antd";
+import { message,Alert } from "antd";
 import OBJ2XML from "object-to-xml";
 import Config from "./config";
 import { Post, PostBlob } from "./request";
@@ -589,14 +589,19 @@ export default class TreeModel extends React.Component {
       Post(window.remote, Api.DebugStep, { BotID: this.state.botid }).then(
         (json) => {
           if (json.Code !== 200) {
-            if (json.Code === 1008) {
-              message.success("the end")
+            let change, changestr
 
-              let change = JSON.parse(json.Body.Change)
-              let changestr = JSON.stringify(change)
-              PubSub.publish(Topic.UpdateChange, changestr)
+            if (json.Code === 1008) {
+              change = JSON.parse(json.Body.Change)
+              changestr = JSON.stringify(change,null,"\t")
+              message.success("the end")
             } else {
-              message.warn(json.Msg);
+              message.warn(json.Msg)
+              changestr = "runtime err: " + json.Msg + "\n" + json.Body.RuntimeErr
+            }
+            
+            if (json.Code !== 1010) {
+              PubSub.publish(Topic.UpdateChange, changestr)
             }
             PubSub.publish(Topic.UpdateBlackboard, json.Body.Blackboard);
           } else {
@@ -606,7 +611,7 @@ export default class TreeModel extends React.Component {
             let change = JSON.parse(json.Body.Change)
 
             metastr = JSON.stringify(meta)
-            changestr = JSON.stringify(change)
+            changestr = JSON.stringify(change, null, "\t")
 
             PubSub.publish(Topic.UpdateBlackboard, metastr);
             PubSub.publish(Topic.UpdateChange, changestr)

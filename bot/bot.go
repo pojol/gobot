@@ -32,6 +32,8 @@ type Bot struct {
 
 	sync.Mutex
 	bs *botState
+
+	runtimeErr string
 }
 
 const (
@@ -48,33 +50,33 @@ func (b *Bot) Name() string {
 	return b.name
 }
 
-func (b *Bot) GetMetadata() (string, string, error) {
+func (b *Bot) GetMetadata() (string, string, string, error) {
 
 	if b.preloadErr != "" {
-		return b.preloadErr, "", nil
+		return b.preloadErr, "", "", nil
 	}
 
 	meta, err := utils.Table2Map(b.bs.L.GetGlobal("meta").(*lua.LTable))
 	if err != nil {
-		return "", "", err
+		return "", "", "", err
 	}
 
 	metabyt, err := json.Marshal(&meta)
 	if err != nil {
-		return "", "", err
+		return "", "", "", err
 	}
 
 	change, err := utils.Table2Map(b.bs.L.GetGlobal("change").(*lua.LTable))
 	if err != nil {
-		return "", "", err
+		return "", "", "", err
 	}
 
 	changebyt, err := json.Marshal(&change)
 	if err != nil {
-		return "", "", err
+		return "", "", "", err
 	}
 
-	return string(metabyt), string(changebyt), nil
+	return string(metabyt), string(changebyt), b.runtimeErr, nil
 
 }
 
@@ -411,6 +413,7 @@ func (b *Bot) RunStep() State {
 
 	f, err := b.run_nod(b.cur, false)
 	if err != nil {
+		b.runtimeErr = err.Error()
 		return SBreak
 	}
 	// step 中使用了sleep之后，会有多个goroutine执行接下来的程序

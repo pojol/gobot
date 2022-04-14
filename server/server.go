@@ -453,7 +453,7 @@ func DebugStep(ctx echo.Context) error {
 	}
 
 	s = b.RunStep()
-	body.Blackboard, body.Change, err = b.GetMetadata()
+	body.Blackboard, body.Change, body.RuntimeErr, err = b.GetMetadata()
 	if err != nil {
 		code = ErrMetaData
 		goto EXT
