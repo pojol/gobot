@@ -13,3 +13,5 @@ logo.zip
 editor/build
 editor/dockerbuild.sh
 editor/yarn-error.log
+editor/dist/
+editor/out/
