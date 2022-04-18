@@ -49,8 +49,6 @@ export default class ChangeView extends React.Component {
     this.setState({ behaviorName: e.target.value });
   };
 
-
-
   debugClick = () => {
     PubSub.publish(Topic.Run, "");
   };

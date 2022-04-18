@@ -293,7 +293,7 @@ func GetReport(ctx echo.Context) error {
 				info.Apilst = append(info.Apilst, ReportApiInfo{
 					Api:        fmtapi,
 					ReqNum:     detail.ReqNum,
-					ConsumeNum: detail.AvgNum,
+					ConsumeNum: int64(detail.AvgNum / int64(detail.ReqNum)),
 					ReqSize:    detail.ReqSize,
 					ResSize:    detail.ResSize,
 					ErrNum:     detail.ErrNum,
