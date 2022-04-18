@@ -37,7 +37,8 @@
     "pack": "electron-builder",
     "prepack": "react-scripts build",
     "pack:dir": "electron-builder --dir",
-    "package": "electron-packager . Gobot --platform=win32 --icon=./public/gobot.ico --arch=x64 --out=./dist --asar --app-version=1.0.0 --overwrite"
+    "package_win32": "electron-packager . Gobot --platform=win32 --icon=./public/gobot.ico --arch=x64 --out=./dist --asar --app-version=1.0.0 --overwrite",
+    "package_mac_arm64": "electron-packager . Gobot --platform=darwin --icon=./public/gobot.ico --arch=arm64 --out=./dist --asar --app-version=1.0.0 --overwrite"
   },
   "eslintConfig": {
     "extends": "react-app"
