@@ -348,7 +348,6 @@ func (b *Bot) Run(doneCh chan string, errch chan ErrInfo) {
 
 		defer func() {
 			if err := recover(); err != nil {
-				fmt.Println("run panic", err)
 				errch <- ErrInfo{
 					ID:  b.id,
 					Err: err.(error),
@@ -358,11 +357,11 @@ func (b *Bot) Run(doneCh chan string, errch chan ErrInfo) {
 
 		err := b.run_children(b.tree, b.tree.Children)
 		if err != nil {
-			fmt.Println("run err", err)
 			errch <- ErrInfo{
 				ID:  b.id,
 				Err: err,
 			}
+			return
 		}
 
 		doneCh <- b.id
@@ -391,6 +390,9 @@ func (b *Bot) GetReport() []script.Report {
 }
 
 func (b *Bot) Close() {
+	b.bs.L.DoString(`
+		meta = {}
+	`)
 	luaPool.Put(b.bs)
 }
 
