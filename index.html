@@ -1,19 +1,22 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta charset="UTF-8">
   <link rel="stylesheet" href="//unpkg.com/docsify/themes/vue.css">
   <link rel="stylesheet" href="//unpkg.com/docsify-gifcontrol/dist/docsify-gifcontrol.css">
+  <link rel="stylesheet" href="https://unpkg.com/docsify-toc@1.0.0/dist/toc.css">
   <!-- sidebar logo style -->
   <style>
-    .app-name-link > img{
+    .app-name-link>img {
       width: 50%;
       height: 100%;
     }
   </style>
 </head>
+
 <body>
   <nav>
     <a href="#/zh-cn/">中文</a>
@@ -28,12 +31,19 @@
       topMargin: 20,
       themeColor: '#00796B',
       repo: 'https://github.com/pojol/gobot',
+      toc: {
+        scope: '.markdown-section',
+        headings: 'h1, h2, h3',
+        title: '目录',
+      }
     }
   </script>
   <script src="//unpkg.com/docsify/lib/docsify.min.js"></script>
   <script src="//cdn.jsdelivr.net/npm/docsify-copy-code"></script>
   <script src="https://cdn.jsdelivr.net/npm/prismjs@1.22.0/components/prism-lua.min.js"></script>
   <script src="//unpkg.com/docsify-gifcontrol/dist/docsify-gifcontrol.js"></script>
-  
+  <script src="https://unpkg.com/docsify-toc@1.0.0/dist/toc.js"></script>
+
 </body>
+
 </html>
