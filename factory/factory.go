@@ -213,6 +213,7 @@ func (f *Factory) taskLoop() {
 			f.pipelineCache = f.pipelineCache[1:]
 
 			b := f.CreateTask(info.Name, int(info.Num))
+
 			f.pushBatch(b)
 			<-b.BatchDone
 			f.popBatch()

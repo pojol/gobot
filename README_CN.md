@@ -22,7 +22,7 @@ Gobot是一个有状态的api测试工具，支持图形编辑、api调用、绑
 
 
 ## 编辑器预览
-[![image.png](https://i.postimg.cc/mrbSNKmS/image.png)](https://postimg.cc/CRQDwrTZ)
+[![2022-04-20-9-51-09.png](https://i.postimg.cc/xCW3KnxD/2022-04-20-9-51-09.png)](https://postimg.cc/bD9nPcf3)
 
 ## 脚本接口
 * [http](https://docs.gobot.fun/#/zh-cn/advance/script_http)

@@ -51,9 +51,9 @@ export default class TestReport extends React.Component {
               <>
                 {tags.map(tag => {
                   let color = 'green';
-                  if (tag === 'tree') {
+                  if (tag === 'avg_request_time_ms') {
                     color = 'volcano';
-                  } else if (tag === 'pie') {
+                  } else if (tag === 'request_times') {
                       color = 'geekblue';
                   }
                   return (
@@ -83,7 +83,7 @@ export default class TestReport extends React.Component {
         botnum: info[i].BotNum,
         reqnum: info[i].ReqNum,
         errors : info[i].ErrNum,
-        charts: ["tree"],
+        charts: ["avg_request_time_ms", "request_times"],
         apilst : info[i].Apilst,
       })
     }
@@ -113,12 +113,22 @@ export default class TestReport extends React.Component {
   }
 
   clickTag = (e,record) => {
-    console.info(record)
     if (record.apilst) {
-      console.info("send", e)
+      let lst = new Array()
+
+      if (e === "avg_request_time_ms") {
+        for (var i = 0; i < record.apilst.length; i++) {
+          lst.push({"Api": record.apilst[i].Api, "Value": record.apilst[i].ConsumeNum})
+        }
+      } else if (e === "request_times") {
+        for (var i = 0; i < record.apilst.length; i++) {
+          lst.push({"Api": record.apilst[i].Api, "Value": record.apilst[i].ReqNum})
+        }
+      }
+
       PubSub.publish(Topic.ReportSelect, {
         Chart : e,
-        ApiList : record.apilst
+        ApiList : lst
       })
     }
   };

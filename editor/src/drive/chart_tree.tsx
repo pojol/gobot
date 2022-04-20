@@ -6,7 +6,7 @@ import Topic from "../model/topic";
 
 type Info  = {
   Api : string,
-  ConsumeNum : number,
+  Value : number,
 }
 
 type ReportChartInfo = {
@@ -49,7 +49,7 @@ export default class ApiChart extends React.Component {
       for (var i of info.ApiList) {
         let newinfo : ApiInfo = {
           name : i.Api,
-          value : i.ConsumeNum,
+          value : i.Value,
         }
         newdata.children.push(newinfo)
       }
