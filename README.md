@@ -26,8 +26,10 @@ Try the editor out [on website](http://1.117.168.37:7777/)
 [Document](https://docs.gobot.fun)
 
 ## Preview
-[![image.png](https://i.postimg.cc/mrbSNKmS/image.png)](https://postimg.cc/CRQDwrTZ)
+[![2022-04-20-9-51-09.png](https://i.postimg.cc/xCW3KnxD/2022-04-20-9-51-09.png)](https://postimg.cc/bD9nPcf3)
 
+## Benchmark
+[![gobot-qps.png](https://i.postimg.cc/5y72F2Nb/gobot-qps.png)](https://postimg.cc/WqZvBjkH)
 
 ## Script interface
 * [http](https://docs.gobot.fun/#/zh-cn/advance/script_http)
@@ -63,68 +65,3 @@ res, err = http.post("url", reqTable)
     err                 -- error message
 ]]--
 ```
-
-# Install
-1. Install docker-compose
-    ```shell
-    # for CentOS
-    yum install docker-compose -y
-
-    # for Ubuntu
-    apt-get install docker-compose -y
-    ```
-
-2. Down load and modify [docker-compose.yml](https://github.com/pojol/gobot-driver/blob/develop/docker-compose.yml) file make sure to pass in values for `MYSQL_ROOT_PASSWORD` and `MYSQL_PASSWORD` variables before you run this setup.
-
-    ```yaml
-    version: "3.7"
-
-    volumes:
-    db:
-
-    services:
-    db:
-        image: mariadb:10.5
-        restart: always
-        networks:
-        - gnet
-        volumes:
-        - db:/var/lib/mysql
-        environment:
-        - MYSQL_ROOT_PASSWORD=
-        - MYSQL_PASSWORD=
-        - MYSQL_DATABASE=gobot
-        - MYSQL_USER=gobot
-
-    gobot_driver:
-        image: braidgo/gobot-driver:latest
-        restart: always
-        networks:
-        - gnet
-        depends_on:
-        - db
-        ports:
-        - 8888:8888
-        deploy:
-        resources:
-            limits:
-            cpus: "0.3"
-        environment:
-        - MYSQL_PASSWORD=
-        - MYSQL_DATABASE=gobot
-        - MYSQL_USER=gobot
-        - MYSQL_HOST=db
-
-    gobot_editor:
-        image: braidgo/gobot-editor:latest
-        restart: always
-        depends_on:
-        - gobot_driver
-        ports:
-        - 7777:7777
-
-    networks:
-    gnet:
-        driver: bridge
-    ```
-3. Run `docker-compose up -d`, now you can access gobot at http://localhost:7777/ from your host system.

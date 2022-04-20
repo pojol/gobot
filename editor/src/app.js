@@ -76,7 +76,7 @@ export default class App extends React.Component {
     return (
       <dev className="site-layout-content">
         <dev className="ver">
-          <Tag color="#108ee9">v0.1.5</Tag>
+          <Tag color="#108ee9">v0.1.6</Tag>
           <Radio.Group value={locale} onChange={this.changeLocale}>
             <Radio.Button key="en" value={enUS}>
               English
