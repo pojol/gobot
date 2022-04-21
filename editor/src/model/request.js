@@ -1,6 +1,6 @@
 export function Post(url, methon, formData) {
   return new Promise(function (resolve, reject) {
-    fetch(url + methon, {
+    fetch(url + "/" + methon, {
       method: "POST",
       mode: "cors",
       headers: {
@@ -42,7 +42,7 @@ export function PostBlob(url, methon, name, data) {
     headers.append("Content-Type", "text/html");
     headers.append("FileName", str2utf8(name));
 
-    fetch(url + methon, {
+    fetch(url + "/" + methon, {
       method: "POST",
       mode: "cors",
       headers: headers,

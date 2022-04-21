@@ -92,7 +92,7 @@ export default class TestReport extends React.Component {
 
   refresh() {
     this.setState({data:[]})
-    Post(window.remote, Api.ReportInfo, {}).then((json) => {
+    Post(localStorage.remoteAddr, Api.ReportInfo, {}).then((json) => {
       if (json.Code !== 200) {
         message.error("run fail:" + String(json.Code) + " msg: " + json.Msg);
       } else {

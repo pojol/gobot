@@ -1,4 +1,4 @@
-import { Input, Tag, Divider, Button } from "antd";
+import { Input, Tag, Divider, Button, Tabs } from "antd";
 import * as React from "react";
 import PubSub from "pubsub-js";
 
@@ -8,26 +8,36 @@ import "codemirror/theme/solarized.css";
 import "codemirror/mode/lua/lua";
 import Topic from "../model/topic";
 import Config from "../model/config";
+import moment from 'moment';
+import lanMap from "../config/lan";
 
 const { Search } = Input;
 
+const { TabPane } = Tabs;
+
+
 export default class BotConfig extends React.Component {
+
+  newTabIndex = 0;
+
   constructor(props) {
     super(props);
     this.state = {
       driveAddr: "",
-      httpActionCode: Config.httpCode,
-      assertCode: Config.assertCode,
-      conditionCode: Config.conditionCode,
+      activeKey: 'http',
+      panes: [
+        { title: 'HTTP', content: Config.httpCode, key: 'http', closable: false },
+        { title: 'Assert', content: Config.assertCode, key: 'assert', closable: false },
+        { title: 'Condition', content: Config.conditionCode, key: 'condition', closable: false },
+        { title: "Global", content: Config.globalCode, key: 'global', closable: false},
+      ],
     };
   }
 
   componentDidMount() {
     var remote = localStorage.remoteAddr
     if (remote !== undefined && remote !== "") {
-      this.setState({driveAddr:remote})
-    } else {
-      this.setState({driveAddr:Config.driveAddr})
+      this.setState({ driveAddr: remote })
     }
   }
 
@@ -37,43 +47,76 @@ export default class BotConfig extends React.Component {
 
   onApplyDriveAddr = () => {
     PubSub.publish(Topic.ConfigUpdate, {
-        key: "addr",
-        val: this.state.driveAddr,
-      });
+      key: "addr",
+      val: this.state.driveAddr,
+    });
   };
 
-  onBeforeHttpChange = (editor, data, value) => {
-    this.setState({ httpActionCode: value });
-  };
-
-  onApplyHttpCode = () => {
+  onApplyCode = () => {
     PubSub.publish(Topic.ConfigUpdate, {
-        key: "httpCode",
-        val: this.state.httpActionCode,
-      });
+      key: "assertCode",
+      val: this.state.assertCode,
+    });
   };
 
-  onBeforeAssertChange = (editor, data, value) => {
-    this.setState({ assertCode: value });
+  onBeforeChange = (editor, data, value) => {
+
+    console.info(this.state.activeKey, value)
+    let activeKey = this.state.activeKey
+    let newPanes = this.state.panes
+
+    for (var i = 0; i < newPanes.length; i++) {
+      if (newPanes[i].key === activeKey) {
+        newPanes[i].content = value
+      }
+    }
+
+    this.setState({ panes: newPanes })
   };
 
-  onApplyAssertCode = () => {
-    PubSub.publish(Topic.ConfigUpdate, {
-        key: "assertCode",
-        val: this.state.assertCode,
-      });
+  onTableChange = activeKey => {
+    this.setState({ activeKey });
   };
 
-  onBeforeConditionChange = (editor, data, value) => {
-    this.setState({ conditionCode: value });
+  onTableEdit = (targetKey, action) => {
+    console.info(action, targetKey)
+    this[action](targetKey);
   };
 
-  onApplyConditionCode = () => {
-    PubSub.publish(Topic.ConfigUpdate, {
-        key: "conditionCode",
-        val: this.state.conditionCode,
-      });
+  add = () => {
+    const { panes } = this.state;
+    const activeKey = `newTab${this.newTabIndex++}`;
+    const newPanes = [...panes];
+    newPanes.push({ title: 'New Tab', content: 'Content of new Tab', key: activeKey });
+    this.setState({
+      panes: newPanes,
+      activeKey,
+    });
   };
+
+  remove = targetKey => {
+    const { panes, activeKey } = this.state;
+    let newActiveKey = activeKey;
+    let lastIndex;
+    panes.forEach((pane, i) => {
+      if (pane.key === targetKey) {
+        lastIndex = i - 1;
+      }
+    });
+    const newPanes = panes.filter(pane => pane.key !== targetKey);
+    if (newPanes.length && newActiveKey === targetKey) {
+      if (lastIndex >= 0) {
+        newActiveKey = newPanes[lastIndex].key;
+      } else {
+        newActiveKey = newPanes[0].key;
+      }
+    }
+    this.setState({
+      panes: newPanes,
+      activeKey: newActiveKey,
+    });
+  };
+
 
   render() {
     const addr = this.state.driveAddr;
@@ -86,57 +129,40 @@ export default class BotConfig extends React.Component {
       lineNumbers: true,
     };
 
+    const { panes, activeKey } = this.state;
+
     return (
       <div>
         <Divider>
-          {" "}
-          <Tag color="#2db7f5">drive service address</Tag>
+          {lanMap["app.config.drive.address"][moment.locale()]}
         </Divider>
         <Search
           placeholder={addr}
           onChange={this.onChangeDriveAddr}
-          enterButton="Apply"
+          enterButton={lanMap["app.config.drive.apply"][moment.locale()]}
           onSearch={this.onApplyDriveAddr}
         />
         <Divider>
-          {" "}
-          <Tag color="#2db7f5">Script</Tag> action code init template
+          {lanMap["app.config.template"][moment.locale()]}
         </Divider>
 
-        <CodeMirror
-          width="600"
-          height="400"
-          value={httpCode}
-          options={options}
-          onBeforeChange={this.onBeforeHttpChange}
-        />
-        <Button onClick={this.onApplyHttpCode}>Apply</Button>
-
-        <Divider>
-          {" "}
-          <Tag color="#2db7f5">Assert</Tag> action code init template
-        </Divider>
-        <CodeMirror
-          width="600"
-          height="400"
-          value={assertCode}
-          options={options}
-          onBeforeChange={this.onBeforeAssertChange}
-        />
-        <Button onClick={this.onApplyAssertCode}>Apply</Button>
-
-        <Divider>
-          {" "}
-          <Tag color="#2db7f5">Condition</Tag> action code init template
-        </Divider>
-        <CodeMirror
-          width="600"
-          height="400"
-          value={conditionCode}
-          options={options}
-          onBeforeChange={this.onBeforeConditionChange}
-        />
-        <Button onClick={this.onApplyConditionCode}>Apply</Button>
+        <Tabs
+          type="editable-card"
+          onChange={this.onTableChange}
+          activeKey={activeKey}
+          onEdit={this.onTableEdit}
+        >
+          {panes.map(pane => (
+            <TabPane tab={pane.title} key={pane.key} closable={pane.closable}>
+              <CodeMirror
+                value={pane.content}
+                options={options}
+                onBeforeChange={this.onBeforeChange}
+              />
+            </TabPane>
+          ))}
+        </Tabs>
+        <Button type="primary" onClick={this.onApplyCode}>{lanMap["app.config.code.apply"][moment.locale()]}</Button>
       </div>
     );
   }

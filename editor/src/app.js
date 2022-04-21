@@ -1,4 +1,4 @@
-import { Layout, Tabs, Tag, Radio } from "antd";
+import { Layout, Tabs, Tag, Radio, Modal, Input } from "antd";
 import * as React from "react";
 import "antd/dist/antd.css";
 import "./app.css";
@@ -26,6 +26,8 @@ export default class App extends React.Component {
     this.state = {
       tab: "Edit",
       locale: enUS,
+      isModalVisible: false,
+      modalConfig: "",
     };
   }
 
@@ -42,9 +44,15 @@ export default class App extends React.Component {
   componentDidMount() {
     PubSub.subscribe(Topic.FileLoad, (topic, info) => {
       this.setState({ tab: "Edit" });
-
       PubSub.publish(Topic.FileLoadDraw, [info.Tree]);
     });
+
+    let remote = localStorage.remoteAddr
+    if (remote === "") {
+      this.setState({isModalVisible: true})
+    } else {
+      this.syncTemplateCode()
+    }
 
     window.addEventListener('resize', this.resizeHandler, false)
   }
@@ -61,6 +69,32 @@ export default class App extends React.Component {
     });
   };
 
+  syncTemplateCode() {
+
+  }
+
+  showModal = () => {
+    this.setState({ isModalVisible: true });
+  };
+
+  modalConfigChange = (e) => {
+    this.setState({ modalConfig: e.target.value });
+  };
+
+  modalHandleOk = () => {
+    this.setState({ isModalVisible: false });
+    if (this.state.modalConfig !== "") {
+      localStorage.remoteAddr = this.state.modalConfig
+
+      this.syncTemplateCode()
+    }
+  };
+
+  modalHandleCancel = () => {
+    this.setState({ isModalVisible: false });
+  };
+
+
   changeLocale = e => {
     const localeValue = e.target.value;
     this.setState({ locale: localeValue });
@@ -71,7 +105,7 @@ export default class App extends React.Component {
   };
 
   render() {
-    const { locale } = this.state;
+    const { locale, isModalVisible } = this.state;
 
     return (
       <dev className="site-layout-content">
@@ -111,6 +145,16 @@ export default class App extends React.Component {
           </TabPane>
         </Tabs>
 
+        <Modal
+            visible={isModalVisible}
+            onOk={this.modalHandleOk}
+            onCancel={this.modalHandleCancel}
+          >
+            <Input
+              placeholder={lanMap["app.main.modal.input"][moment.locale()]}
+              onChange={this.modalConfigChange}
+            />
+          </Modal>
       </dev>
 
     );

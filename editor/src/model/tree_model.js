@@ -454,17 +454,9 @@ export default class TreeModel extends React.Component {
     window.tree = new Map(); // 主要维护的是 editor 节点编辑后的数据
     this.setState({ tree: {} }); // 主要维护的是 graph 中节点的数据
 
-    var remote = localStorage.remoteAddr
-    if (remote === undefined || remote === "") {
-      localStorage.remoteAddr = Config.driveAddr;
-      remote = Config.driveAddr
-    }
-    window.remote = remote
-
     PubSub.subscribe(Topic.ConfigUpdate, (topic, info) => {
       if (info.key === "addr") {
         localStorage.remoteAddr = info.val;
-        window.remote = info.val;
       } else if (info.key === "httpCode") {
         this.setState({ httpCodeTmp: info.val });
       } else if (info.key === "assertCode") {
@@ -543,7 +535,7 @@ export default class TreeModel extends React.Component {
         type: "application/json",
       });
 
-      PostBlob(window.remote, Api.DebugCreate, name, blob).then(
+      PostBlob(localStorage.remoteAddr, Api.DebugCreate, name, blob).then(
         (json) => {
           if (json.Code !== 200) {
             message.error(
@@ -567,7 +559,7 @@ export default class TreeModel extends React.Component {
         type: "application/json",
       });
 
-      PostBlob(window.remote, Api.FileBlobUpload, filename, blob).then(
+      PostBlob(localStorage.remoteAddr, Api.FileBlobUpload, filename, blob).then(
         (json) => {
           if (json.Code !== 200) {
             message.error(
@@ -586,7 +578,7 @@ export default class TreeModel extends React.Component {
         return;
       }
 
-      Post(window.remote, Api.DebugStep, { BotID: this.state.botid }).then(
+      Post(localStorage.remoteAddr, Api.DebugStep, { BotID: this.state.botid }).then(
         (json) => {
           if (json.Code !== 200) {
             let change, changestr

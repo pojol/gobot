@@ -1,8 +1,7 @@
 
 
 const Config = {
-    driveAddr : "http://localhost:8888/",
-    httpCode : `
+    httpCode: `
 local parm = {
     body = {},    -- request body
     timeout = "10s",
@@ -23,7 +22,7 @@ function execute()
 
 end
 `,
-    assertCode : `
+    assertCode: `
 -- Write expression to return true or false
 function execute()
 
@@ -31,13 +30,17 @@ function execute()
 
 end
 `,
-    conditionCode : `
+    conditionCode: `
 -- Write expression to return true or false
 function execute()
 
 
 
 end
+`
+    ,
+    globalCode: `
+meta = {}
 `
     ,
 }

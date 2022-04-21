@@ -1,5 +1,9 @@
 
 var lanMap = {
+    "app.main.modal.input" : {
+        "en" : "Input drive server address",
+        "zh-cn" : "输入驱动端服务器地址"
+    },
     "app.tab.edit" : {
         "en" : "Edit",
         "zh-cn" : "编辑"
@@ -134,6 +138,23 @@ var lanMap = {
         "en" : "New Tag",
         "zh-cn" : "新建标签"
     },
+
+    "app.config.drive.address" : {
+        "en" : "Drive server address",
+        "zh-cn" : "驱动端服务器地址"
+    },
+    "app.config.drive.apply" : {
+        "en" : "Apply new server address",
+        "zh-cn" : "应用新的服务器地址"
+    },
+    "app.config.template" : {
+        "en" : "Predefined node template code",
+        "zh-cn" : "预定义节点模版代码"
+    },
+    "app.config.code.apply" : {
+        "en" : "Apply template code",
+        "zh-cn" : "应用模版代码"
+    }
 }
 
 export default lanMap
