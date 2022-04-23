@@ -123,13 +123,11 @@ func NewWithBehaviorTree(path string, bt *behavior.Tree, name, globalScript stri
 	rand.Seed(time.Now().UnixNano())
 
 	// 加载预定义全局脚本文件
-	fmt.Println("global", globalScript)
 	DoString(bot.bs.L, globalScript)
 
 	// 这里要对script目录进行一次检查，将lua脚本都载入进来
 	preScripts := utils.GetDirectoryFiels(path, ".lua")
 	for _, v := range preScripts {
-		fmt.Println("preload script", path+v)
 		err := DoFile(bot.bs.L, path+v)
 		if err != nil {
 			fmt.Println("err", err.Error())

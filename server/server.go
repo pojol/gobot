@@ -257,7 +257,6 @@ func ConfigUpload(ctx echo.Context) error {
 		goto EXT
 	}
 
-	fmt.Println(string(bts))
 	err = factory.Global.UploadConfig(bts)
 	if err != nil {
 		code = ErrUploadConfig
