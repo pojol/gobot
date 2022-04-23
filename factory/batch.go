@@ -32,8 +32,9 @@ type Batch struct {
 	BatchNum  int32
 	Errors    int32
 
-	tree *behavior.Tree
-	path string
+	tree          *behavior.Tree
+	path          string
+	globalScripte string
 
 	bots    map[string]*bot.Bot
 	colorer *color.Color
@@ -50,7 +51,7 @@ type Batch struct {
 	botErrCh  chan bot.ErrInfo
 }
 
-func CreateBatch(scriptPath, name string, num int, tbyt []byte) *Batch {
+func CreateBatch(scriptPath, name string, num int, tbyt []byte, globalScript string) *Batch {
 
 	tree, err := behavior.New(tbyt)
 	if err != nil {
@@ -58,20 +59,21 @@ func CreateBatch(scriptPath, name string, num int, tbyt []byte) *Batch {
 	}
 
 	b := &Batch{
-		ID:        uuid.New().String(),
-		Name:      name,
-		path:      scriptPath,
-		CurNum:    0,
-		BatchNum:  512,
-		TotalNum:  int32(num),
-		bwg:       utils.NewSizeWaitGroup(512),
-		exit:      utils.NewSwitch(),
-		tree:      tree,
-		pipeline:  make(chan *bot.Bot, num),
-		done:      make(chan interface{}, 1),
-		BatchDone: make(chan interface{}, 1),
-		botDoneCh: make(chan string),
-		botErrCh:  make(chan bot.ErrInfo),
+		ID:            uuid.New().String(),
+		Name:          name,
+		path:          scriptPath,
+		globalScripte: globalScript,
+		CurNum:        0,
+		BatchNum:      512,
+		TotalNum:      int32(num),
+		bwg:           utils.NewSizeWaitGroup(512),
+		exit:          utils.NewSwitch(),
+		tree:          tree,
+		pipeline:      make(chan *bot.Bot, num),
+		done:          make(chan interface{}, 1),
+		BatchDone:     make(chan interface{}, 1),
+		botDoneCh:     make(chan string),
+		botErrCh:      make(chan bot.ErrInfo),
 
 		colorer: color.New(),
 		bots:    make(map[string]*bot.Bot),
@@ -172,7 +174,7 @@ func (b *Batch) run() {
 				curbatchnum = last
 			}
 			for i := 0; i < int(curbatchnum); i++ {
-				b.pipeline <- bot.NewWithBehaviorTree(b.path, b.tree, b.Name)
+				b.pipeline <- bot.NewWithBehaviorTree(b.path, b.tree, b.Name, b.globalScripte)
 			}
 
 			b.bwg.Wait()

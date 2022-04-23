@@ -76,7 +76,7 @@ export default class RunningList extends React.Component {
     refreshBotList() {
         this.setState({ botLst: [] });
 
-        Post(window.remote, Api.BotList, {}).then((json) => {
+        Post(localStorage.remoteAddr, Api.BotList, {}).then((json) => {
             if (json.Code !== 200) {
                 message.error("run fail:" + String(json.Code) + " msg: " + json.Msg);
             } else {

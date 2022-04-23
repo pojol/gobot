@@ -138,6 +138,20 @@ func (f *Factory) GetBehaviors() []database.BehaviorInfo {
 	return lst
 }
 
+func (f *Factory) UploadConfig(dat []byte) error {
+
+	err := database.Get().UpsetConfig(dat)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (f *Factory) GetConfig() (database.TemplateConfig, error) {
+	return database.Get().FindConfig("config")
+}
+
 func (f *Factory) FindBehavior(name string) (database.BehaviorInfo, error) {
 	return database.Get().FindFile(name)
 }
@@ -170,7 +184,7 @@ func (f *Factory) CreateTask(name string, num int) *Batch {
 		f.lru.Put(name, info.Dat)
 	}
 
-	return CreateBatch(f.parm.ScriptPath, name, num, dat)
+	return CreateBatch(f.parm.ScriptPath, name, num, dat, database.GetGlobalScript())
 }
 
 func (f *Factory) CreateDebugBot(name string, fbyt []byte) *bot.Bot {
@@ -181,7 +195,7 @@ func (f *Factory) CreateDebugBot(name string, fbyt []byte) *bot.Bot {
 		return nil
 	}
 
-	b = bot.NewWithBehaviorTree(f.parm.ScriptPath, tree, name)
+	b = bot.NewWithBehaviorTree(f.parm.ScriptPath, tree, name, database.GetGlobalScript())
 	f.debugBots[b.ID()] = b
 
 	return b

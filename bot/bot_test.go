@@ -250,7 +250,7 @@ func TestLoad(t *testing.T) {
 	tree, err := behavior.New([]byte(compose))
 	assert.Equal(t, err, nil)
 
-	bot = NewWithBehaviorTree("../script/", tree, "test")
+	bot = NewWithBehaviorTree("../script/", tree, "test", "")
 	defer bot.Close()
 
 	for i := 0; i < 20; i++ {
@@ -266,7 +266,7 @@ func TestPool(t *testing.T) {
 	tree, err := behavior.New([]byte(compose))
 	assert.Equal(t, err, nil)
 
-	bot = NewWithBehaviorTree("../script/", tree, "test")
+	bot = NewWithBehaviorTree("../script/", tree, "test", "")
 	defer bot.Close()
 
 	err = bot.RunByBlock()

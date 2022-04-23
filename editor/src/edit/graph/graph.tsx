@@ -151,11 +151,15 @@ export default class GraphView extends React.Component {
       target: graph,
       collapsable: true,
       stencilGraphWidth: 180,
-      stencilGraphHeight: 400,
+      stencilGraphHeight: 250,
       groups: [
         {
           name: "group1",
           title: "Normal",
+        },
+        {
+          name: "group2",
+          title: "Predefined",
         }
       ],
     });
@@ -165,10 +169,9 @@ export default class GraphView extends React.Component {
       , new SequenceNode()
       , new ConditionNode()
       , new AssertNode()
-      , new ActionNode()
       , new LoopNode()
       , new WaitNode()], "group1");
-
+      stencil.load([new ActionNode()], "group2")
 
     graph.bindKey("del", () => {
       const cells = this.graph.getSelectedCells();

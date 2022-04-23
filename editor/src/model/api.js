@@ -10,6 +10,9 @@ const Api = {
     FileRemove: "file.remove",
     FileSetTags: "file.setTags",
 
+    ConfigUpload : "config.upload",
+    ConfigGet : "config.get",
+
     /*
         Debug
     */

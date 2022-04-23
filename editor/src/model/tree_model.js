@@ -3,7 +3,6 @@ import PubSub from "pubsub-js";
 import Topic from "./topic";
 import { message,Alert } from "antd";
 import OBJ2XML from "object-to-xml";
-import Config from "./config";
 import { Post, PostBlob } from "./request";
 import Api from "./api";
 import { NodeTy } from "./node_type";
@@ -49,9 +48,19 @@ export default class TreeModel extends React.Component {
       nods: [], //  root 记录节点的链路关系， window(map 记录节点的细节
       botid: "",
       behaviorTreeName: "",
-      httpCodeTmp: Config.httpCode,
-      assertTmp: Config.assertCode,
-      conditionTmp: Config.conditionCode,
+      httpCodeTmp: "",
+      assertTmp: `
+-- Write expression to return true or false
+function execute()
+
+end
+      `,
+      conditionTmp: `
+-- Write expression to return true or false
+function execute()
+
+end
+      `,
       history: [],
     };
   }
@@ -454,25 +463,18 @@ export default class TreeModel extends React.Component {
     window.tree = new Map(); // 主要维护的是 editor 节点编辑后的数据
     this.setState({ tree: {} }); // 主要维护的是 graph 中节点的数据
 
-    var remote = localStorage.remoteAddr
-    if (remote === undefined || remote === "") {
-      localStorage.remoteAddr = Config.driveAddr;
-      remote = Config.driveAddr
-    }
-    window.remote = remote
-
     PubSub.subscribe(Topic.ConfigUpdate, (topic, info) => {
       if (info.key === "addr") {
         localStorage.remoteAddr = info.val;
-        window.remote = info.val;
-      } else if (info.key === "httpCode") {
-        this.setState({ httpCodeTmp: info.val });
-      } else if (info.key === "assertCode") {
-        this.setState({ assertTmp: info.val });
-      } else if (info.key === "conditionCode") {
-        this.setState({ conditionTmp: info.val });
+        message.success("addr update succ");
+      } else if (info.key === "code" && info.val !== "") {
+        var codetmp = JSON.parse(info.val)
+        for (var i = 0; i < codetmp.length; i++) {
+          if (codetmp[i]["title"] === "HTTP") {
+            this.setState({ httpCodeTmp: codetmp[i]["content"] });
+          }
+        }
       }
-      message.success("config update succ");
     });
 
     PubSub.subscribe(Topic.NodeAdd, (topic, addinfo) => {
@@ -543,7 +545,7 @@ export default class TreeModel extends React.Component {
         type: "application/json",
       });
 
-      PostBlob(window.remote, Api.DebugCreate, name, blob).then(
+      PostBlob(localStorage.remoteAddr, Api.DebugCreate, name, blob).then(
         (json) => {
           if (json.Code !== 200) {
             message.error(
@@ -567,7 +569,7 @@ export default class TreeModel extends React.Component {
         type: "application/json",
       });
 
-      PostBlob(window.remote, Api.FileBlobUpload, filename, blob).then(
+      PostBlob(localStorage.remoteAddr, Api.FileBlobUpload, filename, blob).then(
         (json) => {
           if (json.Code !== 200) {
             message.error(
@@ -586,7 +588,7 @@ export default class TreeModel extends React.Component {
         return;
       }
 
-      Post(window.remote, Api.DebugStep, { BotID: this.state.botid }).then(
+      Post(localStorage.remoteAddr, Api.DebugStep, { BotID: this.state.botid }).then(
         (json) => {
           if (json.Code !== 200) {
             let change, changestr
