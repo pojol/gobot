@@ -24,6 +24,34 @@ export function Post(url, methon, formData) {
   });
 }
 
+export function PostGetBlob(url, methon) {
+  return new Promise(function (resolve, reject) {
+    fetch(url +"/"+ methon, {
+        method: "POST",
+        mode: "cors",
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+        },
+    })
+        .then((response) => {
+            if (response.ok) {
+                return response.blob();
+            } else {
+                reject({ status: response.status });
+            }
+        })
+        .then((response) => {
+            resolve({
+                blob: response
+            });
+        })
+        .catch((err) => {
+            console.info(err)
+            reject({ status: -1 });
+        });
+});
+}
+
 var str2utf8 = window.TextEncoder ? function(str) {
   var encoder = new TextEncoder('utf8');
   var bytes = encoder.encode(str);
@@ -59,6 +87,7 @@ export function PostBlob(url, methon, name, data) {
         resolve(response);
       })
       .catch((err) => {
+        console.info(err)
         reject({ status: -1 });
       });
   });

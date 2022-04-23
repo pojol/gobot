@@ -117,3 +117,7 @@ type StepResponse struct {
 type CreateDebugBotResponse struct {
 	BotID string
 }
+
+type ConfigGetInfoResponse struct {
+	Lst []database.TemplateConfig
+}

@@ -3,7 +3,6 @@ import PubSub from "pubsub-js";
 import Topic from "./topic";
 import { message,Alert } from "antd";
 import OBJ2XML from "object-to-xml";
-import Config from "./config";
 import { Post, PostBlob } from "./request";
 import Api from "./api";
 import { NodeTy } from "./node_type";
@@ -49,9 +48,19 @@ export default class TreeModel extends React.Component {
       nods: [], //  root 记录节点的链路关系， window(map 记录节点的细节
       botid: "",
       behaviorTreeName: "",
-      httpCodeTmp: Config.httpCode,
-      assertTmp: Config.assertCode,
-      conditionTmp: Config.conditionCode,
+      httpCodeTmp: "",
+      assertTmp: `
+-- Write expression to return true or false
+function execute()
+
+end
+      `,
+      conditionTmp: `
+-- Write expression to return true or false
+function execute()
+
+end
+      `,
       history: [],
     };
   }
@@ -457,14 +466,15 @@ export default class TreeModel extends React.Component {
     PubSub.subscribe(Topic.ConfigUpdate, (topic, info) => {
       if (info.key === "addr") {
         localStorage.remoteAddr = info.val;
-      } else if (info.key === "httpCode") {
-        this.setState({ httpCodeTmp: info.val });
-      } else if (info.key === "assertCode") {
-        this.setState({ assertTmp: info.val });
-      } else if (info.key === "conditionCode") {
-        this.setState({ conditionTmp: info.val });
+        message.success("addr update succ");
+      } else if (info.key === "code" && info.val !== "") {
+        var codetmp = JSON.parse(info.val)
+        for (var i = 0; i < codetmp.length; i++) {
+          if (codetmp[i]["title"] === "HTTP") {
+            this.setState({ httpCodeTmp: codetmp[i]["content"] });
+          }
+        }
       }
-      message.success("config update succ");
     });
 
     PubSub.subscribe(Topic.NodeAdd, (topic, addinfo) => {

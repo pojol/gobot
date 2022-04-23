@@ -1,4 +1,4 @@
-import { Input, Tag, Divider, Button, Tabs } from "antd";
+import { Input, Tag, Divider, Button, Tabs, message } from "antd";
 import * as React from "react";
 import PubSub from "pubsub-js";
 
@@ -7,9 +7,12 @@ import "codemirror/lib/codemirror.css";
 import "codemirror/theme/solarized.css";
 import "codemirror/mode/lua/lua";
 import Topic from "../model/topic";
-import Config from "../model/config";
 import moment from 'moment';
 import lanMap from "../config/lan";
+import Api from "../model/api";
+import { PostBlob } from "../model/request";
+import OBJ2XML from "object-to-xml";
+
 
 const { Search } = Input;
 
@@ -24,13 +27,8 @@ export default class BotConfig extends React.Component {
     super(props);
     this.state = {
       driveAddr: "",
-      activeKey: 'http',
-      panes: [
-        { title: 'HTTP', content: Config.httpCode, key: 'http', closable: false },
-        { title: 'Assert', content: Config.assertCode, key: 'assert', closable: false },
-        { title: 'Condition', content: Config.conditionCode, key: 'condition', closable: false },
-        { title: "Global", content: Config.globalCode, key: 'global', closable: false},
-      ],
+      activeKey: 'global',
+      panes: [],
     };
   }
 
@@ -38,6 +36,11 @@ export default class BotConfig extends React.Component {
     var remote = localStorage.remoteAddr
     if (remote !== undefined && remote !== "") {
       this.setState({ driveAddr: remote })
+    }
+
+    var temp = localStorage.CodeTemplate
+    if (temp !== undefined && temp !== "") {
+        this.setState({panes: JSON.parse(temp)})
     }
   }
 
@@ -53,18 +56,37 @@ export default class BotConfig extends React.Component {
   };
 
   onApplyCode = () => {
-    PubSub.publish(Topic.ConfigUpdate, {
-      key: "assertCode",
-      val: this.state.assertCode,
+
+    let panes = this.state.panes
+    var templatecode = JSON.stringify(panes)
+    var blob = new Blob([templatecode], {
+      type: "application/json",
     });
+
+    PostBlob(localStorage.remoteAddr, Api.ConfigUpload, "config", blob).then(
+      (json) => {
+        console.info(json.Code)
+        if (json.Code !== 200) {
+          message.error(
+            "upload fail:" + String(json.Code) + " msg: " + json.Msg
+          );
+        } else {
+          PubSub.publish(Topic.ConfigUpdate, {
+            key : "code",
+            val : templatecode,
+          })
+          message.success("upload succ ");
+        }
+      }
+    )
   };
 
   onBeforeChange = (editor, data, value) => {
 
     console.info(this.state.activeKey, value)
     let activeKey = this.state.activeKey
+    
     let newPanes = this.state.panes
-
     for (var i = 0; i < newPanes.length; i++) {
       if (newPanes[i].key === activeKey) {
         newPanes[i].content = value
@@ -120,9 +142,6 @@ export default class BotConfig extends React.Component {
 
   render() {
     const addr = this.state.driveAddr;
-    const httpCode = this.state.httpActionCode;
-    const assertCode = this.state.assertCode;
-    const conditionCode = this.state.conditionCode;
     const options = {
       mode: "text/x-lua",
       theme: "solarized dark",

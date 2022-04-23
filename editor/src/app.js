@@ -16,6 +16,8 @@ import zhCN from 'antd/lib/locale/zh_CN';
 import moment from 'moment';
 import 'moment/locale/zh-cn';
 import lanMap from "./config/lan";
+import { PostGetBlob } from "./model/request";
+import Api from "./model/api";
 
 const { TabPane } = Tabs;
 moment.locale('en');
@@ -70,6 +72,21 @@ export default class App extends React.Component {
   };
 
   syncTemplateCode() {
+
+    PostGetBlob(localStorage.remoteAddr, Api.ConfigGet, {}).then(
+      (file) => {
+        let reader = new FileReader();
+        reader.onload = function(ev) {
+          localStorage.CodeTemplate = reader.result
+
+          PubSub.publish(Topic.ConfigUpdate, {
+            key : "code",
+            val : reader.result,
+          })
+        }
+        reader.readAsText(file.blob);
+      }
+    )
 
   }
 

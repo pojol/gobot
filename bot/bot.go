@@ -52,31 +52,47 @@ func (b *Bot) Name() string {
 
 func (b *Bot) GetMetadata() (string, string, string, error) {
 
+	var metaStr, changeStr string
+
 	if b.preloadErr != "" {
 		return b.preloadErr, "", "", nil
 	}
 
-	meta, err := utils.Table2Map(b.bs.L.GetGlobal("meta").(*lua.LTable))
-	if err != nil {
-		return "", "", "", err
+	metaTable, ok := b.bs.L.GetGlobal("meta").(*lua.LTable)
+	if ok {
+		meta, err := utils.Table2Map(metaTable)
+		if err != nil {
+			return "", "", "", err
+		}
+
+		metabyt, err := json.Marshal(&meta)
+		if err != nil {
+			return "", "", "", err
+		}
+
+		metaStr = string(metabyt)
+	} else {
+		b.runtimeErr += "\nThe meta field is not obtained"
 	}
 
-	metabyt, err := json.Marshal(&meta)
-	if err != nil {
-		return "", "", "", err
+	changeTable, ok := b.bs.L.GetGlobal("change").(*lua.LTable)
+	if ok {
+		change, err := utils.Table2Map(changeTable)
+		if err != nil {
+			return "", "", "", err
+		}
+
+		changebyt, err := json.Marshal(&change)
+		if err != nil {
+			return "", "", "", err
+		}
+
+		changeStr = string(changebyt)
+	} else {
+		b.runtimeErr += "\nThe change field is not obtained"
 	}
 
-	change, err := utils.Table2Map(b.bs.L.GetGlobal("change").(*lua.LTable))
-	if err != nil {
-		return "", "", "", err
-	}
-
-	changebyt, err := json.Marshal(&change)
-	if err != nil {
-		return "", "", "", err
-	}
-
-	return string(metabyt), string(changebyt), b.runtimeErr, nil
+	return metaStr, changeStr, b.runtimeErr, nil
 
 }
 
@@ -94,21 +110,26 @@ func (b *Bot) GetPrevNodeID() string {
 	return ""
 }
 
-func NewWithBehaviorTree(path string, bt *behavior.Tree, tmpl string) *Bot {
+func NewWithBehaviorTree(path string, bt *behavior.Tree, name, globalScript string) *Bot {
 
 	bot := &Bot{
 		id:   uuid.New().String(),
 		tree: bt,
 		cur:  bt,
 		bs:   luaPool.Get(),
-		name: tmpl,
+		name: name,
 	}
 
 	rand.Seed(time.Now().UnixNano())
 
+	// 加载预定义全局脚本文件
+	fmt.Println("global", globalScript)
+	DoString(bot.bs.L, globalScript)
+
 	// 这里要对script目录进行一次检查，将lua脚本都载入进来
 	preScripts := utils.GetDirectoryFiels(path, ".lua")
 	for _, v := range preScripts {
+		fmt.Println("preload script", path+v)
 		err := DoFile(bot.bs.L, path+v)
 		if err != nil {
 			fmt.Println("err", err.Error())
