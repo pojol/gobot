@@ -35,6 +35,12 @@ type BotConfig struct {
 	Addr string `gorm:"<-"` // bot driver address
 }
 
+type TemplateConfig struct {
+	gorm.Model
+	Name string `gorm:"<-"`
+	Dat  []byte `gorm:"<-"`
+}
+
 type Database struct {
 	db *gorm.DB
 	sync.Mutex
@@ -86,7 +92,7 @@ func New(pwd, name, host, user string) {
 		panic(err)
 	}
 
-	err = db.AutoMigrate(&BehaviorInfo{}, &BotTemplateConfig{}, &BotConfig{})
+	err = db.AutoMigrate(&BehaviorInfo{}, &BotTemplateConfig{}, &BotConfig{}, &TemplateConfig{})
 	if err != nil {
 		panic(err)
 	}
@@ -100,6 +106,7 @@ func New(pwd, name, host, user string) {
 		panic(err.Error())
 	}
 
+	bf.initTemplateCode()
 	fmt.Println("mysql", name, "init succ", "have bots ", len(f))
 }
 
@@ -162,6 +169,14 @@ func (f *Database) FindFile(name string) (BehaviorInfo, error) {
 	return info, res.Error
 }
 
+func (f *Database) FindConfig(name string) (TemplateConfig, error) {
+	info := TemplateConfig{}
+
+	res := f.db.Where("name = ?", name).First(&info)
+
+	return info, res.Error
+}
+
 func (f *Database) GetAllFiles() ([]BehaviorInfo, error) {
 
 	lst := []BehaviorInfo{}
@@ -169,6 +184,35 @@ func (f *Database) GetAllFiles() ([]BehaviorInfo, error) {
 	result := f.db.Find(&lst)
 
 	return lst, result.Error
+}
+
+func (f *Database) UpsetConfig(byt []byte) error {
+
+	f.Lock()
+	defer f.Unlock()
+
+	var res *gorm.DB
+
+	info := TemplateConfig{
+		Name: "config",
+		Dat:  byt,
+	}
+
+	_, err := f.FindConfig("config")
+	if err == nil {
+		res = f.db.Model(&TemplateConfig{}).Where("name = ?", "config").Updates(info)
+	} else if err == gorm.ErrRecordNotFound {
+		res = f.db.Create(&info)
+	}
+
+	return res.Error
+}
+
+func (f *Database) initTemplateCode() {
+	_, err := f.FindConfig("config")
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		bf.UpsetConfig([]byte(`[{"title":"Global","content":"\n--[[\n\tGlobal constant area, users can define some constants here; it is easy to call in other scripts\n]]--\n\nREMOTE = \"http://127.0.0.1:8888\"\n","key":"global","closable":false},{"title":"HTTP","content":"\nlocal parm = {\n    body = {},    -- request body\n    timeout = \"10s\",\n    headers = {},\n}\n\nlocal url = REMOTE .. \"/group/methon\"\nlocal http = require(\"http\")\n\nfunction execute()\n    res, errmsg = http.post(url, parm)\n  \tif errmsg ~= nil then\n\t\tmeta.Err = errmsg\n    \treturn\n  \tend\n  \t\n  \tif res[\"status_code\"] ~= 200 then\n\t\tmeta.Err = \"post \" .. url .. \" http status code err \" .. res[\"status_code\"]\n  \t\treturn\n  \tend\n  \n  \tbody = json.decode(res[\"body\"])\n  \tmerge(meta, body.Body)\n\nend\n","key":"http","closable":false}]`))
+	}
 }
 
 func init() {

@@ -45,7 +45,7 @@ function parseChildren(childrenNodes, children) {
 
 function LoadBehaviorWithBlob(url, methon, name) {
     return new Promise(function (resolve, reject) {
-        fetch(url + methon, {
+        fetch(url +"/"+ methon, {
             method: "POST",
             mode: "cors",
             headers: {

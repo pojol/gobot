@@ -58,13 +58,13 @@ func main() {
 
 	e := echo.New()
 	e.Use(middleware.CORS())
-	e.Use(middleware.RecoverWithConfig(middleware.RecoverConfig{
-		Skipper:           middleware.DefaultSkipper,
-		StackSize:         4 << 10, // 4 KB
-		DisableStackAll:   true,
-		DisablePrintStack: true,
-		LogLevel:          1,
-	}))
+	/*
+		e.Use(middleware.RecoverWithConfig(middleware.RecoverConfig{
+			Skipper:   middleware.DefaultSkipper,
+			StackSize: 4 << 10, // 4 KB
+			LogLevel:  0,
+		}))
+	*/
 	server.Route(e)
 	e.Start(":8888")
 

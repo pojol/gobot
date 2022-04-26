@@ -33,6 +33,8 @@ const (
 	ErrEmptyBatch
 	ErrTagsFormat
 	ErrRunningErr
+	ErrUploadConfig
+	ErrGetConfig
 )
 
 var errmap map[Err]string = map[Err]string{
@@ -237,6 +239,57 @@ EXT:
 	return nil
 }
 
+func ConfigUpload(ctx echo.Context) error {
+	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
+	code := Succ
+	res := &Response{}
+
+	bts, err := ioutil.ReadAll(ctx.Request().Body)
+	if err != nil {
+		code = ErrContentRead // tmp
+		fmt.Println(err.Error())
+		goto EXT
+	}
+
+	if len(bts) == 0 {
+		code = ErrContentRead // tmp
+		fmt.Println("bytes is empty!")
+		goto EXT
+	}
+
+	err = factory.Global.UploadConfig(bts)
+	if err != nil {
+		code = ErrUploadConfig
+		res.Msg = err.Error()
+		goto EXT
+	}
+
+EXT:
+	res.Code = int(code)
+	fmt.Println(res.Code, res.Msg)
+	ctx.JSON(http.StatusOK, res)
+	return nil
+}
+
+func ConfigGetInfo(ctx echo.Context) error {
+	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
+	code := Succ
+	res := &Response{}
+
+	cfg, err := factory.Global.GetConfig()
+	if err != nil {
+		code = ErrGetConfig
+		res.Msg = err.Error()
+		goto EXT
+	}
+
+EXT:
+	fmt.Println(code, string(cfg.Dat))
+	res.Code = int(code)
+	ctx.Blob(http.StatusOK, "text/plain;charset=utf-8", cfg.Dat)
+	return nil
+}
+
 func FileGetBlob(ctx echo.Context) error {
 	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
 	req := &FindBehaviorReq{}
@@ -350,7 +403,7 @@ func BotRun(ctx echo.Context) error {
 		code = Fail
 		goto EXT
 	}
-	b = bot.NewWithBehaviorTree("script/", tree, req.Name)
+	b = bot.NewWithBehaviorTree("script/", tree, req.Name, database.GetGlobalScript())
 	err = b.RunByBlock()
 	if err != nil {
 		code = ErrRunningErr
@@ -532,6 +585,9 @@ func Route(e *echo.Echo) {
 	e.POST("/file.list", FileGetList)
 	e.POST("/file.get", FileGetBlob)
 	e.POST("/file.setTags", FileSetTags)
+
+	e.POST("/config.get", ConfigGetInfo)
+	e.POST("/config.upload", ConfigUpload)
 
 	e.POST("/bot.run", BotRun)
 	e.POST("/bot.batch", BotCreateBatch) // 创建一批bot

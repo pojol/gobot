@@ -188,7 +188,7 @@ export default class BotList extends React.Component {
       if (bots[i].Name === name) {
         bots[i].Tags = tags   // update tags
         // 同步给服务器
-        Post(window.remote, Api.FileSetTags, {
+        Post(localStorage.remoteAddr, Api.FileSetTags, {
           Name: name,
           NewTags: tags,
         }).then((json) => {
@@ -247,7 +247,7 @@ export default class BotList extends React.Component {
     this.setState({ botLst: [] });
     this.setState({ batchLst: [] });
 
-    Post(window.remote, Api.FileList, {}).then((json) => {
+    Post(localStorage.remoteAddr, Api.FileList, {}).then((json) => {
       if (json.Code !== 200) {
         message.error("run fail:" + String(json.Code) + " msg: " + json.Msg);
       } else {
@@ -311,7 +311,7 @@ export default class BotList extends React.Component {
     if (this.state.selectedRows.length > 0) {
       var row = this.state.selectedRows[0]
       LoadBehaviorWithBlob(
-        window.remote,
+        localStorage.remoteAddr,
         Api.FileGet,
         row.name
       ).then((file) => {
@@ -338,7 +338,7 @@ export default class BotList extends React.Component {
 
       var num = this.state.runs[row.name]
       if (num === undefined || num === 0) {
-        Post(window.remote, Api.BotRun, {Name : row.name}).then((json)=>{
+        Post(localStorage.remoteAddr, Api.BotRun, {Name : row.name}).then((json)=>{
           if (json.Code !== 200) {
             message.error("running fail:" + String(json.Code) + " msg: " + json.Msg);
           } else {
@@ -348,7 +348,7 @@ export default class BotList extends React.Component {
         continue
       }
 
-      Post(window.remote, Api.BotCreateBatch, { Name: row.name, Num: num }).then((json) => {
+      Post(localStorage.remoteAddr, Api.BotCreateBatch, { Name: row.name, Num: num }).then((json) => {
         if (json.Code !== 200) {
           message.error("run fail:" + String(json.Code) + " msg: " + json.Msg);
         } else {
@@ -363,7 +363,7 @@ export default class BotList extends React.Component {
   handleBotDelete = e => {
     for (var i = 0; i < this.state.selectedRows.length; i++) {
       var row = this.state.selectedRows[i]
-      Post(window.remote, Api.FileRemove, {
+      Post(localStorage.remoteAddr, Api.FileRemove, {
         Name: row.name,
       }).then((json) => {
         if (json.Code !== 200) {
@@ -384,7 +384,7 @@ export default class BotList extends React.Component {
       var row = this.state.selectedRows[i]
 
       LoadBehaviorWithBlob(
-        window.remote,
+        localStorage.remoteAddr,
         Api.FileGet,
         row.name
       ).then((file) => {
@@ -399,7 +399,7 @@ export default class BotList extends React.Component {
     var filepProps = {
       name: "file",
       multiple: true,
-      action: window.remote + Api.FileTxtUpload,
+      action: localStorage.remoteAddr + Api.FileTxtUpload,
       onDrop(e) {
         console.log("Dropped files", e.dataTransfer.files);
       },
