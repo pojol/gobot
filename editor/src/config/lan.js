@@ -45,10 +45,18 @@ var lanMap = {
         "en" : "Assert",
         "zh-cn" : "断言节点"
     },
+    "app.edit.tab.other" : {
+        "en" : "Other",
+        "zh-cn" : "其他"
+    },
 
     "app.edit.tab.apply" : {
         "en" : "Apply",
         "zh-cn" : "应用"
+    },
+    "app.edit.tab.placeholder" : {
+        "en" : "Input node name",
+        "zh-cn" : "输入节点名称"
     },
 
     "app.edit.blackboard.create" : {
@@ -56,7 +64,7 @@ var lanMap = {
         "zh-cn" : "创建"
     },
     "app.edit.blackboard.create.desc" : {
-        "en" : "Create a bot based on the current behavior tree",
+        "en" : "Create a bot for debugging",
         "zh-cn" : "使用当前的行为树创建一个调试用的机器人"
     },
     "app.edit.blackboard.step" : {

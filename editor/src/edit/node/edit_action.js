@@ -12,6 +12,9 @@ import { NodeTy } from "../../model/node_type";
 import moment from 'moment';
 import lanMap from "../../config/lan";
 
+const { Search } = Input;
+
+
 export default class ActionTab extends React.Component {
   constructor(props) {
     super(props);
@@ -45,9 +48,9 @@ export default class ActionTab extends React.Component {
       }
     });
 
-    PubSub.subscribe(Topic.EditPlaneCodeMetaResize, (topic, h) =>{
+    PubSub.subscribe(Topic.EditPlaneCodeMetaResize, (topic, h) => {
       var nh = h - 100
-      this.state.editor.setSize("auto",nh.toString())
+      this.state.editor.setSize("auto", nh.toString())
     })
   }
 
@@ -75,15 +78,15 @@ export default class ActionTab extends React.Component {
     this.setState({ code: value });
   };
 
-  onChange = (editor, data, value) => {};
+  onChange = (editor, data, value) => { };
 
   onDidMount = (editor) => {
     editor.setSize("auto", "400px")
-    this.setState({editor:editor})
+    this.setState({ editor: editor })
   }
 
   onChangeAlias = (e) => {
-    this.setState({defaultAlias:e.target.value})
+    this.setState({ defaultAlias: e.target.value })
   }
 
   render() {
@@ -105,9 +108,15 @@ export default class ActionTab extends React.Component {
           editorDidMount={this.onDidMount}
         />
         <Space>
-          <Tag color="#55acee">{nod.id}</Tag>
-          <Input placeholder="set alias" width={200} value={this.state.defaultAlias} onChange={this.onChangeAlias}/>
-          <Button onClick={this.applyClick}>{lanMap["app.edit.tab.apply"][moment.locale()]}</Button>
+          <Button type="dashed">{nod.id}</Button>
+          <Search
+            placeholder={lanMap["app.edit.tab.placeholder"][moment.locale()]}
+            width={200}
+            enterButton={lanMap["app.edit.tab.apply"][moment.locale()]}
+            value={this.state.defaultAlias}
+            onChange={this.onChangeAlias}
+            onSearch={this.applyClick}
+          />
         </Space>{" "}
       </div>
     );

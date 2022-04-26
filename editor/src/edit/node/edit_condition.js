@@ -8,10 +8,13 @@ import "codemirror/lib/codemirror.css";
 import "codemirror/theme/solarized.css";
 import "codemirror/mode/lua/lua";
 
-import { Tag, Button, message, Space } from "antd";
+import { Tag, Button, message, Space,Input } from "antd";
 
 import moment from 'moment';
 import lanMap from "../../config/lan";
+
+const { Search } = Input;
+
 
 export default class ConditionTab extends React.Component {
   constructor(props) {
@@ -43,9 +46,9 @@ export default class ConditionTab extends React.Component {
       }
     });
 
-    PubSub.subscribe(Topic.EditPlaneCodeMetaResize, (topic, h) =>{
+    PubSub.subscribe(Topic.EditPlaneCodeMetaResize, (topic, h) => {
       var nh = h - 100
-      this.state.editor.setSize("auto",nh.toString())
+      this.state.editor.setSize("auto", nh.toString())
     })
   }
 
@@ -72,11 +75,11 @@ export default class ConditionTab extends React.Component {
     this.setState({ code: value });
   };
 
-  onChange = (editor, data, value) => {};
+  onChange = (editor, data, value) => { };
 
   onDidMount = (editor) => {
     editor.setSize("auto", "400px")
-    this.setState({editor:editor})
+    this.setState({ editor: editor })
   }
 
 
@@ -98,11 +101,17 @@ export default class ConditionTab extends React.Component {
           onChange={this.onChange}
           editorDidMount={this.onDidMount}
         />
-
         <Space>
-          <Tag color="#55acee">{nod.id}</Tag>
-          <Button onClick={this.applyClick}>{lanMap["app.edit.tab.apply"][moment.locale()]}</Button>
-        </Space>
+          <Button type="dashed">{nod.id}</Button>
+          <Search
+            placeholder={lanMap["app.edit.tab.placeholder"][moment.locale()]}
+            width={200}
+            enterButton={lanMap["app.edit.tab.apply"][moment.locale()]}
+            value={this.state.defaultAlias}
+            onChange={this.onChangeAlias}
+            onSearch={this.applyClick}
+          />
+        </Space>{" "}
       </div>
     );
   }

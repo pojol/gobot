@@ -13,6 +13,7 @@ import { NodeTy } from "../../model/node_type";
 
 import moment from 'moment';
 import lanMap from "../../config/lan";
+import SequenceTab from "./edit_sequence";
 
 
 const { TabPane } = Tabs;
@@ -35,17 +36,20 @@ export default class Edit extends React.Component {
 
   changeTab(ty, id) {
     var state = this.state;
+    var tabkey = ""
 
     if (state.tab_id === id) {
       return;
     }
 
     if (ty === NodeTy.Sequence || ty === NodeTy.Selector) {
-      return;
+      tabkey = "other"
+    } else {
+      tabkey = ty
     }
 
     this.clean();
-    this.setState({ tab_key: ty });
+    this.setState({ tab_key: tabkey });
   }
 
   componentDidMount() {
@@ -76,6 +80,9 @@ export default class Edit extends React.Component {
           </TabPane>
           <TabPane tab={lanMap["app.edit.tab.assert"][moment.locale()]} key={NodeTy.Assert} disabled={true}>
             <AssertTab />
+          </TabPane>
+          <TabPane tab={lanMap["app.edit.tab.other"][moment.locale()]} key={"other"} disabled={true}>
+            <SequenceTab />
           </TabPane>
         </Tabs>
       </div>

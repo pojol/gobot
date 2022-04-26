@@ -27,6 +27,27 @@
   right:180px;
 }
 
+.app-create {
+  position: absolute;
+  z-index: 10;
+  right:335px;
+  bottom:18px;
+}
+
+.app-step {
+  position: absolute;
+  z-index: 10;
+  right:265px;
+  bottom:18px;
+}
+
+.app-upload {
+  position: absolute;
+  z-index: 10;
+  right:180px;
+  bottom:18px;
+}
+
 
 .dnd-wrap {
   width: 200px;

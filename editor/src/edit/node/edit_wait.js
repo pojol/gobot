@@ -8,6 +8,7 @@ import {
   message,
   Tag,
   Space,
+  Input,
 } from "antd";
 import PubSub from "pubsub-js";
 import Topic from "../../model/topic";
@@ -18,6 +19,9 @@ import lanMap from "../../config/lan";
 
 const Min = 1;
 const Max = 60 * 60 * 1000; // 1 hour
+
+const { Search } = Input;
+
 
 export default class WaitTab extends React.Component {
   constructor(props) {
@@ -107,8 +111,15 @@ export default class WaitTab extends React.Component {
           </Col>
         </Row>
         <Space>
-          <Tag color="#55acee">{nod.id}</Tag>
-          <Button onClick={this.applyClick}>{lanMap["app.edit.tab.apply"][moment.locale()]}</Button>
+          <Button type="dashed">{nod.id}</Button>
+          <Search
+            placeholder={lanMap["app.edit.tab.placeholder"][moment.locale()]}
+            width={200}
+            enterButton={lanMap["app.edit.tab.apply"][moment.locale()]}
+            value={this.state.defaultAlias}
+            onChange={this.onChangeAlias}
+            onSearch={this.applyClick}
+          />
         </Space>{" "}
       </div>
     );

@@ -8,6 +8,7 @@ import {
   message,
   Slider,
   Space,
+  Input,
 } from "antd";
 import PubSub from "pubsub-js";
 import Topic from "../../model/topic";
@@ -18,6 +19,9 @@ import lanMap from "../../config/lan";
 
 const Min = 0;
 const Max = 1000;
+
+const { Search } = Input;
+
 
 export default class LoopTab extends React.Component {
   constructor(props) {
@@ -113,9 +117,16 @@ export default class LoopTab extends React.Component {
         </Row>
 
         <Space>
-          <Tag color="#55acee">{nod.id}</Tag>
-          <Button onClick={this.applyClick}>{lanMap["app.edit.tab.apply"][moment.locale()]}</Button>
-        </Space>
+          <Button type="dashed">{nod.id}</Button>
+          <Search
+            placeholder={lanMap["app.edit.tab.placeholder"][moment.locale()]}
+            width={200}
+            enterButton={lanMap["app.edit.tab.apply"][moment.locale()]}
+            value={this.state.defaultAlias}
+            onChange={this.onChangeAlias}
+            onSearch={this.applyClick}
+          />
+        </Space>{" "}
       </div>
     );
   }

@@ -9,9 +9,8 @@ import LoopNode from "../../shape/shape_loop";
 import WaitNode from "../../shape/shape_wait";
 import AssertNode from "../../shape/shap_assert";
 import { NodeTy, IsScriptNode } from "../../model/node_type";
-import { Button, Tooltip } from 'antd';
-import { ZoomInOutlined, ZoomOutOutlined, AimOutlined, UndoOutlined } from '@ant-design/icons';
-
+import { Button, Tooltip, Modal, Input } from 'antd';
+import { ZoomInOutlined, ZoomOutOutlined, AimOutlined, UndoOutlined, CloudUploadOutlined, StepForwardOutlined, BugOutlined } from '@ant-design/icons';
 
 import "./graph.css";
 import { message } from "antd";
@@ -44,6 +43,8 @@ export default class GraphView extends React.Component {
   container: HTMLElement;
   dnd: any;
   stencilContainer: HTMLDivElement;
+
+  state = { isModalVisible: false, behaviorName: "" };
 
   rect: Rect = {
     wratio: 0.6,
@@ -171,7 +172,7 @@ export default class GraphView extends React.Component {
       , new AssertNode()
       , new LoopNode()
       , new WaitNode()], "group1");
-      stencil.load([new ActionNode()], "group2")
+    stencil.load([new ActionNode()], "group2")
 
     graph.bindKey("del", () => {
       const cells = this.graph.getSelectedCells();
@@ -348,16 +349,6 @@ export default class GraphView extends React.Component {
         });
       }
     });
-
-    PubSub.subscribe(Topic.Create, (topic: string, info: any) => {
-      this.refreshNodes((nod) => {  // 
-        nod.setAttrs({
-          body: {
-            strokeWidth: 1,
-          },
-        });
-      })
-    })
 
     PubSub.subscribe(Topic.EditPlaneEditCodeResize, (topic: string, w: number) => {
 
@@ -647,6 +638,42 @@ export default class GraphView extends React.Component {
     PubSub.publish(Topic.Undo, {})
   }
 
+  behaviorNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    this.setState({ behaviorName: e.target.value })
+  };
+
+  modalHandleOk = () => {
+    this.setState({ isModalVisible: false })
+    if (this.state.behaviorName !== "") {
+      PubSub.publish(Topic.Upload, this.state.behaviorName);
+    } else {
+      message.warning("please enter the file name of the behavior tree");
+    }
+  };
+
+  modalHandleCancel = () => {
+    this.setState({ isModalVisible: false })
+  };
+
+  ClickUpload = () => {
+    this.setState({ isModalVisible: true })
+  };
+
+  ClickStep = () => {
+    PubSub.publish(Topic.Step, "");
+  };
+
+  ClickDebug = () => {
+    PubSub.publish(Topic.Create, "");
+    this.refreshNodes((nod) => {  // 
+      nod.setAttrs({
+        body: {
+          strokeWidth: 1,
+        },
+      });
+    })
+  }
+
   render() {
     return (
       <div className="app">
@@ -678,6 +705,36 @@ export default class GraphView extends React.Component {
             <Button icon={<UndoOutlined />} onClick={this.ClickUndo} />
           </Tooltip>
         </div>
+
+        <div className="app-create">
+          <Tooltip
+            placement="topRight"
+            title={"Create a bot for debugging"}
+          >
+            <Button icon={<BugOutlined />} size={"small"} onClick={this.ClickDebug} >Debug</Button>
+          </Tooltip>
+        </div>
+        <div className="app-step">
+          <Button icon={<StepForwardOutlined />} size={"small"} onClick={this.ClickStep} >Step</Button>
+        </div>
+        <div className="app-upload">
+          <Tooltip
+            placement="topRight"
+            title={"Upload the bot to the server"}
+          >
+            <Button icon={<CloudUploadOutlined />} size={"small"} onClick={this.ClickUpload}> {"Upload"}</Button>
+          </Tooltip>
+        </div>
+        <Modal
+          visible={this.state.isModalVisible}
+          onOk={this.modalHandleOk}
+          onCancel={this.modalHandleCancel}
+        >
+          <Input
+            placeholder="input behavior file name"
+            onChange={this.behaviorNameChange}
+          />
+        </Modal>
 
       </div>
     );

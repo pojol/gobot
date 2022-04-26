@@ -20,7 +20,7 @@ export default class SelectorTab extends React.Component {
   render() {
     return (
       <div>
-        <Input placeholder="id" value={this.state.node_id} disabled={true} />
+          <Button type="dashed">{this.state.node_id}</Button>
       </div>
     );
   }
