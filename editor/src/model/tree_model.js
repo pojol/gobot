@@ -40,6 +40,38 @@ const Cmd = {
   Unlink: "node_unlink",
 }
 
+function ErrMsgParse(msg) {
+
+  var arr = msg.split("\n")
+  var newmsg = ""
+  var wline,tline = -1
+
+  for (var i = 0; i < arr.length; i++) {
+    var lidx = arr[i].indexOf("line:")
+    var cidx = arr[i].indexOf("(column:")
+    if (lidx !== -1 && cidx !== -1) {
+      wline = parseInt(arr[i].substring(lidx+5, cidx), 10) -1
+      tline = i
+      console.info("err line", wline, "tips", tline)
+    }
+  }
+
+  for(var i =0; i < arr.length; i++) {
+    if (tline == i) {
+      newmsg += "<u>" + arr[i] + "</u>\n"
+    } else if (wline == i) {
+      newmsg += "<font color='red'>" + arr[i] + "</font>\n"
+      console.info("warp", newmsg)
+    } else {
+      newmsg += arr[i]+"\n"
+    }
+  }
+
+  newmsg += "\n\n"
+
+  return newmsg
+}
+
 export default class TreeModel extends React.Component {
   constructor(props) {
     super(props);
@@ -591,32 +623,39 @@ end
       Post(localStorage.remoteAddr, Api.DebugStep, { BotID: this.state.botid }).then(
         (json) => {
           if (json.Code !== 200) {
-            let change, changestr
+            let change
+            let changeInfo = {}
 
             if (json.Code === 1008) {
               change = JSON.parse(json.Body.Change)
-              changestr = JSON.stringify(change,null,"\t")
+              changeInfo = {
+                status : "",
+                msg : JSON.stringify(change,null,"\t")
+              } 
+
               message.success("the end")
             } else {
-              message.warn(json.Msg)
-              changestr = "runtime err: " + json.Msg + "\n" + json.Body.RuntimeErr
+              message.error(json.Msg)
+              changeInfo = {
+                status : "error",
+                msg : ErrMsgParse(json.Body.RuntimeErr)
+              }
             }
             
             if (json.Code !== 1010) {
-              PubSub.publish(Topic.UpdateChange, changestr)
+              PubSub.publish(Topic.UpdateChange, changeInfo)
             }
             PubSub.publish(Topic.UpdateBlackboard, json.Body.Blackboard);
           } else {
 
-            let changestr, metastr
+            let metastr
             let meta = JSON.parse(json.Body.Blackboard)
             let change = JSON.parse(json.Body.Change)
 
             metastr = JSON.stringify(meta)
-            changestr = JSON.stringify(change, null, "\t")
 
             PubSub.publish(Topic.UpdateBlackboard, metastr);
-            PubSub.publish(Topic.UpdateChange, changestr)
+            PubSub.publish(Topic.UpdateChange, {status:"", msg:JSON.stringify(change, null, "\t")})
             PubSub.publish(Topic.Focus, {
               Cur: json.Body.Cur,
               Prev: json.Body.Prev,
