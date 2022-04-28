@@ -44,27 +44,9 @@ function ErrMsgParse(msg) {
 
   var arr = msg.split("\n")
   var newmsg = ""
-  var wline,tline = -1
-
-  for (var i = 0; i < arr.length; i++) {
-    var lidx = arr[i].indexOf("line:")
-    var cidx = arr[i].indexOf("(column:")
-    if (lidx !== -1 && cidx !== -1) {
-      wline = parseInt(arr[i].substring(lidx+5, cidx), 10) -1
-      tline = i
-      console.info("err line", wline, "tips", tline)
-    }
-  }
 
   for(var i =0; i < arr.length; i++) {
-    if (tline == i) {
-      newmsg += "<u>" + arr[i] + "</u>\n"
-    } else if (wline == i) {
-      newmsg += "<font color='red'>" + arr[i] + "</font>\n"
-      console.info("warp", newmsg)
-    } else {
-      newmsg += arr[i]+"\n"
-    }
+    newmsg += "<u>"+(i+1).toString()+"</u> " + arr[i]+"\n"
   }
 
   newmsg += "\n\n"

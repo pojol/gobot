@@ -31,18 +31,10 @@ services:
         limits:
           cpus: "0.3"
     environment:
-      - MYSQL_PASSWORD=
+      - MYSQL_PASSWORD=gobot
       - MYSQL_DATABASE=gobot
       - MYSQL_USER=gobot
       - MYSQL_HOST=db
-
-  gobot_editor:
-    image: braidgo/gobot-editor:latest
-    restart: always
-    depends_on:
-      - gobot_driver
-    ports:
-      - 7777:7777
 
 networks:
   gnet:
