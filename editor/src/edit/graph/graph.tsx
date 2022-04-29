@@ -160,7 +160,7 @@ export default class GraphView extends React.Component {
         },
         {
           name: "group2",
-          title: "Predefined",
+          title: "Prefab",
         }
       ],
     });

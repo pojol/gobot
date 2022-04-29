@@ -100,7 +100,6 @@ export default class AssertTab extends React.Component {
         />
 
         <Space>
-          <Button type="dashed">{nod.id}</Button>
           <Search
             placeholder={lanMap["app.edit.tab.placeholder"][moment.locale()]}
             width={200}
@@ -109,6 +108,7 @@ export default class AssertTab extends React.Component {
             onChange={this.onChangeAlias}
             onSearch={this.applyClick}
           />
+          <Button type="dashed">{nod.id}</Button>
         </Space>{" "}
       </div>
     );

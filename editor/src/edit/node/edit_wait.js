@@ -90,28 +90,28 @@ export default class WaitTab extends React.Component {
 
     return (
       <div>
-        <Row>
-          <Col span={12}>
-            <Slider
-              tipFormatter={this.formatter}
-              min={Min}
-              max={Max}
-              onChange={this.onChange}
-              value={typeof inputValue === "number" ? inputValue : 1}
-            />
-          </Col>
-          <Col span={4}>
-            <InputNumber
-              min={Min}
-              max={Max}
-              style={{ margin: "0 26px" }}
-              value={inputValue}
-              onChange={this.onChange}
-            />
-          </Col>
-        </Row>
-        <Space>
-          <Button type="dashed">{nod.id}</Button>
+
+        <Space direction="vertical">
+          <Row>
+            <Col span={12}>
+              <Slider
+                tipFormatter={this.formatter}
+                min={Min}
+                max={Max}
+                onChange={this.onChange}
+                value={typeof inputValue === "number" ? inputValue : 1}
+              />
+            </Col>
+            <Col span={4}>
+              <InputNumber
+                min={Min}
+                max={Max}
+                style={{ margin: "0 26px" }}
+                value={inputValue}
+                onChange={this.onChange}
+              />
+            </Col>
+          </Row>
           <Search
             placeholder={lanMap["app.edit.tab.placeholder"][moment.locale()]}
             width={200}
@@ -120,6 +120,8 @@ export default class WaitTab extends React.Component {
             onChange={this.onChangeAlias}
             onSearch={this.applyClick}
           />
+          <Button type="dashed">{nod.id}</Button>
+
         </Space>{" "}
       </div>
     );

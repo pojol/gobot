@@ -95,6 +95,7 @@ export default class LoopTab extends React.Component {
 
     return (
       <div>
+        <Space direction="vertical" >
         <Row>
           <Col span={12}>
             <Slider
@@ -116,8 +117,6 @@ export default class LoopTab extends React.Component {
           </Col>
         </Row>
 
-        <Space>
-          <Button type="dashed">{nod.id}</Button>
           <Search
             placeholder={lanMap["app.edit.tab.placeholder"][moment.locale()]}
             width={200}
@@ -126,6 +125,7 @@ export default class LoopTab extends React.Component {
             onChange={this.onChangeAlias}
             onSearch={this.applyClick}
           />
+          <Button type="dashed">{nod.id}</Button>
         </Space>{" "}
       </div>
     );

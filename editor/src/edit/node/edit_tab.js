@@ -23,7 +23,7 @@ export default class Edit extends React.Component {
     super(props);
     this.state = {
       tab_id: "",
-      tab_key: "ConditionNode",
+      tab_key: "ActionNode",
     };
   }
 
@@ -44,6 +44,8 @@ export default class Edit extends React.Component {
 
     if (ty === NodeTy.Sequence || ty === NodeTy.Selector) {
       tabkey = "other"
+    } else if (ty === NodeTy.Action || ty === NodeTy.Condition || ty === NodeTy.Assert) {
+      tabkey = NodeTy.Action
     } else {
       tabkey = ty
     }
@@ -66,9 +68,6 @@ export default class Edit extends React.Component {
     return (
       <div>
         <Tabs activeKey={this.state.tab_key} size="small">
-          <TabPane tab={lanMap["app.edit.tab.condition"][moment.locale()]} key={NodeTy.Condition} disabled={true}>
-            <ConditionTab />
-          </TabPane>
           <TabPane tab={lanMap["app.edit.tab.script"][moment.locale()]} key={NodeTy.Action} disabled={true}>
             <ActionTab />
           </TabPane>
@@ -77,9 +76,6 @@ export default class Edit extends React.Component {
           </TabPane>
           <TabPane tab={lanMap["app.edit.tab.wait"][moment.locale()]} key={NodeTy.Wait} disabled={true}>
             <WaitTab />
-          </TabPane>
-          <TabPane tab={lanMap["app.edit.tab.assert"][moment.locale()]} key={NodeTy.Assert} disabled={true}>
-            <AssertTab />
           </TabPane>
           <TabPane tab={lanMap["app.edit.tab.other"][moment.locale()]} key={"other"} disabled={true}>
             <SequenceTab />
