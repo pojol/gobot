@@ -1,10 +1,16 @@
-import { Input, Tag, Divider, Button, Tabs, message } from "antd";
+import { Input, Tag, Divider, Button, Tabs, message, Select, Space } from "antd";
 import * as React from "react";
 import PubSub from "pubsub-js";
+import { DownOutlined } from '@ant-design/icons';
 
 import { Controlled as CodeMirror } from "react-codemirror2";
 import "codemirror/lib/codemirror.css";
 import "codemirror/theme/solarized.css";
+import "codemirror/theme/abcdef.css";
+import "codemirror/theme/ayu-dark.css";
+import "codemirror/theme/yonce.css";
+import "codemirror/theme/neo.css";
+import "codemirror/theme/zenburn.css";
 import "codemirror/mode/lua/lua";
 import Topic from "../model/topic";
 import moment from 'moment';
@@ -15,9 +21,8 @@ import OBJ2XML from "object-to-xml";
 
 
 const { Search } = Input;
-
 const { TabPane } = Tabs;
-
+const { Option } = Select;
 
 export default class BotConfig extends React.Component {
 
@@ -29,6 +34,7 @@ export default class BotConfig extends React.Component {
       driveAddr: "",
       activeKey: 'global',
       panes: [],
+      theme:"default",
     };
   }
 
@@ -40,7 +46,7 @@ export default class BotConfig extends React.Component {
 
     var temp = localStorage.CodeTemplate
     if (temp !== undefined && temp !== "") {
-        this.setState({panes: JSON.parse(temp)})
+      this.setState({ panes: JSON.parse(temp) })
     }
   }
 
@@ -72,8 +78,8 @@ export default class BotConfig extends React.Component {
           );
         } else {
           PubSub.publish(Topic.ConfigUpdate, {
-            key : "code",
-            val : templatecode,
+            key: "code",
+            val: templatecode,
           })
           message.success("upload succ ");
         }
@@ -85,7 +91,7 @@ export default class BotConfig extends React.Component {
 
     console.info(this.state.activeKey, value)
     let activeKey = this.state.activeKey
-    
+
     let newPanes = this.state.panes
     for (var i = 0; i < newPanes.length; i++) {
       if (newPanes[i].key === activeKey) {
@@ -139,18 +145,24 @@ export default class BotConfig extends React.Component {
     });
   };
 
+  clickTheme =(e)=> {
+    this.setState({theme: e}, ()=>{
+      localStorage.theme = e
+    })
+  }
 
   render() {
     const addr = this.state.driveAddr;
     const options = {
       mode: "text/x-lua",
-      theme: "solarized dark",
+      theme: this.state.theme,
       lineNumbers: true,
     };
 
     const { panes, activeKey } = this.state;
 
     return (
+
       <div>
         <Divider>
           {lanMap["app.config.drive.address"][moment.locale()]}
@@ -162,7 +174,20 @@ export default class BotConfig extends React.Component {
           onSearch={this.onApplyDriveAddr}
         />
         <Divider>
-          {lanMap["app.config.template"][moment.locale()]}
+          <Space>
+            {lanMap["app.config.template"][moment.locale()]}
+            <Select placeholder="Select a theme"
+              style={{ width: 180 }} onChange={this.clickTheme}>
+              <Option value="default">default</Option>
+              <Option value="abcdef">abcdef</Option>
+              <Option value="ayu-dark">ayu-dark</Option>
+              <Option value="yonce">yonce</Option>
+              <Option value="neo">neo</Option>
+              <Option value="solarized dark">solarized dark</Option>
+              <Option value="solarized light">solarized light</Option>
+              <Option value="zenburn">zenburn</Option>
+            </Select>
+          </Space>
         </Divider>
 
         <Tabs

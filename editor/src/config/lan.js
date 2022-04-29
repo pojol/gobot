@@ -156,7 +156,7 @@ var lanMap = {
         "zh-cn" : "应用新的服务器地址"
     },
     "app.config.template" : {
-        "en" : "Predefined node template code",
+        "en" : "Prefab node template code",
         "zh-cn" : "预定义节点模版代码"
     },
     "app.config.code.apply" : {

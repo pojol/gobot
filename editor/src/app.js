@@ -56,6 +56,11 @@ export default class App extends React.Component {
       this.syncTemplateCode()
     }
 
+    if (localStorage.theme === "" || localStorage.theme === undefined) {
+      localStorage.theme = "solarized dark"
+    }
+    console.info("theme",localStorage.theme)
+
     window.addEventListener('resize', this.resizeHandler, false)
   }
 

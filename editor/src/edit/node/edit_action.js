@@ -95,7 +95,7 @@ export default class ActionTab extends React.Component {
     const nod = this.state.nod;
     const options = {
       mode: "text/x-lua",
-      theme: "solarized dark",
+      theme: localStorage.theme,
       lineNumbers: true,
     };
 

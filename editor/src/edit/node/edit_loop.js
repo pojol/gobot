@@ -96,26 +96,26 @@ export default class LoopTab extends React.Component {
     return (
       <div>
         <Space direction="vertical" >
-        <Row>
-          <Col span={12}>
-            <Slider
-              tipFormatter={this.formatter}
-              min={Min}
-              max={Max}
-              onChange={this.onChange}
-              value={typeof inputValue === "number" ? inputValue : 0}
-            />
-          </Col>
-          <Col span={4}>
-            <InputNumber
-              min={Min}
-              max={Max}
-              style={{ margin: "0 26px" }}
-              value={inputValue}
-              onChange={this.onChange}
-            />
-          </Col>
-        </Row>
+          <Row>
+            <Col span={12}>
+              <Slider
+                tipFormatter={this.formatter}
+                min={Min}
+                max={Max}
+                onChange={this.onChange}
+                value={typeof inputValue === "number" ? inputValue : 0}
+              />
+            </Col>
+            <Col span={4}>
+              <InputNumber
+                min={Min}
+                max={Max}
+                style={{ margin: "0 26px" }}
+                value={inputValue}
+                onChange={this.onChange}
+              />
+            </Col>
+          </Row>
 
           <Search
             placeholder={lanMap["app.edit.tab.placeholder"][moment.locale()]}

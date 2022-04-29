@@ -7,8 +7,6 @@ import Topic from "../../model/topic";
 import ActionTab from "./edit_action";
 import LoopTab from "./edit_loop";
 import WaitTab from "./edit_wait";
-import ConditionTab from "./edit_condition";
-import AssertTab from "./edit_assert";
 import { NodeTy } from "../../model/node_type";
 
 import moment from 'moment';
