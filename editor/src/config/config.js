@@ -34,7 +34,7 @@ export default class BotConfig extends React.Component {
       driveAddr: "",
       activeKey: 'global',
       panes: [],
-      theme:"default",
+      theme:"ayu-dark",
     };
   }
 

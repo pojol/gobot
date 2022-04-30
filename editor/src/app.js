@@ -43,6 +43,12 @@ export default class App extends React.Component {
     }
   }
 
+  componentWillMount() {
+    if (localStorage.theme === "" || localStorage.theme === undefined) {
+      localStorage.theme = "ayu-dark"
+    }
+  }
+
   componentDidMount() {
     PubSub.subscribe(Topic.FileLoad, (topic, info) => {
       this.setState({ tab: "Edit" });
@@ -55,11 +61,6 @@ export default class App extends React.Component {
     } else {
       this.syncTemplateCode()
     }
-
-    if (localStorage.theme === "" || localStorage.theme === undefined) {
-      localStorage.theme = "solarized dark"
-    }
-    console.info("theme",localStorage.theme)
 
     window.addEventListener('resize', this.resizeHandler, false)
   }
