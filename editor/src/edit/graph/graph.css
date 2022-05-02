@@ -31,21 +31,21 @@
   position: absolute;
   z-index: 10;
   right:335px;
-  bottom:18px;
+  bottom:0px;
 }
 
 .app-step {
   position: absolute;
   z-index: 10;
   right:265px;
-  bottom:18px;
+  bottom:0px;
 }
 
 .app-upload {
   position: absolute;
   z-index: 10;
   right:180px;
-  bottom:18px;
+  bottom:0px;
 }
 
 
