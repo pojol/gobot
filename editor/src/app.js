@@ -1,4 +1,4 @@
-import { Layout, Tabs, Tag, Radio, Modal, Input } from "antd";
+import { Layout, Tabs, Tag, Radio, Modal, Input, Image, Space } from "antd";
 import * as React from "react";
 import "antd/dist/antd.css";
 import "./app.css";
@@ -18,6 +18,10 @@ import 'moment/locale/zh-cn';
 import lanMap from "./config/lan";
 import { PostGetBlob } from "./model/request";
 import Api from "./model/api";
+
+import {
+  ReadOutlined,
+} from '@ant-design/icons';
 
 const { TabPane } = Tabs;
 moment.locale('en');
@@ -57,7 +61,7 @@ export default class App extends React.Component {
 
     let remote = localStorage.remoteAddr
     if (remote === "") {
-      this.setState({isModalVisible: true})
+      this.setState({ isModalVisible: true })
     } else {
       this.syncTemplateCode()
     }
@@ -82,12 +86,12 @@ export default class App extends React.Component {
     PostGetBlob(localStorage.remoteAddr, Api.ConfigGet, {}).then(
       (file) => {
         let reader = new FileReader();
-        reader.onload = function(ev) {
+        reader.onload = function (ev) {
           localStorage.CodeTemplate = reader.result
 
           PubSub.publish(Topic.ConfigUpdate, {
-            key : "code",
-            val : reader.result,
+            key: "code",
+            val: reader.result,
           })
         }
         reader.readAsText(file.blob);
@@ -121,10 +125,10 @@ export default class App extends React.Component {
   changeLocale = e => {
     const localeValue = e.target.value;
     this.setState({ locale: localeValue });
-    
+
     moment.locale(localeValue.locale);
-    
-    console.info("moment=>",moment.locale())
+
+    console.info("moment=>", moment.locale())
   };
 
   render() {
@@ -133,15 +137,30 @@ export default class App extends React.Component {
     return (
       <dev className="site-layout-content">
         <dev className="ver">
-          <Tag color="#108ee9">v0.1.7</Tag>
-          <Radio.Group value={locale} onChange={this.changeLocale}>
-            <Radio.Button key="en" value={enUS}>
-              English
-            </Radio.Button>
-            <Radio.Button key="cn" value={zhCN}>
-              中文
-            </Radio.Button>
-          </Radio.Group>
+          <Space>
+            <Tag color="geekblue">v0.1.7</Tag>
+            <a href="https://pojol.gitee.io/gobot/#/">
+              <Tag icon={<ReadOutlined />} color="#108ee9">
+                Document
+              </Tag>
+            </a>
+            <Radio.Group size="small" value={locale} onChange={this.changeLocale}>
+              <Radio.Button key="en" value={enUS}>
+                English
+              </Radio.Button>
+              <Radio.Button key="cn" value={zhCN}>
+                中文
+              </Radio.Button>
+            </Radio.Group>
+
+            <a href="https://github.com/pojol/gobot">
+              <Image preview={false}
+                src="https://img.shields.io/github/stars/pojol/gobot?style=social"
+              />
+            </a>
+
+          </Space>
+
         </dev>
         <Tabs
           defaultActiveKey="Edit"
@@ -169,15 +188,15 @@ export default class App extends React.Component {
         </Tabs>
 
         <Modal
-            visible={isModalVisible}
-            onOk={this.modalHandleOk}
-            onCancel={this.modalHandleCancel}
-          >
-            <Input
-              placeholder={lanMap["app.main.modal.input"][moment.locale()]}
-              onChange={this.modalConfigChange}
-            />
-          </Modal>
+          visible={isModalVisible}
+          onOk={this.modalHandleOk}
+          onCancel={this.modalHandleCancel}
+        >
+          <Input
+            placeholder={lanMap["app.main.modal.input"][moment.locale()]}
+            onChange={this.modalConfigChange}
+          />
+        </Modal>
       </dev>
 
     );

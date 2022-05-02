@@ -11,37 +11,14 @@ import (
 	"github.com/pojol/gobot/utils"
 )
 
-type urlDetail struct {
-	ReqNum int
-	ErrNum int
-	AvgNum int64
-
-	ReqSize int64
-	ResSize int64
-}
-
-type Report struct {
-	ID     string
-	Name   string
-	BotNum int
-	ReqNum int
-	ErrNum int
-	Tps    int
-	Dura   string
-
-	BeginTime time.Time
-
-	UrlMap map[string]*urlDetail
-}
-
 type TaskInfo struct {
 	Name string
 	Num  int32
 }
 
 type Factory struct {
-	parm          Parm
-	reportHistory []Report
+	parm   Parm
+	report *Report
 
 	debugBots map[string]*bot.Bot
 
@@ -61,7 +38,7 @@ func Create(opts ...Option) (*Factory, error) {
 		frameRate:   time.Second * 1,
 		lifeTime:    time.Minute,
 		Interrupt:   true,
-		ReportLimit: 10,
+		ReportLimit: 100,
 		ScriptPath:  "script/",
 		batchSize:   1024,
 	}
@@ -72,6 +49,7 @@ func Create(opts ...Option) (*Factory, error) {
 
 	f := &Factory{
 		parm:      p,
+		report:    NewReport(int32(p.ReportLimit)),
 		debugBots: make(map[string]*bot.Bot),
 		exit:      utils.NewSwitch(),
 		lru:       database.Constructor(100),
@@ -85,15 +63,8 @@ func Create(opts ...Option) (*Factory, error) {
 
 var Global *Factory
 
-func (f *Factory) GetReport() []Report {
-	return f.reportHistory
-}
-
-func (f *Factory) AppendReport(rep Report) {
-	if len(f.reportHistory) >= f.parm.ReportLimit {
-		f.reportHistory = f.reportHistory[1:]
-	}
-	f.reportHistory = append(f.reportHistory, rep)
+func (f *Factory) GetReport() []database.ReportInfo {
+	return f.report.Info()
 }
 
 // Close 关闭机器人工厂
@@ -250,7 +221,7 @@ func (f *Factory) popBatch() {
 
 	f.batchLock.Lock()
 	b := f.batches[0]
-	f.AppendReport(b.Report())
+	f.report.Append(b.Report())
 	b.Close()
 
 	fmt.Println("pop batch", b.ID, b.Name)

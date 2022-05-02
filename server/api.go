@@ -51,31 +51,8 @@ type SetBehaviorTagsRes struct {
 	Bots []behaviorInfo
 }
 
-// get.report
-type ReportApiInfo struct {
-	Api        string
-	ReqNum     int
-	ErrNum     int
-	ConsumeNum int64
-
-	ReqSize int64
-	ResSize int64
-}
-
-type ReportInfo struct {
-	ID        string
-	Name      string
-	BotNum    int
-	ReqNum    int
-	ErrNum    int
-	Tps       int
-	Dura      string
-	BeginTime string
-	Apilst    []ReportApiInfo
-}
-
 type ReportRes struct {
-	Info []ReportInfo
+	Info []database.ReportInfo
 }
 
 // bot.batch
