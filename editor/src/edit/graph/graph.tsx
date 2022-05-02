@@ -44,7 +44,7 @@ export default class GraphView extends React.Component {
   dnd: any;
   stencilContainer: HTMLDivElement;
 
-  state = { isModalVisible: false, behaviorName: "" };
+  state = { isModalVisible: false, behaviorName: "", platfrom: "" };
 
   rect: Rect = {
     wratio: 0.6,
@@ -387,6 +387,21 @@ export default class GraphView extends React.Component {
 
       this.graph.resize(w, h)
     })
+
+
+    var agent = navigator.userAgent.toLowerCase();
+    var isMac = /macintosh|mac os x/i.test(navigator.userAgent);
+    if (agent.indexOf("win32") >= 0 || agent.indexOf("wow32") >= 0) {
+        this.setState({platfrom:"win"})
+    }
+    if (agent.indexOf("win64") >= 0 || agent.indexOf("wow64") >= 0) {
+      this.setState({platfrom:"win"})
+    }
+    if(isMac){
+      this.setState({platfrom:"mac"})
+    }
+
+
   }
 
   getLoopLabel(val: Number) {
@@ -706,7 +721,7 @@ export default class GraphView extends React.Component {
           </Tooltip>
         </div>
 
-        <div className="app-create">
+        <div className={"app-create-"+this.state.platfrom}>
           <Tooltip
             placement="topRight"
             title={"Create a bot for debugging"}
@@ -714,10 +729,10 @@ export default class GraphView extends React.Component {
             <Button icon={<BugOutlined />} size={"small"} onClick={this.ClickDebug} >Debug</Button>
           </Tooltip>
         </div>
-        <div className="app-step">
+        <div className={"app-step-"+this.state.platfrom}>
           <Button icon={<StepForwardOutlined />} size={"small"} onClick={this.ClickStep} >Step</Button>
         </div>
-        <div className="app-upload">
+        <div className={"app-upload-"+this.state.platfrom}>
           <Tooltip
             placement="topRight"
             title={"Upload the bot to the server"}
