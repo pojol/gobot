@@ -6,9 +6,14 @@ import Topic from "../model/topic";
 import { Post } from "../model/request";
 import Api from "../model/api";
 
+import moment from 'moment';
+import lanMap from "../config/lan";
+
 const { TabPane } = Tabs;
 
+
 export default class TestReport extends React.Component {
+
   constructor(props) {
     super(props);
     this.state = {
@@ -110,12 +115,37 @@ export default class TestReport extends React.Component {
     });
   }
 
+  refresh_lan() {
+    var lan = moment.locale()
+    var columns = this.state.columns
+    for (var i = 0; i < columns.length; i++) {
+      if (columns[i].key === "time") {
+        columns[i].title = lanMap["app.report.time"][lan]
+      }else if (columns[i].key === "duration") {
+        columns[i].title = lanMap["app.report.duration"][lan]
+      }else if (columns[i].key === "botnum") {
+        columns[i].title = lanMap["app.report.botnum"][lan]
+      }else if (columns[i].key === "reqnum") {
+        columns[i].title = lanMap["app.report.reqnum"][lan]
+      }else if (columns[i].key === "errors") {
+        columns[i].title = lanMap["app.report.errors"][lan]
+      }
+    }
+
+    this.setState({columns: columns})
+  }
+
   componentDidMount() {
     PubSub.subscribe(Topic.ReportUpdate, (topic, info) => {
       this.refresh();
     });
 
+    PubSub.subscribe(Topic.LanuageChange, ()=>{
+      this.refresh_lan()
+    })
+
     this.refresh();
+    this.refresh_lan();
   }
 
   clickTag = (e,record) => {

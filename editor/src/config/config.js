@@ -176,7 +176,7 @@ export default class BotConfig extends React.Component {
         <Divider>
           <Space>
             {lanMap["app.config.template"][moment.locale()]}
-            <Select placeholder="Select a theme"
+            <Select placeholder={lanMap["app.config.theme"][moment.locale()]}
               style={{ width: 180 }} onChange={this.clickTheme}>
               <Option value="default">default</Option>
               <Option value="abcdef">abcdef</Option>

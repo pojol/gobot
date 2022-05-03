@@ -128,6 +128,8 @@ export default class App extends React.Component {
 
     moment.locale(localeValue.locale);
 
+    PubSub.publish(Topic.LanuageChange, {})
+
     console.info("moment=>", moment.locale())
   };
 

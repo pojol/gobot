@@ -147,6 +147,28 @@ var lanMap = {
         "zh-cn" : "新建标签"
     },
 
+    "app.report.time" : {
+        "en" : "Time",
+        "zh-cn": "报告时间",
+    },
+    "app.report.duration" : {
+        "en" : "Duration",
+        "zh-cn": "运行时间",
+    },
+    "app.report.botnum" : {
+        "en" : "BotNum",
+        "zh-cn": "机器人数量",
+    },
+    "app.report.reqnum" : {
+        "en" : "ReqNum",
+        "zh-cn": "请求次数",
+    },
+    "app.report.errors" : {
+        "en" : "Errors",
+        "zh-cn": "错误次数",
+    },
+    
+
     "app.config.drive.address" : {
         "en" : "Drive server address",
         "zh-cn" : "驱动端服务器地址"
@@ -158,6 +180,10 @@ var lanMap = {
     "app.config.template" : {
         "en" : "Prefab node template code",
         "zh-cn" : "预定义节点模版代码"
+    },
+    "app.config.theme" : {
+        "en" : "Select a theme",
+        "zh-cn" : "选择代码框风格"
     },
     "app.config.code.apply" : {
         "en" : "Apply template code",
