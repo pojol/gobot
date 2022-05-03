@@ -6,3 +6,6 @@ logo.zip
 zh-cn/driver/main.exe
 driver/bot_linux
 bot_linux
+editor/build/
+editor/dist/
+editor/out/

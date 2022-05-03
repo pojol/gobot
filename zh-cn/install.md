@@ -1,5 +1,9 @@
 # 安装
 
+### 本地运行
+1. 在 release 页下载对应的客户端版本
+2. 在 release 页下载对应的服务器版本
+3. 启动服务器
 
 ### 通过 docker-compose
 1. 安装 docker-compose
