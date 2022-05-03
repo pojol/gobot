@@ -17,6 +17,7 @@ import { message } from "antd";
 import PubSub from "pubsub-js";
 import Topic from "../../model/topic";
 
+import moment from 'moment';
 
 const { Dnd, Stencil } = Addon;
 
@@ -38,19 +39,104 @@ type Rect = {
   hoffset: number,
 }
 
+function NewStencil(graph: Graph) {
+
+  var selectorNod = new SelectorNode()
+  var seqNod = new SequenceNode()
+  var condNod = new ConditionNode()
+  var assertNod = new AssertNode()
+  var loopNod = new LoopNode()
+  var waitNod = new WaitNode()
+  var title = "Components"
+  var placeholder = "Search by shape name"
+  var g1title = "Normal"
+  var g2title = "Prefab"
+
+  if (moment.locale() == "en") {
+    selectorNod.setAttrs({ label: { text: "Selector" } });
+    seqNod.setAttrs({ label: { text: "Sequence" } });
+    condNod.setAttrs({ label: { text: "Condition" } });
+    assertNod.setAttrs({ label: { text: "Assert" } });
+    loopNod.setAttrs({ label: { text: "Loop" } });
+    waitNod.setAttrs({ label: { text: "Wait" } });
+
+  } else if (moment.locale() == "zh-cn") {
+    selectorNod.setAttrs({ label: { text: "选择" } });
+    seqNod.setAttrs({ label: { text: "顺序" } });
+    condNod.setAttrs({ label: { text: "条件" } });
+    assertNod.setAttrs({ label: { text: "断言" } });
+    loopNod.setAttrs({ label: { text: "循环" } });
+    waitNod.setAttrs({ label: { text: "等待" } });
+
+    title = "组件"
+    placeholder = "通过节点名进行搜索"
+    g1title = "默认节点"
+    g2title = "预制节点"
+  }
+
+  var stencil = new Stencil({
+    title: title,
+    search(nod, keyword) {
+      var attr = nod.getAttrs();
+      var label = attr.label.text as String;
+      if (label !== null) {
+        return label.toLowerCase().indexOf(keyword.toLowerCase()) !== -1;
+      }
+
+      return false;
+    },
+    placeholder: placeholder,
+    notFoundText: "Not Found",
+    target: graph,
+    collapsable: true,
+    stencilGraphWidth: 180,
+    stencilGraphHeight: 250,
+    groups: [
+      {
+        name: "group1",
+        title: g1title,
+      },
+      {
+        name: "group2",
+        title: g2title,
+      }
+    ],
+  });
+
+  stencil.load([selectorNod, seqNod, condNod, assertNod, loopNod, waitNod], "group1");
+  stencil.load([new ActionNode()], "group2")
+
+  return stencil
+}
+
 export default class GraphView extends React.Component {
   graph: Graph;
   container: HTMLElement;
   dnd: any;
   stencilContainer: HTMLDivElement;
 
-  state = { isModalVisible: false, behaviorName: "", platfrom: "" };
+  state = { isModalVisible: false, behaviorName: "", platfrom: "", stencil: null, btnDebug: "Debug", btnStep: "Step", btnUpload: "Upload" };
 
   rect: Rect = {
     wratio: 0.6,
     woffset: 0,
     hratio: 0.69,
     hoffset: 0,
+  }
+
+  reloadStencil() {
+    this.setState({ stencil: NewStencil(this.graph) }, () => {
+      if (this.state.stencil != null) {
+        var stencil = this.state.stencil as Addon.Stencil
+        this.stencilContainer.appendChild(stencil.container);
+      }
+    })
+
+    if (moment.locale() === "en") {
+      this.setState({ btnDebug: "Debug", btnStep: "Step", btnUpload: "Upload" })
+    } else if (moment.locale() === "zh-cn") {
+      this.setState({ btnDebug: "调试", btnStep: "步进", btnUpload: "上传" })
+    }
   }
 
   componentDidMount() {
@@ -135,44 +221,6 @@ export default class GraphView extends React.Component {
 
     PubSub.publish(Topic.NodeAdd, [this.getNodInfo(root), true, false]);
     PubSub.publish(Topic.HistoryClean, {})
-
-    const stencil = new Stencil({
-      title: "Components",
-      search(nod, keyword) {
-        var attr = nod.getAttrs();
-        var label = attr.label.text as String;
-        if (label !== null) {
-          return label.toLowerCase().indexOf(keyword.toLowerCase()) !== -1;
-        }
-
-        return false;
-      },
-      placeholder: "Search by shape name",
-      notFoundText: "Not Found",
-      target: graph,
-      collapsable: true,
-      stencilGraphWidth: 180,
-      stencilGraphHeight: 250,
-      groups: [
-        {
-          name: "group1",
-          title: "Normal",
-        },
-        {
-          name: "group2",
-          title: "Prefab",
-        }
-      ],
-    });
-    this.stencilContainer.appendChild(stencil.container);
-
-    stencil.load([new SelectorNode()
-      , new SequenceNode()
-      , new ConditionNode()
-      , new AssertNode()
-      , new LoopNode()
-      , new WaitNode()], "group1");
-    stencil.load([new ActionNode()], "group2")
 
     graph.bindKey("del", () => {
       const cells = this.graph.getSelectedCells();
@@ -282,8 +330,10 @@ export default class GraphView extends React.Component {
     });
     this.graph = graph;
 
+    this.reloadStencil()
 
     PubSub.subscribe(Topic.UpdateNodeParm, (topic: string, info: any) => {
+      console.info("update", info.parm.id, info.parm.alias, info.parm.ty)
       if (info.parm.ty === NodeTy.Action) {
         this.findNode(info.parm.id, (nod) => {
           nod.setAttrs({
@@ -388,17 +438,20 @@ export default class GraphView extends React.Component {
       this.graph.resize(w, h)
     })
 
+    PubSub.subscribe(Topic.LanuageChange, () => {
+      this.reloadStencil()
+    })
 
     var agent = navigator.userAgent.toLowerCase();
     var isMac = /macintosh|mac os x/i.test(navigator.userAgent);
     if (agent.indexOf("win32") >= 0 || agent.indexOf("wow32") >= 0) {
-        this.setState({platfrom:"win"})
+      this.setState({ platfrom: "win" })
     }
     if (agent.indexOf("win64") >= 0 || agent.indexOf("wow64") >= 0) {
-      this.setState({platfrom:"win"})
+      this.setState({ platfrom: "win" })
     }
-    if(isMac){
-      this.setState({platfrom:"mac"})
+    if (isMac) {
+      this.setState({ platfrom: "mac" })
     }
 
 
@@ -721,25 +774,26 @@ export default class GraphView extends React.Component {
           </Tooltip>
         </div>
 
-        <div className={"app-create-"+this.state.platfrom}>
+        <div className={"app-create-" + this.state.platfrom}>
           <Tooltip
             placement="topRight"
             title={"Create a bot for debugging"}
           >
-            <Button icon={<BugOutlined />} size={"small"} onClick={this.ClickDebug} >Debug</Button>
+            <Button icon={<BugOutlined />} size={"small"} onClick={this.ClickDebug} >{this.state.btnDebug}</Button>
           </Tooltip>
         </div>
-        <div className={"app-step-"+this.state.platfrom}>
-          <Button icon={<StepForwardOutlined />} size={"small"} onClick={this.ClickStep} >Step</Button>
+        <div className={"app-step-" + this.state.platfrom}>
+          <Button icon={<StepForwardOutlined />} size={"small"} onClick={this.ClickStep} >{this.state.btnStep}</Button>
         </div>
-        <div className={"app-upload-"+this.state.platfrom}>
+        <div className={"app-upload-" + this.state.platfrom}>
           <Tooltip
             placement="topRight"
             title={"Upload the bot to the server"}
           >
-            <Button icon={<CloudUploadOutlined />} size={"small"} onClick={this.ClickUpload}> {"Upload"}</Button>
+            <Button icon={<CloudUploadOutlined />} size={"small"} onClick={this.ClickUpload}> {this.state.btnUpload}</Button>
           </Tooltip>
         </div>
+
         <Modal
           visible={this.state.isModalVisible}
           onOk={this.modalHandleOk}

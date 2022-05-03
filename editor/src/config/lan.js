@@ -4,6 +4,12 @@ var lanMap = {
         "en" : "Input drive server address",
         "zh-cn" : "输入驱动端服务器地址"
     },
+
+    "behavior.node.selector" : {
+        "en" : "Selector",
+        "zh-cn" : "选择节点"
+    },
+
     "app.tab.edit" : {
         "en" : "Edit",
         "zh-cn" : "编辑"
@@ -170,8 +176,8 @@ var lanMap = {
     
 
     "app.config.drive.address" : {
-        "en" : "Drive server address",
-        "zh-cn" : "驱动端服务器地址"
+        "en" : "Drive server address e.g. (http://127.0.0.1:8888",
+        "zh-cn" : "驱动端服务器地址 例 (http://127.0.0.1:8888"
     },
     "app.config.drive.apply" : {
         "en" : "Apply new server address",

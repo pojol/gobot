@@ -35,12 +35,12 @@ export default class ActionTab extends React.Component {
         delete target.pos;
         delete target.children;
 
-        console.info(target)
+        console.info("click",target)
         this.setState({
           nod: target,
           code: target.code,
           defaultAlias: target.alias,
-          node_ty : target.type,
+          node_ty : target.ty,
         });
       } else {
         this.setState({
