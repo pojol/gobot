@@ -73,20 +73,27 @@ export default class TestReport extends React.Component {
   }
 
   fillData(info) {
+
     var newdata = [] 
     for (var i = 0; i < info.length; i++) {
+
+      var date = new Date(info[i].BeginTime*1000);
+      var convdataTime = date.getFullYear() + '-'+date.getMonth()+'-'+date.getDate()+' '+date.getHours() + ':' + date.getMinutes() + ':' + date.getSeconds();
+
+
       newdata.push({
         key: info[i].ID,
-        time: info[i].BeginTime,
+        time:convdataTime ,
         tps:info[i].Tps,
         duration: info[i].Dura,
         botnum: info[i].BotNum,
         reqnum: info[i].ReqNum,
         errors : info[i].ErrNum,
         charts: ["avg_request_time_ms", "request_times"],
-        apilst : info[i].Apilst,
+        apilst : info[i].ApiInfoLst,
       })
     }
+
     this.setState({data:newdata})
   }
 
@@ -96,7 +103,6 @@ export default class TestReport extends React.Component {
       if (json.Code !== 200) {
         message.error("run fail:" + String(json.Code) + " msg: " + json.Msg);
       } else {
-        console.info(json.Body.Info);
         if (json.Body.Info){
           this.fillData(json.Body.Info)
         }
@@ -113,6 +119,7 @@ export default class TestReport extends React.Component {
   }
 
   clickTag = (e,record) => {
+
     if (record.apilst) {
       let lst = new Array()
 
@@ -125,6 +132,8 @@ export default class TestReport extends React.Component {
           lst.push({"Api": record.apilst[i].Api, "Value": record.apilst[i].ReqNum})
         }
       }
+
+      console.info("report", e, lst)
 
       PubSub.publish(Topic.ReportSelect, {
         Chart : e,

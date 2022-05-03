@@ -69,7 +69,7 @@ func (r *Report) Append(info ReportDetail) error {
 		ErrNum:    info.ErrNum,
 		Tps:       info.Tps,
 		Dura:      info.Dura,
-		BeginTime: info.BeginTime.Local().Format("2006-01-02 15:04:05"),
+		BeginTime: info.BeginTime.Unix(),
 	}
 	for api, detail := range info.UrlMap {
 		u, err := url.Parse(api)

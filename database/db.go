@@ -1,6 +1,8 @@
 package database
 
 import (
+	"database/sql/driver"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -51,17 +53,27 @@ type ReportApiInfo struct {
 	ResSize int64
 }
 
+type ReportApiArr []ReportApiInfo
+
+func (p ReportApiArr) Value() (driver.Value, error) {
+	return json.Marshal(p)
+}
+
+func (p *ReportApiArr) Scan(data interface{}) error {
+	return json.Unmarshal(data.([]byte), &p)
+}
+
 type ReportInfo struct {
 	gorm.Model
-	ID         string          `gorm:"<-"`
-	Name       string          `gorm:"<-"`
-	BotNum     int             `gorm:"<-"`
-	ReqNum     int             `gorm:"<-"`
-	ErrNum     int             `gorm:"<-"`
-	Tps        int             `gorm:"<-"`
-	Dura       string          `gorm:"<-"`
-	BeginTime  string          `gorm:"<-"`
-	ApiInfoLst []ReportApiInfo `gorm:"<-"`
+	ID         string
+	Name       string
+	BotNum     int
+	ReqNum     int
+	ErrNum     int
+	Tps        int
+	Dura       string
+	BeginTime  int64
+	ApiInfoLst ReportApiArr `gorm:"column:childrens;type:longtext"`
 }
 
 type Database struct {
@@ -253,7 +265,10 @@ func (f *Database) RemoveReport(id string) error {
 
 func (f *Database) AppendReport(info ReportInfo) error {
 
-	f.db.Create(&info)
+	r := f.db.Create(&info)
+	if r.Error != nil {
+		fmt.Println(r.Error)
+	}
 
 	return nil
 }
