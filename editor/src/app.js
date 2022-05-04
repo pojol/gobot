@@ -11,20 +11,18 @@ import BotConfig from "./config/config";
 import EditPlane from "./edit/edit";
 import RunningList from "./runing/runing";
 
-import enUS from 'antd/lib/locale/en_US';
-import zhCN from 'antd/lib/locale/zh_CN';
-import moment from 'moment';
-import 'moment/locale/zh-cn';
+import enUS from "antd/lib/locale/en_US";
+import zhCN from "antd/lib/locale/zh_CN";
+import moment from "moment";
+import "moment/locale/zh-cn";
 import lanMap from "./config/lan";
 import { PostGetBlob } from "./model/request";
 import Api from "./model/api";
 
-import {
-  ReadOutlined,
-} from '@ant-design/icons';
+import { ReadOutlined } from "@ant-design/icons";
 
 const { TabPane } = Tabs;
-moment.locale('en');
+moment.locale("en");
 
 export default class App extends React.Component {
   constructor(props) {
@@ -41,15 +39,15 @@ export default class App extends React.Component {
     let resizeTimer;
     if (!resizeTimer) {
       resizeTimer = setTimeout(() => {
-        resizeTimer = null
+        resizeTimer = null;
         PubSub.publish(Topic.WindowResize, {});
-      }, 100)
+      }, 100);
     }
-  }
+  };
 
   componentWillMount() {
     if (localStorage.theme === "" || localStorage.theme === undefined) {
-      localStorage.theme = "ayu-dark"
+      localStorage.theme = "ayu-dark";
     }
   }
 
@@ -59,14 +57,14 @@ export default class App extends React.Component {
       PubSub.publish(Topic.FileLoadDraw, [info.Tree]);
     });
 
-    let remote = localStorage.remoteAddr
+    let remote = localStorage.remoteAddr;
     if (remote === "") {
-      this.setState({ isModalVisible: true })
+      this.setState({ isModalVisible: true });
     } else {
-      this.syncTemplateCode()
+      this.syncTemplateCode();
     }
 
-    window.addEventListener('resize', this.resizeHandler, false)
+    window.addEventListener("resize", this.resizeHandler, false);
   }
 
   changeTab = (e) => {
@@ -82,22 +80,18 @@ export default class App extends React.Component {
   };
 
   syncTemplateCode() {
+    PostGetBlob(localStorage.remoteAddr, Api.ConfigGet, {}).then((file) => {
+      let reader = new FileReader();
+      reader.onload = function (ev) {
+        localStorage.CodeTemplate = reader.result;
 
-    PostGetBlob(localStorage.remoteAddr, Api.ConfigGet, {}).then(
-      (file) => {
-        let reader = new FileReader();
-        reader.onload = function (ev) {
-          localStorage.CodeTemplate = reader.result
-
-          PubSub.publish(Topic.ConfigUpdate, {
-            key: "code",
-            val: reader.result,
-          })
-        }
-        reader.readAsText(file.blob);
-      }
-    )
-
+        PubSub.publish(Topic.ConfigUpdate, {
+          key: "code",
+          val: reader.result,
+        });
+      };
+      reader.readAsText(file.blob);
+    });
   }
 
   showModal = () => {
@@ -111,9 +105,9 @@ export default class App extends React.Component {
   modalHandleOk = () => {
     this.setState({ isModalVisible: false });
     if (this.state.modalConfig !== "") {
-      localStorage.remoteAddr = this.state.modalConfig
+      localStorage.remoteAddr = this.state.modalConfig;
 
-      this.syncTemplateCode()
+      this.syncTemplateCode();
     }
   };
 
@@ -121,16 +115,23 @@ export default class App extends React.Component {
     this.setState({ isModalVisible: false });
   };
 
-
-  changeLocale = e => {
+  changeLocale = (e) => {
     const localeValue = e.target.value;
     this.setState({ locale: localeValue });
 
     moment.locale(localeValue.locale);
 
-    PubSub.publish(Topic.LanuageChange, {})
+    PubSub.publish(Topic.LanuageChange, {});
 
-    console.info("moment=>", moment.locale())
+    console.info("moment=>", moment.locale());
+  };
+
+  clickDocTag = () => {
+    window.open("https://pojol.gitee.io/gobot/#/");
+  };
+
+  clickGithubTag = () => {
+    window.open("https://github.com/pojol/gobot");
   };
 
   render() {
@@ -141,12 +142,18 @@ export default class App extends React.Component {
         <dev className="ver">
           <Space>
             <Tag color="geekblue">v0.1.7</Tag>
-            <a href="https://pojol.gitee.io/gobot/#/">
-              <Tag icon={<ReadOutlined />} color="#108ee9">
-                Document
-              </Tag>
-            </a>
-            <Radio.Group size="small" value={locale} onChange={this.changeLocale}>
+            <Tag
+              icon={<ReadOutlined />}
+              color="#108ee9"
+              onClick={this.clickDocTag}
+            >
+              Document
+            </Tag>
+            <Radio.Group
+              size="small"
+              value={locale}
+              onChange={this.changeLocale}
+            >
               <Radio.Button key="en" value={enUS}>
                 English
               </Radio.Button>
@@ -155,14 +162,12 @@ export default class App extends React.Component {
               </Radio.Button>
             </Radio.Group>
 
-            <a href="https://github.com/pojol/gobot">
-              <Image preview={false}
-                src="https://img.shields.io/github/stars/pojol/gobot?style=social"
-              />
-            </a>
-
+            <Image
+              preview={false}
+              src="https://img.shields.io/github/stars/pojol/gobot?style=social"
+              onClick={this.clickGithubTag}
+            />
           </Space>
-
         </dev>
         <Tabs
           defaultActiveKey="Edit"
@@ -176,7 +181,10 @@ export default class App extends React.Component {
           <TabPane tab={lanMap["app.tab.home"][moment.locale()]} key="Home">
             <BotList />
           </TabPane>
-          <TabPane tab={lanMap["app.tab.running"][moment.locale()]} key="Running">
+          <TabPane
+            tab={lanMap["app.tab.running"][moment.locale()]}
+            key="Running"
+          >
             <RunningList />
           </TabPane>
           <TabPane tab={lanMap["app.tab.report"][moment.locale()]} key="Report">
@@ -200,7 +208,6 @@ export default class App extends React.Component {
           />
         </Modal>
       </dev>
-
     );
   }
 }
