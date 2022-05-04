@@ -12,6 +12,8 @@ SequenceNode.config({
       stroke: "#5AA897",
       strokeWidth: 1,
       borderRadius: 2,
+      rx: 3, // 圆角矩形
+      ry: 3,
     },
     label: {
       text: "Sequence",

@@ -10,7 +10,7 @@ ActionNode.config({
     },
     body: {
       fill: "#f5f5f5",
-      stroke: "#F8A488",
+      stroke: "#035397",
       strokeWidth: 1,
       borderRadius: 2,
     },

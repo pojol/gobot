@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"net/url"
 
 	"github.com/labstack/echo/v4"
 	"github.com/pojol/gobot/behavior"
@@ -321,39 +320,8 @@ EXT:
 func GetReport(ctx echo.Context) error {
 	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
 	res := &Response{}
-	body := &ReportRes{}
-
-	rep := factory.Global.GetReport()
-	if len(rep) > 0 {
-		for i := len(rep) - 1; i >= 0; i -= 1 {
-			info := ReportInfo{
-				ID:        rep[i].ID,
-				Name:      rep[i].Name,
-				BotNum:    rep[i].BotNum,
-				ReqNum:    rep[i].ReqNum,
-				ErrNum:    rep[i].ErrNum,
-				Tps:       rep[i].Tps,
-				Dura:      rep[i].Dura,
-				BeginTime: rep[i].BeginTime.Local().Format("2006-01-02 15:04:05"),
-			}
-
-			for api, detail := range rep[i].UrlMap {
-				u, err := url.Parse(api)
-				fmtapi := ""
-				if err == nil {
-					fmtapi = u.Path
-				}
-				info.Apilst = append(info.Apilst, ReportApiInfo{
-					Api:        fmtapi,
-					ReqNum:     detail.ReqNum,
-					ConsumeNum: int64(detail.AvgNum / int64(detail.ReqNum)),
-					ReqSize:    detail.ReqSize,
-					ResSize:    detail.ResSize,
-					ErrNum:     detail.ErrNum,
-				})
-			}
-			body.Info = append(body.Info, info)
-		}
+	body := &ReportRes{
+		Info: factory.Global.GetReport(),
 	}
 
 	res.Code = int(Succ)

@@ -6,9 +6,14 @@ import Topic from "../model/topic";
 import { Post } from "../model/request";
 import Api from "../model/api";
 
+import moment from 'moment';
+import lanMap from "../config/lan";
+
 const { TabPane } = Tabs;
 
+
 export default class TestReport extends React.Component {
+
   constructor(props) {
     super(props);
     this.state = {
@@ -73,20 +78,27 @@ export default class TestReport extends React.Component {
   }
 
   fillData(info) {
+
     var newdata = [] 
     for (var i = 0; i < info.length; i++) {
+
+      var date = new Date(info[i].BeginTime*1000);
+      var convdataTime = date.getFullYear() + '-'+date.getMonth()+'-'+date.getDate()+' '+date.getHours() + ':' + date.getMinutes() + ':' + date.getSeconds();
+
+
       newdata.push({
         key: info[i].ID,
-        time: info[i].BeginTime,
+        time:convdataTime ,
         tps:info[i].Tps,
         duration: info[i].Dura,
         botnum: info[i].BotNum,
         reqnum: info[i].ReqNum,
         errors : info[i].ErrNum,
         charts: ["avg_request_time_ms", "request_times"],
-        apilst : info[i].Apilst,
+        apilst : info[i].ApiInfoLst,
       })
     }
+
     this.setState({data:newdata})
   }
 
@@ -96,7 +108,6 @@ export default class TestReport extends React.Component {
       if (json.Code !== 200) {
         message.error("run fail:" + String(json.Code) + " msg: " + json.Msg);
       } else {
-        console.info(json.Body.Info);
         if (json.Body.Info){
           this.fillData(json.Body.Info)
         }
@@ -104,15 +115,41 @@ export default class TestReport extends React.Component {
     });
   }
 
+  refresh_lan() {
+    var lan = moment.locale()
+    var columns = this.state.columns
+    for (var i = 0; i < columns.length; i++) {
+      if (columns[i].key === "time") {
+        columns[i].title = lanMap["app.report.time"][lan]
+      }else if (columns[i].key === "duration") {
+        columns[i].title = lanMap["app.report.duration"][lan]
+      }else if (columns[i].key === "botnum") {
+        columns[i].title = lanMap["app.report.botnum"][lan]
+      }else if (columns[i].key === "reqnum") {
+        columns[i].title = lanMap["app.report.reqnum"][lan]
+      }else if (columns[i].key === "errors") {
+        columns[i].title = lanMap["app.report.errors"][lan]
+      }
+    }
+
+    this.setState({columns: columns})
+  }
+
   componentDidMount() {
     PubSub.subscribe(Topic.ReportUpdate, (topic, info) => {
       this.refresh();
     });
 
+    PubSub.subscribe(Topic.LanuageChange, ()=>{
+      this.refresh_lan()
+    })
+
     this.refresh();
+    this.refresh_lan();
   }
 
   clickTag = (e,record) => {
+
     if (record.apilst) {
       let lst = new Array()
 
@@ -125,6 +162,8 @@ export default class TestReport extends React.Component {
           lst.push({"Api": record.apilst[i].Api, "Value": record.apilst[i].ReqNum})
         }
       }
+
+      console.info("report", e, lst)
 
       PubSub.publish(Topic.ReportSelect, {
         Chart : e,

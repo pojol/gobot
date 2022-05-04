@@ -28,8 +28,10 @@ type Parm struct {
 	// batchSize 批次大小（用于控制goroutine的并发数量（默认1024
 	batchSize int
 
+	// 脚本路径
 	ScriptPath string
 
+	// 报告的次数限制
 	ReportLimit int
 }
 

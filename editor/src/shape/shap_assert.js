@@ -9,7 +9,7 @@ AssertNode.config({
     },
     body: {
       fill: "#f5f5f5",
-      stroke: "#45526C",
+      stroke: "#E04D01",
       strokeWidth: 1,
       refPoints: "0,5 2.5,0 5,5",
     },

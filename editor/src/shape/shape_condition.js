@@ -9,7 +9,7 @@ ConditionNode.config({
     },
     body: {
       fill: "#f5f5f5",
-      stroke: "#45526C",
+      stroke: "#FEB139",
       strokeWidth: 1,
       refPoints: "0,2.5 2.5,0 5,2.5 2.5,5",
     },

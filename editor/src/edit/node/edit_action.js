@@ -20,7 +20,7 @@ export default class ActionTab extends React.Component {
     super(props);
     this.state = {
       nod: {},
-      node_ty: NodeTy.Action,
+      node_ty: "",
       code: "",
       defaultAlias: "",
     };
@@ -30,16 +30,17 @@ export default class ActionTab extends React.Component {
     PubSub.subscribe(Topic.NodeEditorClick, (topic, dat) => {
       var obj = window.tree.get(dat.id);
 
-      if (obj !== undefined && obj.ty === this.state.node_ty) {
+      if (obj !== undefined) {
         let target = { ...obj };
         delete target.pos;
         delete target.children;
 
-        console.info(target)
+        console.info("click",target)
         this.setState({
           nod: target,
           code: target.code,
           defaultAlias: target.alias,
+          node_ty : target.ty,
         });
       } else {
         this.setState({
@@ -94,7 +95,7 @@ export default class ActionTab extends React.Component {
     const nod = this.state.nod;
     const options = {
       mode: "text/x-lua",
-      theme: "solarized dark",
+      theme: localStorage.theme,
       lineNumbers: true,
     };
 
@@ -108,7 +109,6 @@ export default class ActionTab extends React.Component {
           editorDidMount={this.onDidMount}
         />
         <Space>
-          <Button type="dashed">{nod.id}</Button>
           <Search
             placeholder={lanMap["app.edit.tab.placeholder"][moment.locale()]}
             width={200}
@@ -117,6 +117,7 @@ export default class ActionTab extends React.Component {
             onChange={this.onChangeAlias}
             onSearch={this.applyClick}
           />
+          <Button type="dashed">{nod.id}</Button>
         </Space>{" "}
       </div>
     );

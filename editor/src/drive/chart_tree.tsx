@@ -15,6 +15,7 @@ type ReportChartInfo = {
 }
 
 type ApiInfo  = {
+  ty : string,
   name : string,
   value : number,
 }
@@ -48,6 +49,7 @@ export default class ApiChart extends React.Component {
 
       for (var i of info.ApiList) {
         let newinfo : ApiInfo = {
+          ty : info.Chart,
           name : i.Api,
           value : i.Value,
         }
@@ -61,7 +63,19 @@ export default class ApiChart extends React.Component {
   render() {
     var config = {
       data: this.state.data,
-      colorField: "name",
+      colorField: "name", 
+      tooltip: {
+        formatter: (datum: any) => {
+
+          if (datum.path[0].data.ty === "avg_request_time_ms") {
+            return { name: datum.name, value: datum.value + ' ms' };
+          } else if (datum.path[0].data.ty === "request_times") {
+            return { name: datum.name, value: datum.value + " times" };
+          }
+
+          return { name: datum.name, value: datum.value };
+        },
+      }
     };
 
     return (

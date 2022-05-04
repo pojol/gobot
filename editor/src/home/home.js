@@ -357,7 +357,6 @@ export default class BotList extends React.Component {
       });
     }
 
-
   }
 
   handleBotDelete = e => {
@@ -399,7 +398,7 @@ export default class BotList extends React.Component {
     var filepProps = {
       name: "file",
       multiple: true,
-      action: localStorage.remoteAddr + Api.FileTxtUpload,
+      action: localStorage.remoteAddr +"/"+ Api.FileTxtUpload,
       onDrop(e) {
         console.log("Dropped files", e.dataTransfer.files);
       },

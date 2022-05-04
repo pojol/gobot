@@ -38,7 +38,7 @@ type Batch struct {
 
 	bots    map[string]*bot.Bot
 	colorer *color.Color
-	rep     *Report
+	rep     *ReportDetail
 
 	bwg  utils.SizeWaitGroup
 	exit *utils.Switch
@@ -98,7 +98,7 @@ func (b *Batch) Info() BatchInfo {
 	}
 }
 
-func (b *Batch) Report() Report {
+func (b *Batch) Report() ReportDetail {
 	return *b.rep
 }
 
@@ -123,7 +123,7 @@ func (b *Batch) pop(id string) {
 
 func (b *Batch) loop() {
 
-	b.rep = &Report{
+	b.rep = &ReportDetail{
 		ID:        b.ID,
 		Name:      b.Name,
 		BeginTime: time.Now(),
@@ -189,7 +189,7 @@ func (b *Batch) Close() {
 
 }
 
-func (b *Batch) pushReport(rep *Report, bot *bot.Bot) {
+func (b *Batch) pushReport(rep *ReportDetail, bot *bot.Bot) {
 	rep.BotNum++
 	robotReport := bot.GetReport()
 

@@ -45,6 +45,7 @@ const Topic = {
     EditPlaneEditChangeResize : "topic_plane_edit&change_resize",
 
     WindowResize : "topic_window_resize",
+    LanuageChange : "topic_lanuage_change",
 }
 
 /*

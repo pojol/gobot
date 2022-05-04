@@ -6,7 +6,7 @@
   "dependencies": {
     "@ant-design/charts": "^1.2.11",
     "@antv/x6": "1.27.2",
-    "antd": "^4.4.2",
+    "antd": "4.19.0",
     "codemirror": "^5.62.3",
     "electron-is-dev": "^2.0.0",
     "electron-packager": "^15.4.0",
@@ -17,6 +17,7 @@
     "react-codemirror2": "^7.2.1",
     "react-dom": "^16.13.1",
     "react-json-view": "^1.21.3",
+    "react-medium-editor": "^1.8.1",
     "react-scripts": "^3.4.1",
     "react-split-pane": "^0.1.92",
     "rimraf": "^3.0.2",
@@ -40,7 +41,6 @@
     "package_win32_x64": "electron-packager . Gobot --platform=win32 --icon=./public/gobot.ico --arch=x64 --out=./dist --asar --app-version=1.0.0 --overwrite",
     "package_darwin_arm64": "electron-packager . Gobot --platform=darwin --icon=./public/gobot.ico --arch=arm64 --out=./dist --asar --app-version=1.0.0 --overwrite",
     "package_darwin_x64": "electron-packager . Gobot --platform=darwin --icon=./public/gobot.ico --arch=x64 --out=./dist --asar --app-version=1.0.0 --overwrite"
-
   },
   "eslintConfig": {
     "extends": "react-app"
