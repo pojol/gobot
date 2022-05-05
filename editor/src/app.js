@@ -141,7 +141,7 @@ export default class App extends React.Component {
       <dev className="site-layout-content">
         <dev className="ver">
           <Space>
-            <Tag color="geekblue">v0.1.7</Tag>
+            <Tag color="geekblue">v0.1.9</Tag>
             <Tag
               icon={<ReadOutlined />}
               color="#108ee9"

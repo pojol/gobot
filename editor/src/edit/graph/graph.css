@@ -32,35 +32,35 @@
 .app-create-mac {
   position: absolute;
   z-index: 10;
-  right:335px;
-  bottom:2px;
+  right:345px;
+  bottom:15px;
 }
 
 .app-step-mac {
   position: absolute;
   z-index: 10;
-  right:265px;
-  bottom:2px;
+  right:262px;
+  bottom:15px;
 }
 
 .app-upload-mac {
   position: absolute;
   z-index: 10;
   right:180px;
-  bottom:2px;
+  bottom:15px;
 }
 
 .app-create-win {
   position: absolute;
   z-index: 10;
-  right:340px;
+  right:354px;
   bottom:18px;
 }
 
 .app-step-win {
   position: absolute;
   z-index: 10;
-  right:269px;
+  right:262px;
   bottom:18px;
 }
 

@@ -9,8 +9,8 @@ import LoopNode from "../../shape/shape_loop";
 import WaitNode from "../../shape/shape_wait";
 import AssertNode from "../../shape/shap_assert";
 import { NodeTy, IsScriptNode } from "../../model/node_type";
-import { Button, Tooltip, Modal, Input } from 'antd';
-import { ZoomInOutlined, ZoomOutOutlined, AimOutlined, UndoOutlined, CloudUploadOutlined, StepForwardOutlined, BugOutlined } from '@ant-design/icons';
+import { Button, Tooltip, Modal, Input, Badge } from 'antd';
+import { ZoomInOutlined, ZoomOutOutlined, AimOutlined, UndoOutlined, CloudUploadOutlined, BugOutlined } from '@ant-design/icons';
 
 import "./graph.css";
 import { message } from "antd";
@@ -20,6 +20,7 @@ import Topic from "../../model/topic";
 import moment from 'moment';
 
 const { Dnd, Stencil } = Addon;
+const { Search } = Input;
 
 // 高亮
 const magnetAvailabilityHighlighter = {
@@ -115,7 +116,16 @@ export default class GraphView extends React.Component {
   dnd: any;
   stencilContainer: HTMLDivElement;
 
-  state = { isModalVisible: false, behaviorName: "", platfrom: "", stencil: null, btnDebug: "Debug", btnStep: "Step", btnUpload: "Upload" };
+  state = {
+    isModalVisible: false,
+    behaviorName: "",
+    platfrom: "",
+    stencil: null,
+    btnDebug: "Debug",
+    btnStep: "Step",
+    btnUpload: "Upload",
+    stepCnt: 0,
+  };
 
   rect: Rect = {
     wratio: 0.6,
@@ -377,11 +387,9 @@ export default class GraphView extends React.Component {
 
     PubSub.subscribe(Topic.Focus, (topic: string, info: any) => {
 
-      console.info("focus", info)
-
       if (info.Cur !== "") {
+        this.setState({ stepCnt: this.state.stepCnt + 1 })
         this.findNode(info.Cur, (nod) => {
-          console.info("setattrs", nod.id)
           nod.setAttrs({
             body: {
               strokeWidth: 3,
@@ -727,11 +735,16 @@ export default class GraphView extends React.Component {
     this.setState({ isModalVisible: true })
   };
 
-  ClickStep = () => {
-    PubSub.publish(Topic.Step, "");
+  ClickStep = (e : any) => {
+
+    var val = 1
+    if (e !== "") {  }
+
+    PubSub.publish(Topic.Step, val);
   };
 
   ClickDebug = () => {
+    this.setState({stepCnt : 0})
     PubSub.publish(Topic.Create, "");
     this.refreshNodes((nod) => {  // 
       nod.setAttrs({
@@ -772,6 +785,10 @@ export default class GraphView extends React.Component {
           >
             <Button icon={<UndoOutlined />} onClick={this.ClickUndo} />
           </Tooltip>
+          <Badge
+            count={this.state.stepCnt}
+            style={{ backgroundColor: '#52c41a' }}
+          />
         </div>
 
         <div className={"app-create-" + this.state.platfrom}>
@@ -779,18 +796,18 @@ export default class GraphView extends React.Component {
             placement="topRight"
             title={"Create a bot for debugging"}
           >
-            <Button icon={<BugOutlined />} size={"small"} onClick={this.ClickDebug} >{this.state.btnDebug}</Button>
+            <Button icon={<BugOutlined />} size={"small"} style={{ width: 80 }} onClick={this.ClickDebug} >{this.state.btnDebug}</Button>
           </Tooltip>
         </div>
         <div className={"app-step-" + this.state.platfrom}>
-          <Button icon={<StepForwardOutlined />} size={"small"} onClick={this.ClickStep} >{this.state.btnStep}</Button>
+          <Search placeholder="1" size={"small"} onSearch={this.ClickStep} style={{ width: 80 }} enterButton={this.state.btnStep}></Search>
         </div>
         <div className={"app-upload-" + this.state.platfrom}>
           <Tooltip
             placement="topRight"
             title={"Upload the bot to the server"}
           >
-            <Button icon={<CloudUploadOutlined />} size={"small"} onClick={this.ClickUpload}> {this.state.btnUpload}</Button>
+            <Button icon={<CloudUploadOutlined />} size={"small"} style={{ width: 80 }} onClick={this.ClickUpload}> {this.state.btnUpload}</Button>
           </Tooltip>
         </div>
 
