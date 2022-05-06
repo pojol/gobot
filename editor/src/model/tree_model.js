@@ -1,7 +1,7 @@
 import React from "react";
 import PubSub from "pubsub-js";
 import Topic from "./topic";
-import { message,Alert } from "antd";
+import { message, Alert } from "antd";
 import OBJ2XML from "object-to-xml";
 import { Post, PostBlob } from "./request";
 import Api from "./api";
@@ -45,14 +45,17 @@ function ErrMsgParse(msg) {
   var arr = msg.split("\n")
   var newmsg = ""
 
-  for(var i =0; i < arr.length; i++) {
-    newmsg += "<u>"+(i+1).toString()+"</u> " + arr[i]+"\n"
+  for (var i = 0; i < arr.length; i++) {
+    newmsg += "<u>" + (i + 1).toString() + "</u> " + arr[i] + "\n"
   }
 
   newmsg += "\n\n"
 
   return newmsg
 }
+
+const sleep = (delay) => new Promise((resolve) => setTimeout(resolve, delay))
+
 
 export default class TreeModel extends React.Component {
   constructor(props) {
@@ -596,55 +599,71 @@ end
       );
     });
 
-    PubSub.subscribe(Topic.Step, (topic, info) => {
+    PubSub.subscribe(Topic.Step, (topic, cnt) => {
       if (this.state.botid === "") {
         message.warn("have not created bot");
         return;
       }
 
-      Post(localStorage.remoteAddr, Api.DebugStep, { BotID: this.state.botid }).then(
-        (json) => {
-          if (json.Code !== 200) {
-            let change
-            let changeInfo = {}
+      var flag = true
+      var botid = this.state.botid
 
-            if (json.Code === 1008) {
-              change = JSON.parse(json.Body.Change)
-              changeInfo = {
-                status : "",
-                msg : JSON.stringify(change,null,"\t")
-              } 
+      const step = async () => {
+        for (var i = 0; i < cnt; i++) {
+          
+          Post(localStorage.remoteAddr, Api.DebugStep, { BotID: botid }).then(
+            (json) => {
+              if (json.Code !== 200) {
+                let change
+                let changeInfo = {}
 
-              message.success("the end")
-            } else {
-              message.error(json.Msg)
-              changeInfo = {
-                status : "error",
-                msg : ErrMsgParse(json.Body.RuntimeErr)
+                if (json.Code === 1008) {
+                  change = JSON.parse(json.Body.Change)
+                  changeInfo = {
+                    status: "",
+                    msg: JSON.stringify(change, null, "\t")
+                  }
+
+                  message.success("the end")
+                } else {
+                  message.error(json.Msg)
+                  changeInfo = {
+                    status: "error",
+                    msg: ErrMsgParse(json.Body.RuntimeErr)
+                  }
+                }
+
+                if (json.Code !== 1010) {
+                  PubSub.publish(Topic.UpdateChange, changeInfo)
+                }
+                PubSub.publish(Topic.UpdateBlackboard, json.Body.Blackboard);
+                flag = false
+              } else {
+
+                let metastr
+                let meta = JSON.parse(json.Body.Blackboard)
+                let change = JSON.parse(json.Body.Change)
+
+                metastr = JSON.stringify(meta)
+
+                PubSub.publish(Topic.UpdateBlackboard, metastr);
+                PubSub.publish(Topic.UpdateChange, { status: "", msg: JSON.stringify(change, null, "\t") })
+                PubSub.publish(Topic.Focus, {
+                  Cur: json.Body.Cur,
+                  Prev: json.Body.Prev,
+                });
               }
             }
-            
-            if (json.Code !== 1010) {
-              PubSub.publish(Topic.UpdateChange, changeInfo)
-            }
-            PubSub.publish(Topic.UpdateBlackboard, json.Body.Blackboard);
-          } else {
+          );
 
-            let metastr
-            let meta = JSON.parse(json.Body.Blackboard)
-            let change = JSON.parse(json.Body.Change)
+          await sleep(200)
+          if (!flag) { break }
 
-            metastr = JSON.stringify(meta)
-
-            PubSub.publish(Topic.UpdateBlackboard, metastr);
-            PubSub.publish(Topic.UpdateChange, {status:"", msg:JSON.stringify(change, null, "\t")})
-            PubSub.publish(Topic.Focus, {
-              Cur: json.Body.Cur,
-              Prev: json.Body.Prev,
-            });
-          }
         }
-      );
+      }
+
+      step()
+
     });
 
     PubSub.subscribe(Topic.FileSave, (topic, msg) => {

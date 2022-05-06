@@ -735,16 +735,19 @@ export default class GraphView extends React.Component {
     this.setState({ isModalVisible: true })
   };
 
-  ClickStep = (e : any) => {
+  ClickStep = (e: any) => {
 
     var val = 1
-    if (e !== "") {  }
+    if (e !== "") {
+      val = parseInt(e, 10);
+      if (isNaN(val)) { val = 1 }
+    }
 
     PubSub.publish(Topic.Step, val);
   };
 
   ClickDebug = () => {
-    this.setState({stepCnt : 0})
+    this.setState({ stepCnt: 0 })
     PubSub.publish(Topic.Create, "");
     this.refreshNodes((nod) => {  // 
       nod.setAttrs({
