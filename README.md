@@ -8,38 +8,30 @@ Gobot is a stateful api testing tool that supports graph editing, api calling, a
 [中文](https://github.com/pojol/gobot/blob/master/README_CN.md)
 
 # What is the goal of the tool ?
-1. Use bots for complex logic (stateful) testing
-    * For example, in the game business, create a character → send an email → use items → fight ...
-    * For example, create multiple roles in social business → discover each other | add friends → like | comment ...
-2. Keep it simple
+1. With a complete life cycle, we can retain and use various state information on different nodes (tests for different purposes can be customized by processing the context
+2. No need to write control code logic, only need to do logic arrangement and write node scripts (you can use prefab templates
+3. Through the API provided by the driver, we can use the test robot in the ci/cd pipeline
 
 # Feature
-* Use behavior tree to arrange bot's running logic
-* Use lua script to control the execution logic of bot
-* Each bot has a meta data structure to store the context of the entire test process
-* Use tag + filter to manage bot behavior files
-* With an intuitive debugging window and environment, you can view the execution of the node logic in a single step
+* Use `behavior tree` + `script` to control the execution logic of the robot
+* Support interface editing and debugging
+* Manage and find bots in your warehouse with `tag` + `filter`
+* Can perform `stress tests` (concurrent driving robots
+* The driver provides api calls
+* Provides a report viewing page (api statistics called by the robot
 
 # Try it out
 Try the editor out [on website](http://1.117.168.37:7777/)
 
-[Document](https://docs.gobot.fun)
 
-## Preview
-[![2022-04-20-9-51-09.png](https://i.postimg.cc/xCW3KnxD/2022-04-20-9-51-09.png)](https://postimg.cc/bD9nPcf3)
+### Preview
+[![image.png](https://i.postimg.cc/LXCt5Zcd/image.png)](https://postimg.cc/ZBNBD0Yj)
 
-## Benchmark
+### Benchmark
 [![gobot-qps.png](https://i.postimg.cc/5y72F2Nb/gobot-qps.png)](https://postimg.cc/WqZvBjkH)
 
-## Script interface
-* [http](https://docs.gobot.fun/#/zh-cn/advance/script_http)
-* [proto](https://docs.gobot.fun/#/zh-cn/advance/script_protobuf)
-* [utils](https://docs.gobot.fun/#/zh-cn/advance/script_utils)
-* [base64](https://docs.gobot.fun/#/zh-cn/advance/script_base64)
-* [json](https://docs.gobot.fun/#/zh-cn/advance/script_utils)
 
-
-## Http request sample
+### Http request sample
 ```lua
 -- lua script
 local http = require("http")

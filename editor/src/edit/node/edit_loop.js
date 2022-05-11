@@ -18,7 +18,7 @@ import moment from 'moment';
 import lanMap from "../../config/lan";
 
 const Min = 0;
-const Max = 1000;
+const Max = 10000;
 
 const { Search } = Input;
 
