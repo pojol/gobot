@@ -32,7 +32,7 @@ Gobot是一个有状态的api测试工具，支持图形编辑、api调用、绑
 ### 编辑器预览
 [![image.png](https://i.postimg.cc/3J9Kvxkr/image.png)](https://postimg.cc/0bMRgxGh)
 
-### 一个http节点的阳历
+### 一个http节点的例子
 ```lua
 -- lua script
 local http = require("http")
@@ -58,3 +58,6 @@ res, err = http.post("url", reqTable)
     err                 -- 错误信息
 ]]--
 ```
+
+### Report
+[![image.png](https://i.postimg.cc/4d3TTrvf/image.png)](https://postimg.cc/yJ2Gmprt)

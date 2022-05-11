@@ -27,10 +27,6 @@ Try the editor out [on website](http://1.117.168.37:7777/)
 ### Preview
 [![image.png](https://i.postimg.cc/LXCt5Zcd/image.png)](https://postimg.cc/ZBNBD0Yj)
 
-### Benchmark
-[![gobot-qps.png](https://i.postimg.cc/5y72F2Nb/gobot-qps.png)](https://postimg.cc/WqZvBjkH)
-
-
 ### Http request sample
 ```lua
 -- lua script
@@ -57,3 +53,6 @@ res, err = http.post("url", reqTable)
     err                 -- error message
 ]]--
 ```
+
+### Report
+[![image.png](https://i.postimg.cc/4d3TTrvf/image.png)](https://postimg.cc/yJ2Gmprt)
