@@ -10,7 +10,7 @@ import WaitNode from "../../shape/shape_wait";
 import AssertNode from "../../shape/shap_assert";
 import { NodeTy, IsScriptNode } from "../../model/node_type";
 import { Button, Tooltip, Modal, Input, Badge } from 'antd';
-import { ZoomInOutlined, ZoomOutOutlined, AimOutlined, UndoOutlined, CloudUploadOutlined, BugOutlined } from '@ant-design/icons';
+import { ZoomInOutlined, ZoomOutOutlined, AimOutlined, UndoOutlined, CloudUploadOutlined, BugOutlined,DeleteOutlined  } from '@ant-design/icons';
 
 import "./graph.css";
 import { message } from "antd";
@@ -233,22 +233,7 @@ export default class GraphView extends React.Component {
     PubSub.publish(Topic.HistoryClean, {})
 
     graph.bindKey("del", () => {
-      const cells = this.graph.getSelectedCells();
-
-      if (cells.length) {
-        for (var i = 0; i < cells.length; i++) {
-
-          if (cells[i].getAttrs().type.toString() !== NodeTy.Root) {
-
-            if (cells[i].getParent() == null) {
-              graph.removeCell(cells[i])
-            } else {
-              PubSub.publish(Topic.NodeRmv, cells[i].id);
-              cells[i].getParent()?.removeChild(cells[i]);
-            }
-          }
-        }
-      }
+      this.ClickDel()
       return false;
     });
 
@@ -714,6 +699,25 @@ export default class GraphView extends React.Component {
     PubSub.publish(Topic.Undo, {})
   }
 
+  ClickDel = () => {
+    const cells = this.graph.getSelectedCells();
+
+      if (cells.length) {
+        for (var i = 0; i < cells.length; i++) {
+
+          if (cells[i].getAttrs().type.toString() !== NodeTy.Root) {
+
+            if (cells[i].getParent() == null) {
+              this.graph.removeCell(cells[i])
+            } else {
+              PubSub.publish(Topic.NodeRmv, cells[i].id);
+              cells[i].getParent()?.removeChild(cells[i]);
+            }
+          }
+        }
+      }
+  }
+
   behaviorNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     this.setState({ behaviorName: e.target.value })
   };
@@ -787,6 +791,12 @@ export default class GraphView extends React.Component {
             title="Undo [ ctrl+z ]"
           >
             <Button icon={<UndoOutlined />} onClick={this.ClickUndo} />
+          </Tooltip>
+          <Tooltip
+          placement="leftTop"
+          title="Delete [ del ]"
+          >
+          <Button icon={<DeleteOutlined />} onClick={this.ClickDel} />
           </Tooltip>
           <Badge
             count={this.state.stepCnt}
