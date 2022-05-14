@@ -5,6 +5,7 @@ import { message } from "antd";
 import OBJ2XML from "object-to-xml";
 import { Post, PostBlob } from "../utils/request";
 import Api from "../constant/api";
+import Cmd from "../constant/cmd";
 import { NodeTy } from "../constant/node_type";
 
 /*!
@@ -31,13 +32,6 @@ import { NodeTy } from "../constant/node_type";
 
 */
 
-const Cmd = {
-  ADD: "nod_add",
-  RMV: "nod_rmv",
-  Update: "nod_update",
-  Link: "node_link",
-  Unlink: "node_unlink",
-};
 
 function ErrMsgParse(msg) {
   var arr = msg.split("\n");
