@@ -1,21 +1,12 @@
 import React from "react";
-import ReactJson from "react-json-view";
 import PubSub from "pubsub-js";
-import { Input, message } from "antd";
+import { message } from "antd";
 
-import Topic from "../../model/topic";
-
-import moment from 'moment';
-import lanMap from "../../config/lan";
-import { ClockCircleOutlined } from '@ant-design/icons';
-
+import Topic from "../../../model/topic";
 import Editor from 'react-medium-editor';
-import { text } from "@antv/x6/lib/util/dom/text";
 
 require('medium-editor/dist/css/medium-editor.css');
 require('medium-editor/dist/css/themes/default.css');
-
-const { TextArea } = Input;
 
 
 export default class ChangeView extends React.Component {

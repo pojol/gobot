@@ -5,10 +5,10 @@ import SplitPane, { Pane } from "react-split-pane";
 
 import GraphView from "./graph/graph";
 import Edit from "./node/edit_tab";
-import Blackboard from "./blackboard/blackboard";
+import Blackboard from "./meta/meta";
 import ChangeView from "./change/change";
 
-import Topic from "../model/topic";
+import Topic from "../../model/topic";
 
 import "./edit.css";
 

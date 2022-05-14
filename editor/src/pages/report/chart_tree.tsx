@@ -1,7 +1,7 @@
 import React from "react";
 import { Treemap } from "@ant-design/charts";
 import PubSub from "pubsub-js";
-import Topic from "../model/topic";
+import Topic from "../../model/topic";
 
 
 type Info  = {

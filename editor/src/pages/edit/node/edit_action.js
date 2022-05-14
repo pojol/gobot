@@ -1,16 +1,15 @@
 import React from "react";
 import PubSub from "pubsub-js";
-import Topic from "../../model/topic";
+import Topic from "../../../model/topic";
 import { Controlled as CodeMirror } from "react-codemirror2";
 import "codemirror/lib/codemirror.css";
 import "codemirror/theme/solarized.css";
 import "codemirror/mode/lua/lua";
 
-import { Input, Button, message, Tag, Space } from "antd";
-import { NodeTy } from "../../model/node_type";
+import { Input, Button, message, Space } from "antd";
 
 import moment from 'moment';
-import lanMap from "../../config/lan";
+import lanMap from "../../../locales/lan";
 
 const { Search } = Input;
 

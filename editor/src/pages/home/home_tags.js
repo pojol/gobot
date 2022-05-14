@@ -4,7 +4,7 @@ import { TweenOneGroup } from 'rc-tween-one';
 import { PlusOutlined } from '@ant-design/icons';
 
 import moment from 'moment';
-import lanMap from "../config/lan";
+import lanMap from '../../locales/lan';
 
 export default class HomeTagGroup extends React.Component {
 

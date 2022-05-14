@@ -3,8 +3,8 @@ import PubSub from "pubsub-js";
 import Topic from "./topic";
 import { message, Alert } from "antd";
 import OBJ2XML from "object-to-xml";
-import { Post, PostBlob } from "./request";
-import Api from "./api";
+import { Post, PostBlob } from "../net/request";
+import Api from "../net/api";
 import { NodeTy } from "./node_type";
 
 
@@ -459,7 +459,7 @@ end
           this.addNode(h[i].parm, true)
         } else if (h[i].cmd === Cmd.RMV) {
           this.rmvNode(h[i].parm, true)
-        } else if (h[i].cmd == Cmd.Link) {
+        } else if (h[i].cmd === Cmd.Link) {
           this.link(h[i].parm[0], h[i].parm[1], true)
         } else if (h[i].cmd === Cmd.Unlink) {
           this.Unlink(h[i].parm[0], true)
@@ -467,8 +467,6 @@ end
       }
 
       let mtree = this.getAllTree()
-
-      //console.info("new tree", JSON.stringify(mtree))
 
       PubSub.publish(Topic.FileLoadRedraw, mtree)
       this.setState({ history: ohistory })

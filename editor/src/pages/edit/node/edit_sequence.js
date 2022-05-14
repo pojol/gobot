@@ -2,7 +2,7 @@ import React from "react";
 import { Input } from "antd";
 
 import PubSub from "pubsub-js";
-import Topic from "../../model/topic";
+import Topic from "../../../model/topic";
 
 import { Button } from "antd";
 

@@ -1,21 +1,22 @@
 import * as React from "react";
 import { Graph, Addon, Shape, Cell, Node } from "@antv/x6";
-import ActionNode from "../../shape/shape_action";
-import ConditionNode from "../../shape/shape_condition";
-import SelectorNode from "../../shape/shape_selector";
-import SequenceNode from "../../shape/shape_sequence";
-import RootNode from "../../shape/shape_root";
-import LoopNode from "../../shape/shape_loop";
-import WaitNode from "../../shape/shape_wait";
-import AssertNode from "../../shape/shap_assert";
-import { NodeTy, IsScriptNode } from "../../model/node_type";
+import ActionNode from "./shape/shape_action";
+import ConditionNode from "./shape/shape_condition";
+import SelectorNode from "./shape/shape_selector";
+import SequenceNode from "./shape/shape_sequence";
+import RootNode from "./shape/shape_root";
+import LoopNode from "./shape/shape_loop";
+import WaitNode from "./shape/shape_wait";
+import AssertNode from "./shape/shap_assert";
+
+import { NodeTy,IsScriptNode } from "../../../model/node_type";
 import { Button, Tooltip, Modal, Input, Badge } from 'antd';
 import { ZoomInOutlined, ZoomOutOutlined, AimOutlined, UndoOutlined, CloudUploadOutlined, BugOutlined,DeleteOutlined  } from '@ant-design/icons';
 
 import "./graph.css";
 import { message } from "antd";
 import PubSub from "pubsub-js";
-import Topic from "../../model/topic";
+import Topic from "../../../model/topic";
 
 import moment from 'moment';
 

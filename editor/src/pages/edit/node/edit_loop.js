@@ -1,35 +1,34 @@
 import React from "react";
 import {
-  Slider,
   InputNumber,
   Row,
   Col,
   Button,
   message,
-  Tag,
+  Slider,
   Space,
   Input,
 } from "antd";
 import PubSub from "pubsub-js";
-import Topic from "../../model/topic";
+import Topic from "../../../model/topic";
 
 
 import moment from 'moment';
-import lanMap from "../../config/lan";
+import lanMap from "../../../locales/lan";
 
-const Min = 1;
-const Max = 60 * 60 * 1000; // 1 hour
+const Min = 0;
+const Max = 10000;
 
 const { Search } = Input;
 
 
-export default class WaitTab extends React.Component {
+export default class LoopTab extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
+      inputValue: 0,
       nod: {},
-      node_ty: "WaitNode",
-      inputValue: 1,
+      node_ty: "LoopNode",
     };
   }
 
@@ -44,11 +43,12 @@ export default class WaitTab extends React.Component {
 
         this.setState({
           nod: target,
+          inputValue: target.loop,
         });
       } else {
         this.setState({
           nod: {},
-          inputValue: 1,
+          inputValue: 0,
         });
       }
     });
@@ -61,11 +61,15 @@ export default class WaitTab extends React.Component {
   };
 
   formatter = (value) => {
-    return `Delay ${value} ms`;
+    if (value === 0) {
+      return `endless`;
+    } else {
+      return `loop ${value} times`;
+    }
   };
 
   applyClick = () => {
-    if (this.state.node_id === "") {
+    if (this.state.nod.id === "") {
       message.warning("节点未被选中");
       return;
     }
@@ -74,13 +78,13 @@ export default class WaitTab extends React.Component {
       parm: {
         id: this.state.nod.id,
         ty: this.state.node_ty,
-        wait: this.state.inputValue,
+        loop: this.state.inputValue,
       },
       notify: true,
     });
 
     var nod = this.state.nod;
-    nod.wait = this.state.inputValue;
+    nod.loop = this.state.inputValue;
     this.setState({ nod: nod });
   };
 
@@ -90,8 +94,7 @@ export default class WaitTab extends React.Component {
 
     return (
       <div>
-
-        <Space direction="vertical">
+        <Space direction="vertical" >
           <Row>
             <Col span={12}>
               <Slider
@@ -99,7 +102,7 @@ export default class WaitTab extends React.Component {
                 min={Min}
                 max={Max}
                 onChange={this.onChange}
-                value={typeof inputValue === "number" ? inputValue : 1}
+                value={typeof inputValue === "number" ? inputValue : 0}
               />
             </Col>
             <Col span={4}>
@@ -112,6 +115,7 @@ export default class WaitTab extends React.Component {
               />
             </Col>
           </Row>
+
           <Search
             placeholder={lanMap["app.edit.tab.placeholder"][moment.locale()]}
             width={200}
@@ -121,7 +125,6 @@ export default class WaitTab extends React.Component {
             onSearch={this.applyClick}
           />
           <Button type="dashed">{nod.id}</Button>
-
         </Space>{" "}
       </div>
     );

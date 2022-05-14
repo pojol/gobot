@@ -2,12 +2,12 @@ import { Table, Tag, Tabs,message} from "antd";
 import * as React from "react";
 import ApiChart from "./chart_tree";
 import PubSub from "pubsub-js";
-import Topic from "../model/topic";
-import { Post } from "../model/request";
-import Api from "../model/api";
+import Topic from "../../model/topic";
+import { Post } from "../../net/request";
+import Api from "../../net/api";
 
 import moment from 'moment';
-import lanMap from "../config/lan";
+import lanMap from "../../locales/lan";
 
 const { TabPane } = Tabs;
 

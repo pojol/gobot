@@ -23,16 +23,16 @@ import {
   ExclamationCircleTwoTone
 } from "@ant-design/icons";
 import PubSub from "pubsub-js";
-import Topic from "../model/topic";
-import { Post } from "../model/request";
-import Api from "../model/api";
+import Topic from "../../model/topic";
+import { Post } from "../../net/request";
+import Api from "../../net/api";
 import "./home.css";
-import { SaveAs } from "../utils/file";
-import { LoadBehaviorWithBlob, LoadBehaviorWithFile } from "../utils/tree";
+import { SaveAs } from "../../utils/file";
+import { LoadBehaviorWithBlob, LoadBehaviorWithFile } from "../../utils/tree";
 import HomeTagGroup from "./home_tags";
 
 import moment from 'moment';
-import lanMap from "../config/lan";
+import lanMap from "../../locales/lan";
 
 const { Dragger } = Upload;
 const { Option } = Select;

@@ -5,19 +5,20 @@ import "./app.css";
 import TreeModel from "./model/tree_model";
 import PubSub from "pubsub-js";
 import Topic from "./model/topic";
-import BotList from "./home/home";
-import TestReport from "./drive/report";
-import BotConfig from "./config/config";
-import EditPlane from "./edit/edit";
-import RunningList from "./runing/runing";
+
+import HomePage from "./pages/home/home";
+import ReportPage from "./pages/report/report";
+import ConfigPage from "./pages/config/config";
+import EditPage from "./pages/edit/edit";
+import RunningPage from "./pages/runing/runing";
 
 import enUS from "antd/lib/locale/en_US";
 import zhCN from "antd/lib/locale/zh_CN";
 import moment from "moment";
 import "moment/locale/zh-cn";
-import lanMap from "./config/lan";
-import { PostGetBlob } from "./model/request";
-import Api from "./model/api";
+import lanMap from "./locales/lan";
+import { PostGetBlob } from "./net/request";
+import Api from "./net/api";
 
 import { ReadOutlined } from "@ant-design/icons";
 
@@ -175,25 +176,25 @@ export default class App extends React.Component {
           onChange={this.changeTab}
         >
           <TabPane tab={lanMap["app.tab.edit"][moment.locale()]} key="Edit">
-            <EditPlane />
+            <EditPage />
             <TreeModel />
           </TabPane>
           <TabPane tab={lanMap["app.tab.home"][moment.locale()]} key="Home">
-            <BotList />
+            <HomePage />
           </TabPane>
           <TabPane
             tab={lanMap["app.tab.running"][moment.locale()]}
             key="Running"
           >
-            <RunningList />
+            <RunningPage />
           </TabPane>
           <TabPane tab={lanMap["app.tab.report"][moment.locale()]} key="Report">
             <Layout>
-              <TestReport />
+              <ReportPage />
             </Layout>
           </TabPane>
           <TabPane tab={lanMap["app.tab.config"][moment.locale()]} key="Config">
-            <BotConfig />
+            <ConfigPage />
           </TabPane>
         </Tabs>
 

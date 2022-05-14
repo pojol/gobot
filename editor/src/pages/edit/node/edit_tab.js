@@ -3,14 +3,14 @@ import {
   Tabs,
 } from "antd";
 import PubSub from "pubsub-js";
-import Topic from "../../model/topic";
+import Topic from "../../../model/topic";
 import ActionTab from "./edit_action";
 import LoopTab from "./edit_loop";
 import WaitTab from "./edit_wait";
-import { NodeTy } from "../../model/node_type";
+import { NodeTy } from "../../../model/node_type";
 
 import moment from 'moment';
-import lanMap from "../../config/lan";
+import lanMap from "../../../locales/lan";
 import SequenceTab from "./edit_sequence";
 
 

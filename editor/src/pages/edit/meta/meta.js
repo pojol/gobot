@@ -1,16 +1,13 @@
 import React from "react";
 import ReactJson from "react-json-view";
 import PubSub from "pubsub-js";
-import { message, Button, Tooltip, Modal, Input,Space } from "antd";
-import {
-  CloudUploadOutlined,
-} from "@ant-design/icons";
+import { message } from "antd";
 
 import moment from 'moment';
-import lanMap from "../../config/lan";
+import lanMap from "../../../locales/lan";
 
-import Topic from "../../model/topic";
-import "./blackboard.css";
+import Topic from "../../../model/topic";
+import "./meta.css";
 
 export default class Blackboard extends React.Component {
   constructor(props) {

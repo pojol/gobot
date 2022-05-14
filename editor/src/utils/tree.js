@@ -1,4 +1,3 @@
-import { IsScriptNode, NodeTy } from "../model/node_type";
 
 function parseChildren(childrenNodes, children) {
     var nod = {};
