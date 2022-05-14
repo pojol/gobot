@@ -2,9 +2,9 @@ import { Table, Tag, Tabs,message} from "antd";
 import * as React from "react";
 import ApiChart from "./chart_tree";
 import PubSub from "pubsub-js";
-import Topic from "../../model/topic";
-import { Post } from "../../net/request";
-import Api from "../../net/api";
+import Topic from "../../constant/topic";
+import { Post } from "../../utils/request";
+import Api from "../../constant/api";
 
 import moment from 'moment';
 import lanMap from "../../locales/lan";
@@ -151,14 +151,14 @@ export default class TestReport extends React.Component {
   clickTag = (e,record) => {
 
     if (record.apilst) {
-      let lst = new Array()
+      let lst = []
 
       if (e === "avg_request_time_ms") {
         for (var i = 0; i < record.apilst.length; i++) {
           lst.push({"Api": record.apilst[i].Api, "Value": record.apilst[i].ConsumeNum})
         }
       } else if (e === "request_times") {
-        for (var i = 0; i < record.apilst.length; i++) {
+        for (i = 0; i < record.apilst.length; i++) {
           lst.push({"Api": record.apilst[i].Api, "Value": record.apilst[i].ReqNum})
         }
       }

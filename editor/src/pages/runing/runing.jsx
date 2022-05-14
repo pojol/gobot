@@ -5,9 +5,9 @@ import {
 import * as React from "react";
 
 import PubSub from "pubsub-js";
-import Topic from "../../model/topic";
-import { Post } from "../../net/request";
-import Api from "../../net/api";
+import Topic from "../../constant/topic";
+import { Post } from "../../utils/request";
+import Api from "../../constant/api";
 
 
 export default class RunningList extends React.Component {

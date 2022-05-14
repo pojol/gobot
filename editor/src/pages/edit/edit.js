@@ -8,7 +8,7 @@ import Edit from "./node/edit_tab";
 import Blackboard from "./meta/meta";
 import ChangeView from "./change/change";
 
-import Topic from "../../model/topic";
+import Topic from "../../constant/topic";
 
 import "./edit.css";
 

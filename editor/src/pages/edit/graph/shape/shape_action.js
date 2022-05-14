@@ -1,5 +1,5 @@
 import { Shape } from "@antv/x6";
-import { NodeTy } from "../../../../model/node_type";
+import { NodeTy } from "../../../../constant/node_type";
 
 class ActionNode extends Shape.Rect {}
 

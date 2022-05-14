@@ -1,6 +1,6 @@
 import React from "react";
 import PubSub from "pubsub-js";
-import Topic from "../../../model/topic";
+import Topic from "../../../constant/topic";
 import { Controlled as CodeMirror } from "react-codemirror2";
 import "codemirror/lib/codemirror.css";
 import "codemirror/theme/solarized.css";

@@ -2,19 +2,18 @@ import React from "react";
 import PubSub from "pubsub-js";
 import { message } from "antd";
 
-import Topic from "../../../model/topic";
-import Editor from 'react-medium-editor';
+import Topic from "../../../constant/topic";
+import Editor from "react-medium-editor";
 
-require('medium-editor/dist/css/medium-editor.css');
-require('medium-editor/dist/css/themes/default.css');
-
+require("medium-editor/dist/css/medium-editor.css");
+require("medium-editor/dist/css/themes/default.css");
 
 export default class ChangeView extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       metadata: "",
-      status : "",
+      status: "",
       behaviorName: "",
     };
   }
@@ -22,9 +21,9 @@ export default class ChangeView extends React.Component {
   componentDidMount() {
     PubSub.subscribe(Topic.UpdateChange, (topic, info) => {
       try {
-        info.msg += "\n\n"
-        console.info(info.msg)
-        this.setState({ metadata:info.msg, status: info.status });
+        info.msg += "\n\n";
+        console.info(info.msg);
+        this.setState({ metadata: info.msg, status: info.status });
       } catch (err) {
         message.warning("blackboard parse info err");
       }
@@ -57,13 +56,15 @@ export default class ChangeView extends React.Component {
   };
 
   render() {
-
     return (
       <div>
         <Editor
           tag="pre"
           //https://github.com/yabwe/medium-editor/blob/d113a74437fda6f1cbd5f146b0f2c46288b118ea/OPTIONS.md#disableediting
-          options={{ placeholder: { text : "",hideOnClick: true }, disableEditing : true }}
+          options={{
+            placeholder: { text: "", hideOnClick: true },
+            disableEditing: true,
+          }}
           text={this.state.metadata}
         />
       </div>

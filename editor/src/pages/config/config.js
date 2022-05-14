@@ -12,11 +12,11 @@ import "codemirror/theme/neo.css";
 import "codemirror/theme/zenburn.css";
 import "codemirror/mode/lua/lua";
 
-import Topic from "../../model/topic";
+import Topic from "../../constant/topic";
 import moment from 'moment';
 import lanMap from "../../locales/lan";
-import Api from "../../net/api";
-import { PostBlob } from "../../net/request";
+import Api from "../../constant/api";
+import { PostBlob } from "../../utils/request";
 
 
 const { Search } = Input;

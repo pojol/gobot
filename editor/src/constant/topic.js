@@ -1,6 +1,4 @@
 
-
-
 const Topic = {
     // model
     NodeAdd : "topic_node_add",
@@ -48,20 +46,6 @@ const Topic = {
     LanuageChange : "topic_lanuage_change",
 }
 
-/*
-    {
-        name : "",
-        id : "",
-        param : {
-
-        },
-        display : {
-            "x" : 10,
-            "y" : 10
-        }
-        children : []
-    }
-*/
 
 export default Topic;
 

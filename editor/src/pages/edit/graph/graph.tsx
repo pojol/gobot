@@ -9,14 +9,14 @@ import LoopNode from "./shape/shape_loop";
 import WaitNode from "./shape/shape_wait";
 import AssertNode from "./shape/shap_assert";
 
-import { NodeTy,IsScriptNode } from "../../../model/node_type";
+import { NodeTy,IsScriptNode } from "../../../constant/node_type";
 import { Button, Tooltip, Modal, Input, Badge } from 'antd';
 import { ZoomInOutlined, ZoomOutOutlined, AimOutlined, UndoOutlined, CloudUploadOutlined, BugOutlined,DeleteOutlined  } from '@ant-design/icons';
 
 import "./graph.css";
 import { message } from "antd";
 import PubSub from "pubsub-js";
-import Topic from "../../../model/topic";
+import Topic from "../../../constant/topic";
 
 import moment from 'moment';
 
@@ -54,7 +54,7 @@ function NewStencil(graph: Graph) {
   var g1title = "Normal"
   var g2title = "Prefab"
 
-  if (moment.locale() == "en") {
+  if (moment.locale() === "en") {
     selectorNod.setAttrs({ label: { text: "Selector" } });
     seqNod.setAttrs({ label: { text: "Sequence" } });
     condNod.setAttrs({ label: { text: "Condition" } });
@@ -62,7 +62,7 @@ function NewStencil(graph: Graph) {
     loopNod.setAttrs({ label: { text: "Loop" } });
     waitNod.setAttrs({ label: { text: "Wait" } });
 
-  } else if (moment.locale() == "zh-cn") {
+  } else if (moment.locale() === "zh-cn") {
     selectorNod.setAttrs({ label: { text: "选择" } });
     seqNod.setAttrs({ label: { text: "顺序" } });
     condNod.setAttrs({ label: { text: "条件" } });

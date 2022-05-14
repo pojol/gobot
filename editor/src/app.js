@@ -2,9 +2,9 @@ import { Layout, Tabs, Tag, Radio, Modal, Input, Image, Space } from "antd";
 import * as React from "react";
 import "antd/dist/antd.css";
 import "./app.css";
-import TreeModel from "./model/tree_model";
+import TreeModel from "./behavior_tree/tree_model";
 import PubSub from "pubsub-js";
-import Topic from "./model/topic";
+import Topic from "./constant/topic";
 
 import HomePage from "./pages/home/home";
 import ReportPage from "./pages/report/report";
@@ -17,8 +17,8 @@ import zhCN from "antd/lib/locale/zh_CN";
 import moment from "moment";
 import "moment/locale/zh-cn";
 import lanMap from "./locales/lan";
-import { PostGetBlob } from "./net/request";
-import Api from "./net/api";
+import { PostGetBlob } from "./utils/request";
+import Api from "./constant/api";
 
 import { ReadOutlined } from "@ant-design/icons";
 

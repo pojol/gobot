@@ -10,7 +10,7 @@ import {
   Input,
 } from "antd";
 import PubSub from "pubsub-js";
-import Topic from "../../../model/topic";
+import Topic from "../../../constant/topic";
 
 
 import moment from 'moment';

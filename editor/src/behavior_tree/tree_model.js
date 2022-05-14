@@ -1,12 +1,11 @@
 import React from "react";
 import PubSub from "pubsub-js";
-import Topic from "./topic";
-import { message, Alert } from "antd";
+import Topic from "../constant/topic";
+import { message } from "antd";
 import OBJ2XML from "object-to-xml";
-import { Post, PostBlob } from "../net/request";
-import Api from "../net/api";
-import { NodeTy } from "./node_type";
-
+import { Post, PostBlob } from "../utils/request";
+import Api from "../constant/api";
+import { NodeTy } from "../constant/node_type";
 
 /*!
 
@@ -38,24 +37,22 @@ const Cmd = {
   Update: "nod_update",
   Link: "node_link",
   Unlink: "node_unlink",
-}
+};
 
 function ErrMsgParse(msg) {
-
-  var arr = msg.split("\n")
-  var newmsg = ""
+  var arr = msg.split("\n");
+  var newmsg = "";
 
   for (var i = 0; i < arr.length; i++) {
-    newmsg += "<u>" + (i + 1).toString() + "</u> " + arr[i] + "\n"
+    newmsg += "<u>" + (i + 1).toString() + "</u> " + arr[i] + "\n";
   }
 
-  newmsg += "\n\n"
+  newmsg += "\n\n";
 
-  return newmsg
+  return newmsg;
 }
 
-const sleep = (delay) => new Promise((resolve) => setTimeout(resolve, delay))
-
+const sleep = (delay) => new Promise((resolve) => setTimeout(resolve, delay));
 
 export default class TreeModel extends React.Component {
   constructor(props) {
@@ -83,44 +80,51 @@ end
   }
 
   _getRelationInfo(parentChildren, children) {
-
     var cinfo = {
       id: children.id,
-      children: []
-    }
+      children: [],
+    };
 
-    parentChildren.push(cinfo)
+    parentChildren.push(cinfo);
 
     if (children.children && children.children.length) {
-      children.children.forEach(cc => {
-        this._getRelationInfo(cinfo.children, cc)
-      })
+      children.children.forEach((cc) => {
+        this._getRelationInfo(cinfo.children, cc);
+      });
     }
-
   }
 
   getRelationInfo(nod) {
     var rinfo = {
       id: nod.id,
-      children: []
-    }
+      children: [],
+    };
 
     if (nod.children && nod.children.length) {
-      nod.children.forEach(children => {
-        this._getRelationInfo(rinfo.children, children)
+      nod.children.forEach((children) => {
+        this._getRelationInfo(rinfo.children, children);
       });
     }
 
-    return rinfo
+    return rinfo;
   }
 
   setNode(nod) {
     // init
-    if (nod.ty === NodeTy.Action && (nod.code === "" || nod.code === undefined)) {
+    if (
+      nod.ty === NodeTy.Action &&
+      (nod.code === "" || nod.code === undefined)
+    ) {
       nod.code = this.state.httpCodeTmp;
-    } else if (nod.ty === NodeTy.Condition && (nod.code === "" || nod.code === undefined)) {
+    } else if (
+      nod.ty === NodeTy.Condition &&
+      (nod.code === "" || nod.code === undefined)
+    ) {
       nod.code = this.state.conditionTmp;
-    } else if (nod.ty === NodeTy.Assert && (nod.code === "" || nod.code === undefined)) {
+    } else if (
+      nod.ty === NodeTy.Assert &&
+      (nod.code === "" || nod.code === undefined)
+    ) {
       nod.code = this.state.assertTmp;
     } else if (nod.ty === NodeTy.Loop && nod.loop === undefined) {
       nod.loop = 1;
@@ -128,265 +132,242 @@ end
       nod.wait = 1;
     }
 
-    window.tree.set(nod.id, nod)
+    window.tree.set(nod.id, nod);
   }
 
   syncMapInfo(nod) {
-
-    this.setNode(nod)
+    this.setNode(nod);
 
     if (nod.children && nod.children.length) {
-      nod.children.forEach(children => {
-        this.syncMapInfo(children)
-      })
+      nod.children.forEach((children) => {
+        this.syncMapInfo(children);
+      });
     }
-
   }
 
   addNode = (nod, silent) => {
     if (nod.ty === NodeTy.Root) {
-      this.setState({ rootid: nod.id })
+      this.setState({ rootid: nod.id });
     }
 
-    let rinfo = this.getRelationInfo(nod)
-    this.syncMapInfo(nod)
+    let rinfo = this.getRelationInfo(nod);
+    this.syncMapInfo(nod);
 
-    let olst = this.state.nods
-    olst.push(rinfo)
+    let olst = this.state.nods;
+    olst.push(rinfo);
 
-    let ohistory = this.state.history
+    let ohistory = this.state.history;
     if (!silent) {
-      let cmd = [{ "cmd": Cmd.RMV, "parm": nod.id }]
-      console.info("history push", cmd)
-      ohistory.push(cmd)
+      let cmd = [{ cmd: Cmd.RMV, parm: nod.id }];
+      console.info("history push", cmd);
+      ohistory.push(cmd);
     }
 
-    this.setState({ nods: olst, history: ohistory })
-  }
+    this.setState({ nods: olst, history: ohistory });
+  };
 
   rmvNode = (id, silent) => {
-
     if (id === this.state.rootid) {
-      return
+      return;
     }
 
-    let rmvnod, rmvparent
-    let nnods = this.state.nods
-    let ohistory = this.state.history
+    let nnods = this.state.nods;
+    let ohistory = this.state.history;
 
     for (var i = 0; i < nnods.length; i++) {
+      let rmvnod, rmvparent;
 
       if (nnods[i].id === id) {
-        rmvnod = nnods[i]
-        nnods.splice(i, 1)
-        break
+        rmvnod = nnods[i];
+        nnods.splice(i, 1);
+        break;
       }
 
       this.findNode(id, nnods[i], (parent, children, idx) => {
-        parent.children.splice(idx, 1)
-        rmvparent = parent
-        rmvnod = children
-      })
+        parent.children.splice(idx, 1);
+        rmvparent = parent;
+        rmvnod = children;
+      });
 
       if (rmvnod) {
-        this.fillData(rmvnod, window.tree.get(rmvnod.id), true, true)
-        this.foreachRelation(rmvnod)
+        this.fillData(rmvnod, window.tree.get(rmvnod.id), true, true);
+        this.foreachRelation(rmvnod);
 
         if (!silent) {
           let cmd = [
-            { "cmd": Cmd.ADD, "parm": rmvnod },
-            { "cmd": Cmd.Link, "parm": [rmvparent.id, rmvnod.id] }
-          ]
-          console.info("history push", cmd)
-          ohistory.push(cmd)
+            { cmd: Cmd.ADD, parm: rmvnod },
+            { cmd: Cmd.Link, parm: [rmvparent.id, rmvnod.id] },
+          ];
+          console.info("history push", cmd);
+          ohistory.push(cmd);
         }
 
         this.walk(rmvnod, (nod) => {
           if (window.tree.has(nod.id)) {
             window.tree.delete(nod.id);
           }
-        })
+        });
       }
 
-      this.setState({ nods: nnods, history: ohistory })
+      this.setState({ nods: nnods, history: ohistory });
     }
-
-  }
+  };
 
   findTree = (nods, id) => {
-
     for (var i = 0; i < nods.length; i++) {
-
       if (nods[i].id === id) {
-        return nods[i]
+        return nods[i];
       }
 
       if (nods[i].chlidren) {
-        var res = this.findTree(nods[i].children, id)
+        var res = this.findTree(nods[i].children, id);
         if (res) {
-          return res
+          return res;
         }
       }
-
     }
-
-
-  }
+  };
 
   link = (parentid, childid, silent) => {
+    let children;
+    let onods = this.state.nods;
+    let ohistory = this.state.history;
 
-    let children
-    let onods = this.state.nods
-    let ohistory = this.state.history
-
-    for (let i = 0; i < onods.length; i++) {
-
-      if (onods[i].id === childid) {
-        children = onods[i]
-        onods.splice(i, 1)
-        break
-      }
-
-      this.findNode(childid, onods[i], (parent, innerChildren, idx) => {
-
+    let findSplice = (id, nod) => {
+      this.findNode(id, nod, (parent, innerChildren, idx) => {
         if (!silent) {
-          let cmd = [
-            { "cmd": Cmd.unLink, "parm": [innerChildren.id] }
-          ]
-          console.info("history push", cmd)
-          ohistory.push(cmd)
+          let cmd = [{ cmd: Cmd.unLink, parm: [innerChildren.id] }];
+          console.info("history push", cmd);
+          ohistory.push(cmd);
         }
 
-        parent.children.splice(idx, 1)
-        children = innerChildren
+        parent.children.splice(idx, 1);
+        children = innerChildren;
+      });
+    };
 
-      })
+    let findPush = (id, nod) => {
+      this.findNode(id, nod, (_, parent) => {
+        parent.children.push(children);
+      });
+    };
 
+    for (let i = 0; i < onods.length; i++) {
+      if (onods[i].id === childid) {
+        children = onods[i];
+        onods.splice(i, 1);
+        break;
+      }
+
+      findSplice(childid, onods[i]);
     }
 
     if (children) {
       for (let i = 0; i < onods.length; i++) {
-
         if (onods[i].id === parentid) {
-          onods[i].children.push(children)
-          break
+          onods[i].children.push(children);
+          break;
         }
 
-        this.findNode(parentid, onods[i], (_, parent) => {
-          parent.children.push(children)
-        })
+        findPush(parentid, onods[i]);
       }
     }
 
-    this.setState({ nods: onods })
-
-  }
+    this.setState({ nods: onods });
+  };
 
   unLink = (childid, silent) => {
-    let onods = this.state.nods
-    let children
-    let ohistory = this.state.history
+    let onods = this.state.nods;
+    let children;
+    let ohistory = this.state.history;
 
-    for (var i = 0; i < onods.length; i++) {
-
-      if (onods[i].id === childid) {
-        children = onods[i]
-        onods.splice(i, 1)
-        break
-      }
-
-      this.findNode(childid, onods[i], (innerParent, innerChildren, idx) => {
-
+    let find = (id, nod) => {
+      this.findNode(id, nod, (innerParent, innerChildren, idx) => {
         if (!silent) {
           let cmd = [
-            { "cmd": Cmd.Link, "parm": [innerParent.id, innerChildren.id] }
-          ]
-          console.info("history push", cmd)
-          ohistory.push(cmd)
+            { cmd: Cmd.Link, parm: [innerParent.id, innerChildren.id] },
+          ];
+          console.info("history push", cmd);
+          ohistory.push(cmd);
         }
 
-        innerParent.children.splice(idx, 1)
-        children = innerChildren
-      })
+        innerParent.children.splice(idx, 1);
+        children = innerChildren;
+      });
+    };
 
+    for (var i = 0; i < onods.length; i++) {
+      if (onods[i].id === childid) {
+        children = onods[i];
+        onods.splice(i, 1);
+        break;
+      }
+
+      find(childid, onods[i]);
     }
 
     if (children) {
-      onods.push(children)
+      onods.push(children);
     }
 
-    this.setState({ nods: onods })
-  }
+    this.setState({ nods: onods });
+  };
 
   findNode = (id, parent, callback) => {
-
     if (parent.children && parent.children.length) {
-
       for (var i = 0; i < parent.children.length; i++) {
-
         if (parent.children[i].id === id) {
-          callback(parent, parent.children[i], i)
-          break
+          callback(parent, parent.children[i], i);
+          break;
         }
 
-        this.findNode(id, parent.children[i], callback)
-
+        this.findNode(id, parent.children[i], callback);
       }
-
     }
   };
 
   walk = (tree, callback) => {
-
     if (tree.children && tree.children.length) {
-
       for (var i = 0; i < tree.children.length; i++) {
-        callback(tree.children[i])
+        callback(tree.children[i]);
 
-        this.walk(tree.children[i], callback)
+        this.walk(tree.children[i], callback);
       }
-
     }
-
-  }
+  };
 
   fillData(org, info, graph, edit) {
-
     if (graph) {
-      org.pos = info.pos
+      org.pos = info.pos;
     }
 
     if (edit) {
       if (info.ty === NodeTy.Action) {
-        org.code = info.code
-        org.alias = info.alias
+        org.code = info.code;
+        org.alias = info.alias;
       } else if (info.ty === NodeTy.Assert || info.ty === NodeTy.Condition) {
-        org.code = info.code
+        org.code = info.code;
       } else if (info.ty === NodeTy.Loop) {
-        org.loop = info.loop
+        org.loop = info.loop;
       } else if (info.ty === NodeTy.Wait) {
-        org.wait = info.wait
+        org.wait = info.wait;
       }
     }
 
-    org.ty = info.ty
-
+    org.ty = info.ty;
   }
 
   updateGraphInfo(graphinfo) {
+    let tnode = window.tree.get(graphinfo.id);
+    this.fillData(tnode, graphinfo, true, false);
 
-    let tnode = window.tree.get(graphinfo.id)
-    this.fillData(tnode, graphinfo, true, false)
-
-    window.tree.set(tnode.id, tnode)
-
+    window.tree.set(tnode.id, tnode);
   }
 
   updateEditInfo(editinfo, notify) {
+    let tnode = window.tree.get(editinfo.id);
 
-    let tnode = window.tree.get(editinfo.id)
-
-    this.fillData(tnode, editinfo, false, true)
+    this.fillData(tnode, editinfo, false, true);
 
     if (notify) {
       message.success("apply info succ");
@@ -396,82 +377,79 @@ end
   }
 
   foreachRelation(parent) {
-
     for (var i = 0; i < parent.children.length; i++) {
-
       if (window.tree.has(parent.children[i].id)) {
-        this.fillData(parent.children[i], window.tree.get(parent.children[i].id), true, true)
+        this.fillData(
+          parent.children[i],
+          window.tree.get(parent.children[i].id),
+          true,
+          true
+        );
       }
 
       if (parent.children[i].children && parent.children[i].children.length) {
-        this.foreachRelation(parent.children[i])
+        this.foreachRelation(parent.children[i]);
       }
-
     }
-
   }
 
   getTree() {
-
-    let root
+    let root;
     for (var i = 0; i < this.state.nods.length; i++) {
       if (this.state.nods[i].id === this.state.rootid) {
-        root = this.state.nods[i]
-        break
+        root = this.state.nods[i];
+        break;
       }
     }
 
-    this.fillData(root, window.tree.get(root.id), true, false)
+    this.fillData(root, window.tree.get(root.id), true, false);
     if (root && root.children.length) {
-      this.foreachRelation(root)
+      this.foreachRelation(root);
     }
 
-    return root
+    return root;
   }
 
   getAllTree() {
-
-    let nods = []
+    let nods = [];
 
     for (var i = 0; i < this.state.nods.length; i++) {
-      var nod = this.state.nods[i]
-      this.fillData(nod, window.tree.get(nod.id), true, true)
+      var nod = this.state.nods[i];
+      this.fillData(nod, window.tree.get(nod.id), true, true);
 
       if (nod.children && nod.children.length) {
-        this.foreachRelation(nod)
+        this.foreachRelation(nod);
       }
 
-      nods.push(nod)
+      nods.push(nod);
     }
 
-    return nods
+    return nods;
   }
 
   undo() {
-    let ohistory = this.state.history
+    let ohistory = this.state.history;
     if (ohistory.length) {
-
-      let h = ohistory.pop()
-      console.info("history pop", h)
+      let h = ohistory.pop();
+      console.info("history pop", h);
 
       for (var i = 0; i < h.length; i++) {
         if (h[i].cmd === Cmd.ADD) {
-          this.addNode(h[i].parm, true)
+          this.addNode(h[i].parm, true);
         } else if (h[i].cmd === Cmd.RMV) {
-          this.rmvNode(h[i].parm, true)
+          this.rmvNode(h[i].parm, true);
         } else if (h[i].cmd === Cmd.Link) {
-          this.link(h[i].parm[0], h[i].parm[1], true)
+          this.link(h[i].parm[0], h[i].parm[1], true);
         } else if (h[i].cmd === Cmd.Unlink) {
-          this.Unlink(h[i].parm[0], true)
+          this.Unlink(h[i].parm[0], true);
         }
       }
 
-      let mtree = this.getAllTree()
+      let mtree = this.getAllTree();
 
-      PubSub.publish(Topic.FileLoadRedraw, mtree)
-      this.setState({ history: ohistory })
+      PubSub.publish(Topic.FileLoadRedraw, mtree);
+      this.setState({ history: ohistory });
     }
-
   }
 
   componentWillMount() {
@@ -483,7 +461,7 @@ end
         localStorage.remoteAddr = info.val;
         message.success("addr update succ");
       } else if (info.key === "code" && info.val !== "") {
-        var codetmp = JSON.parse(info.val)
+        var codetmp = JSON.parse(info.val);
         for (var i = 0; i < codetmp.length; i++) {
           if (codetmp[i]["title"] === "HTTP") {
             this.setState({ httpCodeTmp: codetmp[i]["content"] });
@@ -493,12 +471,12 @@ end
     });
 
     PubSub.subscribe(Topic.NodeAdd, (topic, addinfo) => {
-      let info = addinfo[0]
-      let build = addinfo[1]
-      let silent = addinfo[2]
+      let info = addinfo[0];
+      let build = addinfo[1];
+      let silent = addinfo[2];
 
       if (build) {
-        console.info("node model add", info)
+        console.info("node model add", info);
         this.addNode(info, silent);
       }
     });
@@ -508,16 +486,15 @@ end
     });
 
     PubSub.subscribe(Topic.LinkConnect, (topic, linkinfo) => {
-
-      let info = linkinfo[0]
-      let silent = linkinfo[1]
+      let info = linkinfo[0];
+      let silent = linkinfo[1];
 
       this.link(info.parent, info.child, silent);
     });
 
     PubSub.subscribe(Topic.LinkDisconnect, (topic, info) => {
-      let nodid = info[0]
-      let silent = info[1]
+      let nodid = info[0];
+      let silent = info[1];
 
       this.unLink(nodid, silent);
     });
@@ -531,13 +508,13 @@ end
     });
 
     PubSub.subscribe(Topic.Undo, () => {
-      this.undo()
-    })
+      this.undo();
+    });
 
     PubSub.subscribe(Topic.HistoryClean, () => {
-      console.info("history clean")
-      this.setState({ history: [] })
-    })
+      console.info("history clean");
+      this.setState({ history: [] });
+    });
 
     PubSub.subscribe(Topic.FileLoad, (topic, info) => {
       window.tree = new Map();
@@ -549,7 +526,7 @@ end
       var tree = this.getTree();
 
       if (name === undefined || name === "") {
-        name = tree.id
+        name = tree.id;
       }
 
       var xmltree = {
@@ -571,7 +548,7 @@ end
             message.success("create succ " + json.Body.BotID);
           }
         }
-      )
+      );
     });
 
     PubSub.subscribe(Topic.Upload, (topic, filename) => {
@@ -584,17 +561,20 @@ end
         type: "application/json",
       });
 
-      PostBlob(localStorage.remoteAddr, Api.FileBlobUpload, filename, blob).then(
-        (json) => {
-          if (json.Code !== 200) {
-            message.error(
-              "upload fail:" + String(json.Code) + " msg: " + json.Msg
-            );
-          } else {
-            message.success("upload succ " + tree.id);
-          }
+      PostBlob(
+        localStorage.remoteAddr,
+        Api.FileBlobUpload,
+        filename,
+        blob
+      ).then((json) => {
+        if (json.Code !== 200) {
+          message.error(
+            "upload fail:" + String(json.Code) + " msg: " + json.Msg
+          );
+        } else {
+          message.success("upload succ " + tree.id);
         }
-      );
+      });
     });
 
     PubSub.subscribe(Topic.Step, (topic, cnt) => {
@@ -603,49 +583,52 @@ end
         return;
       }
 
-      var flag = true
-      var botid = this.state.botid
+      var botid = this.state.botid;
 
       const step = async () => {
-        for (var i = 0; i < cnt; i++) {
-          
+
+        for (let i = 0; i < cnt; i++) {
+          let flag = true;
+
           Post(localStorage.remoteAddr, Api.DebugStep, { BotID: botid }).then(
             (json) => {
               if (json.Code !== 200) {
-                let change
-                let changeInfo = {}
+                let change;
+                let changeInfo = {};
 
                 if (json.Code === 1008) {
-                  change = JSON.parse(json.Body.Change)
+                  change = JSON.parse(json.Body.Change);
                   changeInfo = {
                     status: "",
-                    msg: JSON.stringify(change, null, "\t")
-                  }
+                    msg: JSON.stringify(change, null, "\t"),
+                  };
 
-                  message.success("the end")
+                  message.success("the end");
                 } else {
-                  message.error(json.Msg)
+                  message.error(json.Msg);
                   changeInfo = {
                     status: "error",
-                    msg: ErrMsgParse(json.Body.RuntimeErr)
-                  }
+                    msg: ErrMsgParse(json.Body.RuntimeErr),
+                  };
                 }
 
                 if (json.Code !== 1010) {
-                  PubSub.publish(Topic.UpdateChange, changeInfo)
+                  PubSub.publish(Topic.UpdateChange, changeInfo);
                 }
                 PubSub.publish(Topic.UpdateBlackboard, json.Body.Blackboard);
-                flag = false
+                flag = false;
               } else {
+                let metastr;
+                let meta = JSON.parse(json.Body.Blackboard);
+                let change = JSON.parse(json.Body.Change);
 
-                let metastr
-                let meta = JSON.parse(json.Body.Blackboard)
-                let change = JSON.parse(json.Body.Change)
-
-                metastr = JSON.stringify(meta)
+                metastr = JSON.stringify(meta);
 
                 PubSub.publish(Topic.UpdateBlackboard, metastr);
-                PubSub.publish(Topic.UpdateChange, { status: "", msg: JSON.stringify(change, null, "\t") })
+                PubSub.publish(Topic.UpdateChange, {
+                  status: "",
+                  msg: JSON.stringify(change, null, "\t"),
+                });
                 PubSub.publish(Topic.Focus, {
                   Cur: json.Body.Cur,
                   Prev: json.Body.Prev,
@@ -654,14 +637,14 @@ end
             }
           );
 
-          await sleep(200)
-          if (!flag) { break }
-
+          await sleep(200);
+          if (!flag) {
+            break;
+          }
         }
-      }
+      };
 
-      step()
-
+      step();
     });
 
     PubSub.subscribe(Topic.FileSave, (topic, msg) => {
@@ -692,7 +675,7 @@ end
     });
   }
 
-  componentDidMount() { }
+  componentDidMount() {}
 
   render() {
     return <div></div>;

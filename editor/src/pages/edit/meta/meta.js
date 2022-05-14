@@ -3,18 +3,13 @@ import ReactJson from "react-json-view";
 import PubSub from "pubsub-js";
 import { message } from "antd";
 
-import moment from 'moment';
-import lanMap from "../../../locales/lan";
-
-import Topic from "../../../model/topic";
-import "./meta.css";
+import Topic from "../../../constant/topic";
 
 export default class Blackboard extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      metadata: {
-      },
+      metadata: {},
       behaviorName: "",
 
       isModalVisible: false,
@@ -37,24 +32,21 @@ export default class Blackboard extends React.Component {
 
     PubSub.subscribe(Topic.Create, (topic, info) => {
       this.setState({ metadata: JSON.parse("{}") });
-    })
+    });
   }
 
-
   render() {
-    const isModalVisible = this.state.isModalVisible;
-
     return (
-      <div className="offset">
+      <div>
         <ReactJson
-          name={lanMap["app.edit.blackboardJson"][moment.locale()]}
+          name="Meta"
           src={this.state.metadata}
           theme={"rjv-default"}
           enableClipboard={false}
           displayDataTypes={false}
           edit={false}
           add={false}
-        ></ReactJson>        
+        ></ReactJson>
       </div>
     );
   }
