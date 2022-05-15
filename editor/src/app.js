@@ -1,4 +1,4 @@
-import { Layout, Tabs, Tag, Radio, Modal, Input, Image, Space } from "antd";
+import { Layout, Tabs, Tag, Radio, Modal, Input, Image, Space, Spin } from "antd";
 import * as React from "react";
 import "antd/dist/antd.css";
 import "./app.css";
@@ -52,7 +52,9 @@ export default class App extends React.Component {
     }
   }
 
+
   componentDidMount() {
+
     PubSub.subscribe(Topic.FileLoad, (topic, info) => {
       this.setState({ tab: "Edit" });
       PubSub.publish(Topic.FileLoadDraw, [info.Tree]);
