@@ -33,21 +33,21 @@
   position: absolute;
   z-index: 10;
   right:345px;
-  bottom:15px;
+  bottom:3px;
 }
 
 .app-step-mac {
   position: absolute;
   z-index: 10;
   right:262px;
-  bottom:15px;
+  bottom:3px;
 }
 
 .app-upload-mac {
   position: absolute;
   z-index: 10;
   right:180px;
-  bottom:15px;
+  bottom:3px;
 }
 
 .app-create-win {
