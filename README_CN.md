@@ -4,35 +4,35 @@ Gobot是一个有状态的api测试工具，支持图形编辑、api调用、绑
 [![](https://img.shields.io/badge/Trello-Todo-2ca5e0?style=flat&logo=trello)](https://trello.com/b/8eDZ6h7n/)
 [![CI](https://github.com/pojol/gobot/actions/workflows/dockerimage.yml/badge.svg?branch=develop)](https://github.com/pojol/gobot/actions/workflows/dockerimage.yml)
 
-# 工具的目标是什么？
-1. 使用 bot 进行复杂逻辑（有状态）的测试
-    * 如游戏业务中 创建角色→发送邮件→使用道具→进行战斗 ...
-    * 如社交业务中 创建多个角色 → 互相发现|添加好友 → 点赞|评论 ...
-2. 尽可能的简单，只需要拖拽行为树节点 + 少量的脚本编辑
+### 用来解决那些问题
 
-# 特性
-* 使用 behavior tree 编排 bot 的运行逻辑 
-* 使用 lua script 控制 bot 的执行逻辑
-* 每个 bot 都拥有一个 meta 数据结构，用于存储整个测试流程的上下文
-* 使用 tag + filter 管理 bot 行为文件
-* 拥有直观的调试窗口和环境，可以单步查看节点逻辑的执行情况
+* **状态管理**
+> 当前市面上绝大部分的测试工具都是基于单条API进行测试的，但是我们同样也有一些API会依赖各种状态，例如社交中想要测试一些行为必须先是好友关系，例如游戏中想要进入战斗必须要有编队信息等等，gobot 拥有完整的生命周期我们可以在不同的节点（测试）上，保留和使用各种状态信息。
 
-# [在线试用](http://1.117.168.37:7777) <--
-# [文档](https://pojol.gitee.io/gobot/#/) <--
+* **降低使用门槛** 
+> 在定制AI逻辑的时候，首先我们想到的是使用代码（或者脚本）进行控制，这会让使用的门槛相对有些高；在 gobot 中我们可以使用界面化的工具`行为树编辑器`对机器人进行流程上的编辑，避免了手写相关控制代码。
+
+* **提供API接口**
+> 由于现代的服务器体系中引入了大量的 CI/CD 流程，在使用 gobot 的时候，我们也可以方便的在流程中插入API调用`post /bot.run -d '{"Name":"某个机器人"}'`来进行集成测试。
 
 
-## 编辑器预览
-[![2022-04-20-9-51-09.png](https://i.postimg.cc/xCW3KnxD/2022-04-20-9-51-09.png)](https://postimg.cc/bD9nPcf3)
-
-## 脚本接口
-* [http](https://docs.gobot.fun/#/zh-cn/advance/script_http)
-* [proto](https://docs.gobot.fun/#/zh-cn/advance/script_protobuf)
-* [utils](https://docs.gobot.fun/#/zh-cn/advance/script_utils)
-* [base64](https://docs.gobot.fun/#/zh-cn/advance/script_base64)
-* [json](https://docs.gobot.fun/#/zh-cn/advance/script_utils)
+### 拥有那些特性
+1. 使用`行为树`+`脚本`控制机器人的执行逻辑
+2. 图形化的编辑，调试功能
+3. 使用 tag + filter 管理和查找仓库中的机器人
+4. 可以进行`压力测试`（并发驱动机器人
+5. 驱动端提供`http调用接口`
+6. 提供报告查看页（机器人调用的api统计信息
 
 
-## Http请求例子
+## [在线试用](http://1.117.168.37:7777) <--
+## [文档](https://pojol.gitee.io/gobot/#/) <--
+
+
+### 编辑器预览
+[![image.png](https://i.postimg.cc/3J9Kvxkr/image.png)](https://postimg.cc/0bMRgxGh)
+
+### 一个http节点的例子
 ```lua
 -- lua script
 local http = require("http")
@@ -59,67 +59,5 @@ res, err = http.post("url", reqTable)
 ]]--
 ```
 
-# 安装
-1. 安装 docker-compose
-    ```shell
-    # for CentOS
-    yum install docker-compose -y
-
-    # for Ubuntu
-    apt-get install docker-compose -y
-    ```
-
-2. 下载并编辑 [docker-compose.yml](https://github.com/pojol/gobot-driver/blob/develop/docker-compose.yml) 在启动前，请确保对 `MYSQL_ROOT_PASSWORD` 和 `MYSQL_PASSWORD` 参数进行赋值
-
-    ```yaml
-    version: "3.7"
-
-    volumes:
-    db:
-
-    services:
-    db:
-        image: mariadb:10.5
-        restart: always
-        networks:
-        - gnet
-        volumes:
-        - db:/var/lib/mysql
-        environment:
-        - MYSQL_ROOT_PASSWORD=
-        - MYSQL_PASSWORD=
-        - MYSQL_DATABASE=gobot
-        - MYSQL_USER=gobot
-
-    gobot_driver:
-        image: braidgo/gobot-driver:latest
-        restart: always
-        networks:
-        - gnet
-        depends_on:
-        - db
-        ports:
-        - 8888:8888
-        deploy:
-        resources:
-            limits:
-            cpus: "0.3"
-        environment:
-        - MYSQL_PASSWORD=
-        - MYSQL_DATABASE=gobot
-        - MYSQL_USER=gobot
-        - MYSQL_HOST=db
-
-    gobot_editor:
-        image: braidgo/gobot-editor:latest
-        restart: always
-        depends_on:
-        - gobot_driver
-        ports:
-        - 7777:7777
-
-    networks:
-    gnet:
-        driver: bridge
-    ```
-3. 运行命令 `docker-compose up -d` 运行成功后，访问 http://localhost:7777/ 即可进行 gobot 的编辑
+### Report
+[![image.png](https://i.postimg.cc/4d3TTrvf/image.png)](https://postimg.cc/yJ2Gmprt)

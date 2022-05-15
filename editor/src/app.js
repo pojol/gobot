@@ -1,23 +1,24 @@
-import { Layout, Tabs, Tag, Radio, Modal, Input, Image, Space } from "antd";
+import { Layout, Tabs, Tag, Radio, Modal, Input, Image, Space, Spin } from "antd";
 import * as React from "react";
 import "antd/dist/antd.css";
 import "./app.css";
-import TreeModel from "./model/tree_model";
+import TreeModel from "./behavior_tree/tree_model";
 import PubSub from "pubsub-js";
-import Topic from "./model/topic";
-import BotList from "./home/home";
-import TestReport from "./drive/report";
-import BotConfig from "./config/config";
-import EditPlane from "./edit/edit";
-import RunningList from "./runing/runing";
+import Topic from "./constant/topic";
+
+import HomePage from "./pages/home/home";
+import ReportPage from "./pages/report/report";
+import ConfigPage from "./pages/config/config";
+import EditPage from "./pages/edit/edit";
+import RunningPage from "./pages/runing/runing";
 
 import enUS from "antd/lib/locale/en_US";
 import zhCN from "antd/lib/locale/zh_CN";
 import moment from "moment";
 import "moment/locale/zh-cn";
-import lanMap from "./config/lan";
-import { PostGetBlob } from "./model/request";
-import Api from "./model/api";
+import lanMap from "./locales/lan";
+import { PostGetBlob } from "./utils/request";
+import Api from "./constant/api";
 
 import { ReadOutlined } from "@ant-design/icons";
 
@@ -51,7 +52,9 @@ export default class App extends React.Component {
     }
   }
 
+
   componentDidMount() {
+
     PubSub.subscribe(Topic.FileLoad, (topic, info) => {
       this.setState({ tab: "Edit" });
       PubSub.publish(Topic.FileLoadDraw, [info.Tree]);
@@ -141,7 +144,7 @@ export default class App extends React.Component {
       <dev className="site-layout-content">
         <dev className="ver">
           <Space>
-            <Tag color="geekblue">v0.1.7</Tag>
+            <Tag color="geekblue">v0.1.9</Tag>
             <Tag
               icon={<ReadOutlined />}
               color="#108ee9"
@@ -175,25 +178,25 @@ export default class App extends React.Component {
           onChange={this.changeTab}
         >
           <TabPane tab={lanMap["app.tab.edit"][moment.locale()]} key="Edit">
-            <EditPlane />
+            <EditPage />
             <TreeModel />
           </TabPane>
           <TabPane tab={lanMap["app.tab.home"][moment.locale()]} key="Home">
-            <BotList />
+            <HomePage />
           </TabPane>
           <TabPane
             tab={lanMap["app.tab.running"][moment.locale()]}
             key="Running"
           >
-            <RunningList />
+            <RunningPage />
           </TabPane>
           <TabPane tab={lanMap["app.tab.report"][moment.locale()]} key="Report">
             <Layout>
-              <TestReport />
+              <ReportPage />
             </Layout>
           </TabPane>
           <TabPane tab={lanMap["app.tab.config"][moment.locale()]} key="Config">
-            <BotConfig />
+            <ConfigPage />
           </TabPane>
         </Tabs>
 
