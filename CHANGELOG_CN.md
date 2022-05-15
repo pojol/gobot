@@ -8,6 +8,7 @@
     - 报告中新增了后缀信息（标注这是 ms 或者 times
     - 为 debug 信息新增了行号
     - change 窗口更换为 #medium-editor 为了更好的支持文字作色
+    - 添加了 loading 页
 * fix
     - 
 
