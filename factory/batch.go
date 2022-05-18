@@ -51,7 +51,7 @@ type Batch struct {
 	botErrCh  chan bot.ErrInfo
 }
 
-func CreateBatch(scriptPath, name string, num int, tbyt []byte, globalScript string) *Batch {
+func CreateBatch(scriptPath, name string, num int, tbyt []byte, batchsize int32, globalScript string) *Batch {
 
 	tree, err := behavior.New(tbyt)
 	if err != nil {
@@ -64,9 +64,9 @@ func CreateBatch(scriptPath, name string, num int, tbyt []byte, globalScript str
 		path:          scriptPath,
 		globalScripte: globalScript,
 		CurNum:        0,
-		BatchNum:      512,
+		BatchNum:      batchsize,
 		TotalNum:      int32(num),
-		bwg:           utils.NewSizeWaitGroup(512),
+		bwg:           utils.NewSizeWaitGroup(int(batchsize)),
 		exit:          utils.NewSwitch(),
 		tree:          tree,
 		pipeline:      make(chan *bot.Bot, num),
@@ -105,6 +105,7 @@ func (b *Batch) Report() ReportDetail {
 func (b *Batch) push(bot *bot.Bot) {
 	b.bwg.Add()
 	atomic.AddInt32(&b.cursorNum, 1)
+	fmt.Println("bot", bot.ID(), "running", atomic.LoadInt32(&b.cursorNum), "=>", b.TotalNum)
 
 	b.bots[bot.ID()] = bot
 }
@@ -112,11 +113,10 @@ func (b *Batch) push(bot *bot.Bot) {
 func (b *Batch) pop(id string) {
 	b.bwg.Done()
 	atomic.AddInt32(&b.CurNum, 1)
-	atomic.AddInt32(&b.cursorNum, -1)
 
 	b.bots[id].Close()
 
-	if atomic.LoadInt32(&b.cursorNum) == 0 && atomic.LoadInt32(&b.CurNum) >= b.TotalNum {
+	if atomic.LoadInt32(&b.CurNum) >= b.TotalNum {
 		b.done <- 1
 	}
 }

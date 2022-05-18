@@ -275,7 +275,6 @@ func (b *Bot) run_loop(nod *behavior.Tree, next bool) (bool, error) {
 				if err != nil {
 					goto ext
 				}
-				time.Sleep(time.Millisecond)
 			}
 		}
 	}
