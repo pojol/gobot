@@ -104,7 +104,6 @@ func (b *Batch) Report() ReportDetail {
 
 func (b *Batch) push(bot *bot.Bot) {
 	b.bwg.Add()
-	atomic.AddInt32(&b.cursorNum, 1)
 	fmt.Println("bot", bot.ID(), "running", atomic.LoadInt32(&b.cursorNum), "=>", b.TotalNum)
 
 	b.bots[bot.ID()] = bot
@@ -174,7 +173,8 @@ func (b *Batch) run() {
 				curbatchnum = last
 			}
 			for i := 0; i < int(curbatchnum); i++ {
-				b.pipeline <- bot.NewWithBehaviorTree(b.path, b.tree, b.Name, b.globalScripte)
+				atomic.AddInt32(&b.cursorNum, 1)
+				b.pipeline <- bot.NewWithBehaviorTree(b.path, b.tree, b.Name, atomic.LoadInt32(&b.cursorNum), b.globalScripte)
 			}
 
 			b.bwg.Wait()

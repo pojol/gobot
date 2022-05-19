@@ -166,7 +166,7 @@ func (f *Factory) CreateDebugBot(name string, fbyt []byte) *bot.Bot {
 		return nil
 	}
 
-	b = bot.NewWithBehaviorTree(f.parm.ScriptPath, tree, name, database.GetGlobalScript())
+	b = bot.NewWithBehaviorTree(f.parm.ScriptPath, tree, name, 1, database.GetGlobalScript())
 	f.debugBots[b.ID()] = b
 
 	return b
