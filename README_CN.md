@@ -59,5 +59,10 @@ res, err = http.post("url", reqTable)
 ]]--
 ```
 
+### 脚本层支持的模块
+|||||||
+|-|-|-|-|-|-|
+|`base64`|`http`|`protobuf`|`utils`|`mongoDB`|`json`|
+
 ### Report
 [![image.png](https://i.postimg.cc/4d3TTrvf/image.png)](https://postimg.cc/yJ2Gmprt)
