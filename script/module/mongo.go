@@ -25,6 +25,7 @@ func NewMgoModule() *MgoModule {
 func (m *MgoModule) Loader(L *lua.LState) int {
 	mod := L.SetFuncs(L.NewTable(), map[string]lua.LGFunction{
 		"conn":       m.conn,
+		"disconn":    m.disconn,
 		"insert_one": m.insert_one,
 		"find":       m.find,
 		"find_one":   m.find_one,
@@ -50,7 +51,8 @@ func (m *MgoModule) _conn(db string, url string) error {
 	clientOpt := options.Client()
 	clientOpt.ApplyURI(url)
 	clientOpt.SetConnectTimeout(5 * time.Second)
-	clientOpt.SetMaxPoolSize(128)
+	clientOpt.SetMaxPoolSize(1)
+	clientOpt.SetMaxConnIdleTime(60 * time.Second)
 
 	client, err := mongo.Connect(context.TODO(), clientOpt)
 	if err != nil {
@@ -67,6 +69,17 @@ func (m *MgoModule) _conn(db string, url string) error {
 	m.Url = url
 
 	return nil
+}
+
+func (m *MgoModule) disconn(L *lua.LState) int {
+	err := m.client.Disconnect(context.TODO())
+	if err != nil {
+		L.Push(lua.LString(fmt.Sprintf("%s", err)))
+		return 1
+	}
+
+	L.Push(lua.LString("succ"))
+	return 1
 }
 
 func (m *MgoModule) insert(L *lua.LState) int {
