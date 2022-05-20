@@ -1,3 +1,5 @@
+import { message } from "antd";
+
 export function Post(url, methon, formData) {
   return new Promise(function (resolve, reject) {
     fetch(url + "/" + methon, {
@@ -46,7 +48,6 @@ export function PostGetBlob(url, methon) {
             });
         })
         .catch((err) => {
-            console.info(err)
             reject({ status: -1 });
         });
 });

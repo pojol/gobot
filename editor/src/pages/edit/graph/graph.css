@@ -26,48 +26,48 @@
   z-index: 10;
   width: 32px;
   height: 100px;
-  right:180px;
+  right:3px;
 }
 
 .app-create-mac {
   position: absolute;
   z-index: 10;
-  right:345px;
+  right:168px;
   bottom:3px;
 }
 
 .app-step-mac {
   position: absolute;
   z-index: 10;
-  right:262px;
+  right:85px;
   bottom:3px;
 }
 
 .app-upload-mac {
   position: absolute;
   z-index: 10;
-  right:180px;
+  right:3px;
   bottom:3px;
 }
 
 .app-create-win {
   position: absolute;
   z-index: 10;
-  right:354px;
+  right:168px;
   bottom:18px;
 }
 
 .app-step-win {
   position: absolute;
   z-index: 10;
-  right:262px;
+  right:85px;
   bottom:18px;
 }
 
 .app-upload-win {
   position: absolute;
   z-index: 10;
-  right:180px;
+  right:3px;
   bottom:18px;
 }
 

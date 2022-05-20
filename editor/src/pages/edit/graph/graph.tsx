@@ -41,6 +41,8 @@ type Rect = {
   hoffset: number,
 }
 
+const stencilWidth = 180
+
 function NewStencil(graph: Graph) {
 
   var selectorNod = new SelectorNode()
@@ -91,7 +93,7 @@ function NewStencil(graph: Graph) {
     notFoundText: "Not Found",
     target: graph,
     collapsable: true,
-    stencilGraphWidth: 180,
+    stencilGraphWidth: stencilWidth,
     stencilGraphHeight: 250,
     groups: [
       {
@@ -153,7 +155,7 @@ export default class GraphView extends React.Component {
   componentDidMount() {
     // 新建画布
     const graph = new Graph({
-      width: document.body.clientWidth * this.rect.wratio,
+      width: document.body.clientWidth * this.rect.wratio - stencilWidth,
       height: document.body.clientHeight * this.rect.hratio,
       container: this.container,
       highlighting: {
@@ -399,7 +401,7 @@ export default class GraphView extends React.Component {
       let woffset = (document.body.clientWidth - w) / document.body.clientWidth
       this.rect.wratio = 1 - woffset
       this.rect.woffset = w
-      this.graph.resize(document.body.clientWidth * this.rect.wratio, document.body.clientHeight * this.rect.hratio)
+      this.graph.resize(document.body.clientWidth * this.rect.wratio - stencilWidth, document.body.clientHeight * this.rect.hratio)
 
     })
     PubSub.subscribe(Topic.EditPlaneEditChangeResize, (topic: string, h: number) => {
@@ -407,7 +409,7 @@ export default class GraphView extends React.Component {
       let hoffset = (document.body.clientHeight - h) / document.body.clientHeight
       this.rect.hratio = 1 - hoffset
       this.rect.hoffset = h
-      this.graph.resize(document.body.clientWidth * this.rect.wratio, document.body.clientHeight * this.rect.hratio)
+      this.graph.resize(document.body.clientWidth * this.rect.wratio - stencilWidth, document.body.clientHeight * this.rect.hratio)
 
     })
 
