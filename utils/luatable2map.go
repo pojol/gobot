@@ -36,7 +36,7 @@ func CapitalizeFirstWord(s string) string {
 
 // Map maps the lua table to the given struct pointer.
 func Table2Map(tbl *lua.LTable) (map[string]interface{}, error) {
-	opt := Option{
+	opt := &Option{
 		NameFunc: CapitalizeFirstWord,
 		TagName:  "gluamapper",
 	}
@@ -48,8 +48,29 @@ func Table2Map(tbl *lua.LTable) (map[string]interface{}, error) {
 	return mp, nil
 }
 
+func Table2MgoMap(tbl *lua.LTable) (map[string]interface{}, error) {
+
+	mp, ok := ToGoValue(tbl, nil).(map[string]interface{})
+	if !ok {
+		return mp, errors.New("arguments #1 must be a table, but got an array")
+	}
+
+	return mp, nil
+}
+
+func Table2MgoArr(tbl *lua.LTable) ([]interface{}, error) {
+
+	val := ToGoValue(tbl, nil)
+	mp, ok := val.([]interface{})
+	if !ok {
+		return mp, errors.New("arguments #1 must be a array, but got an struct")
+	}
+
+	return mp, nil
+}
+
 // ToGoValue converts the given LValue to a Go object.
-func ToGoValue(lv lua.LValue, opt Option) interface{} {
+func ToGoValue(lv lua.LValue, opt *Option) interface{} {
 	switch v := lv.(type) {
 	case *lua.LNilType:
 		return nil
@@ -65,7 +86,11 @@ func ToGoValue(lv lua.LValue, opt Option) interface{} {
 			ret := make(map[string]interface{})
 			v.ForEach(func(key, value lua.LValue) {
 				keystr := fmt.Sprint(ToGoValue(key, opt))
-				ret[opt.NameFunc(keystr)] = ToGoValue(value, opt)
+				if opt != nil {
+					ret[opt.NameFunc(keystr)] = ToGoValue(value, opt)
+				} else {
+					ret[keystr] = ToGoValue(value, opt)
+				}
 			})
 			return ret
 		} else { // array
