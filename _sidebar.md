@@ -16,6 +16,7 @@
     * [Meta *](/zh-cn/script/meta.md)
     * [Http](/zh-cn/script/http.md)
     * [Protobuf](/zh-cn/script/protobuf.md)
+    * [MongoDB](/zh-cn/script/mongo.md)
     * [Prefab](/zh-cn/script/append.md)
     * [Global](/zh-cn/script/global.md)
     * [Utils](/zh-cn/script/utils.md)
