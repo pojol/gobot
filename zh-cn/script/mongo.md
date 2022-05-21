@@ -48,6 +48,47 @@ doc = {
 
 ret = mgo.insert_many(testdb, doc)
 assert(ret == "succ", "mgo insert many err " .. ret)
+
+--[[
+[
+    {
+        "_id":{
+            "$oid":"6288e5aa2a534719e4103d72"
+        },
+        "b":"a",
+        "c":false,
+        "a":1
+    },
+    {
+        "_id":{
+            "$oid":"6288e5aa2a534719e4103d73"
+        },
+        "a":2,
+        "b":"b",
+        "c":true
+    },
+    {
+        "_id":{
+            "$oid":"6288e5aa2a534719e4103d74"
+        },
+        "a":{
+            "b":"c"
+        }
+    },
+    {
+        "_id":{
+            "$oid":"6288e5aa2a534719e4103d75"
+        },
+        "a":[ "a", "b", "c", "d" ]
+    },
+    {
+        "_id":{
+            "$oid":"6288e5aa2a534719e4103d76"
+        },
+        "a":[ 1, 2, 3, 4 ]
+    }
+]
+]]--
 ```
 
 ### find
