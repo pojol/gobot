@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"strconv"
 	"sync"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/pojol/gobot/behavior"
 	script "github.com/pojol/gobot/script/module"
 	"github.com/pojol/gobot/utils"
@@ -110,10 +110,10 @@ func (b *Bot) GetPrevNodeID() string {
 	return ""
 }
 
-func NewWithBehaviorTree(path string, bt *behavior.Tree, name, globalScript string) *Bot {
+func NewWithBehaviorTree(path string, bt *behavior.Tree, name string, idx int32, globalScript string) *Bot {
 
 	bot := &Bot{
-		id:   uuid.New().String(),
+		id:   strconv.Itoa(int(idx)),
 		tree: bt,
 		cur:  bt,
 		bs:   luaPool.Get(),
@@ -133,6 +133,15 @@ func NewWithBehaviorTree(path string, bt *behavior.Tree, name, globalScript stri
 			fmt.Println("err", err.Error())
 			bot.preloadErr = fmt.Sprintf("load script %v err : %v", path+v, err.Error())
 		}
+	}
+
+	err := bot.bs.L.DoString(`meta.BotID = "` + bot.id + `"`)
+	if err != nil {
+		fmt.Println("set bot id", err.Error())
+	}
+	err = bot.bs.L.DoString(`meta.BotName = "` + bot.name + `"`)
+	if err != nil {
+		fmt.Println("set bot name", err.Error())
 	}
 
 	return bot
@@ -275,7 +284,6 @@ func (b *Bot) run_loop(nod *behavior.Tree, next bool) (bool, error) {
 				if err != nil {
 					goto ext
 				}
-				time.Sleep(time.Millisecond)
 			}
 		}
 	}

@@ -22,6 +22,8 @@ export default class ActionTab extends React.Component {
       node_ty: "",
       code: "",
       defaultAlias: "",
+      wratio: 0.4,
+      hratio: 0.53
     };
   }
 
@@ -34,12 +36,12 @@ export default class ActionTab extends React.Component {
         delete target.pos;
         delete target.children;
 
-        console.info("click",target)
+        console.info("click", target)
         this.setState({
           nod: target,
           code: target.code,
           defaultAlias: target.alias,
-          node_ty : target.ty,
+          node_ty: target.ty,
         });
       } else {
         this.setState({
@@ -49,8 +51,20 @@ export default class ActionTab extends React.Component {
     });
 
     PubSub.subscribe(Topic.EditPlaneCodeMetaResize, (topic, h) => {
-      var nh = h - 100
-      this.state.editor.setSize("auto", nh.toString())
+
+      let hratio = 1 - ((document.body.clientHeight - h + 88) / document.body.clientHeight)
+      console.info(hratio)
+
+      this.setState({ hratio: hratio })
+      this.state.editor.setSize((document.body.clientWidth * this.state.wratio).toString() + "px", (document.body.clientHeight * this.state.hratio).toString() + "px")
+    })
+
+    PubSub.subscribe(Topic.EditPlaneEditCodeResize, (topic, w) => {
+      let wratio = ((document.body.clientWidth - w) / document.body.clientWidth)
+      //console.info(wratio, (document.body.clientWidth * this.state.wratio).toString())
+
+      this.setState({ wratio: wratio })
+      this.state.editor.setSize((document.body.clientWidth * this.state.wratio).toString() + "px", (document.body.clientHeight * this.state.hratio).toString() + "px")
     })
   }
 
@@ -78,10 +92,9 @@ export default class ActionTab extends React.Component {
     this.setState({ code: value });
   };
 
-  onChange = (editor, data, value) => { };
-
   onDidMount = (editor) => {
-    editor.setSize("auto", "400px")
+    editor.setSize((document.body.clientWidth * this.state.wratio).toString() + "px", (document.body.clientHeight * this.state.hratio).toString() + "px")
+    console.info("document.body.clientWidth", document.body.clientWidth, document.body.clientWidth * this.state.wratio)
     this.setState({ editor: editor })
   }
 
@@ -104,7 +117,6 @@ export default class ActionTab extends React.Component {
           value={code}
           options={options}
           onBeforeChange={this.onBeforeChange}
-          onChange={this.onChange}
           editorDidMount={this.onDidMount}
         />
         <Space>

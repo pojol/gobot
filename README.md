@@ -54,5 +54,10 @@ res, err = http.post("url", reqTable)
 ]]--
 ```
 
+### Script Module
+|||||||
+|-|-|-|-|-|-|
+|`base64`|`http`|`protobuf`|`utils`|`mongoDB`|`json`|
+
 ### Report
 [![image.png](https://i.postimg.cc/4d3TTrvf/image.png)](https://postimg.cc/yJ2Gmprt)

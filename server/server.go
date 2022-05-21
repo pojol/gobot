@@ -283,7 +283,6 @@ func ConfigGetInfo(ctx echo.Context) error {
 	}
 
 EXT:
-	fmt.Println(code, string(cfg.Dat))
 	res.Code = int(code)
 	ctx.Blob(http.StatusOK, "text/plain;charset=utf-8", cfg.Dat)
 	return nil
@@ -371,7 +370,7 @@ func BotRun(ctx echo.Context) error {
 		code = Fail
 		goto EXT
 	}
-	b = bot.NewWithBehaviorTree("script/", tree, req.Name, database.GetGlobalScript())
+	b = bot.NewWithBehaviorTree("script/", tree, req.Name, 1, database.GetGlobalScript())
 	err = b.RunByBlock()
 	if err != nil {
 		code = ErrRunningErr

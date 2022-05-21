@@ -451,10 +451,7 @@ end
     this.setState({ tree: {} }); // 主要维护的是 graph 中节点的数据
 
     PubSub.subscribe(Topic.ConfigUpdate, (topic, info) => {
-      if (info.key === "addr") {
-        localStorage.remoteAddr = info.val;
-        message.success("addr update succ");
-      } else if (info.key === "code" && info.val !== "") {
+       if (info.key === "code" && info.val !== "") {
         var codetmp = JSON.parse(info.val);
         for (var i = 0; i < codetmp.length; i++) {
           if (codetmp[i]["title"] === "HTTP") {

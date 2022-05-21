@@ -40,7 +40,7 @@ func Create(opts ...Option) (*Factory, error) {
 		Interrupt:   true,
 		ReportLimit: 100,
 		ScriptPath:  "script/",
-		batchSize:   1024,
+		batchSize:   2048,
 	}
 
 	for _, opt := range opts {
@@ -155,7 +155,7 @@ func (f *Factory) CreateTask(name string, num int) *Batch {
 		f.lru.Put(name, info.Dat)
 	}
 
-	return CreateBatch(f.parm.ScriptPath, name, num, dat, database.GetGlobalScript())
+	return CreateBatch(f.parm.ScriptPath, name, num, dat, int32(f.parm.batchSize), database.GetGlobalScript())
 }
 
 func (f *Factory) CreateDebugBot(name string, fbyt []byte) *bot.Bot {
@@ -166,7 +166,7 @@ func (f *Factory) CreateDebugBot(name string, fbyt []byte) *bot.Bot {
 		return nil
 	}
 
-	b = bot.NewWithBehaviorTree(f.parm.ScriptPath, tree, name, database.GetGlobalScript())
+	b = bot.NewWithBehaviorTree(f.parm.ScriptPath, tree, name, 1, database.GetGlobalScript())
 	f.debugBots[b.ID()] = b
 
 	return b
