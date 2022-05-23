@@ -25,12 +25,12 @@ Gobot是一个有状态的api测试工具，支持图形编辑、api调用、绑
 6. 提供报告查看页（机器人调用的api统计信息
 
 
-## [在线试用](http://1.117.168.37:7777) <--
-## [文档](https://pojol.gitee.io/gobot/#/) <--
+### [在线试用](http://1.117.168.37:7777) <--
+### [文档](https://pojol.gitee.io/gobot/#/) <--
 
 
 ### 编辑器预览
-[![image.png](https://i.postimg.cc/3J9Kvxkr/image.png)](https://postimg.cc/0bMRgxGh)
+[![image.png](https://i.postimg.cc/3J9Kvxkr/image.png)](https://www.bilibili.com/video/BV1sS4y1z7Dg?share_source=copy_web)
 
 ### 一个http节点的例子
 ```lua
@@ -65,4 +65,4 @@ res, err = http.post("url", reqTable)
 |`base64`|`http`|`protobuf`|`utils`|`mongoDB`|`json`|
 
 ### Report
-[![image.png](https://i.postimg.cc/4d3TTrvf/image.png)](https://postimg.cc/yJ2Gmprt)
+[![image.png](https://i.postimg.cc/4d3TTrvf/image.png)](https://www.bilibili.com/video/BV1sS4y1z7Dg?share_source=copy_web)
