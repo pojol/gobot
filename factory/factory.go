@@ -25,6 +25,7 @@ type Factory struct {
 	pipelineCache []TaskInfo
 	batches       []*Batch
 	lru           database.LRUCache
+	db            database.IDatabase
 
 	batchLock sync.Mutex
 
@@ -41,18 +42,27 @@ func Create(opts ...Option) (*Factory, error) {
 		ReportLimit: 100,
 		ScriptPath:  "script/",
 		batchSize:   2048,
+		NoDBMode:    false,
 	}
 
 	for _, opt := range opts {
 		opt(&p)
 	}
 
+	var dbmode string
+	if p.NoDBMode {
+		dbmode = database.Momory
+	} else {
+		dbmode = database.Mysql
+	}
+
 	f := &Factory{
 		parm:      p,
-		report:    NewReport(int32(p.ReportLimit)),
+		db:        database.Lookup(dbmode),
 		debugBots: make(map[string]*bot.Bot),
 		exit:      utils.NewSwitch(),
 		lru:       database.Constructor(100),
+		report:    NewReport(int32(p.ReportLimit), database.Lookup(dbmode)),
 	}
 
 	go f.taskLoop()
@@ -76,7 +86,7 @@ func (f *Factory) AddBehavior(name string, byt []byte) {
 	f.lock.Lock()
 	defer f.lock.Unlock()
 
-	err := database.Get().UpsetFile(name, byt)
+	err := f.db.UpsetFile(name, byt)
 	if err != nil {
 		fmt.Println("AddBehavior ", err.Error())
 	}
@@ -85,14 +95,14 @@ func (f *Factory) AddBehavior(name string, byt []byte) {
 }
 
 func (f *Factory) RmvBehavior(name string) {
-	err := database.Get().DelFile(name)
+	err := f.db.DelFile(name)
 	if err != nil {
 		fmt.Println("RmvBehavior ", err.Error())
 	}
 }
 
 func (f *Factory) UpdateBehaviorTags(name string, tags []byte) []database.BehaviorInfo {
-	err := database.Get().UpdateTags(name, tags)
+	err := f.db.UpdateTags(name, tags)
 	if err != nil {
 		fmt.Println("UpdateBehaviorTags", err.Error())
 	}
@@ -101,7 +111,7 @@ func (f *Factory) UpdateBehaviorTags(name string, tags []byte) []database.Behavi
 }
 
 func (f *Factory) GetBehaviors() []database.BehaviorInfo {
-	lst, err := database.Get().GetAllFiles()
+	lst, err := f.db.GetAllFiles()
 	if err != nil {
 		fmt.Println("GetBehaviors ", err.Error())
 	}
@@ -111,7 +121,7 @@ func (f *Factory) GetBehaviors() []database.BehaviorInfo {
 
 func (f *Factory) UploadConfig(dat []byte) error {
 
-	err := database.Get().UpsetConfig(dat)
+	err := f.db.UpsetConfig(dat)
 	if err != nil {
 		return err
 	}
@@ -120,15 +130,15 @@ func (f *Factory) UploadConfig(dat []byte) error {
 }
 
 func (f *Factory) GetConfig() (database.TemplateConfig, error) {
-	return database.Get().FindConfig("config")
+	return f.db.FindConfig("config")
 }
 
 func (f *Factory) FindBehavior(name string) (database.BehaviorInfo, error) {
-	return database.Get().FindFile(name)
+	return f.db.FindFile(name)
 }
 
 func (f *Factory) AddTask(name string, cnt int32) error {
-	_, err := database.Get().FindFile(name)
+	_, err := f.db.FindFile(name)
 	if err != nil {
 		return err
 	}
@@ -146,7 +156,7 @@ func (f *Factory) CreateTask(name string, num int) *Batch {
 		dat = byt.([]byte)
 
 	} else {
-		info, err := database.Get().FindFile(name)
+		info, err := f.db.FindFile(name)
 		if err != nil {
 			return nil
 		}
@@ -155,7 +165,7 @@ func (f *Factory) CreateTask(name string, num int) *Batch {
 		f.lru.Put(name, info.Dat)
 	}
 
-	return CreateBatch(f.parm.ScriptPath, name, num, dat, int32(f.parm.batchSize), database.GetGlobalScript())
+	return CreateBatch(f.parm.ScriptPath, name, num, dat, int32(f.parm.batchSize), f.GetGlobalScript())
 }
 
 func (f *Factory) CreateDebugBot(name string, fbyt []byte) *bot.Bot {
@@ -166,7 +176,7 @@ func (f *Factory) CreateDebugBot(name string, fbyt []byte) *bot.Bot {
 		return nil
 	}
 
-	b = bot.NewWithBehaviorTree(f.parm.ScriptPath, tree, name, 1, database.GetGlobalScript())
+	b = bot.NewWithBehaviorTree(f.parm.ScriptPath, tree, name, 1, f.GetGlobalScript())
 	f.debugBots[b.ID()] = b
 
 	return b
@@ -232,7 +242,7 @@ func (f *Factory) popBatch() {
 	} else {
 		s = bot.BotStatusSucc
 	}
-	database.Get().UpdateState(b.Name, s)
+	f.db.UpdateState(b.Name, s)
 	f.batches = f.batches[1:]
 	f.batchLock.Unlock()
 }
@@ -245,6 +255,10 @@ func (f *Factory) GetBatchInfo() []BatchInfo {
 	}
 	f.batchLock.Unlock()
 	return lst
+}
+
+func (f *Factory) GetGlobalScript() string {
+	return database.GetGlobalScript(f.db)
 }
 
 /*

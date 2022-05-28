@@ -370,7 +370,7 @@ func BotRun(ctx echo.Context) error {
 		code = Fail
 		goto EXT
 	}
-	b = bot.NewWithBehaviorTree("script/", tree, req.Name, 1, database.GetGlobalScript())
+	b = bot.NewWithBehaviorTree("script/", tree, req.Name, 1, factory.Global.GetGlobalScript())
 	err = b.RunByBlock()
 	if err != nil {
 		code = ErrRunningErr

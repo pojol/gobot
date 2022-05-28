@@ -33,6 +33,9 @@ type Parm struct {
 
 	// 报告的次数限制
 	ReportLimit int
+
+	// 无数据库模式运行
+	NoDBMode bool
 }
 
 // Option consul discover config wrapper
@@ -47,5 +50,17 @@ func WithScriptPath(path string) Option {
 func WithReportLimit(limit int) Option {
 	return func(c *Parm) {
 		c.ReportLimit = limit
+	}
+}
+
+func WithBatchSize(batchSize int) Option {
+	return func(c *Parm) {
+		c.batchSize = batchSize
+	}
+}
+
+func WithNoDatabase(flag bool) Option {
+	return func(c *Parm) {
+		c.NoDBMode = flag
 	}
 }
