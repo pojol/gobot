@@ -83,6 +83,7 @@ export default class App extends React.Component {
   };
 
   syncTemplateCode() {
+    console.info("sync templete config", localStorage.remoteAddr)
     PostGetBlob(localStorage.remoteAddr, Api.ConfigGet, {}).then((file) => {
       let reader = new FileReader();
       reader.onload = function (ev) {

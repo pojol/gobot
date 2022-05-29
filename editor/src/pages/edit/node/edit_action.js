@@ -8,11 +8,10 @@ import "codemirror/mode/lua/lua";
 
 import { Input, Button, message, Space } from "antd";
 
-import moment from 'moment';
+import moment from "moment";
 import lanMap from "../../../locales/lan";
 
 const { Search } = Input;
-
 
 export default class ActionTab extends React.Component {
   constructor(props) {
@@ -23,7 +22,9 @@ export default class ActionTab extends React.Component {
       code: "",
       defaultAlias: "",
       wratio: 0.4,
-      hratio: 0.53
+      woffset: 0,
+      hratio: 0.44,
+      hoffset: 0,
     };
   }
 
@@ -36,7 +37,7 @@ export default class ActionTab extends React.Component {
         delete target.pos;
         delete target.children;
 
-        console.info("click", target)
+        console.info("click", target);
         this.setState({
           nod: target,
           code: target.code,
@@ -51,21 +52,49 @@ export default class ActionTab extends React.Component {
     });
 
     PubSub.subscribe(Topic.EditPlaneCodeMetaResize, (topic, h) => {
-
-      let hratio = 1 - ((document.body.clientHeight - h + 88) / document.body.clientHeight)
-      console.info(hratio)
-
-      this.setState({ hratio: hratio })
-      this.state.editor.setSize((document.body.clientWidth * this.state.wratio).toString() + "px", (document.body.clientHeight * this.state.hratio).toString() + "px")
-    })
+      this.adjustHeight(h, true)
+    });
 
     PubSub.subscribe(Topic.EditPlaneEditCodeResize, (topic, w) => {
-      let wratio = ((document.body.clientWidth - w) / document.body.clientWidth)
-      //console.info(wratio, (document.body.clientWidth * this.state.wratio).toString())
+      this.adjustWidth(w, true)
+    });
 
-      this.setState({ wratio: wratio })
-      this.state.editor.setSize((document.body.clientWidth * this.state.wratio).toString() + "px", (document.body.clientHeight * this.state.hratio).toString() + "px")
+    PubSub.subscribe(Topic.WindowResize, (topic, e) => {
+      this.adjustWidth(this.state.woffset, false)
+      this.adjustHeight(this.state.hoffset, false)
     })
+  }
+
+  adjustHeight(h, offset) {
+    
+    let hratio =
+        1 - (document.body.clientHeight - h + 88) / document.body.clientHeight;
+
+      console.info("height", h, hratio)
+
+      if (offset) {
+        this.setState({ hratio: hratio, hoffset: h });
+      }
+      this.state.editor.setSize(
+        (document.body.clientWidth * this.state.wratio).toString() + "px",
+        (document.body.clientHeight * this.state.hratio).toString() + "px"
+      );
+  }
+
+  adjustWidth(w, offset) {
+
+    let wratio = (document.body.clientWidth - w) / document.body.clientWidth;
+    //console.info(wratio, (document.body.clientWidth * this.state.wratio).toString())
+    console.info("width", wratio)
+
+    if (offset) {
+      this.setState({ wratio: wratio ,woffset:w});
+    }
+
+    this.state.editor.setSize(
+      (document.body.clientWidth * this.state.wratio).toString() + "px",
+      (document.body.clientHeight * this.state.hratio).toString() + "px"
+    );
   }
 
   applyClick = () => {
@@ -93,14 +122,15 @@ export default class ActionTab extends React.Component {
   };
 
   onDidMount = (editor) => {
-    editor.setSize((document.body.clientWidth * this.state.wratio).toString() + "px", (document.body.clientHeight * this.state.hratio).toString() + "px")
-    console.info("document.body.clientWidth", document.body.clientWidth, document.body.clientWidth * this.state.wratio)
-    this.setState({ editor: editor })
-  }
+    this.setState({ editor: editor }, ()=>{
+      this.adjustWidth(document.body.clientWidth * this.state.wratio, true)
+      this.adjustHeight(document.body.clientHeight * this.state.hratio, true)
+    });
+  };
 
   onChangeAlias = (e) => {
-    this.setState({ defaultAlias: e.target.value })
-  }
+    this.setState({ defaultAlias: e.target.value });
+  };
 
   render() {
     const code = this.state.code;

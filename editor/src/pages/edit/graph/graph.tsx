@@ -526,7 +526,7 @@ export default class GraphView extends React.Component {
         h = document.body.clientHeight * this.rect.hratio;
       }
 
-      this.graph.resize(w, h);
+      this.graph.resize(w - stencilWidth, h);
     });
 
     PubSub.subscribe(Topic.LanuageChange, () => {
