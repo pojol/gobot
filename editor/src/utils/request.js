@@ -1,4 +1,3 @@
-import { message } from "antd";
 
 export function Post(url, methon, formData) {
   return new Promise(function (resolve, reject) {

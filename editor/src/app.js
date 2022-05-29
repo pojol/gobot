@@ -1,4 +1,4 @@
-import { Layout, Tabs, Tag, Radio, Modal, Input, Image, Space, Spin } from "antd";
+import { Layout, Tabs, Tag, Radio, Modal, Input, Image, Space } from "antd";
 import * as React from "react";
 import "antd/dist/antd.css";
 import "./app.css";
@@ -144,7 +144,7 @@ export default class App extends React.Component {
       <dev className="site-layout-content">
         <dev className="ver">
           <Space>
-            <Tag color="geekblue">v0.1.9</Tag>
+            <Tag color="geekblue">v0.1.10</Tag>
             <Tag
               icon={<ReadOutlined />}
               color="#108ee9"

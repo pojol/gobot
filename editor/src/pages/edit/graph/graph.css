@@ -53,21 +53,21 @@
 .app-create-win {
   position: absolute;
   z-index: 10;
-  right:168px;
+  right:188px;
   bottom:18px;
 }
 
 .app-step-win {
   position: absolute;
   z-index: 10;
-  right:85px;
+  right:105px;
   bottom:18px;
 }
 
 .app-upload-win {
   position: absolute;
   z-index: 10;
-  right:3px;
+  right:23px;
   bottom:18px;
 }
 
