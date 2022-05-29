@@ -277,6 +277,7 @@ func ConfigGetInfo(ctx echo.Context) error {
 
 	cfg, err := factory.Global.GetConfig()
 	if err != nil {
+		fmt.Println("get config", err.Error())
 		code = ErrGetConfig
 		res.Msg = err.Error()
 		goto EXT
