@@ -38,9 +38,9 @@ const Topic = {
     ReportSelect : "topic_report_select",
 
     // resize
-    EditPlaneCodeMetaResize : "topic_plane_code&meta_resize",
-    EditPlaneEditCodeResize : "topic_plane_edit&code_resize",
-    EditPlaneEditChangeResize : "topic_plane_edit&change_resize",
+    EditPanelCodeMetaResize : "topic_panel_code&meta_resize",
+    EditPanelEditCodeResize : "topic_panel_edit&code_resize",
+    EditPanelEditChangeResize : "topic_panel_code&change_resize",
 
     WindowResize : "topic_window_resize",
     LanuageChange : "topic_lanuage_change",

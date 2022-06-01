@@ -1,7 +1,5 @@
-import * as React from 'react';
+import * as React from "react";
 import PubSub from "pubsub-js";
-
-import SplitPane, { Pane } from "react-split-pane";
 
 import GraphView from "./graph/graph";
 import Edit from "./node/edit_tab";
@@ -10,77 +8,79 @@ import ChangeView from "./change/change";
 
 import Topic from "../../constant/topic";
 
+// You will need to import the styles separately
+// You probably want to do this just once during the bootstrapping phase of your application.
+import "react-reflex/styles.css";
+
+// then you can import the components
+import { ReflexContainer, ReflexSplitter, ReflexElement } from "react-reflex";
+
 import "./edit.css";
 
 export default class EditPlane extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {
-    };
+    this.state = {};
   }
 
-  componentDidMount() {}
-
-  onEditChangeDrap = (e) => {
-    PubSub.publish(Topic.EditPlaneEditChangeResize, e);
+  componentDidMount() {
+    
   }
 
-  onEditCodeDrag = (e) => {
-    PubSub.publish(Topic.EditPlaneEditCodeResize, e);
-  };
+  onResizeEditPane(domElement, component) {
+    console.info("resize", domElement.component.props)
 
-  onCodeMetaDrag = (e) => {
-    PubSub.publish(Topic.EditPlaneCodeMetaResize, e);
-  };
+    PubSub.publish(Topic.EditPanelCodeMetaResize, domElement.component.props.flex)
+  }
 
-  onChange = (e) =>{
-    console.info("on change ", e)
+  onResizeGraphPane(domElement) {
+    console.info("resize", domElement.component.props)
+    PubSub.publish(Topic.EditPanelEditCodeResize, domElement.component.props.flex)
+  }
+
+  onResizeChangePane(domElement) {
+    console.info("resize", domElement.component.props)
+    PubSub.publish(Topic.EditPanelEditChangeResize, domElement.component.props.flex)
   }
 
   render() {
-
     const divStyle = {
-      overflow : "scroll"
-    }
+      overflow: "scroll",
+    };
 
     return (
       <div className="container">
-        <SplitPane
-          split="vertical"
-          defaultSize="60%"
-          minSize={400}
-          onDragFinished={this.onEditCodeDrag}
-        >
-          <SplitPane
-            split="horizontal"
-            defaultSize="70%"
-            minSize={100}
-            pane2Style= {divStyle}
-            onDragFinished={this.onEditChangeDrap}
-          >
-            <Pane minSize={200} maxSize={1000} defaultSize="70%">
-              <GraphView />
-            </Pane>
-            <Pane minSize={100} maxSize={700} defaultSize="30%">
-              <ChangeView />
-            </Pane>
-          </SplitPane>
+        <ReflexContainer orientation="vertical">
+          <ReflexElement className="left-pane" flex={0.6} minSize="200" onStopResize={this.onResizeGraphPane}>
+            <ReflexContainer orientation="horizontal">
+              <ReflexElement className="left-pane" minSize="100" flex={0.7} >
+                <GraphView />
+              </ReflexElement>
 
-          <SplitPane
-            split="horizontal"
-            defaultSize={500}
-            minSize={100}
-            pane2Style= {divStyle}
-            onDragFinished={this.onCodeMetaDrag}
-          >
-            <Pane minSize={200} maxSize={1000} defaultSize="50%">
-              <Edit />
-            </Pane>
-            <Pane minSize={200} maxSize={1000} defaultSize="50%" >
-              <Blackboard />
-            </Pane>
-          </SplitPane>
-        </SplitPane>
+              <ReflexSplitter />
+
+              <ReflexElement className="left-pane" minSize="100" flex={0.3} propagateDimensions={true} onStopResize={this.onResizeChangePane}>
+                <ChangeView />
+              </ReflexElement>
+            </ReflexContainer>
+          </ReflexElement>
+
+          <ReflexSplitter propagate={true} />
+
+          <ReflexElement className="right-pane" flex={0.4} minSize="100">
+            <ReflexContainer orientation="horizontal">
+              <ReflexElement className="left-pane" minSize="100" propagateDimensions={true} onStopResize={this.onResizeEditPane}>
+                <Edit />
+              </ReflexElement>
+
+              <ReflexSplitter />
+
+              <ReflexElement className="left-pane" minSize="100">
+                <Blackboard />
+              </ReflexElement>
+            </ReflexContainer>
+          </ReflexElement>
+        </ReflexContainer>
       </div>
     );
   }

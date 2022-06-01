@@ -18,8 +18,8 @@
     "react-dom": "^16.13.1",
     "react-json-view": "^1.21.3",
     "react-medium-editor": "^1.8.1",
+    "react-reflex": "^4.0.9",
     "react-scripts": "^3.4.1",
-    "react-split-pane": "^0.1.92",
     "rimraf": "^3.0.2",
     "xml2json": "^0.12.0"
   },

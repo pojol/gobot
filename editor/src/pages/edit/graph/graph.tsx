@@ -42,13 +42,6 @@ const magnetAvailabilityHighlighter = {
   },
 };
 
-type Rect = {
-  wratio: number;
-  woffset: number;
-  hratio: number;
-  hoffset: number;
-};
-
 const stencilWidth = 180;
 
 function NewStencil(graph: Graph) {
@@ -161,7 +154,6 @@ function GetNodInfo(nod: Node) {
   return info;
 }
 
-
 export default class GraphView extends React.Component {
   graph: Graph;
   container: HTMLElement;
@@ -177,13 +169,8 @@ export default class GraphView extends React.Component {
     btnStep: "Step",
     btnUpload: "Upload",
     stepCnt: 0,
-  };
-
-  rect: Rect = {
-    wratio: 0.6,
-    woffset: 0,
-    hratio: 0.69,
-    hoffset: 0,
+    wflex: 0.6,
+    hflex: 0.7,
   };
 
   reloadStencil() {
@@ -208,8 +195,8 @@ export default class GraphView extends React.Component {
   componentDidMount() {
     // 新建画布
     const graph = new Graph({
-      width: document.body.clientWidth * this.rect.wratio - stencilWidth,
-      height: document.body.clientHeight * this.rect.hratio,
+      width: document.body.clientWidth * this.state.wflex - stencilWidth,
+      height: document.body.clientHeight * this.state.hflex - 2,
       container: this.container,
       highlighting: {
         magnetAvailable: magnetAvailabilityHighlighter,
@@ -369,7 +356,6 @@ export default class GraphView extends React.Component {
     });
 
     graph.on("edge:mouseenter", ({ edge }) => {
-      
       edge.addTools([
         "source-arrowhead",
         "target-arrowhead",
@@ -384,7 +370,7 @@ export default class GraphView extends React.Component {
               graph.removeEdge(cell.id, { disconnectEdges: true });
               PubSub.publish(Topic.LinkDisconnect, [cell.id, false]);
 
-              sourcenod.unembed(targetnod)
+              sourcenod.unembed(targetnod);
             },
           },
         },
@@ -477,57 +463,25 @@ export default class GraphView extends React.Component {
     });
 
     PubSub.subscribe(
-      Topic.EditPlaneEditCodeResize,
-      (topic: string, w: number) => {
-        let woffset =
-          (document.body.clientWidth - w) / document.body.clientWidth;
-        this.rect.wratio = 1 - woffset;
-        this.rect.woffset = w;
-        this.graph.resize(
-          document.body.clientWidth * this.rect.wratio - stencilWidth,
-          document.body.clientHeight * this.rect.hratio
-        );
+      Topic.EditPanelEditCodeResize,
+      (topic: string, flex: number) => {
+        this.setState({ wflex: flex }, () => {
+          this.redrawPanel()
+        });
       }
     );
+
     PubSub.subscribe(
-      Topic.EditPlaneEditChangeResize,
-      (topic: string, h: number) => {
-        let hoffset =
-          (document.body.clientHeight - h) / document.body.clientHeight;
-        this.rect.hratio = 1 - hoffset;
-        this.rect.hoffset = h;
-        this.graph.resize(
-          document.body.clientWidth * this.rect.wratio - stencilWidth,
-          document.body.clientHeight * this.rect.hratio
-        );
+      Topic.EditPanelEditChangeResize, (topic: string, flex: number) =>{
+        this.setState({hflex: 1- flex}, ()=>{
+          this.redrawPanel()
+        })
       }
-    );
+    )
 
-    PubSub.subscribe(Topic.WindowResize, (topic: string, e: number) => {
-      let w,
-        h = 0;
-      if (this.rect.woffset !== 0) {
-        let woffset =
-          (document.body.clientWidth - this.rect.woffset) /
-          document.body.clientWidth;
-        let wratio = 1 - woffset;
-        w = document.body.clientWidth * wratio;
-      } else {
-        w = document.body.clientWidth * this.rect.wratio;
-      }
-
-      if (this.rect.hoffset !== 0) {
-        let hoffset =
-          (document.body.clientHeight - this.rect.hoffset) /
-          document.body.clientHeight;
-        let hratio = 1 - hoffset;
-        h = document.body.clientHeight * hratio;
-      } else {
-        h = document.body.clientHeight * this.rect.hratio;
-      }
-
-      this.graph.resize(w - stencilWidth, h);
-    });
+    PubSub.subscribe(Topic.WindowResize, ()=>{
+      this.redrawPanel()
+    })
 
     PubSub.subscribe(Topic.LanuageChange, () => {
       this.reloadStencil();
@@ -555,6 +509,15 @@ export default class GraphView extends React.Component {
     }
 
     return tlab;
+  }
+
+  redrawPanel() {
+    var width = document.body.clientWidth * this.state.wflex - stencilWidth;
+    var height = document.body.clientHeight * this.state.hflex -2;
+
+    console.info("redraw panel", this.state.wflex, this.state.hflex)
+
+    this.graph.resize(width, height);
   }
 
   redrawChild(parent: any, child: any, build: boolean) {
@@ -687,7 +650,6 @@ export default class GraphView extends React.Component {
     }
   }
 
-  
   refStencil = (container: HTMLDivElement) => {
     this.stencilContainer = container;
   };
@@ -761,7 +723,7 @@ export default class GraphView extends React.Component {
     if (cells.length) {
       for (var i = 0; i < cells.length; i++) {
         if (cells[i].getAttrs().type.toString() !== NodeTy.Root) {
-          this.removeCell(cells[i])
+          this.removeCell(cells[i]);
         }
       }
     }
