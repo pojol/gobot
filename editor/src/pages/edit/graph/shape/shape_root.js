@@ -1,8 +1,11 @@
 import { Shape } from "@antv/x6";
+import Constant from "../../../../constant/constant";
 
-class RootNode extends Shape.Rect {}
+class RootNode extends Shape.Rect { }
 
 RootNode.config({
+  x: Constant.GraphWidth / 2,
+  y: Constant.GraphHeight / 2,
   attrs: {
     root: {
       magnet: true,
@@ -16,7 +19,7 @@ RootNode.config({
     label: {
       text: "root"
     },
-    type : "RootNode"
+    type: "RootNode"
   },
   width: 50,
   height: 20,

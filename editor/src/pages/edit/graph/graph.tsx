@@ -27,6 +27,7 @@ import PubSub from "pubsub-js";
 import Topic from "../../../constant/topic";
 
 import moment from "moment";
+import Constant from "../../../constant/constant";
 
 const { Dnd, Stencil } = Addon;
 const { Search } = Input;
@@ -273,7 +274,7 @@ export default class GraphView extends React.Component {
 
     PubSub.publish(Topic.NodeAdd, [GetNodInfo(root), true, false]);
     PubSub.publish(Topic.HistoryClean, {});
-
+    
     graph.bindKey("del", () => {
       this.ClickDel();
       return false;
@@ -381,7 +382,11 @@ export default class GraphView extends React.Component {
       edge.removeTools();
     });
 
+    // 调整画布大小
+    graph.resizeGraph(Constant.GraphWidth, Constant.GraphHeight)
+    // 居中显示
     graph.centerContent();
+    
     this.dnd = new Dnd({
       target: graph,
       scaled: false,
@@ -466,7 +471,7 @@ export default class GraphView extends React.Component {
       Topic.EditPanelEditCodeResize,
       (topic: string, flex: number) => {
         this.setState({ wflex: flex }, () => {
-          this.redrawPanel()
+          this.resizeViewpoint()
         });
       }
     );
@@ -474,13 +479,13 @@ export default class GraphView extends React.Component {
     PubSub.subscribe(
       Topic.EditPanelEditChangeResize, (topic: string, flex: number) =>{
         this.setState({hflex: 1- flex}, ()=>{
-          this.redrawPanel()
+          this.resizeViewpoint()
         })
       }
     )
 
     PubSub.subscribe(Topic.WindowResize, ()=>{
-      this.redrawPanel()
+      this.resizeViewpoint()
     })
 
     PubSub.subscribe(Topic.LanuageChange, () => {
@@ -511,12 +516,14 @@ export default class GraphView extends React.Component {
     return tlab;
   }
 
-  redrawPanel() {
+  // 重绘视口
+  resizeViewpoint() {
     var width = document.body.clientWidth * this.state.wflex - stencilWidth;
     var height = document.body.clientHeight * this.state.hflex -2;
 
-    console.info("redraw panel", this.state.wflex, this.state.hflex)
+    console.info("resize panel", this.state.wflex, this.state.hflex)
 
+    // 设置视口大小
     this.graph.resize(width, height);
   }
 

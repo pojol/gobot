@@ -37,7 +37,6 @@ export default class ActionTab extends React.Component {
         delete target.pos;
         delete target.children;
 
-        console.info("click", target);
         this.setState({
           nod: target,
           code: target.code,
@@ -63,7 +62,7 @@ export default class ActionTab extends React.Component {
       });
     });
 
-    PubSub.subscribe(Topic.WindowResize, ()=>{
+    PubSub.subscribe(Topic.WindowResize, () => {
       this.redraw()
     })
   }
@@ -104,9 +103,21 @@ export default class ActionTab extends React.Component {
 
   onDidMount = (editor) => {
     this.setState({ editor: editor, wflex: 0.4, hflex: 0.5 }, () => {
-      var width = document.body.clientWidth * this.state.wflex - 2;
-      var height = document.body.clientHeight * this.state.hflex - 38;
 
+      var width, height
+      var dimensions = this.props.dimensions
+
+      if (dimensions.width !== "100%") {
+        width = dimensions.width - 2
+        height = dimensions.height - 38
+
+        this.setState({ wflex: dimensions.width / document.body.clientWidth, hflex: dimensions.height / document.body.clientHeight })
+      } else {
+        width = document.body.clientWidth * this.state.wflex - 2;
+        height = document.body.clientHeight * this.state.hflex - 38;
+      }
+
+      console.info("action init", dimensions, "w", width, "h", height)
       this.state.editor.setSize(
         width.toString() + "px",
         height.toString() + "px"
