@@ -1,5 +1,4 @@
 import React from "react";
-import { Tabs } from "antd";
 import PubSub from "pubsub-js";
 import Topic from "../../../constant/topic";
 import ActionTab from "./edit_action";
@@ -7,11 +6,8 @@ import LoopTab from "./edit_loop";
 import WaitTab from "./edit_wait";
 import { NodeTy } from "../../../constant/node_type";
 
-import moment from "moment";
-import lanMap from "../../../locales/lan";
 import SequenceTab from "./edit_sequence";
 
-const { TabPane } = Tabs;
 
 function GetPane(props) {
   const nodety = props.nodety;
@@ -54,7 +50,6 @@ export default class Edit extends React.Component {
   }
 
   render() {
-    const { width, height } = this.props.dimensions;
 
     return (
       <div>

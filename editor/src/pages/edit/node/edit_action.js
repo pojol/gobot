@@ -6,7 +6,6 @@ import "codemirror/lib/codemirror.css";
 import "codemirror/theme/solarized.css";
 import "codemirror/mode/lua/lua";
 
-import ReactDOM from "react-dom";
 
 import { Input, Button, message, Space } from "antd";
 
@@ -130,7 +129,6 @@ export default class ActionTab extends React.Component {
   };
 
   render() {
-    const { width, height } = this.props.dimensions;
     const code = this.state.code;
     const nod = this.state.nod;
     const options = {

@@ -44,9 +44,6 @@ export default class EditPlane extends React.Component {
   }
 
   render() {
-    const divStyle = {
-      overflow: "scroll",
-    };
 
     return (
       <div className="container">
