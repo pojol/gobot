@@ -1,11 +1,21 @@
 # 安装
 
-### 本地运行
-1. 在 release 页下载对应的客户端版本
-2. 在 release 页下载对应的服务器版本
-3. 启动服务器
+### 1. 本地运行
+* windows
+    1. 在 release 页下载对应的客户端版本 `gobot-editor-win32-x64.zip`
+    2. 在 release 页下载对应的服务器版本 `gobot-driver-win32.exe`
+    3. 启动服务器
+    ```
+        # gobot-driver-win32.exe -h 查看启动参数
+        # 以无数据库模式启动本地服务器（数据将不会保存
+        gobot-driver-win32.exe --no_database true
 
-### 通过 docker-compose
+        启动 editor 将服务器地址配置为 http://127.0.0.1:8888 即可开始使用
+    ```
+
+### 2. 本地 editor + 容器 driver
+
+### 3. 使用 docker-compose
 1. 安装 docker-compose
     ```shell
     # for CentOS
