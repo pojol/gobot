@@ -2,7 +2,7 @@
 
 ### 1. 本地运行
 * windows
-    1. 在 [release](https://github.com/pojol/gobot/releases) 页下载对应版本的客户端 `gobot-editor-win32-x64.zip`
+    1. 在 [release](https://github.com/pojol/gobot/releases) 页下载对应版本的客户端 `gobot-editor-win32.zip`
     2. 在 [release](https://github.com/pojol/gobot/releases) 页下载对应版本的服务器 `gobot-driver-win32.exe`
     3. 启动服务器
     ```
