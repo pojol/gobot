@@ -547,6 +547,11 @@ func ReqPrint() echo.MiddlewareFunc {
 
 func Route(e *echo.Echo) {
 
+	e.GET("/health", func(ctx echo.Context) error {
+		ctx.JSONBlob(http.StatusOK, []byte(``))
+		return nil
+	})
+
 	e.POST("/file.uploadTxt", FileTextUpload)
 	e.POST("/file.uploadBlob", FileBlobUpload)
 	e.POST("/file.remove", FileRemove)

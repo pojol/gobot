@@ -536,7 +536,7 @@ end
             );
           } else {
             this.setState({ botid: json.Body.BotID });
-            message.success("create succ " + json.Body.BotID);
+            message.success("create debug bot succ");
           }
         }
       );

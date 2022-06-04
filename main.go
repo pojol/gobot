@@ -25,6 +25,24 @@ var (
 	scriptPath  string
 )
 
+const (
+	// Version of gobot driver
+	Version = "v0.1.10"
+
+	banner = `
+              __              __      
+             /\ \            /\ \__   
+   __     ___\ \ \____    ___\ \ ,_\  
+ /'_ '\  / __'\ \ '__'\  / __'\ \ \  
+/\ \L\ \/\ \L\ \ \ \L\ \/\ \L\ \ \ \_ 
+\ \____ \ \____/\ \_,__/\ \____/\ \__\
+ \/___L\ \/___/  \/___/  \/___/  \/__/
+   /\____/                            
+   \_/__/             %s                
+
+`
+)
+
 func initFlag() {
 	flag.BoolVar(&help, "h", false, "this help")
 
@@ -50,11 +68,6 @@ func main() {
 		flag.Usage()
 		return
 	}
-
-	fmt.Println("no_database =>", dbmode)
-	fmt.Println("report_limit =>", reportLimit)
-	fmt.Println("batch_size =>", batchSize)
-	fmt.Println("script_path =>", scriptPath)
 
 	_, err := factory.Create(
 		factory.WithNoDatabase(dbmode),
@@ -84,6 +97,8 @@ func main() {
 	*/
 	server.Route(e)
 	e.Start(":8888")
+
+	fmt.Printf(banner, Version)
 
 	// Stop the service gracefully.
 	if err := e.Shutdown(context.TODO()); err != nil {

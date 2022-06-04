@@ -16,7 +16,7 @@ import Topic from "../../constant/topic";
 import moment from 'moment';
 import lanMap from "../../locales/lan";
 import Api from "../../constant/api";
-import { PostBlob, PostGetBlob } from "../../utils/request";
+import { PostBlob, PostGetBlob, CheckHealth } from "../../utils/request";
 
 
 const { Search } = Input;
@@ -87,17 +87,29 @@ export default class BotConfig extends React.Component {
     if (this.isUrl(this.state.driveAddr)) {
 
       let driveAddr = this.state.driveAddr
-      PostGetBlob(driveAddr, Api.ConfigGet, {}).then((file) => {
-        let reader = new FileReader();
-        reader.onload = function (ev) {
-          localStorage.CodeTemplate = reader.result;
-          localStorage.remoteAddr = driveAddr;
 
-          message.success("apply addr succ")
-          PubSub.publish(Topic.ConfigUpdate, { key : "code", val: reader.result})
-        };
-        reader.readAsText(file.blob);
-      });
+      CheckHealth(driveAddr).then((res) => {
+
+        if (res.code !== 200) {
+          message.error("server connection error " + res.code.toString())
+        } else {
+
+          PostGetBlob(driveAddr, Api.ConfigGet, {}).then((file) => {
+            let reader = new FileReader();
+            reader.onload = function (ev) {
+              localStorage.CodeTemplate = reader.result;
+              localStorage.remoteAddr = driveAddr;
+
+              message.success("apply addr succ")
+              PubSub.publish(Topic.ConfigUpdate, { key: "code", val: reader.result })
+            };
+            reader.readAsText(file.blob);
+          });
+
+        }
+
+      })
+
 
     } else {
       message.warning("Please enter a valid address")
