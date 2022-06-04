@@ -16,7 +16,7 @@ import Topic from "../../constant/topic";
 import moment from 'moment';
 import lanMap from "../../locales/lan";
 import Api from "../../constant/api";
-import { PostBlob } from "../../utils/request";
+import { PostBlob, PostGetBlob, CheckHealth } from "../../utils/request";
 
 
 const { Search } = Input;
@@ -47,6 +47,14 @@ export default class BotConfig extends React.Component {
     if (temp !== undefined && temp !== "") {
       this.setState({ panes: JSON.parse(temp) })
     }
+
+    PubSub.subscribe(Topic.ConfigUpdate, (topic, info) => {
+      if (info.key === "code" && info.val !== "") {
+        console.info(info.val)
+        this.setState({ panes: JSON.parse(info.val) })
+      }
+    })
+
   }
 
   isUrl(url) {
@@ -76,12 +84,33 @@ export default class BotConfig extends React.Component {
 
   onApplyDriveAddr = () => {
 
-    console.info(this.isUrl(this.state.driveAddr))
     if (this.isUrl(this.state.driveAddr)) {
-      PubSub.publish(Topic.ConfigUpdate, {
-        key: "addr",
-        val: this.state.driveAddr,
-      });
+
+      let driveAddr = this.state.driveAddr
+
+      CheckHealth(driveAddr).then((res) => {
+
+        if (res.code !== 200) {
+          message.error("server connection error " + res.code.toString())
+        } else {
+
+          PostGetBlob(driveAddr, Api.ConfigGet, {}).then((file) => {
+            let reader = new FileReader();
+            reader.onload = function (ev) {
+              localStorage.CodeTemplate = reader.result;
+              localStorage.remoteAddr = driveAddr;
+
+              message.success("apply addr succ")
+              PubSub.publish(Topic.ConfigUpdate, { key: "code", val: reader.result })
+            };
+            reader.readAsText(file.blob);
+          });
+
+        }
+
+      })
+
+
     } else {
       message.warning("Please enter a valid address")
     }
@@ -98,7 +127,6 @@ export default class BotConfig extends React.Component {
 
     PostBlob(localStorage.remoteAddr, Api.ConfigUpload, "config", blob).then(
       (json) => {
-        console.info(json.Code)
         if (json.Code !== 200) {
           message.error(
             "upload fail:" + String(json.Code) + " msg: " + json.Msg

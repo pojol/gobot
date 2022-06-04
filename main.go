@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"net/http"
+	"runtime"
 
 	_ "net/http/pprof"
 
@@ -18,33 +19,62 @@ import (
 var (
 	help bool
 
-	dbHost string
-	dbPwd  string
-	dbName string
-	dbUser string
+	dbmode      bool
+	reportLimit int
+	batchSize   int
+	scriptPath  string
+)
+
+const (
+	// Version of gobot driver
+	Version = "v0.1.10"
+
+	banner = `
+              __              __      
+             /\ \            /\ \__   
+   __     ___\ \ \____    ___\ \ ,_\  
+ /'_ '\  / __'\ \ '__'\  / __'\ \ \  
+/\ \L\ \/\ \L\ \ \ \L\ \/\ \L\ \ \ \_ 
+\ \____ \ \____/\ \_,__/\ \____/\ \__\
+ \/___L\ \/___/  \/___/  \/___/  \/__/
+   /\____/                            
+   \_/__/             %s                
+
+`
 )
 
 func initFlag() {
 	flag.BoolVar(&help, "h", false, "this help")
 
-	flag.StringVar(&dbHost, "db_host", "127.0.0.1:3306", "set consul address")
-	flag.StringVar(&dbPwd, "db_pwd", "gobot", "set mysql password")
-	flag.StringVar(&dbName, "db_name", "gobot", "set mysql database name")
-	flag.StringVar(&dbUser, "db_user", "gobot", "set mysql user")
-
+	flag.BoolVar(&dbmode, "no_database", false, "Run in local mode")
+	flag.IntVar(&reportLimit, "report_limit", 100, "Report retention limit")
+	flag.IntVar(&batchSize, "batch_size", 1024, "The maximum number of robots in parallel")
+	flag.StringVar(&scriptPath, "script_path", "script/", "Path to bot script")
 }
 
 func main() {
-	initFlag()
-	flag.Parse()
 
 	defer func() {
 		if err := recover(); err != nil {
-			fmt.Println("main panic:", err)
+			var buf [4096]byte
+			n := runtime.Stack(buf[:], false)
+			fmt.Println("panic:", string(buf[:n]))
 		}
 	}()
 
-	_, err := factory.Create()
+	initFlag()
+	flag.Parse()
+	if help {
+		flag.Usage()
+		return
+	}
+
+	_, err := factory.Create(
+		factory.WithNoDatabase(dbmode),
+		factory.WithReportLimit(reportLimit),
+		factory.WithScriptPath(scriptPath),
+		factory.WithBatchSize(batchSize),
+	)
 	if err != nil {
 		panic(err)
 	}
@@ -67,6 +97,8 @@ func main() {
 	*/
 	server.Route(e)
 	e.Start(":8888")
+
+	fmt.Printf(banner, Version)
 
 	// Stop the service gracefully.
 	if err := e.Shutdown(context.TODO()); err != nil {

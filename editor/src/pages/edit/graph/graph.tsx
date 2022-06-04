@@ -9,16 +9,25 @@ import LoopNode from "./shape/shape_loop";
 import WaitNode from "./shape/shape_wait";
 import AssertNode from "./shape/shap_assert";
 
-import { NodeTy,IsScriptNode } from "../../../constant/node_type";
-import { Button, Tooltip, Modal, Input, Badge } from 'antd';
-import { ZoomInOutlined, ZoomOutOutlined, AimOutlined, UndoOutlined, CloudUploadOutlined, BugOutlined,DeleteOutlined  } from '@ant-design/icons';
+import { NodeTy, IsScriptNode } from "../../../constant/node_type";
+import { Button, Tooltip, Modal, Input, Badge } from "antd";
+import {
+  ZoomInOutlined,
+  ZoomOutOutlined,
+  AimOutlined,
+  UndoOutlined,
+  CloudUploadOutlined,
+  BugOutlined,
+  DeleteOutlined,
+} from "@ant-design/icons";
 
 import "./graph.css";
 import { message } from "antd";
 import PubSub from "pubsub-js";
 import Topic from "../../../constant/topic";
 
-import moment from 'moment';
+import moment from "moment";
+import Constant from "../../../constant/constant";
 
 const { Dnd, Stencil } = Addon;
 const { Search } = Input;
@@ -34,25 +43,19 @@ const magnetAvailabilityHighlighter = {
   },
 };
 
-type Rect = {
-  wratio: number,
-  woffset: number,
-  hratio: number,
-  hoffset: number,
-}
+const stencilWidth = 180;
 
 function NewStencil(graph: Graph) {
-
-  var selectorNod = new SelectorNode()
-  var seqNod = new SequenceNode()
-  var condNod = new ConditionNode()
-  var assertNod = new AssertNode()
-  var loopNod = new LoopNode()
-  var waitNod = new WaitNode()
-  var title = "Components"
-  var placeholder = "Search by shape name"
-  var g1title = "Normal"
-  var g2title = "Prefab"
+  var selectorNod = new SelectorNode();
+  var seqNod = new SequenceNode();
+  var condNod = new ConditionNode();
+  var assertNod = new AssertNode();
+  var loopNod = new LoopNode();
+  var waitNod = new WaitNode();
+  var title = "Components";
+  var placeholder = "Search by shape name";
+  var g1title = "Normal";
+  var g2title = "Prefab";
 
   if (moment.locale() === "en") {
     selectorNod.setAttrs({ label: { text: "Selector" } });
@@ -61,7 +64,6 @@ function NewStencil(graph: Graph) {
     assertNod.setAttrs({ label: { text: "Assert" } });
     loopNod.setAttrs({ label: { text: "Loop" } });
     waitNod.setAttrs({ label: { text: "Wait" } });
-
   } else if (moment.locale() === "zh-cn") {
     selectorNod.setAttrs({ label: { text: "选择" } });
     seqNod.setAttrs({ label: { text: "顺序" } });
@@ -70,10 +72,10 @@ function NewStencil(graph: Graph) {
     loopNod.setAttrs({ label: { text: "循环" } });
     waitNod.setAttrs({ label: { text: "等待" } });
 
-    title = "组件"
-    placeholder = "通过节点名进行搜索"
-    g1title = "默认节点"
-    g2title = "预制节点"
+    title = "组件";
+    placeholder = "通过节点名进行搜索";
+    g1title = "默认节点";
+    g2title = "预制节点";
   }
 
   var stencil = new Stencil({
@@ -91,7 +93,7 @@ function NewStencil(graph: Graph) {
     notFoundText: "Not Found",
     target: graph,
     collapsable: true,
-    stencilGraphWidth: 180,
+    stencilGraphWidth: stencilWidth,
     stencilGraphHeight: 250,
     groups: [
       {
@@ -101,14 +103,56 @@ function NewStencil(graph: Graph) {
       {
         name: "group2",
         title: g2title,
-      }
+      },
     ],
   });
 
-  stencil.load([selectorNod, seqNod, condNod, assertNod, loopNod, waitNod], "group1");
-  stencil.load([new ActionNode()], "group2")
+  stencil.load(
+    [selectorNod, seqNod, condNod, assertNod, loopNod, waitNod],
+    "group1"
+  );
+  stencil.load([new ActionNode()], "group2");
 
-  return stencil
+  return stencil;
+}
+
+function fillChildInfo(child: Node, info: any) {
+  var childInfo = {
+    id: child.id,
+    ty: child.getAttrs().type.toString(),
+    pos: {
+      x: child.position().x,
+      y: child.position().y,
+    },
+    children: [],
+  };
+  info.children.push(childInfo);
+
+  child.eachChild((cchild, idx) => {
+    if (cchild instanceof Node) {
+      fillChildInfo(cchild as Node, childInfo);
+    }
+  });
+}
+
+function GetNodInfo(nod: Node) {
+  var info = {
+    id: nod.id,
+    ty: nod.getAttrs().type.toString(),
+    pos: {
+      x: nod.position().x,
+      y: nod.position().y,
+    },
+    children: [],
+  };
+
+  nod.eachChild((child, idx) => {
+    if (child instanceof Node) {
+      fillChildInfo(child as Node, info);
+    }
+  });
+
+  return info;
 }
 
 export default class GraphView extends React.Component {
@@ -126,35 +170,34 @@ export default class GraphView extends React.Component {
     btnStep: "Step",
     btnUpload: "Upload",
     stepCnt: 0,
+    wflex: 0.6,
+    hflex: 0.7,
   };
-
-  rect: Rect = {
-    wratio: 0.6,
-    woffset: 0,
-    hratio: 0.69,
-    hoffset: 0,
-  }
 
   reloadStencil() {
     this.setState({ stencil: NewStencil(this.graph) }, () => {
       if (this.state.stencil != null) {
-        var stencil = this.state.stencil as Addon.Stencil
+        var stencil = this.state.stencil as Addon.Stencil;
         this.stencilContainer.appendChild(stencil.container);
       }
-    })
+    });
 
     if (moment.locale() === "en") {
-      this.setState({ btnDebug: "Debug", btnStep: "Step", btnUpload: "Upload" })
+      this.setState({
+        btnDebug: "Debug",
+        btnStep: "Step",
+        btnUpload: "Upload",
+      });
     } else if (moment.locale() === "zh-cn") {
-      this.setState({ btnDebug: "调试", btnStep: "步进", btnUpload: "上传" })
+      this.setState({ btnDebug: "调试", btnStep: "步进", btnUpload: "上传" });
     }
   }
 
   componentDidMount() {
     // 新建画布
     const graph = new Graph({
-      width: document.body.clientWidth * this.rect.wratio,
-      height: document.body.clientHeight * this.rect.hratio,
+      width: document.body.clientWidth * this.state.wflex - stencilWidth,
+      height: document.body.clientHeight * this.state.hflex - 2,
       container: this.container,
       highlighting: {
         magnetAvailable: magnetAvailabilityHighlighter,
@@ -222,32 +265,31 @@ export default class GraphView extends React.Component {
       },
       mousewheel: {
         enabled: true,
-        modifiers: ['alt', 'meta'],
+        modifiers: ["alt", "meta"],
       },
-
     });
 
     var root = new RootNode();
     graph.addNode(root);
 
-    PubSub.publish(Topic.NodeAdd, [this.getNodInfo(root), true, false]);
-    PubSub.publish(Topic.HistoryClean, {})
-
+    PubSub.publish(Topic.NodeAdd, [GetNodInfo(root), true, false]);
+    PubSub.publish(Topic.HistoryClean, {});
+    
     graph.bindKey("del", () => {
-      this.ClickDel()
+      this.ClickDel();
       return false;
     });
 
-    graph.bindKey('ctrl+z', () => {
-      PubSub.publish(Topic.Undo, {})
-    })
+    graph.bindKey("ctrl+z", () => {
+      PubSub.publish(Topic.Undo, {});
+    });
 
     graph.on("edge:removed", ({ edge, options }) => {
       if (!options.ui) {
         return;
       }
 
-      console.info("edge:removed")
+      console.info("edge:removed");
 
       this.findNode(edge.getTargetCellId(), (child) => {
         //var ts = child.removeFromParent( { deep : false } );  // options 没用？
@@ -266,9 +308,25 @@ export default class GraphView extends React.Component {
 
       if (isNew) {
         if (source !== null && target !== null) {
-          edge.setZIndex(0)
+          if (target.getAttrs().type.toString() === NodeTy.Root) {
+            message.warning("Cannot connect to root node");
+            graph.removeEdge(edge.id, { disconnectEdges: true });
+            return;
+          }
+
+          if (target.parent !== undefined && target.parent != null) {
+            console.info("parent", target.parent);
+            message.warning("Cannot connect to a node that has a parent node");
+            graph.removeEdge(edge.id, { disconnectEdges: true });
+            return;
+          }
+
+          edge.setZIndex(0);
           source.addChild(target);
-          PubSub.publish(Topic.LinkConnect, [{ parent: source.id, child: target.id }, false]);
+          PubSub.publish(Topic.LinkConnect, [
+            { parent: source.id, child: target.id },
+            false,
+          ]);
         }
       }
     });
@@ -281,23 +339,20 @@ export default class GraphView extends React.Component {
     });
 
     graph.on("node:added", ({ node, index, options }) => {
-
-      let silent = false
-      let build = true
+      let silent = false;
+      let build = true;
 
       if (options.others !== undefined) {
-        silent = options.others.silent
-        build = options.others.build
+        silent = options.others.silent;
+        build = options.others.build;
       }
 
-      PubSub.publish(Topic.NodeAdd, [this.getNodInfo(node), build, silent]);
-
+      PubSub.publish(Topic.NodeAdd, [GetNodInfo(node), build, silent]);
     });
-
 
     graph.on("node:moved", ({ e, x, y, node, view: NodeView }) => {
       this.findNode(node.id, (nod) => {
-        PubSub.publish(Topic.UpdateGraphParm, this.getNodInfo(node));
+        PubSub.publish(Topic.UpdateGraphParm, GetNodInfo(node));
       });
     });
 
@@ -309,6 +364,15 @@ export default class GraphView extends React.Component {
           name: "button-remove",
           args: {
             distance: -30,
+            onClick({ e, cell, view }: any) {
+              var sourcenod = cell.getSourceNode();
+              var targetnod = cell.getTargetNode();
+              //
+              graph.removeEdge(cell.id, { disconnectEdges: true });
+              PubSub.publish(Topic.LinkDisconnect, [cell.id, false]);
+
+              sourcenod.unembed(targetnod);
+            },
           },
         },
       ]);
@@ -318,7 +382,11 @@ export default class GraphView extends React.Component {
       edge.removeTools();
     });
 
+    // 调整画布大小
+    graph.resizeGraph(Constant.GraphWidth, Constant.GraphHeight)
+    // 居中显示
     graph.centerContent();
+    
     this.dnd = new Dnd({
       target: graph,
       scaled: false,
@@ -326,10 +394,10 @@ export default class GraphView extends React.Component {
     });
     this.graph = graph;
 
-    this.reloadStencil()
+    this.reloadStencil();
 
     PubSub.subscribe(Topic.UpdateNodeParm, (topic: string, info: any) => {
-      console.info("update", info.parm.id, info.parm.alias, info.parm.ty)
+      console.info("update", info.parm.id, info.parm.alias, info.parm.ty);
       if (info.parm.ty === NodeTy.Action) {
         this.findNode(info.parm.id, (nod) => {
           nod.setAttrs({
@@ -351,30 +419,35 @@ export default class GraphView extends React.Component {
       }
     });
 
-    PubSub.subscribe(Topic.FileLoadRedraw, (topic: string, treearr: Array<any>) => {
-      this.graph.clearCells();
-      console.info("redraw by undo")
+    PubSub.subscribe(
+      Topic.FileLoadRedraw,
+      (topic: string, treearr: Array<any>) => {
+        this.graph.clearCells();
+        console.info("redraw by undo");
 
-      treearr.forEach(element => {
-        this.redraw(element, false);
-      });
-    });
+        treearr.forEach((element) => {
+          this.redraw(element, false);
+        });
+      }
+    );
 
-    PubSub.subscribe(Topic.FileLoadDraw, (topic: string, treearr: Array<any>) => {
-      this.graph.clearCells();
-      console.info("redraw by file")
+    PubSub.subscribe(
+      Topic.FileLoadDraw,
+      (topic: string, treearr: Array<any>) => {
+        this.graph.clearCells();
+        console.info("redraw by file");
 
-      treearr.forEach(element => {
-        this.redraw(element, true);
-      });
+        treearr.forEach((element) => {
+          this.redraw(element, true);
+        });
 
-      PubSub.publish(Topic.HistoryClean, {})
-    });
+        PubSub.publish(Topic.HistoryClean, {});
+      }
+    );
 
     PubSub.subscribe(Topic.Focus, (topic: string, info: any) => {
-
       if (info.Cur !== "") {
-        this.setState({ stepCnt: this.state.stepCnt + 1 })
+        this.setState({ stepCnt: this.state.stepCnt + 1 });
         this.findNode(info.Cur, (nod) => {
           nod.setAttrs({
             body: {
@@ -394,61 +467,42 @@ export default class GraphView extends React.Component {
       }
     });
 
-    PubSub.subscribe(Topic.EditPlaneEditCodeResize, (topic: string, w: number) => {
-
-      let woffset = (document.body.clientWidth - w) / document.body.clientWidth
-      this.rect.wratio = 1 - woffset
-      this.rect.woffset = w
-      this.graph.resize(document.body.clientWidth * this.rect.wratio, document.body.clientHeight * this.rect.hratio)
-
-    })
-    PubSub.subscribe(Topic.EditPlaneEditChangeResize, (topic: string, h: number) => {
-
-      let hoffset = (document.body.clientHeight - h) / document.body.clientHeight
-      this.rect.hratio = 1 - hoffset
-      this.rect.hoffset = h
-      this.graph.resize(document.body.clientWidth * this.rect.wratio, document.body.clientHeight * this.rect.hratio)
-
-    })
-
-    PubSub.subscribe(Topic.WindowResize, (topic: string, e: number) => {
-      let w, h = 0
-      if (this.rect.woffset !== 0) {
-        let woffset = (document.body.clientWidth - this.rect.woffset) / document.body.clientWidth
-        let wratio = 1 - woffset
-        w = document.body.clientWidth * wratio
-      } else {
-        w = document.body.clientWidth * this.rect.wratio
+    PubSub.subscribe(
+      Topic.EditPanelEditCodeResize,
+      (topic: string, flex: number) => {
+        this.setState({ wflex: flex }, () => {
+          this.resizeViewpoint()
+        });
       }
+    );
 
-      if (this.rect.hoffset !== 0) {
-        let hoffset = (document.body.clientHeight - this.rect.hoffset) / document.body.clientHeight
-        let hratio = 1 - hoffset
-        h = document.body.clientHeight * hratio
-      } else {
-        h = document.body.clientHeight * this.rect.hratio
+    PubSub.subscribe(
+      Topic.EditPanelEditChangeResize, (topic: string, flex: number) =>{
+        this.setState({hflex: 1- flex}, ()=>{
+          this.resizeViewpoint()
+        })
       }
+    )
 
-      this.graph.resize(w, h)
+    PubSub.subscribe(Topic.WindowResize, ()=>{
+      this.resizeViewpoint()
     })
 
     PubSub.subscribe(Topic.LanuageChange, () => {
-      this.reloadStencil()
-    })
+      this.reloadStencil();
+    });
 
     var agent = navigator.userAgent.toLowerCase();
     var isMac = /macintosh|mac os x/i.test(navigator.userAgent);
     if (agent.indexOf("win32") >= 0 || agent.indexOf("wow32") >= 0) {
-      this.setState({ platfrom: "win" })
+      this.setState({ platfrom: "win" });
     }
     if (agent.indexOf("win64") >= 0 || agent.indexOf("wow64") >= 0) {
-      this.setState({ platfrom: "win" })
+      this.setState({ platfrom: "win" });
     }
     if (isMac) {
-      this.setState({ platfrom: "mac" })
+      this.setState({ platfrom: "mac" });
     }
-
-
   }
 
   getLoopLabel(val: Number) {
@@ -460,6 +514,17 @@ export default class GraphView extends React.Component {
     }
 
     return tlab;
+  }
+
+  // 重绘视口
+  resizeViewpoint() {
+    var width = document.body.clientWidth * this.state.wflex - stencilWidth;
+    var height = document.body.clientHeight * this.state.hflex -2;
+
+    console.info("resize panel", this.state.wflex, this.state.hflex)
+
+    // 设置视口大小
+    this.graph.resize(width, height);
   }
 
   redrawChild(parent: any, child: any, build: boolean) {
@@ -488,7 +553,7 @@ export default class GraphView extends React.Component {
       y: child.pos.y,
     });
     // this.graph.addNode(nod, { "silent": true }); 这样使用会导致浏览器卡死
-    this.graph.addNode(nod, { "others": { "build": build, "silent": true } })
+    this.graph.addNode(nod, { others: { build: build, silent: true } });
     //PubSub.publish(Topic.NodeAdd, this.getNodInfo(nod));
 
     if (parent) {
@@ -511,12 +576,14 @@ export default class GraphView extends React.Component {
       );
 
       parent.addChild(nod);
-      PubSub.publish(Topic.LinkConnect, [{ parent: parent.id, child: nod.id }, true]);
+      PubSub.publish(Topic.LinkConnect, [
+        { parent: parent.id, child: nod.id },
+        true,
+      ]);
     }
 
-
     if (IsScriptNode(child.ty)) {
-      nod.setAttrs({ label: { text: child.alias } })
+      nod.setAttrs({ label: { text: child.alias } });
       PubSub.publish(Topic.UpdateNodeParm, {
         parm: {
           id: nod.id,
@@ -560,27 +627,23 @@ export default class GraphView extends React.Component {
   }
 
   redraw(jsontree: any, build: boolean) {
-
     if (jsontree.ty === NodeTy.Root) {
-
-      var root = new RootNode({ "id": jsontree.id });
+      var root = new RootNode({ id: jsontree.id });
       root.setPosition({
         x: jsontree.pos.x,
         y: jsontree.pos.y,
       });
 
-      this.graph.addNode(root, { "others": { "build": build, "silent": true } });
+      this.graph.addNode(root, { others: { build: build, silent: true } });
 
       if (jsontree.children && jsontree.children.length) {
         for (var i = 0; i < jsontree.children.length; i++) {
           this.redrawChild(root, jsontree.children[i], build);
         }
       }
-
     } else {
-      this.redrawChild(null, jsontree, build)
+      this.redrawChild(null, jsontree, build);
     }
-
   }
 
   setLabel(id: String, name: String) {
@@ -592,45 +655,6 @@ export default class GraphView extends React.Component {
     if (!flag) {
       message.warning("没有在树中查找到该节点 " + id);
     }
-  }
-
-  fillChildInfo(child: Node, info: any) {
-    var childInfo = {
-      id: child.id,
-      ty: child.getAttrs().type.toString(),
-      pos: {
-        x: child.position().x,
-        y: child.position().y,
-      },
-      children: [],
-    };
-    info.children.push(childInfo);
-
-    child.eachChild((cchild, idx) => {
-      if (cchild instanceof Node) {
-        this.fillChildInfo(cchild as Node, childInfo);
-      }
-    });
-  }
-
-  getNodInfo(nod: Node) {
-    var info = {
-      id: nod.id,
-      ty: nod.getAttrs().type.toString(),
-      pos: {
-        x: nod.position().x,
-        y: nod.position().y,
-      },
-      children: [],
-    };
-
-    nod.eachChild((child, idx) => {
-      if (child instanceof Node) {
-        this.fillChildInfo(child as Node, info);
-      }
-    });
-
-    return info;
   }
 
   refStencil = (container: HTMLDivElement) => {
@@ -666,65 +690,67 @@ export default class GraphView extends React.Component {
   };
 
   refreshNode = (parent: Cell, callback: (nod: Cell) => void) => {
-    callback(parent)
+    callback(parent);
     parent.eachChild((child, idx) => {
-      this.refreshNode(child, callback)
-    })
-  }
+      this.refreshNode(child, callback);
+    });
+  };
 
   refreshNodes = (callback: (nod: Cell) => void) => {
     var nods = this.graph.getRootNodes();
     if (nods.length >= 0) {
       callback(nods[0]);
       nods[0].eachChild((child, idx) => {
-        this.refreshNode(child, callback)
-      })
+        this.refreshNode(child, callback);
+      });
     }
-  }
+  };
 
-  debug = () => { };
+  debug = () => {};
 
   ClickZoomIn = () => {
-    this.graph.zoomTo(this.graph.zoom() * 1.2)
-  }
+    this.graph.zoomTo(this.graph.zoom() * 1.2);
+  };
 
   ClickZoomOut = () => {
-    this.graph.zoomTo(this.graph.zoom() * 0.8)
-  }
+    this.graph.zoomTo(this.graph.zoom() * 0.8);
+  };
 
   ClickZoomReset = () => {
-    this.graph.zoomTo(1)
-  }
+    this.graph.zoomTo(1);
+  };
 
   ClickUndo = () => {
-    PubSub.publish(Topic.Undo, {})
-  }
+    PubSub.publish(Topic.Undo, {});
+  };
 
   ClickDel = () => {
     const cells = this.graph.getSelectedCells();
 
-      if (cells.length) {
-        for (var i = 0; i < cells.length; i++) {
-
-          if (cells[i].getAttrs().type.toString() !== NodeTy.Root) {
-
-            if (cells[i].getParent() == null) {
-              this.graph.removeCell(cells[i])
-            } else {
-              PubSub.publish(Topic.NodeRmv, cells[i].id);
-              cells[i].getParent()?.removeChild(cells[i]);
-            }
-          }
+    if (cells.length) {
+      for (var i = 0; i < cells.length; i++) {
+        if (cells[i].getAttrs().type.toString() !== NodeTy.Root) {
+          this.removeCell(cells[i]);
         }
       }
+    }
+  };
+
+  removeCell(cell: Cell) {
+    if (cell.getParent() == null) {
+      this.graph.removeCell(cell);
+    } else {
+      PubSub.publish(Topic.NodeRmv, cell.id);
+      cell.getParent()?.removeChild(cell);
+    }
   }
 
   behaviorNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    this.setState({ behaviorName: e.target.value })
+    this.setState({ behaviorName: e.target.value });
   };
 
   modalHandleOk = () => {
-    this.setState({ isModalVisible: false })
+    this.setState({ isModalVisible: false });
     if (this.state.behaviorName !== "") {
       PubSub.publish(Topic.Upload, this.state.behaviorName);
     } else {
@@ -733,35 +759,37 @@ export default class GraphView extends React.Component {
   };
 
   modalHandleCancel = () => {
-    this.setState({ isModalVisible: false })
+    this.setState({ isModalVisible: false });
   };
 
   ClickUpload = () => {
-    this.setState({ isModalVisible: true })
+    this.setState({ isModalVisible: true });
   };
 
   ClickStep = (e: any) => {
-
-    var val = 1
+    var val = 1;
     if (e !== "") {
       val = parseInt(e, 10);
-      if (isNaN(val)) { val = 1 }
+      if (isNaN(val)) {
+        val = 1;
+      }
     }
 
     PubSub.publish(Topic.Step, val);
   };
 
   ClickDebug = () => {
-    this.setState({ stepCnt: 0 })
+    this.setState({ stepCnt: 0 });
     PubSub.publish(Topic.Create, "");
-    this.refreshNodes((nod) => {  // 
+    this.refreshNodes((nod) => {
+      //
       nod.setAttrs({
         body: {
           strokeWidth: 1,
         },
       });
-    })
-  }
+    });
+  };
 
   render() {
     return (
@@ -769,59 +797,59 @@ export default class GraphView extends React.Component {
         <div className="app-stencil" ref={this.refStencil} />
         <div className="app-content" ref={this.refContainer} />
         <div className="app-zoom">
-          <Tooltip
-            placement="leftTop"
-            title="ZoomIn"
-          >
+          <Tooltip placement="leftTop" title="ZoomIn">
             <Button icon={<ZoomInOutlined />} onClick={this.ClickZoomIn} />
           </Tooltip>
-          <Tooltip
-            placement="leftTop"
-            title="Reset"
-          >
+          <Tooltip placement="leftTop" title="Reset">
             <Button icon={<AimOutlined />} onClick={this.ClickZoomReset} />
           </Tooltip>
-          <Tooltip
-            placement="leftTop"
-            title="ZoomOut"
-          >
+          <Tooltip placement="leftTop" title="ZoomOut">
             <Button icon={<ZoomOutOutlined />} onClick={this.ClickZoomOut} />
           </Tooltip>
-          <Tooltip
-            placement="leftTop"
-            title="Undo [ ctrl+z ]"
-          >
+          <Tooltip placement="leftTop" title="Undo [ ctrl+z ]">
             <Button icon={<UndoOutlined />} onClick={this.ClickUndo} />
           </Tooltip>
-          <Tooltip
-          placement="leftTop"
-          title="Delete [ del ]"
-          >
-          <Button icon={<DeleteOutlined />} onClick={this.ClickDel} />
+          <Tooltip placement="leftTop" title="Delete [ del ]">
+            <Button icon={<DeleteOutlined />} onClick={this.ClickDel} />
           </Tooltip>
           <Badge
             count={this.state.stepCnt}
-            style={{ backgroundColor: '#52c41a' }}
+            style={{ backgroundColor: "#52c41a" }}
           />
         </div>
 
         <div className={"app-create-" + this.state.platfrom}>
-          <Tooltip
-            placement="topRight"
-            title={"Create a bot for debugging"}
-          >
-            <Button icon={<BugOutlined />} size={"small"} style={{ width: 80 }} onClick={this.ClickDebug} >{this.state.btnDebug}</Button>
+          <Tooltip placement="topRight" title={"Create a bot for debugging"}>
+            <Button
+              icon={<BugOutlined />}
+              size={"small"}
+              style={{ width: 80 }}
+              onClick={this.ClickDebug}
+            >
+              {this.state.btnDebug}
+            </Button>
           </Tooltip>
         </div>
         <div className={"app-step-" + this.state.platfrom}>
-          <Search placeholder="1" size={"small"} onSearch={this.ClickStep} style={{ width: 80 }} enterButton={this.state.btnStep}></Search>
+          <Search
+            placeholder="1"
+            size={"small"}
+            onSearch={this.ClickStep}
+            style={{ width: 80 }}
+            enterButton={this.state.btnStep}
+          ></Search>
         </div>
         <div className={"app-upload-" + this.state.platfrom}>
-          <Tooltip
-            placement="topRight"
-            title={"Upload the bot to the server"}
-          >
-            <Button icon={<CloudUploadOutlined />} size={"small"} style={{ width: 80 }} onClick={this.ClickUpload}> {this.state.btnUpload}</Button>
+          <Tooltip placement="topRight" title={"Upload the bot to the server"}>
+            <Button
+              icon={<CloudUploadOutlined />}
+              size={"small"}
+              style={{ width: 80 }}
+              onClick={this.ClickUpload}
+            >
+              {" "}
+              {this.state.btnUpload}
+            </Button>
           </Tooltip>
         </div>
 
@@ -835,7 +863,6 @@ export default class GraphView extends React.Component {
             onChange={this.behaviorNameChange}
           />
         </Modal>
-
       </div>
     );
   }

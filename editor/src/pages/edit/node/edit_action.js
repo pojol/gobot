@@ -6,13 +6,13 @@ import "codemirror/lib/codemirror.css";
 import "codemirror/theme/solarized.css";
 import "codemirror/mode/lua/lua";
 
+
 import { Input, Button, message, Space } from "antd";
 
-import moment from 'moment';
+import moment from "moment";
 import lanMap from "../../../locales/lan";
 
 const { Search } = Input;
-
 
 export default class ActionTab extends React.Component {
   constructor(props) {
@@ -22,6 +22,8 @@ export default class ActionTab extends React.Component {
       node_ty: "",
       code: "",
       defaultAlias: "",
+      hflex: 0,
+      wflex: 0,
     };
   }
 
@@ -34,12 +36,11 @@ export default class ActionTab extends React.Component {
         delete target.pos;
         delete target.children;
 
-        console.info("click",target)
         this.setState({
           nod: target,
           code: target.code,
           defaultAlias: target.alias,
-          node_ty : target.ty,
+          node_ty: target.ty,
         });
       } else {
         this.setState({
@@ -48,10 +49,31 @@ export default class ActionTab extends React.Component {
       }
     });
 
-    PubSub.subscribe(Topic.EditPlaneCodeMetaResize, (topic, h) => {
-      var nh = h - 100
-      this.state.editor.setSize("auto", nh.toString())
+    PubSub.subscribe(Topic.EditPanelCodeMetaResize, (topic, flex) => {
+      this.setState({ hflex: flex }, () => {
+        this.redraw()
+      });
+    });
+
+    PubSub.subscribe(Topic.EditPanelEditCodeResize, (topic, flex) => {
+      this.setState({ wflex: 1 - flex }, () => {
+        this.redraw()
+      });
+    });
+
+    PubSub.subscribe(Topic.WindowResize, () => {
+      this.redraw()
     })
+  }
+
+  redraw() {
+    var width = document.body.clientWidth * this.state.wflex - 2;
+    var height = document.body.clientHeight * this.state.hflex - 36;
+
+    this.state.editor.setSize(
+      width.toString() + "px",
+      height.toString() + "px"
+    );
   }
 
   applyClick = () => {
@@ -78,16 +100,33 @@ export default class ActionTab extends React.Component {
     this.setState({ code: value });
   };
 
-  onChange = (editor, data, value) => { };
-
   onDidMount = (editor) => {
-    editor.setSize("auto", "400px")
-    this.setState({ editor: editor })
-  }
+    this.setState({ editor: editor, wflex: 0.4, hflex: 0.5 }, () => {
+
+      var width, height
+      var dimensions = this.props.dimensions
+
+      if (dimensions.width !== "100%") {
+        width = dimensions.width - 2
+        height = dimensions.height - 38
+
+        this.setState({ wflex: dimensions.width / document.body.clientWidth, hflex: dimensions.height / document.body.clientHeight })
+      } else {
+        width = document.body.clientWidth * this.state.wflex - 2;
+        height = document.body.clientHeight * this.state.hflex - 38;
+      }
+
+      console.info("action init", dimensions, "w", width, "h", height)
+      this.state.editor.setSize(
+        width.toString() + "px",
+        height.toString() + "px"
+      );
+    });
+  };
 
   onChangeAlias = (e) => {
-    this.setState({ defaultAlias: e.target.value })
-  }
+    this.setState({ defaultAlias: e.target.value });
+  };
 
   render() {
     const code = this.state.code;
@@ -104,7 +143,6 @@ export default class ActionTab extends React.Component {
           value={code}
           options={options}
           onBeforeChange={this.onBeforeChange}
-          onChange={this.onChange}
           editorDidMount={this.onDidMount}
         />
         <Space>

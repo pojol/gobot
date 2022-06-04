@@ -35,9 +35,10 @@ type ReportDetail struct {
 type Report struct {
 	Arr   []database.ReportInfo
 	Limit int32
+	db    database.IDatabase
 }
 
-func NewReport(limit int32) *Report {
+func NewReport(limit int32, db database.IDatabase) *Report {
 
 	if limit == 0 {
 		panic(errors.New("report limit cannot be zero!"))
@@ -45,7 +46,8 @@ func NewReport(limit int32) *Report {
 
 	return &Report{
 		Limit: limit,
-		Arr:   database.Get().GetReport(),
+		db:    db,
+		Arr:   db.GetReport(),
 	}
 }
 
@@ -54,7 +56,7 @@ func (r *Report) Append(info ReportDetail) error {
 	var err error
 
 	if len(r.Arr) >= int(r.Limit) {
-		err = database.Get().RemoveReport(r.Arr[0].ID)
+		err = r.db.RemoveReport(r.Arr[0].ID)
 		if err != nil {
 			fmt.Println("append report remove limit", err.Error())
 		}
@@ -87,7 +89,7 @@ func (r *Report) Append(info ReportDetail) error {
 		})
 	}
 
-	err = database.Get().AppendReport(ri)
+	err = r.db.AppendReport(ri)
 	if err != nil {
 		fmt.Println("append report", err.Error())
 		return err

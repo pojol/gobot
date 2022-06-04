@@ -14,10 +14,10 @@ type CodeTemplate struct {
 	Lst []CodeTemplateInfo
 }
 
-func GetGlobalScript() string {
+func GetGlobalScript(db IDatabase) string {
 	globalScript := ""
 	temp := CodeTemplate{}
-	tc, err := Get().FindConfig("config")
+	tc, err := db.FindConfig("config")
 	if err != nil {
 		fmt.Println("code template load err", err.Error())
 	} else {

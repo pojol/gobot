@@ -1,4 +1,4 @@
-import { Layout, Tabs, Tag, Radio, Modal, Input, Image, Space, Spin } from "antd";
+import { Layout, Tabs, Tag, Radio, Modal, Input, Image, Space } from "antd";
 import * as React from "react";
 import "antd/dist/antd.css";
 import "./app.css";
@@ -83,6 +83,7 @@ export default class App extends React.Component {
   };
 
   syncTemplateCode() {
+    console.info("sync templete config", localStorage.remoteAddr)
     PostGetBlob(localStorage.remoteAddr, Api.ConfigGet, {}).then((file) => {
       let reader = new FileReader();
       reader.onload = function (ev) {
@@ -144,7 +145,7 @@ export default class App extends React.Component {
       <dev className="site-layout-content">
         <dev className="ver">
           <Space>
-            <Tag color="geekblue">v0.1.9</Tag>
+            <Tag color="geekblue">v0.1.12</Tag>
             <Tag
               icon={<ReadOutlined />}
               color="#108ee9"

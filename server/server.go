@@ -277,13 +277,13 @@ func ConfigGetInfo(ctx echo.Context) error {
 
 	cfg, err := factory.Global.GetConfig()
 	if err != nil {
+		fmt.Println("get config", err.Error())
 		code = ErrGetConfig
 		res.Msg = err.Error()
 		goto EXT
 	}
 
 EXT:
-	fmt.Println(code, string(cfg.Dat))
 	res.Code = int(code)
 	ctx.Blob(http.StatusOK, "text/plain;charset=utf-8", cfg.Dat)
 	return nil
@@ -371,7 +371,7 @@ func BotRun(ctx echo.Context) error {
 		code = Fail
 		goto EXT
 	}
-	b = bot.NewWithBehaviorTree("script/", tree, req.Name, database.GetGlobalScript())
+	b = bot.NewWithBehaviorTree("script/", tree, req.Name, 1, factory.Global.GetGlobalScript())
 	err = b.RunByBlock()
 	if err != nil {
 		code = ErrRunningErr
@@ -546,6 +546,11 @@ func ReqPrint() echo.MiddlewareFunc {
 }
 
 func Route(e *echo.Echo) {
+
+	e.GET("/health", func(ctx echo.Context) error {
+		ctx.JSONBlob(http.StatusOK, []byte(``))
+		return nil
+	})
 
 	e.POST("/file.uploadTxt", FileTextUpload)
 	e.POST("/file.uploadBlob", FileBlobUpload)
