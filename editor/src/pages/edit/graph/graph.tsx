@@ -155,6 +155,16 @@ function GetNodInfo(nod: Node) {
   return info;
 }
 
+function iterate(nod: Node, callback: (nod: Node) => void) {
+  if (nod !== null && nod !== undefined) {
+    callback(nod);
+
+    nod.eachChild((children, idx) => {
+      iterate(children as Node, callback);
+    });
+  }
+}
+
 export default class GraphView extends React.Component {
   graph: Graph;
   container: HTMLElement;
@@ -274,7 +284,7 @@ export default class GraphView extends React.Component {
 
     PubSub.publish(Topic.NodeAdd, [GetNodInfo(root), true, false]);
     PubSub.publish(Topic.HistoryClean, {});
-    
+
     graph.bindKey("del", () => {
       this.ClickDel();
       return false;
@@ -351,9 +361,26 @@ export default class GraphView extends React.Component {
     });
 
     graph.on("node:moved", ({ e, x, y, node, view: NodeView }) => {
-      this.findNode(node.id, (nod) => {
-        PubSub.publish(Topic.UpdateGraphParm, GetNodInfo(node));
+      iterate(node, (nod) => {
+
+        if (nod.getAttrs().type !== undefined) {
+
+          var info = {
+            id: nod.id,
+            ty: nod.getAttrs().type.toString(),
+            pos: {
+              x: nod.position().x,
+              y: nod.position().y,
+            },
+            children: [],
+          };
+  
+          PubSub.publish(Topic.UpdateGraphParm, info);
+        }
+
       });
+
+      this.findNode(node.id, (nod) => {});
     });
 
     graph.on("edge:mouseenter", ({ edge }) => {
@@ -383,10 +410,10 @@ export default class GraphView extends React.Component {
     });
 
     // 调整画布大小
-    graph.resizeGraph(Constant.GraphWidth, Constant.GraphHeight)
+    graph.resizeGraph(Constant.GraphWidth, Constant.GraphHeight);
     // 居中显示
     graph.centerContent();
-    
+
     this.dnd = new Dnd({
       target: graph,
       scaled: false,
@@ -471,22 +498,23 @@ export default class GraphView extends React.Component {
       Topic.EditPanelEditCodeResize,
       (topic: string, flex: number) => {
         this.setState({ wflex: flex }, () => {
-          this.resizeViewpoint()
+          this.resizeViewpoint();
         });
       }
     );
 
     PubSub.subscribe(
-      Topic.EditPanelEditChangeResize, (topic: string, flex: number) =>{
-        this.setState({hflex: 1- flex}, ()=>{
-          this.resizeViewpoint()
-        })
+      Topic.EditPanelEditChangeResize,
+      (topic: string, flex: number) => {
+        this.setState({ hflex: 1 - flex }, () => {
+          this.resizeViewpoint();
+        });
       }
-    )
+    );
 
-    PubSub.subscribe(Topic.WindowResize, ()=>{
-      this.resizeViewpoint()
-    })
+    PubSub.subscribe(Topic.WindowResize, () => {
+      this.resizeViewpoint();
+    });
 
     PubSub.subscribe(Topic.LanuageChange, () => {
       this.reloadStencil();
@@ -519,9 +547,9 @@ export default class GraphView extends React.Component {
   // 重绘视口
   resizeViewpoint() {
     var width = document.body.clientWidth * this.state.wflex - stencilWidth;
-    var height = document.body.clientHeight * this.state.hflex -2;
+    var height = document.body.clientHeight * this.state.hflex - 2;
 
-    console.info("resize panel", this.state.wflex, this.state.hflex)
+    console.info("resize panel", this.state.wflex, this.state.hflex);
 
     // 设置视口大小
     this.graph.resize(width, height);
@@ -689,23 +717,6 @@ export default class GraphView extends React.Component {
     }
   };
 
-  refreshNode = (parent: Cell, callback: (nod: Cell) => void) => {
-    callback(parent);
-    parent.eachChild((child, idx) => {
-      this.refreshNode(child, callback);
-    });
-  };
-
-  refreshNodes = (callback: (nod: Cell) => void) => {
-    var nods = this.graph.getRootNodes();
-    if (nods.length >= 0) {
-      callback(nods[0]);
-      nods[0].eachChild((child, idx) => {
-        this.refreshNode(child, callback);
-      });
-    }
-  };
-
   debug = () => {};
 
   ClickZoomIn = () => {
@@ -781,14 +792,17 @@ export default class GraphView extends React.Component {
   ClickDebug = () => {
     this.setState({ stepCnt: 0 });
     PubSub.publish(Topic.Create, "");
-    this.refreshNodes((nod) => {
-      //
-      nod.setAttrs({
-        body: {
-          strokeWidth: 1,
-        },
+
+    var nods = this.graph.getRootNodes();
+    if (nods.length > 0) {
+      iterate(nods[0], (nod) => {
+        nod.setAttrs({
+          body: {
+            strokeWidth: 1,
+          },
+        });
       });
-    });
+    }
   };
 
   render() {
