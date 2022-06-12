@@ -25,7 +25,7 @@ Try the editor out [on website](http://123.60.17.61:7777)
 
 
 ### Preview
-[![image.png](https://i.postimg.cc/LXCt5Zcd/image.png)](https://postimg.cc/ZBNBD0Yj)
+[![botgif1.gif](https://i.postimg.cc/q7H2wqxY/botgif1.gif)](https://postimg.cc/mPVc2bqN)
 
 ### Http request sample
 ```lua

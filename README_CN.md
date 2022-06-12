@@ -30,7 +30,7 @@ Gobot是一个有状态的api测试工具，支持图形编辑、api调用、绑
 
 
 ### 编辑器预览
-[![image.png](https://i.postimg.cc/3J9Kvxkr/image.png)](https://www.bilibili.com/video/BV1sS4y1z7Dg?share_source=copy_web)
+[![botgif1.gif](https://i.postimg.cc/q7H2wqxY/botgif1.gif)](https://www.bilibili.com/video/BV1sS4y1z7Dg?share_source=copy_web)
 
 ### 一个http节点的例子
 ```lua
