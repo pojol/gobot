@@ -70,6 +70,7 @@ function execute()
 end
       `,
       history: [],
+      stepping: false,
     };
   }
 
@@ -451,7 +452,7 @@ end
     this.setState({ tree: {} }); // 主要维护的是 graph 中节点的数据
 
     PubSub.subscribe(Topic.ConfigUpdate, (topic, info) => {
-       if (info.key === "code" && info.val !== "") {
+      if (info.key === "code" && info.val !== "") {
         var codetmp = JSON.parse(info.val);
         for (var i = 0; i < codetmp.length; i++) {
           if (codetmp[i]["title"] === "HTTP") {
@@ -630,12 +631,20 @@ end
 
           await sleep(200);
           if (!flag) {
+            this.setState({ stepping: false })
             break;
           }
         }
+
+        this.setState({ stepping: false })
       };
 
-      step();
+      if (!this.state.stepping) {
+        this.setState({ stepping: true }, () => {
+          step();
+        })
+      }
+
     });
 
     PubSub.subscribe(Topic.FileSave, (topic, msg) => {
@@ -666,7 +675,7 @@ end
     });
   }
 
-  componentDidMount() {}
+  componentDidMount() { }
 
   render() {
     return <div></div>;
