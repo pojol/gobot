@@ -299,8 +299,6 @@ export default class GraphView extends React.Component {
         return;
       }
 
-      console.info("edge:removed");
-
       this.findNode(edge.getTargetCellId(), (child) => {
         //var ts = child.removeFromParent( { deep : false } );  // options 没用？
         PubSub.publish(Topic.LinkDisconnect, [child.id, false]);
@@ -324,8 +322,13 @@ export default class GraphView extends React.Component {
             return;
           }
 
+          if (source.getAttrs().type.toString() === NodeTy.Action && source.getChildCount() > 0) {
+            message.warning("Action node can only mount a single node");
+            graph.removeEdge(edge.id, { disconnectEdges: true });
+            return;
+          }
+
           if (target.parent !== undefined && target.parent != null) {
-            console.info("parent", target.parent);
             message.warning("Cannot connect to a node that has a parent node");
             graph.removeEdge(edge.id, { disconnectEdges: true });
             return;
@@ -396,7 +399,7 @@ export default class GraphView extends React.Component {
               var targetnod = cell.getTargetNode();
               //
               graph.removeEdge(cell.id, { disconnectEdges: true });
-              PubSub.publish(Topic.LinkDisconnect, [cell.id, false]);
+              PubSub.publish(Topic.LinkDisconnect, [targetnod.id, false]);
 
               sourcenod.unembed(targetnod);
             },
