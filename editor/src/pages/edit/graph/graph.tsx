@@ -17,7 +17,6 @@ import {
   AimOutlined,
   UndoOutlined,
   CloudUploadOutlined,
-  BugOutlined,
   DeleteOutlined,
 } from "@ant-design/icons";
 
@@ -178,6 +177,7 @@ export default class GraphView extends React.Component {
     stencil: null,
     btnDebug: "Debug",
     btnStep: "Step",
+    stepDisabled: false,
     btnUpload: "Upload",
     stepCnt: 0,
     wflex: 0.6,
@@ -377,13 +377,13 @@ export default class GraphView extends React.Component {
             },
             children: [],
           };
-  
+
           PubSub.publish(Topic.UpdateGraphParm, info);
         }
 
       });
 
-      this.findNode(node.id, (nod) => {});
+      this.findNode(node.id, (nod) => { });
     });
 
     graph.on("edge:mouseenter", ({ edge }) => {
@@ -485,7 +485,25 @@ export default class GraphView extends React.Component {
             },
           });
         });
+      } else {
+        // clean
+        var nods = this.graph.getRootNodes();
+        if (nods.length > 0) {
+          iterate(nods[0], (nod) => {
+            nod.setAttrs({
+              body: {
+                strokeWidth: 1,
+              },
+            });
+          });
+        }
+        this.setState({ stepCnt: 0 });
+        this.setState({ stepDisabled: true })
+        setTimeout(() => {
+          this.setState({ stepDisabled: false })
+        }, 1000)
       }
+
       if (info.Prev !== "") {
         this.findNode(info.Prev, (nod) => {
           nod.setAttrs({
@@ -720,7 +738,7 @@ export default class GraphView extends React.Component {
     }
   };
 
-  debug = () => {};
+  debug = () => { };
 
   ClickZoomIn = () => {
     this.graph.zoomTo(this.graph.zoom() * 1.2);
@@ -781,32 +799,24 @@ export default class GraphView extends React.Component {
   };
 
   ClickStep = (e: any) => {
-    var val = 1;
-    if (e !== "") {
-      val = parseInt(e, 10);
-      if (isNaN(val)) {
-        val = 1;
+
+    if (this.state.stepCnt === 0) {
+      this.setState({stepCnt:1})
+      PubSub.publish(Topic.Create, "");
+    } else {
+      var val = 1;
+      if (e !== "") {
+        val = parseInt(e, 10);
+        if (isNaN(val)) {
+          val = 1;
+        }
       }
+
+      PubSub.publish(Topic.Step, val);
     }
 
-    PubSub.publish(Topic.Step, val);
   };
 
-  ClickDebug = () => {
-    this.setState({ stepCnt: 0 });
-    PubSub.publish(Topic.Create, "");
-
-    var nods = this.graph.getRootNodes();
-    if (nods.length > 0) {
-      iterate(nods[0], (nod) => {
-        nod.setAttrs({
-          body: {
-            strokeWidth: 1,
-          },
-        });
-      });
-    }
-  };
 
   render() {
     return (
@@ -835,18 +845,6 @@ export default class GraphView extends React.Component {
           />
         </div>
 
-        <div className={"app-create-" + this.state.platfrom}>
-          <Tooltip placement="topRight" title={"Create a bot for debugging"}>
-            <Button
-              icon={<BugOutlined />}
-              size={"small"}
-              style={{ width: 80 }}
-              onClick={this.ClickDebug}
-            >
-              {this.state.btnDebug}
-            </Button>
-          </Tooltip>
-        </div>
         <div className={"app-step-" + this.state.platfrom}>
           <Search
             placeholder="1"
@@ -854,6 +852,7 @@ export default class GraphView extends React.Component {
             onSearch={this.ClickStep}
             style={{ width: 80 }}
             enterButton={this.state.btnStep}
+            disabled={this.state.stepDisabled}
           ></Search>
         </div>
         <div className={"app-upload-" + this.state.platfrom}>

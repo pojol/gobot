@@ -22,6 +22,7 @@ type botState struct {
 	utilsMod  *script.UtilsModule
 	base64Mod *script.Base64Module
 	mgoMod    *script.MgoModule
+	md5Mod    *script.MD5Module
 }
 
 func (pl *lStatePool) Get() *botState {
@@ -47,6 +48,7 @@ func (pl *lStatePool) New() *botState {
 		utilsMod:  &script.UtilsModule{},
 		base64Mod: &script.Base64Module{},
 		mgoMod:    &script.MgoModule{},
+		md5Mod:    &script.MD5Module{},
 	}
 
 	b.L.PreloadModule("proto", b.protoMod.Loader)
@@ -54,6 +56,7 @@ func (pl *lStatePool) New() *botState {
 	b.L.PreloadModule("utils", b.utilsMod.Loader)
 	b.L.PreloadModule("base64", b.base64Mod.Loader)
 	b.L.PreloadModule("mgo", b.mgoMod.Loader)
+	b.L.PreloadModule("md5", b.md5Mod.Loader)
 
 	return b
 }

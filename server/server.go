@@ -451,6 +451,7 @@ func DebugStep(ctx echo.Context) error {
 	var b *bot.Bot
 
 	var err error
+	var ok bool
 	var s bot.State
 
 	bts, err := ioutil.ReadAll(ctx.Request().Body)
@@ -474,8 +475,8 @@ func DebugStep(ctx echo.Context) error {
 	}
 
 	s = b.RunStep()
-	body.Blackboard, body.Change, body.RuntimeErr, err = b.GetMetadata()
-	if err != nil {
+	body.Blackboard, body.Change, body.RuntimeErr, ok = b.GetMetadata()
+	if !ok {
 		code = ErrMetaData
 		goto EXT
 	}

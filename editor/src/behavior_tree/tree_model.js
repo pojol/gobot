@@ -607,9 +607,15 @@ end
                 if (json.Code !== 1010) {
                   PubSub.publish(Topic.UpdateChange, changeInfo);
                 }
+                
                 PubSub.publish(Topic.UpdateBlackboard, json.Body.Blackboard);
                 flag = false;
+                PubSub.publish(Topic.Focus, {
+                  Cur: "",
+                  Prev: "",
+                });
               } else {
+
                 let metastr;
                 let meta = JSON.parse(json.Body.Blackboard);
                 let change = JSON.parse(json.Body.Change);
@@ -626,6 +632,7 @@ end
                   Prev: json.Body.Prev,
                 });
               }
+
             }
           );
 

@@ -50,24 +50,24 @@ func (b *Bot) Name() string {
 	return b.name
 }
 
-func (b *Bot) GetMetadata() (string, string, string, error) {
+func (b *Bot) GetMetadata() (string, string, string, bool) {
 
 	var metaStr, changeStr string
 
 	if b.preloadErr != "" {
-		return b.preloadErr, "", "", nil
+		return b.preloadErr, "", "", true
 	}
 
 	metaTable, ok := b.bs.L.GetGlobal("meta").(*lua.LTable)
 	if ok {
 		meta, err := utils.Table2Map(metaTable)
 		if err != nil {
-			return "", "", "", err
+			return "", "", err.Error(), false
 		}
 
 		metabyt, err := json.Marshal(&meta)
 		if err != nil {
-			return "", "", "", err
+			return "", "", err.Error(), false
 		}
 
 		metaStr = string(metabyt)
@@ -79,12 +79,12 @@ func (b *Bot) GetMetadata() (string, string, string, error) {
 	if ok {
 		change, err := utils.Table2Map(changeTable)
 		if err != nil {
-			return "", "", "", err
+			return "", "", err.Error(), false
 		}
 
 		changebyt, err := json.Marshal(&change)
 		if err != nil {
-			return "", "", "", err
+			return "", "", err.Error(), false
 		}
 
 		changeStr = string(changebyt)
@@ -92,7 +92,7 @@ func (b *Bot) GetMetadata() (string, string, string, error) {
 		b.runtimeErr += "\nThe change field is not obtained"
 	}
 
-	return metaStr, changeStr, b.runtimeErr, nil
+	return metaStr, changeStr, b.runtimeErr, true
 
 }
 
