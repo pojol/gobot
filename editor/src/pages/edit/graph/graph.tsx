@@ -481,7 +481,7 @@ export default class GraphView extends React.Component {
         this.findNode(info.Cur, (nod) => {
           nod.setAttrs({
             body: {
-              strokeWidth: 3,
+              strokeWidth: 4,
             },
           });
         });
