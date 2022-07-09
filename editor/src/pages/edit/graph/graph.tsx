@@ -175,7 +175,7 @@ export default class GraphView extends React.Component {
     behaviorName: "",
     platfrom: "",
     stencil: null,
-    btnDebug: "Debug",
+    btnReset: "Reset",
     btnStep: "Step",
     stepDisabled: false,
     btnUpload: "Upload",
@@ -194,12 +194,12 @@ export default class GraphView extends React.Component {
 
     if (moment.locale() === "en") {
       this.setState({
-        btnDebug: "Debug",
+        btnReset: "Reset",
         btnStep: "Step",
         btnUpload: "Upload",
       });
     } else if (moment.locale() === "zh-cn") {
-      this.setState({ btnDebug: "调试", btnStep: "步进", btnUpload: "上传" });
+      this.setState({ btnReset: "重置", btnStep: "步进", btnUpload: "上传" });
     }
   }
 
@@ -322,7 +322,10 @@ export default class GraphView extends React.Component {
             return;
           }
 
-          if (source.getAttrs().type.toString() === NodeTy.Action && source.getChildCount() > 0) {
+          if (
+            source.getAttrs().type.toString() === NodeTy.Action &&
+            source.getChildCount() > 0
+          ) {
             message.warning("Action node can only mount a single node");
             graph.removeEdge(edge.id, { disconnectEdges: true });
             return;
@@ -365,9 +368,7 @@ export default class GraphView extends React.Component {
 
     graph.on("node:moved", ({ e, x, y, node, view: NodeView }) => {
       iterate(node, (nod) => {
-
         if (nod.getAttrs().type !== undefined) {
-
           var info = {
             id: nod.id,
             ty: nod.getAttrs().type.toString(),
@@ -380,10 +381,9 @@ export default class GraphView extends React.Component {
 
           PubSub.publish(Topic.UpdateGraphParm, info);
         }
-
       });
 
-      this.findNode(node.id, (nod) => { });
+      this.findNode(node.id, (nod) => {});
     });
 
     graph.on("edge:mouseenter", ({ edge }) => {
@@ -487,21 +487,11 @@ export default class GraphView extends React.Component {
         });
       } else {
         // clean
-        var nods = this.graph.getRootNodes();
-        if (nods.length > 0) {
-          iterate(nods[0], (nod) => {
-            nod.setAttrs({
-              body: {
-                strokeWidth: 1,
-              },
-            });
-          });
-        }
-        this.setState({ stepCnt: 0 });
-        this.setState({ stepDisabled: true })
+        this.cleanStepInfo();
+        this.setState({ stepDisabled: true });
         setTimeout(() => {
-          this.setState({ stepDisabled: false })
-        }, 1000)
+          this.setState({ stepDisabled: false });
+        }, 1000);
       }
 
       if (info.Prev !== "") {
@@ -738,7 +728,7 @@ export default class GraphView extends React.Component {
     }
   };
 
-  debug = () => { };
+  debug = () => {};
 
   ClickZoomIn = () => {
     this.graph.zoomTo(this.graph.zoom() * 1.2);
@@ -799,9 +789,8 @@ export default class GraphView extends React.Component {
   };
 
   ClickStep = (e: any) => {
-
     if (this.state.stepCnt === 0) {
-      this.setState({stepCnt:1})
+      this.setState({ stepCnt: 1 });
       PubSub.publish(Topic.Create, "");
     } else {
       var val = 1;
@@ -814,9 +803,26 @@ export default class GraphView extends React.Component {
 
       PubSub.publish(Topic.Step, val);
     }
-
   };
 
+  cleanStepInfo = () => {
+    // clean
+    var nods = this.graph.getRootNodes();
+    if (nods.length > 0) {
+      iterate(nods[0], (nod) => {
+        nod.setAttrs({
+          body: {
+            strokeWidth: 1,
+          },
+        });
+      });
+    }
+    this.setState({ stepCnt: 0 });
+  };
+
+  ClickReset = (e: any) => {
+    this.cleanStepInfo();
+  };
 
   render() {
     return (
@@ -854,6 +860,17 @@ export default class GraphView extends React.Component {
             enterButton={this.state.btnStep}
             disabled={this.state.stepDisabled}
           ></Search>
+        </div>
+        <div className={"app-reset-" + this.state.platfrom}>
+          <Button
+            icon={<UndoOutlined />}
+            size={"small"}
+            style={{ width: 80 }}
+            onClick={this.ClickReset}
+          >
+            {" "}
+            {this.state.btnReset}
+          </Button>
         </div>
         <div className={"app-upload-" + this.state.platfrom}>
           <Tooltip placement="topRight" title={"Upload the bot to the server"}>
