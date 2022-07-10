@@ -12,6 +12,8 @@ const Api = {
 
     ConfigUpload : "config.upload",
     ConfigGet : "config.get",
+    ConfigList : "config.list",
+    ConfigRemove : "config.rmv",
 
     /*
         Debug

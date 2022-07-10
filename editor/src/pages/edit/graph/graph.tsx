@@ -9,6 +9,8 @@ import LoopNode from "./shape/shape_loop";
 import WaitNode from "./shape/shape_wait";
 import AssertNode from "./shape/shap_assert";
 
+/// <reference path="graph.d.ts" />
+
 import { NodeTy, IsScriptNode } from "../../../constant/node_type";
 import { Button, Tooltip, Modal, Input, Badge } from "antd";
 import {
@@ -110,7 +112,25 @@ function NewStencil(graph: Graph) {
     [selectorNod, seqNod, condNod, assertNod, loopNod, waitNod],
     "group1"
   );
-  stencil.load([new ActionNode()], "group2");
+
+  let configmap = (window as any).config as Map<string, string>;
+  let prefabnods: Node[] = new Array();
+
+  configmap.forEach((value: string, key: string) => {
+    console.info("reload", key);
+    var jobj = JSON.parse(value);
+
+    if (jobj["prefab"] === true) {
+      var nod = new ActionNode();
+      nod.setAttrs({
+        label: { text: key },
+      });
+
+      prefabnods.push(nod);
+    }
+  });
+
+  stencil.load(prefabnods, "group2");
 
   return stencil;
 }
@@ -138,6 +158,7 @@ function GetNodInfo(nod: Node) {
   var info = {
     id: nod.id,
     ty: nod.getAttrs().type.toString(),
+    label: nod.getAttrs().label.text,
     pos: {
       x: nod.position().x,
       y: nod.position().y,
@@ -425,6 +446,10 @@ export default class GraphView extends React.Component {
     this.graph = graph;
 
     this.reloadStencil();
+
+    PubSub.subscribe(Topic.ConfigUpdateAll, (topic: string, info: any) => {
+      this.reloadStencil();
+    });
 
     PubSub.subscribe(Topic.UpdateNodeParm, (topic: string, info: any) => {
       console.info("update", info.parm.id, info.parm.alias, info.parm.ty);

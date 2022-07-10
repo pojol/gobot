@@ -251,7 +251,6 @@ export default class BotList extends React.Component {
       if (json.Code !== 200) {
         message.error("run fail:" + String(json.Code) + " msg: " + json.Msg);
       } else {
-        console.info("refresh bots", json.Body.Bots)
         if (json.Body.Bots) {
           this.setState({ Bots: json.Body.Bots }, () => {
             this.updateAllTags()

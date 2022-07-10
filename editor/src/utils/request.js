@@ -25,14 +25,19 @@ export function Post(url, methon, formData) {
   });
 }
 
-export function PostGetBlob(url, methon) {
+
+
+export function PostGetBlob(url, methon, name) {
   return new Promise(function (resolve, reject) {
+
+    var headers = new Headers();
+    headers.append("Content-Type", "application/x-www-form-urlencoded");
+    headers.append("FileName", str2utf8(name));
+
     fetch(url + "/" + methon, {
       method: "POST",
       mode: "cors",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
+      headers: headers,
     })
       .then((response) => {
         if (response.ok) {
@@ -98,6 +103,7 @@ export function CheckHealth(url) {
     }
   }).catch(function (e) {
     console.error(e)
+    return ({code : 404})
   })
 
 }

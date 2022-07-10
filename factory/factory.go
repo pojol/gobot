@@ -119,9 +119,9 @@ func (f *Factory) GetBehaviors() []database.BehaviorInfo {
 	return lst
 }
 
-func (f *Factory) UploadConfig(dat []byte) error {
+func (f *Factory) UploadConfig(name string, dat []byte) error {
 
-	err := f.db.UpsetConfig(dat)
+	err := f.db.ConfigUpset(name, dat)
 	if err != nil {
 		return err
 	}
@@ -129,8 +129,16 @@ func (f *Factory) UploadConfig(dat []byte) error {
 	return nil
 }
 
-func (f *Factory) GetConfig() (database.TemplateConfig, error) {
-	return f.db.FindConfig("config")
+func (f *Factory) GetConfig(name string) (database.TemplateConfig, error) {
+	return f.db.ConfigFind(name)
+}
+
+func (f *Factory) RemoveConfig(name string) error {
+	return f.db.ConfigRemove(name)
+}
+
+func (f *Factory) GetConfigList() ([]string, error) {
+	return f.db.ConfigList()
 }
 
 func (f *Factory) FindBehavior(name string) (database.BehaviorInfo, error) {

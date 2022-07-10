@@ -14,9 +14,6 @@ ActionNode.config({
       strokeWidth: 1,
       borderRadius: 2,
     },
-    label: {
-      text: "HTTP"
-    },
     type : NodeTy.Action
   },
   width: 40,

@@ -17,7 +17,7 @@ type CodeTemplate struct {
 func GetGlobalScript(db IDatabase) string {
 	globalScript := ""
 	temp := CodeTemplate{}
-	tc, err := db.FindConfig("config")
+	tc, err := db.ConfigFind("config")
 	if err != nil {
 		fmt.Println("code template load err", err.Error())
 	} else {

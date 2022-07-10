@@ -56,7 +56,6 @@ export default class TreeModel extends React.Component {
       nods: [], //  root 记录节点的链路关系， window(map 记录节点的细节
       botid: "",
       behaviorTreeName: "",
-      httpCodeTmp: "",
       assertTmp: `
 -- Write expression to return true or false
 function execute()
@@ -110,7 +109,9 @@ end
       nod.ty === NodeTy.Action &&
       (nod.code === "" || nod.code === undefined)
     ) {
-      nod.code = this.state.httpCodeTmp;
+      var httpobj = window.config.get(nod.label)
+      var jobj = JSON.parse(httpobj)
+      nod.code = jobj["content"];
     } else if (
       nod.ty === NodeTy.Condition &&
       (nod.code === "" || nod.code === undefined)
@@ -449,18 +450,8 @@ end
 
   componentWillMount() {
     window.tree = new Map(); // 主要维护的是 editor 节点编辑后的数据
+    window.config = new Map();
     this.setState({ tree: {} }); // 主要维护的是 graph 中节点的数据
-
-    PubSub.subscribe(Topic.ConfigUpdate, (topic, info) => {
-      if (info.key === "code" && info.val !== "") {
-        var codetmp = JSON.parse(info.val);
-        for (var i = 0; i < codetmp.length; i++) {
-          if (codetmp[i]["title"] === "HTTP") {
-            this.setState({ httpCodeTmp: codetmp[i]["content"] });
-          }
-        }
-      }
-    });
 
     PubSub.subscribe(Topic.NodeAdd, (topic, addinfo) => {
       let info = addinfo[0];

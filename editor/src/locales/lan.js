@@ -194,6 +194,18 @@ var lanMap = {
     "app.config.code.apply" : {
         "en" : "Apply template code",
         "zh-cn" : "应用模版代码"
+    },
+    "app.config.modal.checked": {
+        "en" : "Prefab",
+        "zh-cn" : "预制的"
+    },
+    "app.config.modal.uncheked":{
+        "en" : "Global",
+        "zh-cn" : "全局的"
+    },
+    "app.config.modal.input" : {
+        "en" : "Enter script name",
+        "zh-cn" : "输入脚本名称"
     }
 }
 

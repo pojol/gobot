@@ -1,4 +1,14 @@
-import { Layout, Tabs, Tag, Radio, Modal, Input, Image, Space } from "antd";
+import {
+  Layout,
+  Tabs,
+  Tag,
+  Radio,
+  Modal,
+  Input,
+  Image,
+  Space,
+  message,
+} from "antd";
 import * as React from "react";
 import "antd/dist/antd.css";
 import "./app.css";
@@ -17,7 +27,7 @@ import zhCN from "antd/lib/locale/zh_CN";
 import moment from "moment";
 import "moment/locale/zh-cn";
 import lanMap from "./locales/lan";
-import { PostGetBlob } from "./utils/request";
+import { Post, PostGetBlob } from "./utils/request";
 import Api from "./constant/api";
 
 import { ReadOutlined } from "@ant-design/icons";
@@ -50,15 +60,6 @@ export default class App extends React.Component {
     if (localStorage.theme === "" || localStorage.theme === undefined) {
       localStorage.theme = "ayu-dark";
     }
-  }
-
-
-  componentDidMount() {
-
-    PubSub.subscribe(Topic.FileLoad, (topic, info) => {
-      this.setState({ tab: "Edit" });
-      PubSub.publish(Topic.FileLoadDraw, [info.Tree]);
-    });
 
     let remote = localStorage.remoteAddr;
     if (remote === "") {
@@ -66,6 +67,14 @@ export default class App extends React.Component {
     } else {
       this.syncTemplateCode();
     }
+
+  }
+
+  componentDidMount() {
+    PubSub.subscribe(Topic.FileLoad, (topic, info) => {
+      this.setState({ tab: "Edit" });
+      PubSub.publish(Topic.FileLoadDraw, [info.Tree]);
+    });
 
     window.addEventListener("resize", this.resizeHandler, false);
   }
@@ -83,18 +92,45 @@ export default class App extends React.Component {
   };
 
   syncTemplateCode() {
-    console.info("sync templete config", localStorage.remoteAddr)
-    PostGetBlob(localStorage.remoteAddr, Api.ConfigGet, {}).then((file) => {
-      let reader = new FileReader();
-      reader.onload = function (ev) {
-        localStorage.CodeTemplate = reader.result;
+    console.info("sync templete config", localStorage.remoteAddr);
 
-        PubSub.publish(Topic.ConfigUpdate, {
-          key: "code",
-          val: reader.result,
+    Post(localStorage.remoteAddr, Api.ConfigList, {}).then((json) => {
+      if (json.Code !== 200) {
+        message.error(
+          "get config list fail:" + String(json.Code) + " msg: " + json.Msg
+        );
+      } else {
+        let lst = json.Body.Lst;
+
+        var counter = 0;
+
+        lst.forEach(function(element) {
+          PostGetBlob(localStorage.remoteAddr, Api.ConfigGet, element).then(
+            (file) => {
+              let reader = new FileReader();
+              reader.onload = function (ev) {
+
+                if (reader.result.byteLength === 0) {
+                  message.warning("get config byte length == 0")
+                  return
+                }
+                
+                window.config.set(element, reader.result)
+                
+                PubSub.publish(Topic.ConfigUpdate, reader.result);
+
+                counter++
+                if (counter === lst.length) {
+                  PubSub.publish(Topic.ConfigUpdateAll, {})
+                }
+              };
+
+              reader.readAsText(file.blob);
+            }
+          );
         });
-      };
-      reader.readAsText(file.blob);
+
+      }
     });
   }
 

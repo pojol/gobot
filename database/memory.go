@@ -29,9 +29,11 @@ func (f *MemoryAdapter) Init() error {
 	f.behaviormap = make(map[string]BehaviorInfo)
 	f.configmap = make(map[string]TemplateConfig)
 
-	f.configmap["config"] = TemplateConfig{
-		Name: "config",
-		Dat:  []byte(`[{"title":"Global","content":"\n--[[\n\tGlobal constant area, users can define some constants here; it is easy to call in other scripts\n]]--\n\nREMOTE = \"http://127.0.0.1:8888\"\n","key":"global","closable":false},{"title":"HTTP","content":"\nlocal parm = {\n    body = {},    -- request body\n    timeout = \"10s\",\n    headers = {},\n}\n\nlocal url = REMOTE .. \"/group/methon\"\nlocal http = require(\"http\")\n\nfunction execute()\n    res, errmsg = http.post(url, parm)\n  \tif errmsg ~= nil then\n\t\tmeta.Err = errmsg\n    \treturn\n  \tend\n  \t\n  \tif res[\"status_code\"] ~= 200 then\n\t\tmeta.Err = \"post \" .. url .. \" http status code err \" .. res[\"status_code\"]\n  \t\treturn\n  \tend\n  \n  \tbody = json.decode(res[\"body\"])\n  \tmerge(meta, body.Body)\n\nend\n","key":"http","closable":false}]`),
+	for k, v := range DefaultConfig {
+		f.configmap[k] = TemplateConfig{
+			Name: k,
+			Dat:  []byte(v),
+		}
 	}
 
 	fmt.Println("memory init succ")
@@ -118,7 +120,7 @@ func (f *MemoryAdapter) UpdateTags(name string, tags []byte) error {
 	return nil
 }
 
-func (f *MemoryAdapter) FindConfig(name string) (TemplateConfig, error) {
+func (f *MemoryAdapter) ConfigFind(name string) (TemplateConfig, error) {
 	info := TemplateConfig{}
 
 	f.Lock()
@@ -131,12 +133,31 @@ func (f *MemoryAdapter) FindConfig(name string) (TemplateConfig, error) {
 	return info, fmt.Errorf("cant find config %v", name)
 }
 
-func (f *MemoryAdapter) UpsetConfig(byt []byte) error {
+func (f *MemoryAdapter) ConfigRemove(name string) error {
+	f.Lock()
+	defer f.Unlock()
+
+	delete(f.configmap, name)
+	return nil
+}
+
+func (f *MemoryAdapter) ConfigList() ([]string, error) {
 
 	f.Lock()
 	defer f.Unlock()
 
-	name := "config"
+	lst := []string{}
+	for k := range f.configmap {
+		lst = append(lst, k)
+	}
+
+	return lst, nil
+}
+
+func (f *MemoryAdapter) ConfigUpset(name string, byt []byte) error {
+
+	f.Lock()
+	defer f.Unlock()
 
 	if _, ok := f.configmap[name]; ok {
 		info := f.configmap[name]
