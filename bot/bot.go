@@ -110,7 +110,7 @@ func (b *Bot) GetPrevNodeID() string {
 	return ""
 }
 
-func NewWithBehaviorTree(path string, bt *behavior.Tree, name string, idx int32, globalScript string) *Bot {
+func NewWithBehaviorTree(path string, bt *behavior.Tree, name string, idx int32, globalScript []string) *Bot {
 
 	bot := &Bot{
 		id:   strconv.Itoa(int(idx)),
@@ -123,7 +123,9 @@ func NewWithBehaviorTree(path string, bt *behavior.Tree, name string, idx int32,
 	rand.Seed(time.Now().UnixNano())
 
 	// 加载预定义全局脚本文件
-	DoString(bot.bs.L, globalScript)
+	for _, gs := range globalScript {
+		DoString(bot.bs.L, gs)
+	}
 
 	// 这里要对script目录进行一次检查，将lua脚本都载入进来
 	preScripts := utils.GetDirectoryFiels(path, ".lua")
@@ -338,15 +340,12 @@ func (b *Bot) run_nod(nod *behavior.Tree, next bool) (bool, error) {
 		ok, _ = b.run_wait(nod, next)
 	case behavior.LOOP:
 		ok, err = b.run_loop(nod, next)
-	case behavior.ACTION:
-		ok, err = b.run_script(nod, next)
 	case behavior.ASSERT:
 		ok, err = b.run_assert(nod, next)
 	case behavior.ROOT:
 		ok = true
 	default:
-		ok = false
-		err = fmt.Errorf("run node type err %s", nod.Ty)
+		ok, err = b.run_script(nod, next)
 	}
 
 	if err != nil {

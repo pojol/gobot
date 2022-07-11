@@ -121,12 +121,7 @@ func (f *Factory) GetBehaviors() []database.BehaviorInfo {
 
 func (f *Factory) UploadConfig(name string, dat []byte) error {
 
-	err := f.db.ConfigUpset(name, dat)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return f.db.ConfigUpset(name, dat)
 }
 
 func (f *Factory) GetConfig(name string) (database.TemplateConfig, error) {
@@ -265,7 +260,7 @@ func (f *Factory) GetBatchInfo() []BatchInfo {
 	return lst
 }
 
-func (f *Factory) GetGlobalScript() string {
+func (f *Factory) GetGlobalScript() []string {
 	return database.GetGlobalScript(f.db)
 }
 

@@ -19,6 +19,7 @@ Gobot is a stateful api testing tool that supports graph editing, api calling, a
 * Can perform `stress tests` (concurrent driving robots
 * The driver provides api calls
 * Provides a report viewing page (api statistics called by the robot
+* Provide `prefab` template code function in config
 
 # Try it out
 Try the editor out [on website](http://123.60.17.61:7777)

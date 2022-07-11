@@ -34,7 +34,7 @@ type Batch struct {
 
 	tree          *behavior.Tree
 	path          string
-	globalScripte string
+	globalScripte []string
 
 	bots    map[string]*bot.Bot
 	colorer *color.Color
@@ -51,7 +51,7 @@ type Batch struct {
 	botErrCh  chan bot.ErrInfo
 }
 
-func CreateBatch(scriptPath, name string, num int, tbyt []byte, batchsize int32, globalScript string) *Batch {
+func CreateBatch(scriptPath, name string, num int, tbyt []byte, batchsize int32, globalScript []string) *Batch {
 
 	tree, err := behavior.New(tbyt)
 	if err != nil {

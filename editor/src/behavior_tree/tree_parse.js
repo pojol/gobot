@@ -21,7 +21,7 @@ function parseChildren(childrenNodes, children) {
             childrens.push(children.childNodes)
         } else if (children.nodeName === "loop") {
             nod.loop = parseInt(children.childNodes[0].nodeValue)
-        } else if (children.nodeName === "wait") {
+    } else if (children.nodeName === "wait") {
             nod.wait = parseInt(children.childNodes[0].nodeValue)
         } else if (children.nodeName === "code") {
             nod.code = children.childNodes[0].nodeValue
@@ -35,7 +35,6 @@ function parseChildren(childrenNodes, children) {
     nod.children = [];
     children.push(nod);
 
-    console.info(nod.id, nod.ty, childrens)
     childrens.forEach(c => {
         parseChildren(c, nod.children)
     })

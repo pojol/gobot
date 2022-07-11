@@ -15,6 +15,7 @@
     "rc-tween-one": "^3.0.3",
     "react": "^16.13.1",
     "react-codemirror2": "^7.2.1",
+    "react-color": "^2.19.3",
     "react-dom": "^16.13.1",
     "react-json-view": "^1.21.3",
     "react-medium-editor": "^1.8.1",

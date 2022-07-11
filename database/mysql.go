@@ -188,7 +188,7 @@ func (f *MysqlAdapter) ConfigUpset(name string, byt []byte) error {
 
 	_, err := f.ConfigFind(name)
 	if err == nil {
-		res = f.db.Model(&TemplateConfig{}).Where("name = ?", "config").Updates(info)
+		res = f.db.Model(&TemplateConfig{}).Where("name = ?", name).Updates(info)
 	} else if err == gorm.ErrRecordNotFound {
 		res = f.db.Create(&info)
 	}

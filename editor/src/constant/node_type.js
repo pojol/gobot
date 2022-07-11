@@ -1,6 +1,6 @@
 const NodeTy = {
   // 行为树根节点
-  Root : "RootNode",
+  Root: "RootNode",
 
   // 脚本动作节点
   Action: "ActionNode",
@@ -19,11 +19,34 @@ const NodeTy = {
 };
 
 function IsScriptNode(ty) {
-  if (ty === NodeTy.Condition || ty === NodeTy.Action || ty === NodeTy.Assert) {
-    return true;
-  } else {
-    return false;
+
+  switch (ty) {
+    case NodeTy.Root:
+    case NodeTy.Loop:
+    case NodeTy.Wait:
+    case NodeTy.Selector:
+    case NodeTy.Sequence:
+      return false
+    default:
+      return true
+  }
+
+}
+
+function IsActionNode(ty) {
+  switch (ty) {
+    case NodeTy.Root:
+    case NodeTy.Loop:
+    case NodeTy.Wait:
+    case NodeTy.Selector:
+    case NodeTy.Sequence:
+    case NodeTy.Assert:
+    case NodeTy.Condition:
+      return false
+    default:
+      return true
   }
 }
 
-export { NodeTy, IsScriptNode };
+
+export { NodeTy, IsScriptNode, IsActionNode };

@@ -11,7 +11,7 @@ import AssertNode from "./shape/shap_assert";
 
 /// <reference path="graph.d.ts" />
 
-import { NodeTy, IsScriptNode } from "../../../constant/node_type";
+import { NodeTy, IsScriptNode, IsActionNode } from "../../../constant/node_type";
 import { Button, Tooltip, Modal, Input, Badge } from "antd";
 import {
   ZoomInOutlined,
@@ -114,15 +114,15 @@ function NewStencil(graph: Graph) {
   );
 
   let configmap = (window as any).config as Map<string, string>;
-  let prefabnods: Node[] = new Array();
+  let prefabnods : Node[] = []
 
   configmap.forEach((value: string, key: string) => {
-    console.info("reload", key);
     var jobj = JSON.parse(value);
 
     if (jobj["prefab"] === true) {
       var nod = new ActionNode();
       nod.setAttrs({
+        type: jobj["title"],
         label: { text: key },
       });
 
@@ -158,7 +158,6 @@ function GetNodInfo(nod: Node) {
   var info = {
     id: nod.id,
     ty: nod.getAttrs().type.toString(),
-    label: nod.getAttrs().label.text,
     pos: {
       x: nod.position().x,
       y: nod.position().y,
@@ -344,7 +343,7 @@ export default class GraphView extends React.Component {
           }
 
           if (
-            source.getAttrs().type.toString() === NodeTy.Action &&
+            IsScriptNode(source.getAttrs().type.toString()) &&
             source.getChildCount() > 0
           ) {
             message.warning("Action node can only mount a single node");
@@ -404,7 +403,7 @@ export default class GraphView extends React.Component {
         }
       });
 
-      this.findNode(node.id, (nod) => {});
+      this.findNode(node.id, (nod) => { });
     });
 
     graph.on("edge:mouseenter", ({ edge }) => {
@@ -452,8 +451,7 @@ export default class GraphView extends React.Component {
     });
 
     PubSub.subscribe(Topic.UpdateNodeParm, (topic: string, info: any) => {
-      console.info("update", info.parm.id, info.parm.alias, info.parm.ty);
-      if (info.parm.ty === NodeTy.Action) {
+      if (IsActionNode(info.parm.ty)) {
         this.findNode(info.parm.id, (nod) => {
           nod.setAttrs({
             label: { text: info.parm.alias },
@@ -593,23 +591,30 @@ export default class GraphView extends React.Component {
 
   redrawChild(parent: any, child: any, build: boolean) {
     var nod: Node;
-    if (child.ty === NodeTy.Selector) {
-      nod = new SelectorNode({ id: child.id });
-    } else if (child.ty === NodeTy.Sequence) {
-      nod = new SequenceNode({ id: child.id });
-    } else if (child.ty === NodeTy.Condition) {
-      nod = new ConditionNode({ id: child.id });
-    } else if (child.ty === NodeTy.Action) {
-      nod = new ActionNode({ id: child.id });
-    } else if (child.ty === NodeTy.Loop) {
-      nod = new LoopNode({ id: child.id });
-    } else if (child.ty === NodeTy.Assert) {
-      nod = new AssertNode({ id: child.id });
-    } else if (child.ty === NodeTy.Wait) {
-      nod = new WaitNode({ id: child.id });
-    } else {
-      message.warn("未知的节点类型" + child.ty);
-      return;
+
+    switch (child.ty) {
+      case NodeTy.Selector:
+        nod = new SelectorNode({ id: child.id });
+        break
+      case NodeTy.Sequence:
+        nod = new SequenceNode({ id: child.id });
+        break
+      case NodeTy.Condition:
+        nod = new ConditionNode({ id: child.id });
+        break
+      case NodeTy.Loop:
+        nod = new LoopNode({ id: child.id });
+        break
+      case NodeTy.Assert:
+        nod = new AssertNode({ id: child.id });
+        break
+      case NodeTy.Wait:
+        nod = new WaitNode({ id: child.id });
+        break
+      default:
+        nod = new ActionNode({ id: child.id });
+        console.info("redraw node", child.ty)
+        nod.setAttrs({ type: child.ty });
     }
 
     nod.setPosition({
@@ -753,7 +758,7 @@ export default class GraphView extends React.Component {
     }
   };
 
-  debug = () => {};
+  debug = () => { };
 
   ClickZoomIn = () => {
     this.graph.zoomTo(this.graph.zoom() * 1.2);

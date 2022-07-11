@@ -21,6 +21,8 @@ import "codemirror/theme/yonce.css";
 import "codemirror/theme/neo.css";
 import "codemirror/theme/zenburn.css";
 import "codemirror/mode/lua/lua";
+import { SwatchesPicker } from 'react-color';
+
 
 import Topic from "../../constant/topic";
 import moment from "moment";
@@ -44,7 +46,7 @@ export default class BotConfig extends React.Component {
       theme: "ayu-dark",
       isModalVisible: false,
       modalConfig: "",
-      switchChecked : true,
+      switchChecked: true,
     };
   }
 
@@ -64,15 +66,16 @@ export default class BotConfig extends React.Component {
         content: jobj["content"],
         key: key,
         closable: jobj["closable"],
-        prefab:jobj["prefab"],
+        prefab: jobj["prefab"],
+        color: "#fff",
       });
     });
     this.setState({ panes: oldpanes });
 
     PubSub.subscribe(Topic.ConfigUpdate, (topic, info) => {
-    
+
       var oldpanes = this.state.panes;
-      console.info("info",info)
+      console.info("info", info)
       var jobj = JSON.parse(info)
 
       oldpanes.push({
@@ -80,16 +83,16 @@ export default class BotConfig extends React.Component {
         content: jobj["content"],
         key: jobj["title"],
         closable: jobj["closable"],
-        prefab:jobj["prefab"],
+        prefab: jobj["prefab"],
       });
 
       this.setState({ panes: oldpanes });
-      
+
     });
   }
 
   appendPane(val) {
-    
+
   }
 
   isUrl(url) {
@@ -118,6 +121,7 @@ export default class BotConfig extends React.Component {
   };
 
   syncConfig = () => {
+    console.info("sync config", localStorage.remoteAddr + "/" + Api.ConfigList)
     Post(localStorage.remoteAddr, Api.ConfigList, {}).then((json) => {
       if (json.Code !== 200) {
         message.error(
@@ -125,16 +129,16 @@ export default class BotConfig extends React.Component {
         );
       } else {
         let lst = json.Body.Lst;
-
+        console.info("config lst", lst)
         var counter = 0;
 
-        lst.forEach(function(element) {
+        lst.forEach(function (element) {
           PostGetBlob(localStorage.remoteAddr, Api.ConfigGet, element).then(
             (file) => {
               let reader = new FileReader();
               reader.onload = function (ev) {
                 window.config.set(element, reader.result)
-                
+
                 PubSub.publish(Topic.ConfigUpdate, reader.result);
 
                 counter++
@@ -163,7 +167,7 @@ export default class BotConfig extends React.Component {
         } else {
           // reset
           window.config = new Map();
-          this.setState({panes : []})
+          this.setState({ panes: [] })
           this.syncConfig()
         }
       });
@@ -184,6 +188,8 @@ export default class BotConfig extends React.Component {
       var blob = new Blob([templatecode], {
         type: "application/json",
       });
+
+      console.info("apply config code", templatecode)
 
       PostBlob(
         localStorage.remoteAddr,
@@ -231,7 +237,7 @@ export default class BotConfig extends React.Component {
   };
 
   add = () => {
-    this.setState({modalConfig : ""})
+    this.setState({ modalConfig: "" })
     this.showModal();
 
   };
@@ -241,11 +247,19 @@ export default class BotConfig extends React.Component {
     const { panes, activeKey } = this.state;
     let newActiveKey = activeKey;
     let lastIndex;
+    let find
     panes.forEach((pane, i) => {
       if (pane.key === targetKey) {
         lastIndex = i - 1;
+        find = true
       }
     });
+
+    if (!find) {
+      message.warning("unknow template : " + targetKey)
+      return
+    }
+
     const newPanes = panes.filter((pane) => pane.key !== targetKey);
     if (newPanes.length && newActiveKey === targetKey) {
       if (lastIndex >= 0) {
@@ -254,24 +268,24 @@ export default class BotConfig extends React.Component {
         newActiveKey = newPanes[0].key;
       }
     }
+
     this.setState({
       panes: newPanes,
       activeKey: newActiveKey,
-    }, ()=>{
+    }, () => {
 
-        Post(localStorage.remoteAddr, Api.ConfigRemove, {Name : targetKey}).then((json) => {
-          if (json.Code !== 200) {
-            message.error(
-              "remove config err:" + String(json.Code) + " msg: " + json.Msg
-            );
-          } else {
+      Post(localStorage.remoteAddr, Api.ConfigRemove, { Name: targetKey }).then((json) => {
+        if (json.Code !== 200) {
+          message.error(
+            "remove template err:" + String(json.Code) + " msg: " + json.Msg
+          );
+        } else {
+          window.config.delete(targetKey)
+          PubSub.publish(Topic.ConfigUpdateAll, {}) // reload
+          message.success("remove template " + targetKey + " succ")
+        }
+      });
 
-            window.config.delete(targetKey)
-            PubSub.publish(Topic.ConfigUpdateAll, {}) // reload
-            message.success("remove config succ")
-          }
-        });
-          
     });
   };
 
@@ -323,7 +337,18 @@ export default class BotConfig extends React.Component {
   };
 
   switchChange = (checked) => {
-    this.setState({switchChecked: checked})
+    this.setState({ switchChecked: checked })
+  }
+
+  handleColorChange = (color) => {
+    console.info(color.hex)
+    this.setState({color: color.hex})
+  }
+
+  handleOnRemove = (value) => {
+    
+    this.remove(value)
+
   }
 
   render() {
@@ -372,7 +397,7 @@ export default class BotConfig extends React.Component {
           onEdit={this.onTableEdit}
         >
           {panes.map((pane) => (
-            <TabPane tab={pane.title} key={pane.key} closable={pane.closable}>
+            <TabPane tab={pane.title} key={pane.key} closable={false}>
               <CodeMirror
                 value={pane.content}
                 options={options}
@@ -396,7 +421,16 @@ export default class BotConfig extends React.Component {
             value={this.state.modalConfig}
           />
           <Switch checkedChildren={lanMap["app.config.modal.checked"][moment.locale()]} unCheckedChildren={lanMap["app.config.modal.uncheked"][moment.locale()]} onChange={this.switchChange} defaultChecked />
+          <SwatchesPicker color={ this.state.color } onChange={ this.handleColorChange }/>
         </Modal>
+
+    <Search
+      placeholder="input remove template name"
+      allowClear
+      enterButton="Remove template"
+      size="large"
+      onSearch={this.handleOnRemove}
+    />
       </div>
     );
   }

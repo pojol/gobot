@@ -266,6 +266,7 @@ func ConfigUpload(ctx echo.Context) error {
 	}
 
 EXT:
+
 	res.Code = int(code)
 	ctx.JSON(http.StatusOK, res)
 	return nil

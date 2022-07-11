@@ -1,5 +1,4 @@
 import { Shape } from "@antv/x6";
-import { NodeTy } from "../../../../constant/node_type";
 
 class ActionNode extends Shape.Rect {}
 
@@ -14,7 +13,7 @@ ActionNode.config({
       strokeWidth: 1,
       borderRadius: 2,
     },
-    type : NodeTy.Action
+    type : ""
   },
   width: 40,
   height: 20,
