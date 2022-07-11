@@ -1,6 +1,7 @@
 # gobot editor
 Gobot是一个有状态的api测试工具，支持图形编辑、api调用、绑定脚本执行。
 
+[![](https://img.shields.io/badge/%E6%96%87%E6%A1%A3-Doc-2ca5e0?style=flat&logo=github)](https://pojol.gitee.io/gobot/#/)
 [![](https://img.shields.io/badge/Trello-Todo-2ca5e0?style=flat&logo=trello)](https://trello.com/b/8eDZ6h7n/)
 [![CI](https://github.com/pojol/gobot/actions/workflows/dockerimage.yml/badge.svg?branch=develop)](https://github.com/pojol/gobot/actions/workflows/dockerimage.yml)
 
@@ -23,6 +24,7 @@ Gobot是一个有状态的api测试工具，支持图形编辑、api调用、绑
 4. 可以进行`压力测试`（并发驱动机器人
 5. 驱动端提供`http调用接口`
 6. 提供报告查看页（机器人调用的api统计信息
+7. 在配置页中可以进行模版代码`预制`，为自己添加功能节点或模版节点
 
 
 ### [在线试用](http://123.60.17.61:7777) <--
@@ -30,7 +32,7 @@ Gobot是一个有状态的api测试工具，支持图形编辑、api调用、绑
 
 
 ### 编辑器预览
-[![botgif1.gif](https://i.postimg.cc/q7H2wqxY/botgif1.gif)](https://www.bilibili.com/video/BV1sS4y1z7Dg?share_source=copy_web)
+[![botgif2.gif](https://i.postimg.cc/SNKQG50m/botgif2.gif)](https://www.bilibili.com/video/BV1sS4y1z7Dg?share_source=copy_web)
 
 ### 一个http节点的例子
 ```lua

@@ -251,7 +251,6 @@ export default class BotList extends React.Component {
       if (json.Code !== 200) {
         message.error("run fail:" + String(json.Code) + " msg: " + json.Msg);
       } else {
-        console.info("refresh bots", json.Body.Bots)
         if (json.Body.Bots) {
           this.setState({ Bots: json.Body.Bots }, () => {
             this.updateAllTags()
@@ -338,7 +337,7 @@ export default class BotList extends React.Component {
 
       var num = this.state.runs[row.name]
       if (num === undefined || num === 0) {
-        Post(localStorage.remoteAddr, Api.BotRun, {Name : row.name}).then((json)=>{
+        Post(localStorage.remoteAddr, Api.BotRun, { Name: row.name }).then((json) => {
           if (json.Code !== 200) {
             message.error("running fail:" + String(json.Code) + " msg: " + json.Msg);
           } else {
@@ -398,7 +397,7 @@ export default class BotList extends React.Component {
     var filepProps = {
       name: "file",
       multiple: true,
-      action: localStorage.remoteAddr +"/"+ Api.FileTxtUpload,
+      action: localStorage.remoteAddr + "/" + Api.FileTxtUpload,
       onDrop(e) {
         console.log("Dropped files", e.dataTransfer.files);
       },
@@ -435,7 +434,7 @@ export default class BotList extends React.Component {
                   title={lanMap["app.home.run.desc"][moment.locale()]}
                 >
                   <Button icon={<PlayCircleOutlined />} onClick={this.handleBotRun}>
-                  {lanMap["app.home.run"][moment.locale()]}
+                    {lanMap["app.home.run"][moment.locale()]}
                   </Button>
                 </Tooltip>
                 <Tooltip
@@ -451,7 +450,7 @@ export default class BotList extends React.Component {
                 </Tooltip>
                 <Tooltip
                   placement="bottomLeft"
-                  title= {lanMap["app.home.delete.desc"][moment.locale()]}
+                  title={lanMap["app.home.delete.desc"][moment.locale()]}
                 >
                   <Popconfirm
                     title={lanMap["app.home.delete.confirm"][moment.locale()]}

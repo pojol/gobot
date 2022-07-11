@@ -56,7 +56,6 @@ export default class TreeModel extends React.Component {
       nods: [], //  root 记录节点的链路关系， window(map 记录节点的细节
       botid: "",
       behaviorTreeName: "",
-      httpCodeTmp: "",
       assertTmp: `
 -- Write expression to return true or false
 function execute()
@@ -105,26 +104,45 @@ end
   }
 
   setNode(nod) {
-    // init
-    if (
-      nod.ty === NodeTy.Action &&
-      (nod.code === "" || nod.code === undefined)
-    ) {
-      nod.code = this.state.httpCodeTmp;
-    } else if (
-      nod.ty === NodeTy.Condition &&
-      (nod.code === "" || nod.code === undefined)
-    ) {
-      nod.code = this.state.conditionTmp;
-    } else if (
-      nod.ty === NodeTy.Assert &&
-      (nod.code === "" || nod.code === undefined)
-    ) {
-      nod.code = this.state.assertTmp;
-    } else if (nod.ty === NodeTy.Loop && nod.loop === undefined) {
-      nod.loop = 1;
-    } else if (nod.ty === NodeTy.Wait && nod.wait === undefined) {
-      nod.wait = 1;
+
+    if (nod.code === "" || nod.code === undefined) {
+
+      switch (nod.ty) {
+        case NodeTy.Condition:
+          nod.code = this.state.conditionTmp;
+          break
+        case NodeTy.Assert:
+          nod.code = this.state.assertTmp;
+          break
+        case NodeTy.Loop:
+          nod.loop = 1;
+          break
+        case NodeTy.Wait:
+          nod.wait = 1;
+          break
+        case NodeTy.Root:
+        case NodeTy.Sequence:
+        case NodeTy.Selector:
+          break
+        default:
+          let ty = nod.ty
+          if (ty === "ActionNode") { // tmp
+            ty = "HTTP"
+          }
+
+          let httpobj = window.config.get(ty);
+
+          try {
+            let jobj = JSON.parse(httpobj);
+            nod.code = jobj["content"];
+
+            console.info("code get", ty, nod.code)
+
+          } catch (error) {
+            console.error(error)
+            console.error(ty, window.config.get(ty))
+          }          
+      }
     }
 
     window.tree.set(nod.id, nod);
@@ -337,16 +355,23 @@ end
     }
 
     if (edit) {
-      if (info.ty === NodeTy.Action) {
-        org.code = info.code;
-        org.alias = info.alias;
-      } else if (info.ty === NodeTy.Assert || info.ty === NodeTy.Condition) {
-        org.code = info.code;
-      } else if (info.ty === NodeTy.Loop) {
-        org.loop = info.loop;
-      } else if (info.ty === NodeTy.Wait) {
-        org.wait = info.wait;
+
+      switch (info.ty) {
+        case NodeTy.Assert:
+        case NodeTy.Condition:
+          org.code = info.code;
+          break
+        case NodeTy.Loop:
+          org.loop = info.loop;
+          break
+        case NodeTy.Wait:
+          org.wait = info.wait;
+          break
+        default:
+          org.code = info.code;
+          org.alias = info.alias;
       }
+
     }
 
     org.ty = info.ty;
@@ -449,18 +474,8 @@ end
 
   componentWillMount() {
     window.tree = new Map(); // 主要维护的是 editor 节点编辑后的数据
+    window.config = new Map();
     this.setState({ tree: {} }); // 主要维护的是 graph 中节点的数据
-
-    PubSub.subscribe(Topic.ConfigUpdate, (topic, info) => {
-      if (info.key === "code" && info.val !== "") {
-        var codetmp = JSON.parse(info.val);
-        for (var i = 0; i < codetmp.length; i++) {
-          if (codetmp[i]["title"] === "HTTP") {
-            this.setState({ httpCodeTmp: codetmp[i]["content"] });
-          }
-        }
-      }
-    });
 
     PubSub.subscribe(Topic.NodeAdd, (topic, addinfo) => {
       let info = addinfo[0];
@@ -468,7 +483,6 @@ end
       let silent = addinfo[2];
 
       if (build) {
-        console.info("node model add", info);
         this.addNode(info, silent);
       }
     });
@@ -607,9 +621,15 @@ end
                 if (json.Code !== 1010) {
                   PubSub.publish(Topic.UpdateChange, changeInfo);
                 }
+
                 PubSub.publish(Topic.UpdateBlackboard, json.Body.Blackboard);
                 flag = false;
+                PubSub.publish(Topic.Focus, {
+                  Cur: "",
+                  Prev: "",
+                });
               } else {
+
                 let metastr;
                 let meta = JSON.parse(json.Body.Blackboard);
                 let change = JSON.parse(json.Body.Change);
@@ -626,6 +646,7 @@ end
                   Prev: json.Body.Prev,
                 });
               }
+
             }
           );
 

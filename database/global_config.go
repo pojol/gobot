@@ -6,30 +6,41 @@ import (
 )
 
 type CodeTemplateInfo struct {
-	Title string `json:"title"`
-	Code  string `json:"content"`
+	Title  string `json:"title"`
+	Code   string `json:"content"`
+	Prefab bool   `json:"prefab"`
 }
 
 type CodeTemplate struct {
 	Lst []CodeTemplateInfo
 }
 
-func GetGlobalScript(db IDatabase) string {
-	globalScript := ""
-	temp := CodeTemplate{}
-	tc, err := db.FindConfig("config")
+func GetGlobalScript(db IDatabase) []string {
+	globalScript := []string{}
+
+	cfglst, err := db.ConfigList()
 	if err != nil {
-		fmt.Println("code template load err", err.Error())
-	} else {
-		err = json.Unmarshal(tc.Dat, &temp.Lst)
+		fmt.Println("get config list err", err.Error())
+		return globalScript
+	}
+
+	for _, v := range cfglst {
+
+		cfg, err := db.ConfigFind(v)
 		if err != nil {
-			fmt.Println("code template unmarshal err", err.Error())
+			fmt.Println("find config err", err.Error())
+			continue
 		}
-		for _, v := range temp.Lst {
-			if v.Title == "Global" {
-				globalScript = v.Code
-				break
-			}
+
+		info := CodeTemplateInfo{}
+		err = json.Unmarshal(cfg.Dat, &info)
+		if err != nil {
+			fmt.Println("config unmarshal err", err.Error())
+			continue
+		}
+
+		if !info.Prefab { // global script
+			globalScript = append(globalScript, info.Code)
 		}
 	}
 

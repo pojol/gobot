@@ -243,6 +243,8 @@ func ConfigUpload(ctx echo.Context) error {
 	code := Succ
 	res := &Response{}
 
+	name := ctx.Request().Header.Get("FileName")
+
 	bts, err := ioutil.ReadAll(ctx.Request().Body)
 	if err != nil {
 		code = ErrContentRead // tmp
@@ -256,7 +258,7 @@ func ConfigUpload(ctx echo.Context) error {
 		goto EXT
 	}
 
-	err = factory.Global.UploadConfig(bts)
+	err = factory.Global.UploadConfig(name, bts)
 	if err != nil {
 		code = ErrUploadConfig
 		res.Msg = err.Error()
@@ -264,8 +266,62 @@ func ConfigUpload(ctx echo.Context) error {
 	}
 
 EXT:
+
 	res.Code = int(code)
-	fmt.Println(res.Code, res.Msg)
+	ctx.JSON(http.StatusOK, res)
+	return nil
+}
+
+func ConfigRemove(ctx echo.Context) error {
+	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
+	code := Succ
+	res := &Response{}
+	req := ConfigRemoveReq{}
+
+	bts, err := ioutil.ReadAll(ctx.Request().Body)
+	if err != nil {
+		fmt.Println(err.Error())
+		goto EXT
+	}
+
+	err = json.Unmarshal(bts, &req)
+	if err != nil {
+		code = ErrJsonInvalid
+		fmt.Println(err.Error())
+		goto EXT
+	}
+
+	err = factory.Global.RemoveConfig(req.Name)
+	if err != nil {
+		fmt.Println("remove config", err.Error())
+		code = ErrGetConfig
+		goto EXT
+	}
+
+EXT:
+	res.Code = int(code)
+	ctx.JSON(http.StatusOK, res)
+	return nil
+}
+
+func ConfigListInfo(ctx echo.Context) error {
+	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
+	code := Succ
+	res := &Response{}
+
+	lst, err := factory.Global.GetConfigList()
+	if err != nil {
+		fmt.Println("config get list err", err.Error())
+		code = ErrGetConfig
+		goto EXT
+	}
+
+	res.Body = ConfigGetListInfoRes{
+		Lst: lst,
+	}
+
+EXT:
+	res.Code = int(code)
 	ctx.JSON(http.StatusOK, res)
 	return nil
 }
@@ -274,8 +330,9 @@ func ConfigGetInfo(ctx echo.Context) error {
 	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
 	code := Succ
 	res := &Response{}
+	name := ctx.Request().Header.Get("FileName")
 
-	cfg, err := factory.Global.GetConfig()
+	cfg, err := factory.Global.GetConfig(name)
 	if err != nil {
 		fmt.Println("get config", err.Error())
 		code = ErrGetConfig
@@ -451,6 +508,7 @@ func DebugStep(ctx echo.Context) error {
 	var b *bot.Bot
 
 	var err error
+	var ok bool
 	var s bot.State
 
 	bts, err := ioutil.ReadAll(ctx.Request().Body)
@@ -474,8 +532,8 @@ func DebugStep(ctx echo.Context) error {
 	}
 
 	s = b.RunStep()
-	body.Blackboard, body.Change, body.RuntimeErr, err = b.GetMetadata()
-	if err != nil {
+	body.Blackboard, body.Change, body.RuntimeErr, ok = b.GetMetadata()
+	if !ok {
 		code = ErrMetaData
 		goto EXT
 	}
@@ -560,6 +618,8 @@ func Route(e *echo.Echo) {
 	e.POST("/file.setTags", FileSetTags)
 
 	e.POST("/config.get", ConfigGetInfo)
+	e.POST("/config.list", ConfigListInfo)
+	e.POST("/config.rmv", ConfigRemove)
 	e.POST("/config.upload", ConfigUpload)
 
 	e.POST("/bot.run", BotRun)

@@ -51,8 +51,22 @@ type SetBehaviorTagsRes struct {
 	Bots []behaviorInfo
 }
 
+type SetConfigReq struct {
+	Name string `json:"name"`
+	Dat  string `json:"dat"`
+}
+
 type ReportRes struct {
 	Info []database.ReportInfo
+}
+
+//
+type ConfigGetListInfoRes struct {
+	Lst []string
+}
+
+type ConfigRemoveReq struct {
+	Name string
 }
 
 // bot.batch

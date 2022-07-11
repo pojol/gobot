@@ -1,3 +1,14 @@
+## v0.1.15
+* feature
+    - 去除 edit 界面中的 debug 按钮，在点击 step 的时候自动进行创建
+    - 在最后一个节点上为 step 设置延迟（防止连续连击
+    - 添加 reset 按钮防止用户中途不想执行下去时，必须要走到底
+    - 去除 script module 中的 utils (改为独立的 uuid 和 random 接口显示在一级目录方便查阅
+    - 添加节点`预制功能`（现在用户可以在config面板定义和复用自己的脚本节点
+    - 添加连接状态提示
+* fix 
+    - step api 没有返回正确的错误信息
+
 ## v0.1.14
 * feature
 * fix

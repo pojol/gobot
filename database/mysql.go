@@ -74,9 +74,11 @@ func (f *MysqlAdapter) Init() error {
 
 	f.db = db
 
-	_, err = f.FindConfig("config")
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		f.UpsetConfig([]byte(`[{"title":"Global","content":"\n--[[\n\tGlobal constant area, users can define some constants here; it is easy to call in other scripts\n]]--\n\nREMOTE = \"http://127.0.0.1:8888\"\n","key":"global","closable":false},{"title":"HTTP","content":"\nlocal parm = {\n    body = {},    -- request body\n    timeout = \"10s\",\n    headers = {},\n}\n\nlocal url = REMOTE .. \"/group/methon\"\nlocal http = require(\"http\")\n\nfunction execute()\n    res, errmsg = http.post(url, parm)\n  \tif errmsg ~= nil then\n\t\tmeta.Err = errmsg\n    \treturn\n  \tend\n  \t\n  \tif res[\"status_code\"] ~= 200 then\n\t\tmeta.Err = \"post \" .. url .. \" http status code err \" .. res[\"status_code\"]\n  \t\treturn\n  \tend\n  \n  \tbody = json.decode(res[\"body\"])\n  \tmerge(meta, body.Body)\n\nend\n","key":"http","closable":false}]`))
+	for k, v := range DefaultConfig {
+		_, err = f.ConfigFind(k)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			f.ConfigUpset(k, []byte(v))
+		}
 	}
 
 	fmt.Println("mysql init", err)
@@ -147,7 +149,7 @@ func (f *MysqlAdapter) UpdateTags(name string, tags []byte) error {
 	return f.db.Model(&BehaviorInfo{}).Where("name = ?", name).Update("TagDat", tags).Error
 }
 
-func (f *MysqlAdapter) FindConfig(name string) (TemplateConfig, error) {
+func (f *MysqlAdapter) ConfigFind(name string) (TemplateConfig, error) {
 	info := TemplateConfig{}
 
 	res := f.db.Where("name = ?", name).First(&info)
@@ -155,7 +157,24 @@ func (f *MysqlAdapter) FindConfig(name string) (TemplateConfig, error) {
 	return info, res.Error
 }
 
-func (f *MysqlAdapter) UpsetConfig(byt []byte) error {
+func (f *MysqlAdapter) ConfigList() ([]string, error) {
+
+	lst := []TemplateConfig{}
+
+	result := f.db.Find(&lst)
+	if result.Error != nil {
+		return []string{}, result.Error
+	}
+
+	titlelst := []string{}
+	for _, v := range lst {
+		titlelst = append(titlelst, v.Name)
+	}
+
+	return titlelst, nil
+}
+
+func (f *MysqlAdapter) ConfigUpset(name string, byt []byte) error {
 
 	f.Lock()
 	defer f.Unlock()
@@ -163,18 +182,28 @@ func (f *MysqlAdapter) UpsetConfig(byt []byte) error {
 	var res *gorm.DB
 
 	info := TemplateConfig{
-		Name: "config",
+		Name: name,
 		Dat:  byt,
 	}
 
-	_, err := f.FindConfig("config")
+	_, err := f.ConfigFind(name)
 	if err == nil {
-		res = f.db.Model(&TemplateConfig{}).Where("name = ?", "config").Updates(info)
+		res = f.db.Model(&TemplateConfig{}).Where("name = ?", name).Updates(info)
 	} else if err == gorm.ErrRecordNotFound {
 		res = f.db.Create(&info)
 	}
 
 	return res.Error
+}
+
+func (f *MysqlAdapter) ConfigRemove(name string) error {
+
+	f.Lock()
+	defer f.Unlock()
+
+	f.db.Delete(&TemplateConfig{}).Where("name = ?", name)
+
+	return nil
 }
 
 func (f *MysqlAdapter) RemoveReport(id string) error {

@@ -11,7 +11,6 @@ const (
 	CONDITION = "ConditionNode"
 	WAIT      = "WaitNode"
 	LOOP      = "LoopNode"
-	ACTION    = "ActionNode"
 	ASSERT    = "AssertNode"
 )
 

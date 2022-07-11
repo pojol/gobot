@@ -29,14 +29,16 @@
   right:3px;
 }
 
-.app-create-mac {
+
+
+.app-step-mac {
   position: absolute;
   z-index: 10;
-  right:168px;
+  right:173px;
   bottom:3px;
 }
 
-.app-step-mac {
+.app-reset-mac {
   position: absolute;
   z-index: 10;
   right:85px;
@@ -50,14 +52,15 @@
   bottom:3px;
 }
 
-.app-create-win {
+
+.app-step-win {
   position: absolute;
   z-index: 10;
-  right:188px;
+  right:193px;
   bottom:18px;
 }
 
-.app-step-win {
+.app-reset-win {
   position: absolute;
   z-index: 10;
   right:105px;

@@ -1,4 +1,15 @@
-import { Layout, Tabs, Tag, Radio, Modal, Input, Image, Space } from "antd";
+import {
+  Layout,
+  Tabs,
+  Tag,
+  Radio,
+  Modal,
+  Input,
+  Image,
+  Space,
+  message,
+  Tooltip,
+} from "antd";
 import * as React from "react";
 import "antd/dist/antd.css";
 import "./app.css";
@@ -17,10 +28,10 @@ import zhCN from "antd/lib/locale/zh_CN";
 import moment from "moment";
 import "moment/locale/zh-cn";
 import lanMap from "./locales/lan";
-import { PostGetBlob } from "./utils/request";
+import { Post, PostGetBlob, CheckHealth } from "./utils/request";
 import Api from "./constant/api";
 
-import { ReadOutlined } from "@ant-design/icons";
+import { ReadOutlined, ApiFilled } from "@ant-design/icons";
 
 const { TabPane } = Tabs;
 moment.locale("en");
@@ -33,6 +44,8 @@ export default class App extends React.Component {
       locale: enUS,
       isModalVisible: false,
       modalConfig: "",
+      connectColor: "red",
+      connectTxt: "Not connected to server, please set in config",
     };
   }
 
@@ -50,23 +63,23 @@ export default class App extends React.Component {
     if (localStorage.theme === "" || localStorage.theme === undefined) {
       localStorage.theme = "ayu-dark";
     }
-  }
-
-
-  componentDidMount() {
-
-    PubSub.subscribe(Topic.FileLoad, (topic, info) => {
-      this.setState({ tab: "Edit" });
-      PubSub.publish(Topic.FileLoadDraw, [info.Tree]);
-    });
 
     let remote = localStorage.remoteAddr;
-    if (remote === "") {
+    if (remote === "" || remote === undefined) {
       this.setState({ isModalVisible: true });
     } else {
       this.syncTemplateCode();
     }
 
+  }
+
+  componentDidMount() {
+    PubSub.subscribe(Topic.FileLoad, (topic, info) => {
+      this.setState({ tab: "Edit" });
+      PubSub.publish(Topic.FileLoadDraw, [info.Tree]);
+    });
+    
+    this.checkheath()
     window.addEventListener("resize", this.resizeHandler, false);
   }
 
@@ -78,23 +91,61 @@ export default class App extends React.Component {
         PubSub.publish(Topic.ReportUpdate, {});
       } else if (e === "Running") {
         PubSub.publish(Topic.RunningUpdate, {});
+      } else if (e === "Edit") {
+        this.checkheath()
       }
     });
   };
 
-  syncTemplateCode() {
-    console.info("sync templete config", localStorage.remoteAddr)
-    PostGetBlob(localStorage.remoteAddr, Api.ConfigGet, {}).then((file) => {
-      let reader = new FileReader();
-      reader.onload = function (ev) {
-        localStorage.CodeTemplate = reader.result;
+  checkheath() {
+    CheckHealth(localStorage.remoteAddr).then((res=>{
+      if (res.code === 200) {
+        this.setState({connectColor:"#4caf50", connectTxt:"Connecting"})
+      } else {
+        this.setState({connectColor:"red", connectTxt:"Not connected to server, please set in config"})
+      }
+    }));
+  }
 
-        PubSub.publish(Topic.ConfigUpdate, {
-          key: "code",
-          val: reader.result,
+  syncTemplateCode() {
+    console.info("sync templete config", localStorage.remoteAddr);
+
+    Post(localStorage.remoteAddr, Api.ConfigList, {}).then((json) => {
+      if (json.Code !== 200) {
+        message.error(
+          "get config list fail:" + String(json.Code) + " msg: " + json.Msg
+        );
+      } else {
+        let lst = json.Body.Lst;
+
+        var counter = 0;
+
+        lst.forEach(function (element) {
+          PostGetBlob(localStorage.remoteAddr, Api.ConfigGet, element).then(
+            (file) => {
+              let reader = new FileReader();
+              reader.onload = function (ev) {
+
+                if (reader.result.byteLength === 0) {
+                  message.warning("get config byte length == 0")
+                  return
+                }
+
+                window.config.set(element, reader.result)
+                PubSub.publish(Topic.ConfigUpdate, reader.result);
+
+                counter++
+                if (counter === lst.length) {
+                  PubSub.publish(Topic.ConfigUpdateAll, {})
+                }
+              };
+
+              reader.readAsText(file.blob);
+            }
+          );
         });
-      };
-      reader.readAsText(file.blob);
+
+      }
     });
   }
 
@@ -145,7 +196,10 @@ export default class App extends React.Component {
       <dev className="site-layout-content">
         <dev className="ver">
           <Space>
-            <Tag color="geekblue">v0.1.14</Tag>
+            <Tooltip title={this.state.connectTxt}>
+              <ApiFilled  style={{ color: this.state.connectColor }} />
+            </Tooltip>
+            <Tag color="geekblue">v0.1.15</Tag>
             <Tag
               icon={<ReadOutlined />}
               color="#108ee9"

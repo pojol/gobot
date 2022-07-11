@@ -1,7 +1,7 @@
 # gobot
 Gobot is a stateful api testing tool that supports graph editing, api calling, and binding script execution.
 
-[![](https://img.shields.io/badge/%E6%96%87%E6%A1%A3-Doc-2ca5e0?style=flat&logo=github)](https://docs.gobot.fun/)
+[![](https://img.shields.io/badge/%E6%96%87%E6%A1%A3-Doc-2ca5e0?style=flat&logo=github)](https://pojol.gitee.io/gobot/#/)
 [![](https://img.shields.io/badge/Trello-Todo-2ca5e0?style=flat&logo=trello)](https://trello.com/b/8eDZ6h7n/)
 [![CI](https://github.com/pojol/gobot/actions/workflows/dockerimage.yml/badge.svg?branch=develop)](https://github.com/pojol/gobot/actions/workflows/dockerimage.yml)
 
@@ -19,13 +19,14 @@ Gobot is a stateful api testing tool that supports graph editing, api calling, a
 * Can perform `stress tests` (concurrent driving robots
 * The driver provides api calls
 * Provides a report viewing page (api statistics called by the robot
+* Provide `prefab` template code function in config
 
 # Try it out
 Try the editor out [on website](http://123.60.17.61:7777)
 
 
 ### Preview
-[![botgif1.gif](https://i.postimg.cc/q7H2wqxY/botgif1.gif)](https://postimg.cc/mPVc2bqN)
+[![botgif2.gif](https://i.postimg.cc/SNKQG50m/botgif2.gif)](https://www.bilibili.com/video/BV1sS4y1z7Dg?share_source=copy_web)
 
 ### Http request sample
 ```lua
@@ -57,7 +58,8 @@ res, err = http.post("url", reqTable)
 ### Script Module
 |||||||
 |-|-|-|-|-|-|
-|`base64`|`http`|`protobuf`|`utils`|`mongoDB`|`json`|
+|`base64`|`http`|`protobuf`|`mongoDB`|`json`|
+|`md5`|`uuid`|`random`|...|
 
 ### Report
 [![image.png](https://i.postimg.cc/4d3TTrvf/image.png)](https://postimg.cc/yJ2Gmprt)

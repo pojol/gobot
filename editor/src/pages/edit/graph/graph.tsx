@@ -9,7 +9,9 @@ import LoopNode from "./shape/shape_loop";
 import WaitNode from "./shape/shape_wait";
 import AssertNode from "./shape/shap_assert";
 
-import { NodeTy, IsScriptNode } from "../../../constant/node_type";
+/// <reference path="graph.d.ts" />
+
+import { NodeTy, IsScriptNode, IsActionNode } from "../../../constant/node_type";
 import { Button, Tooltip, Modal, Input, Badge } from "antd";
 import {
   ZoomInOutlined,
@@ -17,7 +19,6 @@ import {
   AimOutlined,
   UndoOutlined,
   CloudUploadOutlined,
-  BugOutlined,
   DeleteOutlined,
 } from "@ant-design/icons";
 
@@ -111,7 +112,25 @@ function NewStencil(graph: Graph) {
     [selectorNod, seqNod, condNod, assertNod, loopNod, waitNod],
     "group1"
   );
-  stencil.load([new ActionNode()], "group2");
+
+  let configmap = (window as any).config as Map<string, string>;
+  let prefabnods : Node[] = []
+
+  configmap.forEach((value: string, key: string) => {
+    var jobj = JSON.parse(value);
+
+    if (jobj["prefab"] === true) {
+      var nod = new ActionNode();
+      nod.setAttrs({
+        type: jobj["title"],
+        label: { text: key },
+      });
+
+      prefabnods.push(nod);
+    }
+  });
+
+  stencil.load(prefabnods, "group2");
 
   return stencil;
 }
@@ -176,8 +195,9 @@ export default class GraphView extends React.Component {
     behaviorName: "",
     platfrom: "",
     stencil: null,
-    btnDebug: "Debug",
+    btnReset: "Reset",
     btnStep: "Step",
+    stepDisabled: false,
     btnUpload: "Upload",
     stepCnt: 0,
     wflex: 0.6,
@@ -194,12 +214,12 @@ export default class GraphView extends React.Component {
 
     if (moment.locale() === "en") {
       this.setState({
-        btnDebug: "Debug",
+        btnReset: "Reset",
         btnStep: "Step",
         btnUpload: "Upload",
       });
     } else if (moment.locale() === "zh-cn") {
-      this.setState({ btnDebug: "调试", btnStep: "步进", btnUpload: "上传" });
+      this.setState({ btnReset: "重置", btnStep: "步进", btnUpload: "上传" });
     }
   }
 
@@ -322,7 +342,10 @@ export default class GraphView extends React.Component {
             return;
           }
 
-          if (source.getAttrs().type.toString() === NodeTy.Action && source.getChildCount() > 0) {
+          if (
+            IsScriptNode(source.getAttrs().type.toString()) &&
+            source.getChildCount() > 0
+          ) {
             message.warning("Action node can only mount a single node");
             graph.removeEdge(edge.id, { disconnectEdges: true });
             return;
@@ -365,9 +388,7 @@ export default class GraphView extends React.Component {
 
     graph.on("node:moved", ({ e, x, y, node, view: NodeView }) => {
       iterate(node, (nod) => {
-
         if (nod.getAttrs().type !== undefined) {
-
           var info = {
             id: nod.id,
             ty: nod.getAttrs().type.toString(),
@@ -377,13 +398,12 @@ export default class GraphView extends React.Component {
             },
             children: [],
           };
-  
+
           PubSub.publish(Topic.UpdateGraphParm, info);
         }
-
       });
 
-      this.findNode(node.id, (nod) => {});
+      this.findNode(node.id, (nod) => { });
     });
 
     graph.on("edge:mouseenter", ({ edge }) => {
@@ -426,9 +446,12 @@ export default class GraphView extends React.Component {
 
     this.reloadStencil();
 
+    PubSub.subscribe(Topic.ConfigUpdateAll, (topic: string, info: any) => {
+      this.reloadStencil();
+    });
+
     PubSub.subscribe(Topic.UpdateNodeParm, (topic: string, info: any) => {
-      console.info("update", info.parm.id, info.parm.alias, info.parm.ty);
-      if (info.parm.ty === NodeTy.Action) {
+      if (IsActionNode(info.parm.ty)) {
         this.findNode(info.parm.id, (nod) => {
           nod.setAttrs({
             label: { text: info.parm.alias },
@@ -481,11 +504,19 @@ export default class GraphView extends React.Component {
         this.findNode(info.Cur, (nod) => {
           nod.setAttrs({
             body: {
-              strokeWidth: 3,
+              strokeWidth: 4,
             },
           });
         });
+      } else {
+        // clean
+        this.cleanStepInfo();
+        this.setState({ stepDisabled: true });
+        setTimeout(() => {
+          this.setState({ stepDisabled: false });
+        }, 1000);
       }
+
       if (info.Prev !== "") {
         this.findNode(info.Prev, (nod) => {
           nod.setAttrs({
@@ -560,23 +591,30 @@ export default class GraphView extends React.Component {
 
   redrawChild(parent: any, child: any, build: boolean) {
     var nod: Node;
-    if (child.ty === NodeTy.Selector) {
-      nod = new SelectorNode({ id: child.id });
-    } else if (child.ty === NodeTy.Sequence) {
-      nod = new SequenceNode({ id: child.id });
-    } else if (child.ty === NodeTy.Condition) {
-      nod = new ConditionNode({ id: child.id });
-    } else if (child.ty === NodeTy.Action) {
-      nod = new ActionNode({ id: child.id });
-    } else if (child.ty === NodeTy.Loop) {
-      nod = new LoopNode({ id: child.id });
-    } else if (child.ty === NodeTy.Assert) {
-      nod = new AssertNode({ id: child.id });
-    } else if (child.ty === NodeTy.Wait) {
-      nod = new WaitNode({ id: child.id });
-    } else {
-      message.warn("未知的节点类型" + child.ty);
-      return;
+
+    switch (child.ty) {
+      case NodeTy.Selector:
+        nod = new SelectorNode({ id: child.id });
+        break
+      case NodeTy.Sequence:
+        nod = new SequenceNode({ id: child.id });
+        break
+      case NodeTy.Condition:
+        nod = new ConditionNode({ id: child.id });
+        break
+      case NodeTy.Loop:
+        nod = new LoopNode({ id: child.id });
+        break
+      case NodeTy.Assert:
+        nod = new AssertNode({ id: child.id });
+        break
+      case NodeTy.Wait:
+        nod = new WaitNode({ id: child.id });
+        break
+      default:
+        nod = new ActionNode({ id: child.id });
+        console.info("redraw node", child.ty)
+        nod.setAttrs({ type: child.ty });
     }
 
     nod.setPosition({
@@ -720,7 +758,7 @@ export default class GraphView extends React.Component {
     }
   };
 
-  debug = () => {};
+  debug = () => { };
 
   ClickZoomIn = () => {
     this.graph.zoomTo(this.graph.zoom() * 1.2);
@@ -781,21 +819,24 @@ export default class GraphView extends React.Component {
   };
 
   ClickStep = (e: any) => {
-    var val = 1;
-    if (e !== "") {
-      val = parseInt(e, 10);
-      if (isNaN(val)) {
-        val = 1;
+    if (this.state.stepCnt === 0) {
+      this.setState({ stepCnt: 1 });
+      PubSub.publish(Topic.Create, "");
+    } else {
+      var val = 1;
+      if (e !== "") {
+        val = parseInt(e, 10);
+        if (isNaN(val)) {
+          val = 1;
+        }
       }
-    }
 
-    PubSub.publish(Topic.Step, val);
+      PubSub.publish(Topic.Step, val);
+    }
   };
 
-  ClickDebug = () => {
-    this.setState({ stepCnt: 0 });
-    PubSub.publish(Topic.Create, "");
-
+  cleanStepInfo = () => {
+    // clean
     var nods = this.graph.getRootNodes();
     if (nods.length > 0) {
       iterate(nods[0], (nod) => {
@@ -806,6 +847,11 @@ export default class GraphView extends React.Component {
         });
       });
     }
+    this.setState({ stepCnt: 0 });
+  };
+
+  ClickReset = (e: any) => {
+    this.cleanStepInfo();
   };
 
   render() {
@@ -835,18 +881,6 @@ export default class GraphView extends React.Component {
           />
         </div>
 
-        <div className={"app-create-" + this.state.platfrom}>
-          <Tooltip placement="topRight" title={"Create a bot for debugging"}>
-            <Button
-              icon={<BugOutlined />}
-              size={"small"}
-              style={{ width: 80 }}
-              onClick={this.ClickDebug}
-            >
-              {this.state.btnDebug}
-            </Button>
-          </Tooltip>
-        </div>
         <div className={"app-step-" + this.state.platfrom}>
           <Search
             placeholder="1"
@@ -854,7 +888,19 @@ export default class GraphView extends React.Component {
             onSearch={this.ClickStep}
             style={{ width: 80 }}
             enterButton={this.state.btnStep}
+            disabled={this.state.stepDisabled}
           ></Search>
+        </div>
+        <div className={"app-reset-" + this.state.platfrom}>
+          <Button
+            icon={<UndoOutlined />}
+            size={"small"}
+            style={{ width: 80 }}
+            onClick={this.ClickReset}
+          >
+            {" "}
+            {this.state.btnReset}
+          </Button>
         </div>
         <div className={"app-upload-" + this.state.platfrom}>
           <Tooltip placement="topRight" title={"Upload the bot to the server"}>
