@@ -201,9 +201,9 @@ func (f *MysqlAdapter) ConfigRemove(name string) error {
 	f.Lock()
 	defer f.Unlock()
 
-	f.db.Delete(&TemplateConfig{}).Where("name = ?", name)
+	res := f.db.Where("name = ?", name).Delete(&TemplateConfig{})
 
-	return nil
+	return res.Error
 }
 
 func (f *MysqlAdapter) RemoveReport(id string) error {
