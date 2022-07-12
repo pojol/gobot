@@ -75,7 +75,6 @@ export default class BotConfig extends React.Component {
     PubSub.subscribe(Topic.ConfigUpdate, (topic, info) => {
 
       var oldpanes = this.state.panes;
-      console.info("info", info)
       var jobj = JSON.parse(info)
 
       oldpanes.push({
@@ -161,12 +160,13 @@ export default class BotConfig extends React.Component {
       let driveAddr = this.state.driveAddr;
 
       CheckHealth(driveAddr).then((res) => {
-        console.info("check health", res);
+        console.info("check health", driveAddr, res);
         if (res.code !== 200) {
           message.error("server connection error " + res.code.toString());
         } else {
           // reset
           window.config = new Map();
+          localStorage.remoteAddr = driveAddr
           this.setState({ panes: [] })
           this.syncConfig()
         }

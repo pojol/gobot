@@ -348,10 +348,6 @@ func (b *Bot) run_nod(nod *behavior.Tree, next bool) (bool, error) {
 		ok, err = b.run_script(nod, next)
 	}
 
-	if err != nil {
-		fmt.Println("run node err", nod.ID, nod.Ty, err.Error())
-	}
-
 	return ok, err
 }
 
