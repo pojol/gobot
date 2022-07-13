@@ -176,19 +176,19 @@ var lanMap = {
     
 
     "app.config.drive.address" : {
-        "en" : "Drive server address e.g. (http://127.0.0.1:8888",
-        "zh-cn" : "驱动端服务器地址 例 (http://127.0.0.1:8888"
+        "en" : "Drive server address e.g. http://127.0.0.1:8888",
+        "zh-cn" : "驱动端服务器地址 例 http://127.0.0.1:8888"
     },
     "app.config.drive.apply" : {
         "en" : "Apply new server address",
         "zh-cn" : "应用新的服务器地址"
     },
     "app.config.template" : {
-        "en" : "Prefab node template code",
-        "zh-cn" : "预定义节点模版代码"
+        "en" : "Prefab script node",
+        "zh-cn" : "预制脚本节点"
     },
     "app.config.theme" : {
-        "en" : "Select a theme",
+        "en" : "Select a codebox theme",
         "zh-cn" : "选择代码框风格"
     },
     "app.config.code.apply" : {

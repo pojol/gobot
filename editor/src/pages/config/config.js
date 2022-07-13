@@ -8,6 +8,7 @@ import {
   Space,
   Modal,
   Switch,
+  Collapse,
 } from "antd";
 import * as React from "react";
 import PubSub from "pubsub-js";
@@ -21,8 +22,7 @@ import "codemirror/theme/yonce.css";
 import "codemirror/theme/neo.css";
 import "codemirror/theme/zenburn.css";
 import "codemirror/mode/lua/lua";
-import { SwatchesPicker } from 'react-color';
-
+import { SwatchesPicker } from "react-color";
 
 import Topic from "../../constant/topic";
 import moment from "moment";
@@ -33,6 +33,7 @@ import { PostBlob, PostGetBlob, CheckHealth, Post } from "../../utils/request";
 const { Search } = Input;
 const { TabPane } = Tabs;
 const { Option } = Select;
+const { Panel } = Collapse;
 
 export default class BotConfig extends React.Component {
   newTabIndex = 0;
@@ -73,9 +74,8 @@ export default class BotConfig extends React.Component {
     this.setState({ panes: oldpanes });
 
     PubSub.subscribe(Topic.ConfigUpdate, (topic, info) => {
-
       var oldpanes = this.state.panes;
-      var jobj = JSON.parse(info)
+      var jobj = JSON.parse(info);
 
       oldpanes.push({
         title: jobj["title"],
@@ -86,13 +86,10 @@ export default class BotConfig extends React.Component {
       });
 
       this.setState({ panes: oldpanes });
-
     });
   }
 
-  appendPane(val) {
-
-  }
+  appendPane(val) {}
 
   isUrl(url) {
     var strRegex =
@@ -120,7 +117,7 @@ export default class BotConfig extends React.Component {
   };
 
   syncConfig = () => {
-    console.info("sync config", localStorage.remoteAddr + "/" + Api.ConfigList)
+    console.info("sync config", localStorage.remoteAddr + "/" + Api.ConfigList);
     Post(localStorage.remoteAddr, Api.ConfigList, {}).then((json) => {
       if (json.Code !== 200) {
         message.error(
@@ -128,7 +125,7 @@ export default class BotConfig extends React.Component {
         );
       } else {
         let lst = json.Body.Lst;
-        console.info("config lst", lst)
+        console.info("config lst", lst);
         var counter = 0;
 
         lst.forEach(function (element) {
@@ -136,13 +133,13 @@ export default class BotConfig extends React.Component {
             (file) => {
               let reader = new FileReader();
               reader.onload = function (ev) {
-                window.config.set(element, reader.result)
+                window.config.set(element, reader.result);
 
                 PubSub.publish(Topic.ConfigUpdate, reader.result);
 
-                counter++
+                counter++;
                 if (counter === lst.length) {
-                  PubSub.publish(Topic.ConfigUpdateAll, {})
+                  PubSub.publish(Topic.ConfigUpdateAll, {});
                 }
               };
 
@@ -150,10 +147,9 @@ export default class BotConfig extends React.Component {
             }
           );
         });
-
       }
     });
-  }
+  };
 
   onApplyDriveAddr = () => {
     if (this.isUrl(this.state.driveAddr)) {
@@ -166,9 +162,9 @@ export default class BotConfig extends React.Component {
         } else {
           // reset
           window.config = new Map();
-          localStorage.remoteAddr = driveAddr
-          this.setState({ panes: [] })
-          this.syncConfig()
+          localStorage.remoteAddr = driveAddr;
+          this.setState({ panes: [] });
+          this.syncConfig();
         }
       });
     } else {
@@ -177,19 +173,18 @@ export default class BotConfig extends React.Component {
   };
 
   onApplyCode = () => {
-
     const { panes, activeKey } = this.state;
     const selectPanes = panes.filter((pane) => pane.key === activeKey);
 
     if (selectPanes.length) {
-      let selectPane = selectPanes[0]
+      let selectPane = selectPanes[0];
 
       var templatecode = JSON.stringify(selectPane);
       var blob = new Blob([templatecode], {
         type: "application/json",
       });
 
-      console.info("apply config code", templatecode)
+      console.info("apply config code", templatecode);
 
       PostBlob(
         localStorage.remoteAddr,
@@ -203,14 +198,11 @@ export default class BotConfig extends React.Component {
           );
         } else {
           message.success("upload succ ");
-          window.config.set(activeKey, templatecode)
-          PubSub.publish(Topic.ConfigUpdateAll, {}) // reload
+          window.config.set(activeKey, templatecode);
+          PubSub.publish(Topic.ConfigUpdateAll, {}); // reload
         }
       });
-
     }
-
-
   };
 
   onBeforeChange = (editor, data, value) => {
@@ -237,27 +229,25 @@ export default class BotConfig extends React.Component {
   };
 
   add = () => {
-    this.setState({ modalConfig: "" })
+    this.setState({ modalConfig: "" });
     this.showModal();
-
   };
 
   remove = (targetKey) => {
-
     const { panes, activeKey } = this.state;
     let newActiveKey = activeKey;
     let lastIndex;
-    let find
+    let find;
     panes.forEach((pane, i) => {
       if (pane.key === targetKey) {
         lastIndex = i - 1;
-        find = true
+        find = true;
       }
     });
 
     if (!find) {
-      message.warning("unknow template : " + targetKey)
-      return
+      message.warning("unknow template : " + targetKey);
+      return;
     }
 
     const newPanes = panes.filter((pane) => pane.key !== targetKey);
@@ -269,24 +259,27 @@ export default class BotConfig extends React.Component {
       }
     }
 
-    this.setState({
-      panes: newPanes,
-      activeKey: newActiveKey,
-    }, () => {
-
-      Post(localStorage.remoteAddr, Api.ConfigRemove, { Name: targetKey }).then((json) => {
-        if (json.Code !== 200) {
-          message.error(
-            "remove template err:" + String(json.Code) + " msg: " + json.Msg
-          );
-        } else {
-          window.config.delete(targetKey)
-          PubSub.publish(Topic.ConfigUpdateAll, {}) // reload
-          message.success("remove template " + targetKey + " succ")
-        }
-      });
-
-    });
+    this.setState(
+      {
+        panes: newPanes,
+        activeKey: newActiveKey,
+      },
+      () => {
+        Post(localStorage.remoteAddr, Api.ConfigRemove, {
+          Name: targetKey,
+        }).then((json) => {
+          if (json.Code !== 200) {
+            message.error(
+              "remove template err:" + String(json.Code) + " msg: " + json.Msg
+            );
+          } else {
+            window.config.delete(targetKey);
+            PubSub.publish(Topic.ConfigUpdateAll, {}); // reload
+            message.success("remove template " + targetKey + " succ");
+          }
+        });
+      }
+    );
   };
 
   clickTheme = (e) => {
@@ -328,7 +321,11 @@ export default class BotConfig extends React.Component {
         key: modalConfig,
         prefab: switchChecked,
       });
-      this.setState({ panes: newPanes, activeKey: modalConfig, modalConfig: "" });
+      this.setState({
+        panes: newPanes,
+        activeKey: modalConfig,
+        modalConfig: "",
+      });
     }
   };
 
@@ -337,19 +334,17 @@ export default class BotConfig extends React.Component {
   };
 
   switchChange = (checked) => {
-    this.setState({ switchChecked: checked })
-  }
+    this.setState({ switchChecked: checked });
+  };
 
   handleColorChange = (color) => {
-    console.info(color.hex)
-    this.setState({color: color.hex})
-  }
+    console.info(color.hex);
+    this.setState({ color: color.hex });
+  };
 
   handleOnRemove = (value) => {
-    
-    this.remove(value)
-
-  }
+    this.remove(value);
+  };
 
   render() {
     const addr = this.state.driveAddr;
@@ -363,21 +358,20 @@ export default class BotConfig extends React.Component {
 
     return (
       <div>
-        <Divider>{lanMap["app.config.drive.address"][moment.locale()]}</Divider>
-        <Search
-          placeholder={addr}
-          onChange={this.onChangeDriveAddr}
-          enterButton={lanMap["app.config.drive.apply"][moment.locale()]}
-          onSearch={this.onApplyDriveAddr}
-        />
-        <Divider>
-          <Space>
-            {lanMap["app.config.template"][moment.locale()]}
-            <Select
-              placeholder={lanMap["app.config.theme"][moment.locale()]}
-              style={{ width: 180 }}
-              onChange={this.clickTheme}
-            >
+        <Collapse defaultActiveKey={["1", "2", "3"]}>
+          <Panel
+            header={lanMap["app.config.drive.address"][moment.locale()]}
+            key="1"
+          >
+            <Search
+              placeholder={addr}
+              onChange={this.onChangeDriveAddr}
+              enterButton={lanMap["app.config.drive.apply"][moment.locale()]}
+              onSearch={this.onApplyDriveAddr}
+            />
+          </Panel>
+          <Panel header={lanMap["app.config.theme"][moment.locale()]} key="2">
+            <Select style={{ width: 200 }} onChange={this.clickTheme}>
               <Option value="default">default</Option>
               <Option value="abcdef">abcdef</Option>
               <Option value="ayu-dark">ayu-dark</Option>
@@ -387,28 +381,38 @@ export default class BotConfig extends React.Component {
               <Option value="solarized light">solarized light</Option>
               <Option value="zenburn">zenburn</Option>
             </Select>
-          </Space>
-        </Divider>
-
-        <Tabs
-          type="editable-card"
-          onChange={this.onTableChange}
-          activeKey={activeKey}
-          onEdit={this.onTableEdit}
-        >
-          {panes.map((pane) => (
-            <TabPane tab={pane.title} key={pane.key} closable={false}>
-              <CodeMirror
-                value={pane.content}
-                options={options}
-                onBeforeChange={this.onBeforeChange}
-              />
-            </TabPane>
-          ))}
-        </Tabs>
-        <Button type="primary" onClick={this.onApplyCode}>
-          {lanMap["app.config.code.apply"][moment.locale()]}
-        </Button>
+          </Panel>
+          <Panel
+            header={lanMap["app.config.template"][moment.locale()]}
+            key="3"
+          >
+            <Tabs
+              type="editable-card"
+              onChange={this.onTableChange}
+              activeKey={activeKey}
+              onEdit={this.onTableEdit}
+            >
+              {panes.map((pane) => (
+                <TabPane tab={pane.title} key={pane.key} closable={false}>
+                  <CodeMirror
+                    value={pane.content}
+                    options={options}
+                    onBeforeChange={this.onBeforeChange}
+                  />
+                </TabPane>
+              ))}
+            </Tabs>
+            <Button type="primary" onClick={this.onApplyCode}>
+              {lanMap["app.config.code.apply"][moment.locale()]}
+            </Button>
+            <Search
+              placeholder="remove prefab script node by name"
+              allowClear
+              enterButton="Remove template"
+              onSearch={this.onApplyDriveAddr}
+            />
+          </Panel>
+        </Collapse>
 
         <Modal
           visible={isModalVisible}
@@ -420,17 +424,21 @@ export default class BotConfig extends React.Component {
             onChange={this.modalConfigChange}
             value={this.state.modalConfig}
           />
-          <Switch checkedChildren={lanMap["app.config.modal.checked"][moment.locale()]} unCheckedChildren={lanMap["app.config.modal.uncheked"][moment.locale()]} onChange={this.switchChange} defaultChecked />
-          <SwatchesPicker color={ this.state.color } onChange={ this.handleColorChange }/>
+          <Switch
+            checkedChildren={
+              lanMap["app.config.modal.checked"][moment.locale()]
+            }
+            unCheckedChildren={
+              lanMap["app.config.modal.uncheked"][moment.locale()]
+            }
+            onChange={this.switchChange}
+            defaultChecked
+          />
+          <SwatchesPicker
+            color={this.state.color}
+            onChange={this.handleColorChange}
+          />
         </Modal>
-
-    <Search
-      placeholder="input remove template name"
-      allowClear
-      enterButton="Remove template"
-      size="large"
-      onSearch={this.handleOnRemove}
-    />
       </div>
     );
   }
