@@ -1,6 +1,7 @@
 ## v0.1.15
 * feature 
     - 为lua代码提供fmt功能
+    - 为 prefab 留出足够的空间，将change移动到和meta窗口重叠显示
 * fix
     - 删除配置文件不能成功的错误
 

@@ -201,7 +201,6 @@ export default class GraphView extends React.Component {
     btnUpload: "Upload",
     stepCnt: 0,
     wflex: 0.6,
-    hflex: 0.7,
   };
 
   reloadStencil() {
@@ -227,7 +226,7 @@ export default class GraphView extends React.Component {
     // 新建画布
     const graph = new Graph({
       width: document.body.clientWidth * this.state.wflex - stencilWidth,
-      height: document.body.clientHeight * this.state.hflex - 2,
+      height: document.body.clientHeight-62,
       container: this.container,
       highlighting: {
         magnetAvailable: magnetAvailabilityHighlighter,
@@ -581,12 +580,11 @@ export default class GraphView extends React.Component {
   // 重绘视口
   resizeViewpoint() {
     var width = document.body.clientWidth * this.state.wflex - stencilWidth;
-    var height = document.body.clientHeight * this.state.hflex - 2;
 
-    console.info("resize panel", this.state.wflex, this.state.hflex);
+    console.info("resize panel", this.state.wflex, document.body.clientHeight);
 
     // 设置视口大小
-    this.graph.resize(width, height);
+    this.graph.resize(width, document.body.clientHeight-62);
   }
 
   redrawChild(parent: any, child: any, build: boolean) {
