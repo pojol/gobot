@@ -25,6 +25,7 @@ const Topic = {
 
     // config
     ConfigUpdate : "topic_config_update",   // 配置项更新
+    SystemConfigUpdate : "topic_system_config_update",
     ConfigUpdateAll : "topic_config_update_all",
     BotsUpdate : "topic_bots_update",
     RunningUpdate: "topic_running_update",

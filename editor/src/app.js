@@ -260,6 +260,7 @@ export default class App extends React.Component {
           onOk={this.modalHandleOk}
           onCancel={this.modalHandleCancel}
         >
+          <Tag>e.g. http://123.60.17.61:8888 (Sample driver server address</Tag>
           <Input
             placeholder={lanMap["app.main.modal.input"][moment.locale()]}
             onChange={this.modalConfigChange}

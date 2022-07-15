@@ -70,6 +70,7 @@ func (h *HttpModule) doRequest(L *lua.LState, method string, url string, options
 	req, err := http.NewRequest(method, url, nil)
 	var reqlen, reslen int
 	if err != nil {
+		fmt.Printf("new request %v err : %v\n", method, err.Error())
 		return nil, err
 	}
 
@@ -116,6 +117,7 @@ func (h *HttpModule) doRequest(L *lua.LState, method string, url string, options
 			case lua.LString:
 				duration, err = time.ParseDuration(string(reqTimeout))
 				if err != nil {
+					fmt.Printf("parse timeout err %v\n", err.Error())
 					return nil, err
 				}
 			}
@@ -151,6 +153,7 @@ func (h *HttpModule) doRequest(L *lua.LState, method string, url string, options
 
 	res, err := h.do(req)
 	if err != nil {
+		err = fmt.Errorf("client do err : %v", err.Error())
 		inf.Err = err.Error()
 		h.repolst = append(h.repolst, inf)
 		return nil, err
@@ -158,8 +161,8 @@ func (h *HttpModule) doRequest(L *lua.LState, method string, url string, options
 
 	defer res.Body.Close()
 	body, err := ioutil.ReadAll(res.Body)
-
 	if err != nil {
+		err = fmt.Errorf("read body err : %v", err.Error())
 		inf.Err = err.Error()
 		h.repolst = append(h.repolst, inf)
 		return nil, err

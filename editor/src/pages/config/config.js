@@ -1,14 +1,13 @@
 import {
   Input,
-  Divider,
   Button,
   Tabs,
   message,
   Select,
-  Space,
   Modal,
   Switch,
   Collapse,
+  InputNumber,
 } from "antd";
 import * as React from "react";
 import PubSub from "pubsub-js";
@@ -48,6 +47,8 @@ export default class BotConfig extends React.Component {
       isModalVisible: false,
       modalConfig: "",
       switchChecked: true,
+      reportsize: 0,
+      channelsize: 0,
     };
   }
 
@@ -55,23 +56,9 @@ export default class BotConfig extends React.Component {
     var remote = localStorage.remoteAddr;
     if (remote !== undefined && remote !== "") {
       this.setState({ driveAddr: remote });
+
+      this.syncConfig()
     }
-
-    let configmap = window.config;
-    var oldpanes = this.state.panes;
-
-    configmap.forEach(function (value, key) {
-      var jobj = JSON.parse(value);
-      oldpanes.push({
-        title: key,
-        content: jobj["content"],
-        key: key,
-        closable: jobj["closable"],
-        prefab: jobj["prefab"],
-        color: "#fff",
-      });
-    });
-    this.setState({ panes: oldpanes });
 
     PubSub.subscribe(Topic.ConfigUpdate, (topic, info) => {
       var oldpanes = this.state.panes;
@@ -87,9 +74,19 @@ export default class BotConfig extends React.Component {
 
       this.setState({ panes: oldpanes });
     });
+
+    PubSub.subscribe(Topic.SystemConfigUpdate, (topic, info) => {
+      let jobj = JSON.parse(info)
+
+      let reportsize = jobj["reportsize"]
+      let channelsize = jobj["channelsize"]
+
+      this.setState({ reportsize: reportsize, channelsize: channelsize })
+      console.info("system config", reportsize, channelsize)
+    })
   }
 
-  appendPane(val) {}
+  appendPane(val) { }
 
   isUrl(url) {
     var strRegex =
@@ -117,7 +114,6 @@ export default class BotConfig extends React.Component {
   };
 
   syncConfig = () => {
-    console.info("sync config", localStorage.remoteAddr + "/" + Api.ConfigList);
     Post(localStorage.remoteAddr, Api.ConfigList, {}).then((json) => {
       if (json.Code !== 200) {
         message.error(
@@ -125,7 +121,6 @@ export default class BotConfig extends React.Component {
         );
       } else {
         let lst = json.Body.Lst;
-        console.info("config lst", lst);
         var counter = 0;
 
         lst.forEach(function (element) {
@@ -133,9 +128,14 @@ export default class BotConfig extends React.Component {
             (file) => {
               let reader = new FileReader();
               reader.onload = function (ev) {
-                window.config.set(element, reader.result);
 
-                PubSub.publish(Topic.ConfigUpdate, reader.result);
+                console.info("load config", element)
+                if (element !== "system") {
+                  window.config.set(element, reader.result);
+                  PubSub.publish(Topic.ConfigUpdate, reader.result);
+                } else {
+                  PubSub.publish(Topic.SystemConfigUpdate, reader.result)
+                }
 
                 counter++;
                 if (counter === lst.length) {
@@ -300,17 +300,23 @@ export default class BotConfig extends React.Component {
     this.setState({ isModalVisible: false });
     if (this.state.modalConfig !== "") {
       const { panes, modalConfig, switchChecked } = this.state;
-      var repeat = false;
+      var out = false;
 
       panes.forEach(function (value) {
         if (value.title === modalConfig) {
           message.warning("Duplicate titles cannot be used!");
-          repeat = true;
-          return;
+          out = true;
+          throw new Error("break")
+        }
+
+        if (modalConfig === "system") {
+          message.warning("Can't use keywords `system`");
+          out = true;
+          throw new Error("break")
         }
       });
 
-      if (repeat) {
+      if (out) {
         return;
       }
 
@@ -346,6 +352,41 @@ export default class BotConfig extends React.Component {
     this.remove(value);
   };
 
+  changeChannelSize = (val) => {
+    this.setState({ channelsize: val })
+  }
+
+  onClickSubmit = () => {
+
+    var templatecode = JSON.stringify({
+      "channelsize":this.state.channelsize,
+      "reportsize":this.state.reportsize,
+    });
+    var blob = new Blob([templatecode], {
+      type: "application/json",
+    });
+
+    PostBlob(
+      localStorage.remoteAddr,
+      Api.ConfigUpload,
+      "system",
+      blob
+    ).then((json) => {
+      if (json.Code !== 200) {
+        message.error(
+          "upload config fail:" + String(json.Code) + " msg: " + json.Msg
+        );
+      } else {
+        message.success("upload succ ");
+      }
+    });
+  }
+
+  changeReportSize = (val) => {
+    this.setState({ reportsize: val })
+  }
+
+
   render() {
     const addr = this.state.driveAddr;
     const options = {
@@ -358,7 +399,7 @@ export default class BotConfig extends React.Component {
 
     return (
       <div>
-        <Collapse defaultActiveKey={["1", "2", "3"]}>
+        <Collapse defaultActiveKey={["1", "2", "3", "4", "5"]}>
           <Panel
             header={lanMap["app.config.drive.address"][moment.locale()]}
             key="1"
@@ -408,9 +449,42 @@ export default class BotConfig extends React.Component {
             <Search
               placeholder="remove prefab script node by name"
               allowClear
-              enterButton="Remove template"
-              onSearch={this.onApplyDriveAddr}
+              enterButton="Remove prefab"
+              onSearch={this.handleOnRemove}
             />
+          </Panel>
+          <Panel
+            header={lanMap["app.config.channelsize"][moment.locale()]}
+            key="4"
+          >
+            <Input.Group compact>
+              <InputNumber
+                style={{
+                  width: 'calc(100% - 200px)',
+                }}
+                min={1}
+                value={this.state.channelsize}
+                onChange={this.changeChannelSize}
+              />
+              <Button type="primary" onClick={this.onClickSubmit} >Submit</Button>
+            </Input.Group>
+          </Panel>
+          <Panel
+            header={lanMap["app.config.reportsize"][moment.locale()]}
+            key="5"
+          >
+            <Input.Group compact>
+              <InputNumber
+                style={{
+                  width: 'calc(100% - 200px)',
+                }}
+                min={1}
+                max={10000}
+                value={this.state.reportsize}
+                onChange={this.changeReportSize}
+              />
+              <Button type="primary" onClick={this.onClickSubmit}>Submit</Button>
+            </Input.Group>
           </Panel>
         </Collapse>
 

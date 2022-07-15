@@ -75,5 +75,5 @@ func (pl *lStatePool) Shutdown() {
 
 // Global LState pool
 var luaPool = &lStatePool{
-	saved: make([]*botState, 0, 64),
+	saved: make([]*botState, 0, 128),
 }

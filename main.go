@@ -47,8 +47,6 @@ func initFlag() {
 	flag.BoolVar(&help, "h", false, "this help")
 
 	flag.BoolVar(&dbmode, "no_database", false, "Run in local mode")
-	flag.IntVar(&reportLimit, "report_limit", 100, "Report retention limit")
-	flag.IntVar(&batchSize, "batch_size", 1024, "The maximum number of robots in parallel")
 	flag.StringVar(&scriptPath, "script_path", "script/", "Path to bot script")
 }
 
@@ -71,8 +69,6 @@ func main() {
 
 	_, err := factory.Create(
 		factory.WithNoDatabase(dbmode),
-		factory.WithReportLimit(reportLimit),
-		factory.WithScriptPath(scriptPath),
 		factory.WithBatchSize(batchSize),
 	)
 	if err != nil {

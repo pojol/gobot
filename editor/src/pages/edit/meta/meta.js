@@ -33,6 +33,7 @@ export default class Blackboard extends React.Component {
 
     PubSub.subscribe(Topic.UpdateChange, (topic, info) => {
       try {
+        info.msg+= "\n\n"
         this.setState({ context: info.msg });
       } catch (err) {
         message.warning("blackboard parse info err");

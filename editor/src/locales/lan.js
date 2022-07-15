@@ -206,7 +206,15 @@ var lanMap = {
     "app.config.modal.input" : {
         "en" : "Enter script name",
         "zh-cn" : "输入脚本名称"
-    }
+    },
+    "app.config.channelsize" : {
+        "en" : "The number of concurrent robots",
+        "zh-cn" : "机器人并发数量"
+    },
+    "app.config.reportsize" : {
+        "en" : "Number of reports archived",
+        "zh-cn" : "报告存档数量"
+    },
 }
 
 export default lanMap

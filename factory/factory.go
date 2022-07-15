@@ -41,7 +41,7 @@ func Create(opts ...Option) (*Factory, error) {
 		Interrupt:   true,
 		ReportLimit: 100,
 		ScriptPath:  "script/",
-		batchSize:   2048,
+		batchSize:   512,
 		NoDBMode:    false,
 	}
 
