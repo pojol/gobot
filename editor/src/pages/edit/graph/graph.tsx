@@ -114,7 +114,7 @@ function NewStencil(graph: Graph) {
   );
 
   let configmap = (window as any).config as Map<string, string>;
-  let prefabnods : Node[] = []
+  let prefabnods: Node[] = []
 
   configmap.forEach((value: string, key: string) => {
     var jobj = JSON.parse(value);
@@ -226,7 +226,7 @@ export default class GraphView extends React.Component {
     // 新建画布
     const graph = new Graph({
       width: document.body.clientWidth * this.state.wflex - stencilWidth,
-      height: document.body.clientHeight-62,
+      height: document.body.clientHeight - 62,
       container: this.container,
       highlighting: {
         magnetAvailable: magnetAvailabilityHighlighter,
@@ -312,6 +312,14 @@ export default class GraphView extends React.Component {
     graph.bindKey("ctrl+z", () => {
       PubSub.publish(Topic.Undo, {});
     });
+
+    graph.bindKey(["f10", "command+f10", "ctrl+f10"], () => {
+      this.ClickStep("1")
+    })
+
+    graph.bindKey(["f11", "command+f11", "ctrl+f11"], () => {
+      this.ClickReset(1)
+    })
 
     graph.on("edge:removed", ({ edge, options }) => {
       if (!options.ui) {
@@ -584,7 +592,7 @@ export default class GraphView extends React.Component {
     console.info("resize panel", this.state.wflex, document.body.clientHeight);
 
     // 设置视口大小
-    this.graph.resize(width, document.body.clientHeight-62);
+    this.graph.resize(width, document.body.clientHeight - 62);
   }
 
   redrawChild(parent: any, child: any, build: boolean) {
@@ -853,6 +861,7 @@ export default class GraphView extends React.Component {
   };
 
   render() {
+
     return (
       <div className="app">
         <div className="app-stencil" ref={this.refStencil} />
@@ -880,32 +889,33 @@ export default class GraphView extends React.Component {
         </div>
 
         <div className={"app-step-" + this.state.platfrom}>
-          <Search
-            placeholder="1"
-            size={"small"}
-            onSearch={this.ClickStep}
-            style={{ width: 80 }}
-            enterButton={this.state.btnStep}
-            disabled={this.state.stepDisabled}
-          ></Search>
+          <Tooltip placement="topRight" title={"Run to the next node [F10]"}>
+            <Search
+              placeholder="1"
+              onSearch={this.ClickStep}
+              style={{ width: 100 }}
+              enterButton={this.state.btnStep}
+              disabled={this.state.stepDisabled}
+            ></Search>
+          </Tooltip>
         </div>
         <div className={"app-reset-" + this.state.platfrom}>
-          <Button
-            icon={<UndoOutlined />}
-            size={"small"}
-            style={{ width: 80 }}
-            onClick={this.ClickReset}
-          >
-            {" "}
-            {this.state.btnReset}
-          </Button>
+          <Tooltip placement="topRight" title={"Reset to starting point [F11]"}>
+            <Button
+              icon={<UndoOutlined />}
+              style={{ width: 100 }}
+              onClick={this.ClickReset}
+            >
+              {" "}
+              {this.state.btnReset}
+            </Button>
+          </Tooltip>
         </div>
         <div className={"app-upload-" + this.state.platfrom}>
           <Tooltip placement="topRight" title={"Upload the bot to the server"}>
             <Button
               icon={<CloudUploadOutlined />}
-              size={"small"}
-              style={{ width: 80 }}
+              style={{ width: 100 }}
               onClick={this.ClickUpload}
             >
               {" "}

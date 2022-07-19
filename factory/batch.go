@@ -32,9 +32,9 @@ type Batch struct {
 	BatchNum  int32
 	Errors    int32
 
-	tree          *behavior.Tree
-	path          string
-	globalScripte []string
+	tree         *behavior.Tree
+	path         string
+	globalScript []string
 
 	bots    map[string]*bot.Bot
 	colorer *color.Color
@@ -59,21 +59,21 @@ func CreateBatch(scriptPath, name string, num int, tbyt []byte, batchsize int32,
 	}
 
 	b := &Batch{
-		ID:            uuid.New().String(),
-		Name:          name,
-		path:          scriptPath,
-		globalScripte: globalScript,
-		CurNum:        0,
-		BatchNum:      batchsize,
-		TotalNum:      int32(num),
-		bwg:           utils.NewSizeWaitGroup(int(batchsize)),
-		exit:          utils.NewSwitch(),
-		tree:          tree,
-		pipeline:      make(chan *bot.Bot, num),
-		done:          make(chan interface{}, 1),
-		BatchDone:     make(chan interface{}, 1),
-		botDoneCh:     make(chan string),
-		botErrCh:      make(chan bot.ErrInfo),
+		ID:           uuid.New().String(),
+		Name:         name,
+		path:         scriptPath,
+		globalScript: globalScript,
+		CurNum:       0,
+		BatchNum:     batchsize,
+		TotalNum:     int32(num),
+		bwg:          utils.NewSizeWaitGroup(int(batchsize)),
+		exit:         utils.NewSwitch(),
+		tree:         tree,
+		pipeline:     make(chan *bot.Bot, num),
+		done:         make(chan interface{}, 1),
+		BatchDone:    make(chan interface{}, 1),
+		botDoneCh:    make(chan string),
+		botErrCh:     make(chan bot.ErrInfo),
 
 		colorer: color.New(),
 		bots:    make(map[string]*bot.Bot),
@@ -174,7 +174,7 @@ func (b *Batch) run() {
 			}
 			for i := 0; i < int(curbatchnum); i++ {
 				atomic.AddInt32(&b.cursorNum, 1)
-				b.pipeline <- bot.NewWithBehaviorTree(b.path, b.tree, b.Name, atomic.LoadInt32(&b.cursorNum), b.globalScripte)
+				b.pipeline <- bot.NewWithBehaviorTree(b.path, b.tree, b.Name, atomic.LoadInt32(&b.cursorNum), b.globalScript)
 			}
 
 			b.bwg.Wait()

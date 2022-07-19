@@ -1,9 +1,7 @@
 package bot
 
 import (
-	"net/http"
 	"sync"
-	"time"
 
 	script "github.com/pojol/gobot/script/module"
 	lua "github.com/yuin/gopher-lua"
@@ -43,7 +41,7 @@ func (pl *lStatePool) New() *botState {
 
 	b := &botState{
 		L:         lua.NewState(),
-		httpMod:   script.NewHttpModule(&http.Client{Timeout: time.Second * 120}),
+		httpMod:   script.NewHttpModule(),
 		protoMod:  &script.ProtoModule{},
 		utilsMod:  &script.UtilsModule{},
 		base64Mod: &script.Base64Module{},

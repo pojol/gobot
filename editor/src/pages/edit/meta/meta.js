@@ -33,7 +33,7 @@ export default class Blackboard extends React.Component {
 
     PubSub.subscribe(Topic.UpdateChange, (topic, info) => {
       try {
-        info.msg+= "\n\n"
+        info.msg += "\n\n"
         this.setState({ context: info.msg });
       } catch (err) {
         message.warning("blackboard parse info err");
@@ -60,25 +60,6 @@ export default class Blackboard extends React.Component {
           <TabPane
             tab={
               <span>
-                <CodeOutlined />
-                Context
-              </span>
-            }
-            key="1"
-          >
-            <Editor
-          tag="pre"
-          //https://github.com/yabwe/medium-editor/blob/d113a74437fda6f1cbd5f146b0f2c46288b118ea/OPTIONS.md#disableediting
-          options={{
-            placeholder: { text: "", hideOnClick: true },
-            disableEditing: true,
-          }}
-          text={this.state.context}
-        />
-          </TabPane>
-          <TabPane
-            tab={
-              <span>
                 <FileSearchOutlined />
                 Meta
               </span>
@@ -95,6 +76,26 @@ export default class Blackboard extends React.Component {
               add={false}
             ></ReactJson>
           </TabPane>
+          <TabPane
+            tab={
+              <span>
+                <CodeOutlined />
+                Response
+              </span>
+            }
+            key="1"
+          >
+            <Editor
+              tag="pre"
+              //https://github.com/yabwe/medium-editor/blob/d113a74437fda6f1cbd5f146b0f2c46288b118ea/OPTIONS.md#disableediting
+              options={{
+                placeholder: { text: "", hideOnClick: true },
+                disableEditing: true,
+              }}
+              text={this.state.context}
+            />
+          </TabPane>
+
         </Tabs>
       </div>
     );

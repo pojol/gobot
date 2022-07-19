@@ -25,16 +25,20 @@ type Report struct {
 
 type HttpModule struct {
 	repolst []Report
-	do      func(req *http.Request) (*http.Response, error)
+	client  *http.Client
 }
 
-func NewHttpModule(client *http.Client) *HttpModule {
-	return NewHttpModuleWithDo(client.Do)
+func NewHttpModule() *HttpModule {
+	client := &http.Client{
+		Timeout: time.Second * 120,
+	}
+
+	return NewHttpModuleWithDo(client)
 }
 
-func NewHttpModuleWithDo(do func(req *http.Request) (*http.Response, error)) *HttpModule {
+func NewHttpModuleWithDo(client *http.Client) *HttpModule {
 	return &HttpModule{
-		do: do,
+		client: client,
 	}
 }
 
@@ -151,7 +155,7 @@ func (h *HttpModule) doRequest(L *lua.LState, method string, url string, options
 		ReqBody: reqlen,
 	}
 
-	res, err := h.do(req)
+	res, err := h.client.Do(req)
 	if err != nil {
 		err = fmt.Errorf("client do err : %v", err.Error())
 		inf.Err = err.Error()
