@@ -61,7 +61,7 @@ func mockServer() *httptest.Server {
 
 func TestProtobufEncode(t *testing.T) {
 	protomod := ProtoModule{}
-	httpmod := NewHttpModule(&http.Client{})
+	httpmod := NewHttpModule()
 	L := lua.NewState()
 	defer L.Close()
 
@@ -112,7 +112,7 @@ func TestProtobufEncode(t *testing.T) {
 
 func TestProtobufDecode(t *testing.T) {
 	protomod := ProtoModule{}
-	httpmod := NewHttpModule(&http.Client{})
+	httpmod := NewHttpModule()
 	L := lua.NewState()
 	defer L.Close()
 

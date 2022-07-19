@@ -5,9 +5,8 @@ import { Controlled as CodeMirror } from "react-codemirror2";
 import "codemirror/lib/codemirror.css";
 import "codemirror/theme/solarized.css";
 import "codemirror/mode/lua/lua";
-
-
 import { Input, Button, message, Space } from "antd";
+import {formatText} from 'lua-fmt';
 
 import moment from "moment";
 import lanMap from "../../../locales/lan";
@@ -51,19 +50,19 @@ export default class ActionTab extends React.Component {
 
     PubSub.subscribe(Topic.EditPanelCodeMetaResize, (topic, flex) => {
       this.setState({ hflex: flex }, () => {
-        this.redraw()
+        this.redraw();
       });
     });
 
     PubSub.subscribe(Topic.EditPanelEditCodeResize, (topic, flex) => {
       this.setState({ wflex: 1 - flex }, () => {
-        this.redraw()
+        this.redraw();
       });
     });
 
     PubSub.subscribe(Topic.WindowResize, () => {
-      this.redraw()
-    })
+      this.redraw();
+    });
   }
 
   redraw() {
@@ -102,21 +101,23 @@ export default class ActionTab extends React.Component {
 
   onDidMount = (editor) => {
     this.setState({ editor: editor, wflex: 0.4, hflex: 0.5 }, () => {
-
-      var width, height
-      var dimensions = this.props.dimensions
+      var width, height;
+      var dimensions = this.props.dimensions;
 
       if (dimensions.width !== "100%") {
-        width = dimensions.width - 2
-        height = dimensions.height - 38
+        width = dimensions.width - 2;
+        height = dimensions.height - 38;
 
-        this.setState({ wflex: dimensions.width / document.body.clientWidth, hflex: dimensions.height / document.body.clientHeight })
+        this.setState({
+          wflex: dimensions.width / document.body.clientWidth,
+          hflex: dimensions.height / document.body.clientHeight,
+        });
       } else {
         width = document.body.clientWidth * this.state.wflex - 2;
         height = document.body.clientHeight * this.state.hflex - 38;
       }
 
-      console.info("action init", dimensions, "w", width, "h", height)
+      console.info("action init", dimensions, "w", width, "h", height);
       this.state.editor.setSize(
         width.toString() + "px",
         height.toString() + "px"
@@ -126,6 +127,11 @@ export default class ActionTab extends React.Component {
 
   onChangeAlias = (e) => {
     this.setState({ defaultAlias: e.target.value });
+  };
+
+  clickFmtBtn = (e) => {
+    let old = this.state.code;
+    this.setState({code:formatText(old)})
   };
 
   render() {
@@ -154,6 +160,7 @@ export default class ActionTab extends React.Component {
             onChange={this.onChangeAlias}
             onSearch={this.applyClick}
           />
+          <Button onClick={this.clickFmtBtn}>fmt</Button>
           <Button type="dashed">{nod.id}</Button>
         </Space>{" "}
       </div>

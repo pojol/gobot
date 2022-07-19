@@ -151,7 +151,6 @@ export default class BotList extends React.Component {
         }
 
         if (selectedTag.length > 0) {
-          console.info("select filter tags", selectedTag, "bot tags", bots[i].Tags)
           if (tags.length > 0) {
             if (!intags(tags)) {
               continue
@@ -247,6 +246,7 @@ export default class BotList extends React.Component {
     this.setState({ botLst: [] });
     this.setState({ batchLst: [] });
 
+    console.info(localStorage.remoteAddr+"/"+ Api.FileList)
     Post(localStorage.remoteAddr, Api.FileList, {}).then((json) => {
       if (json.Code !== 200) {
         message.error("run fail:" + String(json.Code) + " msg: " + json.Msg);

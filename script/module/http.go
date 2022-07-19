@@ -25,16 +25,20 @@ type Report struct {
 
 type HttpModule struct {
 	repolst []Report
-	do      func(req *http.Request) (*http.Response, error)
+	client  *http.Client
 }
 
-func NewHttpModule(client *http.Client) *HttpModule {
-	return NewHttpModuleWithDo(client.Do)
+func NewHttpModule() *HttpModule {
+	client := &http.Client{
+		Timeout: time.Second * 120,
+	}
+
+	return NewHttpModuleWithDo(client)
 }
 
-func NewHttpModuleWithDo(do func(req *http.Request) (*http.Response, error)) *HttpModule {
+func NewHttpModuleWithDo(client *http.Client) *HttpModule {
 	return &HttpModule{
-		do: do,
+		client: client,
 	}
 }
 
@@ -70,6 +74,7 @@ func (h *HttpModule) doRequest(L *lua.LState, method string, url string, options
 	req, err := http.NewRequest(method, url, nil)
 	var reqlen, reslen int
 	if err != nil {
+		fmt.Printf("new request %v err : %v\n", method, err.Error())
 		return nil, err
 	}
 
@@ -116,6 +121,7 @@ func (h *HttpModule) doRequest(L *lua.LState, method string, url string, options
 			case lua.LString:
 				duration, err = time.ParseDuration(string(reqTimeout))
 				if err != nil {
+					fmt.Printf("parse timeout err %v\n", err.Error())
 					return nil, err
 				}
 			}
@@ -149,8 +155,9 @@ func (h *HttpModule) doRequest(L *lua.LState, method string, url string, options
 		ReqBody: reqlen,
 	}
 
-	res, err := h.do(req)
+	res, err := h.client.Do(req)
 	if err != nil {
+		err = fmt.Errorf("client do err : %v", err.Error())
 		inf.Err = err.Error()
 		h.repolst = append(h.repolst, inf)
 		return nil, err
@@ -158,8 +165,8 @@ func (h *HttpModule) doRequest(L *lua.LState, method string, url string, options
 
 	defer res.Body.Close()
 	body, err := ioutil.ReadAll(res.Body)
-
 	if err != nil {
+		err = fmt.Errorf("read body err : %v", err.Error())
 		inf.Err = err.Error()
 		h.repolst = append(h.repolst, inf)
 		return nil, err

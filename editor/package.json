@@ -10,6 +10,7 @@
     "codemirror": "^5.62.3",
     "electron-is-dev": "^2.0.0",
     "electron-packager": "^15.4.0",
+    "lua-fmt": "^2.6.0",
     "object-to-xml": "^2.0.0",
     "pubsub-js": "^1.9.3",
     "rc-tween-one": "^3.0.3",

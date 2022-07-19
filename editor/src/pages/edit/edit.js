@@ -4,7 +4,6 @@ import PubSub from "pubsub-js";
 import GraphView from "./graph/graph";
 import Edit from "./node/edit_tab";
 import Blackboard from "./meta/meta";
-import ChangeView from "./change/change";
 
 import Topic from "../../constant/topic";
 
@@ -50,14 +49,8 @@ export default class EditPlane extends React.Component {
         <ReflexContainer orientation="vertical">
           <ReflexElement className="left-pane" flex={0.6} minSize="200" onStopResize={this.onResizeGraphPane}>
             <ReflexContainer orientation="horizontal">
-              <ReflexElement className="left-pane" minSize="100" flex={0.7} >
+              <ReflexElement className="left-pane" minSize="300" flex={1} >
                 <GraphView />
-              </ReflexElement>
-
-              <ReflexSplitter />
-
-              <ReflexElement className="left-pane" minSize="100" flex={0.3} propagateDimensions={true} onStopResize={this.onResizeChangePane}>
-                <ChangeView />
               </ReflexElement>
             </ReflexContainer>
           </ReflexElement>

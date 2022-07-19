@@ -24,7 +24,9 @@ function parseChildren(childrenNodes, children) {
     } else if (children.nodeName === "wait") {
             nod.wait = parseInt(children.childNodes[0].nodeValue)
         } else if (children.nodeName === "code") {
-            nod.code = children.childNodes[0].nodeValue
+            if (children.childNodes.length) {
+                nod.code = children.childNodes[0].nodeValue
+            }
         } else if (children.nodeName === "alias") {
             if (children.childNodes && children.childNodes.length) {
                 nod.alias = children.childNodes[0].nodeValue
