@@ -21,15 +21,21 @@
   
 }
 
-.app-zoom {
+.app-zoom-win {
+  position: absolute;
+  z-index: 10;
+  width: 32px;
+  height: 100px;
+  right:18px;
+}
+
+.app-zoom-mac {
   position: absolute;
   z-index: 10;
   width: 32px;
   height: 100px;
   right:3px;
 }
-
-
 
 .app-step-mac {
   position: absolute;
@@ -55,21 +61,21 @@
 .app-step-win {
   position: absolute;
   z-index: 10;
-  right:213px;
+  right:230px;
   bottom:18px;
 }
 
 .app-reset-win {
   position: absolute;
   z-index: 10;
-  right:105px;
+  right:120px;
   bottom:18px;
 }
 
 .app-upload-win {
   position: absolute;
   z-index: 10;
-  right:23px;
+  right:18px;
   bottom:18px;
 }
 

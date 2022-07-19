@@ -11,8 +11,12 @@ import AssertNode from "./shape/shap_assert";
 
 /// <reference path="graph.d.ts" />
 
-import { NodeTy, IsScriptNode, IsActionNode } from "../../../constant/node_type";
-import { Button, Tooltip, Modal, Input, Badge } from "antd";
+import {
+  NodeTy,
+  IsScriptNode,
+  IsActionNode,
+} from "../../../constant/node_type";
+import { Button, Tooltip, Modal, Input, Badge, InputNumber } from "antd";
 import {
   ZoomInOutlined,
   ZoomOutOutlined,
@@ -31,7 +35,6 @@ import moment from "moment";
 import Constant from "../../../constant/constant";
 
 const { Dnd, Stencil } = Addon;
-const { Search } = Input;
 
 // 高亮
 const magnetAvailabilityHighlighter = {
@@ -114,7 +117,7 @@ function NewStencil(graph: Graph) {
   );
 
   let configmap = (window as any).config as Map<string, string>;
-  let prefabnods: Node[] = []
+  let prefabnods: Node[] = [];
 
   configmap.forEach((value: string, key: string) => {
     var jobj = JSON.parse(value);
@@ -200,6 +203,8 @@ export default class GraphView extends React.Component {
     stepDisabled: false,
     btnUpload: "Upload",
     stepCnt: 0,
+    stepVal: 0,
+    debugCreate:false,
     wflex: 0.6,
   };
 
@@ -314,12 +319,12 @@ export default class GraphView extends React.Component {
     });
 
     graph.bindKey(["f10", "command+f10", "ctrl+f10"], () => {
-      this.ClickStep("1")
-    })
+      this.ClickStep(1);
+    });
 
     graph.bindKey(["f11", "command+f11", "ctrl+f11"], () => {
-      this.ClickReset(1)
-    })
+      this.ClickReset(1);
+    });
 
     graph.on("edge:removed", ({ edge, options }) => {
       if (!options.ui) {
@@ -410,7 +415,7 @@ export default class GraphView extends React.Component {
         }
       });
 
-      this.findNode(node.id, (nod) => { });
+      this.findNode(node.id, (nod) => {});
     });
 
     graph.on("edge:mouseenter", ({ edge }) => {
@@ -601,25 +606,25 @@ export default class GraphView extends React.Component {
     switch (child.ty) {
       case NodeTy.Selector:
         nod = new SelectorNode({ id: child.id });
-        break
+        break;
       case NodeTy.Sequence:
         nod = new SequenceNode({ id: child.id });
-        break
+        break;
       case NodeTy.Condition:
         nod = new ConditionNode({ id: child.id });
-        break
+        break;
       case NodeTy.Loop:
         nod = new LoopNode({ id: child.id });
-        break
+        break;
       case NodeTy.Assert:
         nod = new AssertNode({ id: child.id });
-        break
+        break;
       case NodeTy.Wait:
         nod = new WaitNode({ id: child.id });
-        break
+        break;
       default:
         nod = new ActionNode({ id: child.id });
-        console.info("redraw node", child.ty)
+        console.info("redraw node", child.ty);
         nod.setAttrs({ type: child.ty });
     }
 
@@ -764,7 +769,7 @@ export default class GraphView extends React.Component {
     }
   };
 
-  debug = () => { };
+  debug = () => {};
 
   ClickZoomIn = () => {
     this.graph.zoomTo(this.graph.zoom() * 1.2);
@@ -825,19 +830,17 @@ export default class GraphView extends React.Component {
   };
 
   ClickStep = (e: any) => {
-    if (this.state.stepCnt === 0) {
-      this.setState({ stepCnt: 1 });
+    if (this.state.debugCreate === false) {
+      this.setState({ debugCreate: true });
       PubSub.publish(Topic.Create, "");
     } else {
-      var val = 1;
-      if (e !== "") {
-        val = parseInt(e, 10);
-        if (isNaN(val)) {
-          val = 1;
-        }
-      }
 
-      PubSub.publish(Topic.Step, val);
+      let step = this.state.stepVal
+      if (step <= 0) {
+        step = 1
+      }
+      console.info("step", step)
+      PubSub.publish(Topic.Step, step);
     }
   };
 
@@ -853,7 +856,11 @@ export default class GraphView extends React.Component {
         });
       });
     }
-    this.setState({ stepCnt: 0 });
+    this.setState({ debugCreate: false, stepCnt: 0 });
+  };
+
+  onStepValueChange = (e: any) => {
+    this.setState({stepVal:e})
   };
 
   ClickReset = (e: any) => {
@@ -861,12 +868,11 @@ export default class GraphView extends React.Component {
   };
 
   render() {
-
     return (
       <div className="app">
         <div className="app-stencil" ref={this.refStencil} />
         <div className="app-content" ref={this.refContainer} />
-        <div className="app-zoom">
+        <div className={"app-zoom-" + this.state.platfrom}>
           <Tooltip placement="leftTop" title="ZoomIn">
             <Button icon={<ZoomInOutlined />} onClick={this.ClickZoomIn} />
           </Tooltip>
@@ -890,13 +896,21 @@ export default class GraphView extends React.Component {
 
         <div className={"app-step-" + this.state.platfrom}>
           <Tooltip placement="topRight" title={"Run to the next node [F10]"}>
-            <Search
-              placeholder="1"
-              onSearch={this.ClickStep}
-              style={{ width: 100 }}
-              enterButton={this.state.btnStep}
+            <InputNumber
+              min={1}
+              max={1000}
+              defaultValue={1}
+              style={{ width: 60 }}
+              onChange={this.onStepValueChange}
+            />
+            <Button
+              type="primary"
+              style={{ width: 70 }}
+              onClick={this.ClickStep}
               disabled={this.state.stepDisabled}
-            ></Search>
+            >
+              {this.state.btnStep}
+            </Button>
           </Tooltip>
         </div>
         <div className={"app-reset-" + this.state.platfrom}>
