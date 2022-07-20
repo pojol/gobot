@@ -19,10 +19,9 @@ import (
 var (
 	help bool
 
-	dbmode      bool
-	reportLimit int
-	batchSize   int
-	scriptPath  string
+	dbmode     bool
+	batchSize  int
+	scriptPath string
 )
 
 const (

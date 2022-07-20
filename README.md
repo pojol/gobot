@@ -1,6 +1,7 @@
 # gobot
 Gobot is a stateful api testing tool that supports graph editing, api calling, and binding script execution.
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/pojol/gobot)](https://goreportcard.com/report/github.com/pojol/gobot)
 [![](https://img.shields.io/badge/%E6%96%87%E6%A1%A3-Doc-2ca5e0?style=flat&logo=github)](https://pojol.gitee.io/gobot/#/)
 [![](https://img.shields.io/badge/Trello-Todo-2ca5e0?style=flat&logo=trello)](https://trello.com/b/8eDZ6h7n/)
 [![CI](https://github.com/pojol/gobot/actions/workflows/dockerimage.yml/badge.svg?branch=develop)](https://github.com/pojol/gobot/actions/workflows/dockerimage.yml)
@@ -21,45 +22,20 @@ Gobot is a stateful api testing tool that supports graph editing, api calling, a
 * Provides a report viewing page (api statistics called by the robot
 * Provide `prefab` template code function in config
 
-# Try it out
-Try the editor out [on website](http://123.60.17.61:7777)
-
-
-### Preview
-[![botgif2.gif](https://i.postimg.cc/SNKQG50m/botgif2.gif)](https://www.bilibili.com/video/BV1sS4y1z7Dg?share_source=copy_web)
-
-### Http request sample
-```lua
--- lua script
-local http = require("http")
-
-reqTable = {
-    body = {},       -- post body
-    timeout = "10s", -- http timeout
-    headers = {},    -- http headers
-}
-
--- .post .put .get
-res, err = http.post("url", reqTable)
-
---[[
-    res                 -- userdata
-    res["body"]         -- http response body
-    res["body_size"]    -- body size
-    res["headers"]      -- http headers
-    res["cookies"]      -- http cookies
-    res["status_code"]  -- http status code
-    res["url"]          -- request url
-
-    err                 -- error message
-]]--
-```
-
 ### Script Module
 |||||||
 |-|-|-|-|-|-|
 |`base64`|`http`|`protobuf`|`mongoDB`|`json`|
 |`md5`|`uuid`|`random`|...|
+
+# Try it out
+Try the editor out [on website](http://123.60.17.61:7777)
+
+### Preview
+[![botgif2.gif](https://i.postimg.cc/SNKQG50m/botgif2.gif)](https://www.bilibili.com/video/BV1sS4y1z7Dg?share_source=copy_web)
+
+
+
 
 ### Report
 [![image.png](https://i.postimg.cc/4d3TTrvf/image.png)](https://postimg.cc/yJ2Gmprt)
