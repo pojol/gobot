@@ -29,8 +29,13 @@ type HttpModule struct {
 }
 
 func NewHttpModule() *HttpModule {
+	transport := &http.Transport{
+		ForceAttemptHTTP2: false,
+	}
+
 	client := &http.Client{
-		Timeout: time.Second * 120,
+		Transport: transport,
+		Timeout:   time.Second * 120,
 	}
 
 	return NewHttpModuleWithDo(client)
@@ -71,6 +76,7 @@ func (h *HttpModule) request(L *lua.LState) int {
 }
 
 func (h *HttpModule) doRequest(L *lua.LState, method string, url string, options *lua.LTable) (*lua.LUserData, error) {
+
 	req, err := http.NewRequest(method, url, nil)
 	var reqlen, reslen int
 	if err != nil {
