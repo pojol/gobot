@@ -7,8 +7,11 @@ import { CodeOutlined, FileSearchOutlined } from "@ant-design/icons";
 import Topic from "../../../constant/topic";
 import Editor from "react-medium-editor";
 
+import "./meta.css";
+
 require("medium-editor/dist/css/medium-editor.css");
 require("medium-editor/dist/css/themes/default.css");
+
 
 const { TabPane } = Tabs;
 
@@ -55,7 +58,7 @@ export default class Blackboard extends React.Component {
 
   render() {
     return (
-      <div>
+      <div className="scroll-patch">
         <Tabs defaultActiveKey="1">
           <TabPane
             tab={
