@@ -25,9 +25,6 @@ type Parm struct {
 	// Interrupt 当card遇到err的时候是否中断整个程序 （默认为否
 	Interrupt bool
 
-	// batchSize 批次大小（用于控制goroutine的并发数量（默认1024
-	batchSize int
-
 	// 脚本路径
 	ScriptPath string
 
@@ -50,12 +47,6 @@ func WithScriptPath(path string) Option {
 func WithReportLimit(limit int) Option {
 	return func(c *Parm) {
 		c.ReportLimit = limit
-	}
-}
-
-func WithBatchSize(batchSize int) Option {
-	return func(c *Parm) {
-		c.batchSize = batchSize
 	}
 }
 

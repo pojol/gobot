@@ -41,7 +41,6 @@ func Create(opts ...Option) (*Factory, error) {
 		Interrupt:   true,
 		ReportLimit: 100,
 		ScriptPath:  "script/",
-		batchSize:   512,
 		NoDBMode:    false,
 	}
 
@@ -120,7 +119,6 @@ func (f *Factory) GetBehaviors() []database.BehaviorInfo {
 }
 
 func (f *Factory) UploadConfig(name string, dat []byte) error {
-
 	return f.db.ConfigUpset(name, dat)
 }
 
@@ -168,7 +166,9 @@ func (f *Factory) CreateTask(name string, num int) *Batch {
 		f.lru.Put(name, info.Dat)
 	}
 
-	return CreateBatch(f.parm.ScriptPath, name, num, dat, int32(f.parm.batchSize), f.GetGlobalScript())
+	sysinfo := database.GetSystemParm(f.db)
+
+	return CreateBatch(f.parm.ScriptPath, name, num, dat, sysinfo.ChannelSize, f.GetGlobalScript())
 }
 
 func (f *Factory) CreateDebugBot(name string, fbyt []byte) *bot.Bot {

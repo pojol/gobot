@@ -15,6 +15,11 @@ type CodeTemplate struct {
 	Lst []CodeTemplateInfo
 }
 
+type SystemInfo struct {
+	ChannelSize int32 `json:"channelsize"`
+	ReportSize  int32 `json:"reportsize"`
+}
+
 func GetGlobalScript(db IDatabase) []string {
 	globalScript := []string{}
 
@@ -25,6 +30,10 @@ func GetGlobalScript(db IDatabase) []string {
 	}
 
 	for _, v := range cfglst {
+
+		if v == "system" { // 关键字
+			continue
+		}
 
 		cfg, err := db.ConfigFind(v)
 		if err != nil {
@@ -45,4 +54,27 @@ func GetGlobalScript(db IDatabase) []string {
 	}
 
 	return globalScript
+}
+
+func GetSystemParm(db IDatabase) SystemInfo {
+
+	sysinfo := SystemInfo{
+		ReportSize:  100,
+		ChannelSize: 128,
+	}
+
+	cfg, err := db.ConfigFind("system")
+	if err != nil {
+		fmt.Println("find config err", err.Error())
+		goto EXT
+	}
+
+	err = json.Unmarshal(cfg.Dat, &sysinfo)
+	if err != nil {
+		fmt.Println("config unmarshal err", err.Error())
+		goto EXT
+	}
+
+EXT:
+	return sysinfo
 }

@@ -20,7 +20,6 @@ var (
 	help bool
 
 	dbmode     bool
-	batchSize  int
 	scriptPath string
 )
 
@@ -68,7 +67,6 @@ func main() {
 
 	_, err := factory.Create(
 		factory.WithNoDatabase(dbmode),
-		factory.WithBatchSize(batchSize),
 	)
 	if err != nil {
 		panic(err)
