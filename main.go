@@ -19,10 +19,8 @@ import (
 var (
 	help bool
 
-	dbmode      bool
-	reportLimit int
-	batchSize   int
-	scriptPath  string
+	dbmode     bool
+	scriptPath string
 )
 
 const (
@@ -69,7 +67,6 @@ func main() {
 
 	_, err := factory.Create(
 		factory.WithNoDatabase(dbmode),
-		factory.WithBatchSize(batchSize),
 	)
 	if err != nil {
 		panic(err)

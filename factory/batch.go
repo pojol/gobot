@@ -79,7 +79,7 @@ func CreateBatch(scriptPath, name string, num int, tbyt []byte, batchsize int32,
 		bots:    make(map[string]*bot.Bot),
 	}
 
-	fmt.Println("create", num, "bot")
+	fmt.Println("create", num, "bot", "pipeline size", batchsize)
 	go b.loop()
 	b.run()
 

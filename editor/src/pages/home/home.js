@@ -10,6 +10,7 @@ import {
   Col,
   Row,
   Select,
+  Pagination,
 } from "antd";
 import React, { } from 'react';
 import {
@@ -246,7 +247,7 @@ export default class BotList extends React.Component {
     this.setState({ botLst: [] });
     this.setState({ batchLst: [] });
 
-    console.info(localStorage.remoteAddr+"/"+ Api.FileList)
+    console.info(localStorage.remoteAddr + "/" + Api.FileList)
     Post(localStorage.remoteAddr, Api.FileList, {}).then((json) => {
       if (json.Code !== 200) {
         message.error("run fail:" + String(json.Code) + " msg: " + json.Msg);
@@ -479,14 +480,17 @@ export default class BotList extends React.Component {
 
 
         </div>
-
         <Table
           rowSelection={{
             type: "checkbox",
             ...this.rowSelection,
           }}
           columns={this.state.columns}
-          dataSource={this.state.botLst} />
+          dataSource={this.state.botLst}
+          pagination={{
+            position: ['bottomCenter'],
+          }}
+        />
 
       </div>
     );

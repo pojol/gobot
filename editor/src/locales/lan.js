@@ -15,8 +15,8 @@ var lanMap = {
         "zh-cn" : "编辑"
     },
     "app.tab.home" : {
-        "en" : "Home",
-        "zh-cn" : "主页"
+        "en" : "List",
+        "zh-cn" : "列表"
     },
     "app.tab.running" : {
         "en" : "Running",

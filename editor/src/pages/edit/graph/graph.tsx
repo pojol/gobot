@@ -204,7 +204,7 @@ export default class GraphView extends React.Component {
     btnUpload: "Upload",
     stepCnt: 0,
     stepVal: 0,
-    debugCreate:false,
+    debugCreate: false,
     wflex: 0.6,
   };
 
@@ -304,6 +304,7 @@ export default class GraphView extends React.Component {
     });
 
     var root = new RootNode();
+    root.setPosition((graph.getGraphArea().width / 2) + (stencilWidth / 2), (graph.getGraphArea().height / 2) - 200)
     graph.addNode(root);
 
     PubSub.publish(Topic.NodeAdd, [GetNodInfo(root), true, false]);
@@ -415,7 +416,7 @@ export default class GraphView extends React.Component {
         }
       });
 
-      this.findNode(node.id, (nod) => {});
+      this.findNode(node.id, (nod) => { });
     });
 
     graph.on("edge:mouseenter", ({ edge }) => {
@@ -447,7 +448,7 @@ export default class GraphView extends React.Component {
     // 调整画布大小
     graph.resizeGraph(Constant.GraphWidth, Constant.GraphHeight);
     // 居中显示
-    graph.centerContent();
+    //graph.centerContent();
 
     this.dnd = new Dnd({
       target: graph,
@@ -769,7 +770,7 @@ export default class GraphView extends React.Component {
     }
   };
 
-  debug = () => {};
+  debug = () => { };
 
   ClickZoomIn = () => {
     this.graph.zoomTo(this.graph.zoom() * 1.2);
@@ -860,7 +861,7 @@ export default class GraphView extends React.Component {
   };
 
   onStepValueChange = (e: any) => {
-    this.setState({stepVal:e})
+    this.setState({ stepVal: e })
   };
 
   ClickReset = (e: any) => {
