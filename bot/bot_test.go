@@ -251,7 +251,7 @@ func TestLoad(t *testing.T) {
 	assert.Equal(t, err, nil)
 
 	bot = NewWithBehaviorTree("../script/", tree, "test", 1, []string{})
-	defer bot.Close()
+	defer bot.close()
 
 	for i := 0; i < 20; i++ {
 		bot.RunStep()
@@ -259,6 +259,29 @@ func TestLoad(t *testing.T) {
 	}
 
 	t.Fail()
+}
+
+func TestRuning(t *testing.T) {
+	var tree *behavior.Tree
+	var bot *Bot
+
+	tree, err := behavior.New([]byte(compose))
+	assert.Equal(t, err, nil)
+
+	bot = NewWithBehaviorTree("../script/", tree, "test", 1, []string{})
+
+	donech := make(chan string)
+	errch := make(chan ErrInfo)
+	bot.Run(donech, errch, Batch)
+
+	select {
+	case <-donech:
+		fmt.Println("running succ")
+		return
+	case e := <-errch:
+		fmt.Println("running", e.Err)
+		t.Fail()
+	}
 }
 
 func TestPool(t *testing.T) {
@@ -269,7 +292,7 @@ func TestPool(t *testing.T) {
 	assert.Equal(t, err, nil)
 
 	bot = NewWithBehaviorTree("../script/", tree, "test", 1, []string{})
-	defer bot.Close()
+	defer bot.close()
 
 	err = bot.RunByBlock()
 

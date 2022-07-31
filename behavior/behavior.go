@@ -12,6 +12,7 @@ const (
 	WAIT      = "WaitNode"
 	LOOP      = "LoopNode"
 	ASSERT    = "AssertNode"
+	PARALLEL  = "ParallelNode"
 )
 
 type Tree struct {

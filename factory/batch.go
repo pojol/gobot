@@ -113,8 +113,6 @@ func (b *Batch) pop(id string) {
 	b.bwg.Done()
 	atomic.AddInt32(&b.CurNum, 1)
 
-	b.bots[id].Close()
-
 	if atomic.LoadInt32(&b.CurNum) >= b.TotalNum {
 		b.done <- 1
 	}
@@ -131,9 +129,9 @@ func (b *Batch) loop() {
 
 	for {
 		select {
-		case bot := <-b.pipeline:
-			b.push(bot)
-			bot.Run(b.botDoneCh, b.botErrCh)
+		case botptr := <-b.pipeline:
+			b.push(botptr)
+			botptr.Run(b.botDoneCh, b.botErrCh, bot.Batch)
 		case id := <-b.botDoneCh:
 			if _, ok := b.bots[id]; ok {
 				b.pushReport(b.rep, b.bots[id])
@@ -261,9 +259,9 @@ func (b *Batch) record() {
 	b.rep.Dura = duration
 
 	if b.rep.ErrNum != 0 {
-		b.colorer.Printf("robot : %d req count : %d duration : %s qps : %d errors : %v\n", b.rep.BotNum, b.rep.ReqNum, duration, qps, utils.Red(b.rep.ErrNum))
+		b.colorer.Printf("robot : %d match to %d APIs req count : %d duration : %s qps : %d errors : %v\n", b.rep.BotNum, len(b.rep.UrlMap), b.rep.ReqNum, duration, qps, utils.Red(b.rep.ErrNum))
 	} else {
-		fmt.Printf("robot : %d req count : %d duration : %s qps : %d errors : %d\n", b.rep.BotNum, b.rep.ReqNum, duration, qps, b.rep.ErrNum)
+		fmt.Printf("robot : %d match to %d APIs req count : %d duration : %s qps : %d errors : %d\n", b.rep.BotNum, len(b.rep.UrlMap), b.rep.ReqNum, duration, qps, b.rep.ErrNum)
 	}
 
 }

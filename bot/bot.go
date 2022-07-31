@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"strconv"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/pojol/gobot/behavior"
@@ -19,19 +20,52 @@ type ErrInfo struct {
 	Err error
 }
 
+type RunMode int
+
+const (
+	Debug RunMode = 1 + iota
+	Batch
+)
+
+type Thread struct {
+	num   int
+	preid string
+	err   error
+}
+
+type Transaction struct {
+	cur    *behavior.Tree
+	parent *behavior.Tree
+	thread *Thread
+}
+
 type Bot struct {
 	id   string
 	name string
+	mode RunMode
 
 	preloadErr string
 
 	tree *behavior.Tree
-
 	prev *behavior.Tree
 	cur  *behavior.Tree
 
+	threadnum     int32
+	threadDoneNum int32
+
+	threadChan chan *Transaction
+	waitChan   chan *Transaction
+	waitLst    []*Transaction
+	next       *utils.Switch
+
+	threadLst  []*Thread
+	threadDone chan interface{}
+
 	sync.Mutex
 	bs *botState
+
+	donech chan<- string
+	errch  chan<- ErrInfo
 
 	runtimeErr string
 }
@@ -113,11 +147,15 @@ func (b *Bot) GetPrevNodeID() string {
 func NewWithBehaviorTree(path string, bt *behavior.Tree, name string, idx int32, globalScript []string) *Bot {
 
 	bot := &Bot{
-		id:   strconv.Itoa(int(idx)),
-		tree: bt,
-		cur:  bt,
-		bs:   luaPool.Get(),
-		name: name,
+		id:         strconv.Itoa(int(idx)),
+		tree:       bt,
+		cur:        bt,
+		bs:         luaPool.Get(),
+		name:       name,
+		threadChan: make(chan *Transaction, 1),
+		waitChan:   make(chan *Transaction, 1),
+		threadDone: make(chan interface{}),
+		next:       utils.NewSwitch(),
 	}
 
 	rand.Seed(time.Now().UnixNano())
@@ -149,245 +187,366 @@ func NewWithBehaviorTree(path string, bt *behavior.Tree, name string, idx int32,
 	return bot
 }
 
-func (b *Bot) run_selector(nod *behavior.Tree, next bool) (bool, error) {
+func (b *Bot) fillThreadInfo(t *Thread) {
 
-	if next {
-		for k := range nod.Children {
-			ok, err := b.run_nod(nod.Children[k], true)
+	b.Lock()
 
-			if err != nil {
-				return false, err
+	var f bool
+
+	for k, v := range b.threadLst {
+		if v.num == t.num {
+			b.threadLst[k] = t
+			f = true
+			break
+		}
+	}
+
+	if !f {
+		b.threadLst = append(b.threadLst, t)
+	}
+
+	fmt.Println("thread info ===>")
+	for _, v := range b.threadLst {
+		fmt.Println("\tthread"+strconv.Itoa(v.num), v.preid, v.err)
+	}
+
+	b.Unlock()
+
+}
+
+func (b *Bot) do(t *Transaction) bool {
+	var ok bool
+
+	switch t.cur.Ty {
+	case behavior.SELETE:
+		ok = b.strategySelete(t)
+	case behavior.SEQUENCE:
+		ok = b.strategySequence(t)
+	case behavior.CONDITION:
+		ok = b.strategyCondition(t)
+	case behavior.WAIT:
+		ok = b.strategyWait(t)
+	case behavior.LOOP:
+		ok = b.strategyLoop(t)
+	case behavior.ASSERT:
+		ok = b.strategyAssert(t)
+	case behavior.PARALLEL:
+		ok = b.strategyParallel(t)
+	case behavior.ROOT:
+		ok = true
+	default:
+		ok = b.strategyScript(t)
+	}
+
+	return ok
+}
+
+func (b *Bot) strategySelete(t *Transaction) bool {
+
+	batch := func() bool {
+		for k := range t.cur.Children {
+
+			tr := &Transaction{
+				cur:    t.cur.Children[k],
+				parent: t.cur,
+				thread: &Thread{
+					num:   t.thread.num,
+					preid: t.cur.ID,
+				},
+			}
+			ok := b.do(tr)
+			b.fillThreadInfo(tr.thread)
+
+			if tr.thread.err != nil {
+				return false
 			}
 
 			if ok {
 				break
 			}
+
 		}
+		return true
 	}
 
-	return true, nil
+	step := func() bool {
+
+		tr := &Transaction{
+			cur:    t.parent.Next(),
+			parent: t.parent,
+			thread: &Thread{
+				num:   t.thread.num,
+				preid: t.cur.ID,
+			},
+		}
+		b.waitChan <- tr
+
+		return true
+	}
+
+	if b.mode == Batch {
+		return batch()
+	}
+	return step()
 }
 
-func (b *Bot) run_assert(nod *behavior.Tree, next bool) (bool, error) {
+func (b *Bot) strategySequence(t *Transaction) bool {
 
-	err := DoString(b.bs.L, nod.Code)
-	if err != nil {
-		return false, err
-	}
+	for k := range t.cur.Children {
 
-	err = b.bs.L.CallByParam(lua.P{
-		Fn:      b.bs.L.GetGlobal("execute"),
-		NRet:    1,
-		Protect: true,
-	})
-	if err != nil {
-		return false, err
-	}
-	v := b.bs.L.Get(-1)
-	b.bs.L.Pop(1)
-
-	if lua.LVAsBool(v) {
-		if next {
-			err = b.run_children(nod, nod.Children)
-			if err != nil {
-				return false, err
-			}
+		tr := &Transaction{
+			cur: t.cur.Children[k],
+			thread: &Thread{
+				num:   t.thread.num,
+				preid: t.cur.ID,
+			},
 		}
 
-		return true, nil
-	}
+		ok := b.do(tr)
+		b.fillThreadInfo(tr.thread)
 
-	return false, fmt.Errorf("node %v assert failed", nod.ID)
-}
-
-func (b *Bot) run_sequence(nod *behavior.Tree, next bool) (bool, error) {
-	if next {
-		for k := range nod.Children {
-			ok, err := b.run_nod(nod.Children[k], true)
-
-			if err != nil {
-				return false, err
-			}
-
-			if !ok {
-				break
-			}
-		}
-	}
-
-	return true, nil
-}
-
-func (b *Bot) run_condition(nod *behavior.Tree, next bool) (bool, error) {
-
-	err := DoString(b.bs.L, nod.Code)
-	if err != nil {
-		return false, err
-	}
-
-	err = b.bs.L.CallByParam(lua.P{
-		Fn:      b.bs.L.GetGlobal("execute"),
-		NRet:    1,
-		Protect: true,
-	})
-	if err != nil {
-		return false, err
-	}
-
-	v := b.bs.L.Get(-1)
-	b.bs.L.Pop(1)
-
-	if lua.LVAsBool(v) {
-		if next {
-			err = b.run_children(nod, nod.Children)
-			if err != nil {
-				return false, err
-			}
+		if tr.thread.err != nil {
+			return false
 		}
 
-		return true, nil
-	}
-
-	return false, nil
-}
-
-func (b *Bot) run_wait(nod *behavior.Tree, next bool) (bool, error) {
-	time.Sleep(time.Millisecond * time.Duration(nod.Wait))
-
-	if next {
-		err := b.run_children(nod, nod.Children)
-		if err != nil {
-			return false, err
-		}
-	}
-
-	return true, nil
-}
-
-func (b *Bot) run_loop(nod *behavior.Tree, next bool) (bool, error) {
-
-	var err error
-
-	if nod.Loop == 0 {
-		for {
-			if next {
-				err = b.run_children(nod, nod.Children)
-				if err != nil {
-					goto ext
-				}
-			}
-			time.Sleep(time.Millisecond)
-		}
-	} else {
-
-		if next {
-			for i := 0; i < int(nod.Loop); i++ {
-				err = b.run_children(nod, nod.Children)
-				if err != nil {
-					goto ext
-				}
-			}
-		}
-	}
-
-ext:
-	return true, err
-}
-
-func (b *Bot) run_script(nod *behavior.Tree, next bool) (bool, error) {
-
-	err := DoString(b.bs.L, nod.Code)
-	if err != nil {
-		return false, err
-	}
-
-	err = b.bs.L.CallByParam(lua.P{
-		Fn:      b.bs.L.GetGlobal("execute"),
-		NRet:    1,
-		Protect: true,
-	})
-	if err != nil {
-		return false, err
-	}
-	//v := b.bs.L.Get(-1)
-	b.bs.L.Pop(1)
-
-	// mergo.MergeWithOverwrite(&b.metadata, t)
-
-	if next {
-		err = b.run_children(nod, nod.Children)
-		if err != nil {
-			return false, err
-		}
-	}
-
-	return true, nil
-}
-
-func (b *Bot) run_nod(nod *behavior.Tree, next bool) (bool, error) {
-
-	var ok bool
-	var err error
-
-	switch nod.Ty {
-	case behavior.SELETE:
-		ok, err = b.run_selector(nod, next)
-	case behavior.SEQUENCE:
-		ok, err = b.run_sequence(nod, next)
-	case behavior.CONDITION:
-		ok, err = b.run_condition(nod, next)
-	case behavior.WAIT:
-		ok, _ = b.run_wait(nod, next)
-	case behavior.LOOP:
-		ok, err = b.run_loop(nod, next)
-	case behavior.ASSERT:
-		ok, err = b.run_assert(nod, next)
-	case behavior.ROOT:
-		ok = true
-	default:
-		ok, err = b.run_script(nod, next)
-	}
-
-	return ok, err
-}
-
-func (b *Bot) run_children(parent *behavior.Tree, children []*behavior.Tree) error {
-	var err error
-
-	for k := range children {
-		_, err = b.run_nod(children[k], true)
-		if err != nil {
+		if !ok {
 			break
 		}
 	}
 
-	return err
+	return true
 }
 
-func (b *Bot) Run(doneCh chan string, errch chan ErrInfo) {
+func (b *Bot) strategyParallel(t *Transaction) bool {
 
-	go func() {
+	for k := range t.cur.Children {
 
-		defer func() {
-			if err := recover(); err != nil {
-				errch <- ErrInfo{
-					ID:  b.id,
-					Err: err.(error),
-				}
-			}
-		}()
+		tr := &Transaction{
+			cur: t.cur.Children[k],
+			thread: &Thread{
+				num:   int(atomic.AddInt32(&b.threadnum, 1)),
+				preid: t.cur.ID,
+			},
+		}
+		b.fillThreadInfo(tr.thread)
 
-		err := b.run_children(b.tree, b.tree.Children)
-		if err != nil {
-			errch <- ErrInfo{
-				ID:  b.id,
-				Err: err,
-			}
-			return
+		b.threadChan <- tr
+
+	}
+
+	return true
+}
+
+func (b *Bot) strategyWait(t *Transaction) bool {
+
+	time.Sleep(time.Millisecond * time.Duration(t.cur.Wait))
+
+	if b.mode == Batch && len(t.cur.Children) != 0 {
+
+		tr := &Transaction{
+			cur: t.cur.Children[0],
+			thread: &Thread{
+				num:   t.thread.num,
+				preid: t.cur.ID,
+			},
+		}
+		b.fillThreadInfo(tr.thread)
+		b.do(t)
+
+	}
+
+	return true
+}
+
+func (b *Bot) strategyCondition(t *Transaction) bool {
+
+	tr := &Transaction{
+		thread: &Thread{
+			num:   t.thread.num,
+			preid: t.cur.ID,
+		},
+	}
+	defer b.fillThreadInfo(tr.thread)
+
+	err := DoString(b.bs.L, t.cur.Code)
+	if err != nil {
+		tr.thread.err = err
+		return false
+	}
+
+	err = b.bs.L.CallByParam(lua.P{
+		Fn:      b.bs.L.GetGlobal("execute"),
+		NRet:    1,
+		Protect: true,
+	})
+	if err != nil {
+		t.thread.err = err
+		return false
+	}
+
+	v := b.bs.L.Get(-1)
+	b.bs.L.Pop(1)
+
+	if lua.LVAsBool(v) {
+		if b.mode == Batch && len(t.cur.Children) != 0 {
+
+			tr.cur = t.cur.Children[0]
+			b.do(tr)
 		}
 
-		doneCh <- b.id
-	}()
+	}
+
+	return true
+}
+
+func (b *Bot) strategyLoop(t *Transaction) bool {
+
+	for i := 0; i < int(t.cur.Loop); i++ {
+		if b.mode == Batch && len(t.cur.Children) != 0 {
+			tr := &Transaction{
+				cur: t.cur.Children[0],
+				thread: &Thread{
+					num:   t.thread.num,
+					preid: t.cur.ID,
+				},
+			}
+			b.fillThreadInfo(tr.thread)
+			b.do(tr)
+		}
+	}
+
+	return true
+}
+
+func (b *Bot) strategyScript(t *Transaction) bool {
+
+	tr := &Transaction{
+		thread: &Thread{
+			num:   t.thread.num,
+			preid: t.cur.ID,
+		},
+	}
+	defer b.fillThreadInfo(tr.thread)
+
+	tr.thread.err = DoString(b.bs.L, t.cur.Code)
+	if tr.thread.err != nil {
+		return false
+	}
+
+	tr.thread.err = b.bs.L.CallByParam(lua.P{
+		Fn:      b.bs.L.GetGlobal("execute"),
+		NRet:    1,
+		Protect: true,
+	})
+	if tr.thread.err != nil {
+		return false
+	}
+
+	b.bs.L.Pop(1)
+
+	if b.mode == Batch && len(t.cur.Children) != 0 {
+		tr.cur = t.cur.Children[0]
+		b.do(tr)
+	}
+
+	return true
+}
+
+func (b *Bot) strategyAssert(t *Transaction) bool {
+
+	tr := &Transaction{
+		thread: &Thread{
+			num:   t.thread.num,
+			preid: t.cur.ID,
+		},
+	}
+
+	tr.thread.err = DoString(b.bs.L, t.cur.Code)
+	if tr.thread.err != nil {
+		return false
+	}
+
+	tr.thread.err = b.bs.L.CallByParam(lua.P{
+		Fn:      b.bs.L.GetGlobal("execute"),
+		NRet:    1,
+		Protect: true,
+	})
+	if tr.thread.err != nil {
+		return false
+	}
+	v := b.bs.L.Get(-1)
+	b.bs.L.Pop(1)
+
+	if lua.LVAsBool(v) {
+
+		if len(t.cur.Children) != 0 {
+			tr.cur = t.cur.Children[0]
+			b.fillThreadInfo(tr.thread)
+			b.do(tr)
+		}
+
+		return true
+	}
+
+	return false
+}
+
+func (b *Bot) loop() {
+
+	for {
+
+		select {
+		case t := <-b.threadChan:
+			b.do(t)
+			if t.thread.err != nil {
+				b.errch <- ErrInfo{ID: b.id, Err: t.thread.err}
+				goto ext
+			}
+
+			b.threadDoneNum++
+
+			if atomic.LoadInt32(&b.threadnum) == b.threadDoneNum {
+				b.donech <- b.id
+				goto ext
+			}
+		case w := <-b.waitChan:
+			b.waitLst = append(b.waitLst, w)
+		case <-b.next.Done():
+			if b.next.HasOpend() {
+
+				for _, v := range b.waitLst {
+					b.threadChan <- v
+				}
+
+				b.waitLst = b.waitLst[:0]
+			}
+			b.next.Close()
+		}
+
+	}
+
+ext:
+	// cleanup
+	b.close()
+}
+
+func (b *Bot) Run(doneCh chan<- string, errch chan<- ErrInfo, mode RunMode) {
+
+	b.donech = doneCh
+	b.errch = errch
+	b.mode = mode
+
+	tn := int(atomic.AddInt32(&b.threadnum, 1))
+
+	go b.loop()
+
+	if len(b.tree.Children) != 0 {
+		b.threadChan <- &Transaction{
+			cur:    b.cur.Children[0],
+			parent: b.cur,
+			thread: &Thread{num: tn, preid: b.tree.ID},
+		}
+	}
 
 }
 
@@ -399,19 +558,24 @@ func (b *Bot) RunByBlock() error {
 		}
 	}()
 
-	err := b.run_children(b.tree, b.tree.Children)
-	if err != nil {
-		fmt.Println("run block err", err)
-	}
+	donech := make(chan string)
+	errch := make(chan ErrInfo)
 
-	return err
+	b.Run(donech, errch, Batch)
+
+	select {
+	case <-donech:
+		return nil
+	case e := <-errch:
+		return e.Err
+	}
 }
 
 func (b *Bot) GetReport() []script.Report {
 	return b.bs.httpMod.GetReport()
 }
 
-func (b *Bot) Close() {
+func (b *Bot) close() {
 	b.bs.L.DoString(`
 		meta = {}
 	`)
@@ -428,44 +592,46 @@ const (
 )
 
 func (b *Bot) RunStep() State {
-	if b.cur == nil {
-		return SEnd
-	}
 
-	b.Lock()
-	defer b.Unlock()
-
-	f, err := b.run_nod(b.cur, false)
-	if err != nil {
-		b.runtimeErr = err.Error()
-		return SBreak
-	}
-	// step 中使用了sleep之后，会有多个goroutine执行接下来的程序
-	// fmt.Println(goid.Get())
-
-	if b.cur.Parent != nil {
-		if b.cur.Parent.Ty == behavior.SELETE && f {
-			b.cur.Parent.Step = len(b.cur.Parent.Children)
+	/*
+		if b.cur == nil {
+			return SEnd
 		}
-	}
 
-	if f && b.cur.Step < len(b.cur.Children) {
-		// down
-		nextidx := b.cur.Step
-		b.cur.Step++
-		next := b.cur.Children[nextidx]
-		b.prev = b.cur
-		b.cur = next
-	} else {
-		// right
+		b.Lock()
+		defer b.Unlock()
+
+		f, err := b.run_nod(b.cur, false)
+		if err != nil {
+			b.runtimeErr = err.Error()
+			return SBreak
+		}
+		// step 中使用了sleep之后，会有多个goroutine执行接下来的程序
+		// fmt.Println(goid.Get())
+
 		if b.cur.Parent != nil {
-			b.prev = b.cur
-			b.cur = b.cur.Parent.Next()
-			if b.cur == nil {
-				return SEnd
+			if b.cur.Parent.Ty == behavior.SELETE && f {
+				b.cur.Parent.Step = len(b.cur.Parent.Children)
 			}
 		}
-	}
 
+		if f && b.cur.Step < len(b.cur.Children) {
+			// down
+			nextidx := b.cur.Step
+			b.cur.Step++
+			next := b.cur.Children[nextidx]
+			b.prev = b.cur
+			b.cur = next
+		} else {
+			// right
+			if b.cur.Parent != nil {
+				b.prev = b.cur
+				b.cur = b.cur.Parent.Next()
+				if b.cur == nil {
+					return SEnd
+				}
+			}
+		}
+	*/
 	return SSucc
 }

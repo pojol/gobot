@@ -197,7 +197,6 @@ func (f *Factory) FindBot(botid string) *bot.Bot {
 func (f *Factory) RmvBot(botid string) {
 
 	if _, ok := f.debugBots[botid]; ok {
-		f.debugBots[botid].Close()
 		delete(f.debugBots, botid)
 	}
 
