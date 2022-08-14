@@ -21,15 +21,26 @@ type Tree struct {
 
 	Wait int32 `xml:"wait"`
 
-	Loop     int32 `xml:"loop"`
-	LoopStep int32
-
+	Loop int32  `xml:"loop"`
 	Code string `xml:"code"`
 
 	Step int
 
 	Parent   *Tree
 	Children []*Tree `xml:"children"`
+}
+
+func IsScriptNode(ty string) bool {
+
+	if ty == ROOT ||
+		ty == SELETE ||
+		ty == SEQUENCE ||
+		ty == LOOP ||
+		ty == PARALLEL {
+		return false
+	}
+
+	return true
 }
 
 func (tree *Tree) Link(nod *Tree) {
@@ -61,14 +72,10 @@ func New(f []byte) (*Tree, error) {
 	return tree, nil
 }
 
-// 这边的重置，应该是重置loop节点名下的所有children
 func (tree *Tree) resetChildren() {
 	for k := range tree.Children {
 
 		tree.Children[k].Step = 0
-		if tree.Children[k].Ty == LOOP {
-			tree.Children[k].LoopStep = 0
-		}
 
 		if len(tree.Children[k].Children) > 0 {
 			tree.Children[k].resetChildren()
@@ -77,7 +84,65 @@ func (tree *Tree) resetChildren() {
 	}
 }
 
-func (tree *Tree) Next() *Tree {
+func (tree *Tree) Next(ret bool) []*Tree {
+
+	children := []*Tree{}
+
+	switch tree.Ty {
+	case SEQUENCE:
+		if !ret && tree.Step != 0 {
+			tree.Step = len(tree.Children)
+		}
+		if tree.Step < len(tree.Children) {
+			children = append(children, tree.Children[tree.Step])
+			tree.Step++
+			goto ext
+		}
+		return tree.Parent.Next(false)
+	case SELETE:
+		if ret {
+			tree.Step = len(tree.Children)
+		}
+		if tree.Step < len(tree.Children) {
+			children = append(children, tree.Children[tree.Step])
+			tree.Step++
+			goto ext
+		}
+		return tree.Parent.Next(false)
+	case PARALLEL:
+		break
+	case LOOP:
+		tree.Step++
+		if tree.Step < int(tree.Loop) {
+			tree.resetChildren()
+			children = append(children, tree.Children[0])
+		} else {
+			return tree.Parent.Next(false)
+		}
+	case CONDITION:
+		if ret && tree.Step == 0 && len(tree.Children) != 0 {
+			tree.Step++
+			children = append(children, tree.Children[0])
+		} else {
+			return tree.Parent.Next(ret)
+		}
+	default:
+		if tree.Step == 0 && len(tree.Children) != 0 {
+			tree.Step++
+			children = append(children, tree.Children[0])
+		} else {
+			return tree.Parent.Next(true)
+		}
+	}
+
+ext:
+	return children
+}
+
+/*
+func (tree *Tree) Next() []*Tree {
+
+	var children []*Tree
 
 	if tree.Step < len(tree.Children) {
 		nextidx := tree.Step
@@ -105,5 +170,6 @@ func (tree *Tree) Next() *Tree {
 		}
 	}
 
-	return nil
+	return children
 }
+*/

@@ -537,8 +537,6 @@ func DebugStep(ctx echo.Context) error {
 		code = ErrMetaData
 		goto EXT
 	}
-	body.Cur = b.GetCurNodeID()
-	body.Prev = b.GetPrevNodeID()
 
 	if s == bot.SEnd {
 		code = ErrEnd

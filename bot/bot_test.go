@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/pojol/gobot/behavior"
 	"github.com/pojol/gobot/mock"
@@ -282,6 +283,23 @@ func TestRuning(t *testing.T) {
 		fmt.Println("running", e.Err)
 		t.Fail()
 	}
+}
+
+func TestDebug(t *testing.T) {
+	var tree *behavior.Tree
+	var bot *Bot
+
+	tree, err := behavior.New([]byte(compose))
+	assert.Equal(t, err, nil)
+
+	bot = NewWithBehaviorTree("../script/", tree, "test", 1, []string{})
+
+	for i := 0; i < 5; i++ {
+		fmt.Println("step", i)
+		bot.RunStep()
+		time.Sleep(time.Second)
+	}
+
 }
 
 func TestPool(t *testing.T) {

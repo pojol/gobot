@@ -32,6 +32,7 @@ import { Post, PostGetBlob, CheckHealth } from "./utils/request";
 import Api from "./constant/api";
 
 import { ReadOutlined, ApiFilled } from "@ant-design/icons";
+import { formatText } from "lua-fmt";
 
 const { TabPane } = Tabs;
 moment.locale("en");
@@ -76,7 +77,7 @@ export default class App extends React.Component {
   componentDidMount() {
     PubSub.subscribe(Topic.FileLoad, (topic, info) => {
       this.setState({ tab: "Edit" });
-      PubSub.publish(Topic.FileLoadDraw, [info.Tree]);
+        PubSub.publish(Topic.FileLoadDraw, [info.Tree]);
     });
     
     this.checkheath()
