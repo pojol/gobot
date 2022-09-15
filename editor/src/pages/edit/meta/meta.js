@@ -12,7 +12,6 @@ import "./meta.css";
 require("medium-editor/dist/css/medium-editor.css");
 require("medium-editor/dist/css/themes/default.css");
 
-
 const { TabPane } = Tabs;
 
 export default class Blackboard extends React.Component {
@@ -36,7 +35,7 @@ export default class Blackboard extends React.Component {
 
     PubSub.subscribe(Topic.UpdateChange, (topic, info) => {
       try {
-        info.msg += "\n\n"
+        info.msg += "\n\n";
         this.setState({ context: info.msg });
       } catch (err) {
         message.warning("blackboard parse info err");
@@ -83,7 +82,7 @@ export default class Blackboard extends React.Component {
             tab={
               <span>
                 <CodeOutlined />
-                Response
+                Thread[1]
               </span>
             }
             key="1"
@@ -98,7 +97,6 @@ export default class Blackboard extends React.Component {
               text={this.state.context}
             />
           </TabPane>
-
         </Tabs>
       </div>
     );

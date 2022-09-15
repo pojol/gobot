@@ -88,6 +88,10 @@ func (tree *Tree) Next(ret bool) []*Tree {
 
 	children := []*Tree{}
 
+	if tree == nil {
+		return children
+	}
+
 	switch tree.Ty {
 	case SEQUENCE:
 		if !ret && tree.Step != 0 {
