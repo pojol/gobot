@@ -12,7 +12,7 @@
     * [如何进行编辑&调试 *](/zh-cn/oper/Edit.md)
     * [如何分析报告](/zh-cn/oper/Report.md)
 - [API列表](/zh-cn/driver/api.md)
-- [脚本接口](/zh-cn/script/README.md)
+- [脚本接口 *](/zh-cn/script/README.md)
     * [Meta *](/zh-cn/script/meta.md)
     * [Http](/zh-cn/script/http.md)
     * [Protobuf](/zh-cn/script/protobuf.md)
