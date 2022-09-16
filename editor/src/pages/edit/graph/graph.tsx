@@ -511,34 +511,31 @@ export default class GraphView extends React.Component {
       }
     );
 
-    PubSub.subscribe(Topic.Focus, (topic: string, info: any) => {
-      if (info.Cur !== "") {
-        this.setState({ stepCnt: this.state.stepCnt + 1 });
-        this.findNode(info.Cur, (nod) => {
-          nod.setAttrs({
-            body: {
-              strokeWidth: 4,
-            },
-          });
-        });
-      } else {
-        // clean
-        this.cleanStepInfo();
+    PubSub.subscribe(Topic.Focus, (topic: string, info: Array<string>) => {
+
+      // clean
+      this.cleanStepInfo();
+
+      if (info.length === 0) {
         this.setState({ stepDisabled: true });
         setTimeout(() => {
           this.setState({ stepDisabled: false });
         }, 1000);
-      }
+      } else {
+        this.setState({ stepCnt: this.state.stepCnt + 1 });
 
-      if (info.Prev !== "") {
-        this.findNode(info.Prev, (nod) => {
-          nod.setAttrs({
-            body: {
-              strokeWidth: 1,
-            },
+        info.forEach(element => {
+          this.findNode(element, (nod) => {
+            nod.setAttrs({
+              body: {
+                strokeWidth: 4,
+              },
+            });
           });
         });
+
       }
+
     });
 
     PubSub.subscribe(

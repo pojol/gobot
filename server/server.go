@@ -24,7 +24,6 @@ const (
 	ErrJsonUnmarshal
 	ErrJsonInvalid
 	ErrPluginLoad
-	ErrMetaData
 	ErrEnd
 	ErrBreak
 	ErrCantFindBot
@@ -42,7 +41,6 @@ var errmap map[Err]string = map[Err]string{
 	ErrJsonUnmarshal: "json unmarshal err",
 	ErrWrongInput:    "bad request parameter",
 	ErrPluginLoad:    "failed to plugin load",
-	ErrMetaData:      "failed to get meta data",
 	ErrEnd:           "run to the end",
 	ErrBreak:         "run to the break",
 	ErrCantFindBot:   "can't find bot",
@@ -508,7 +506,6 @@ func DebugStep(ctx echo.Context) error {
 	var b *bot.Bot
 
 	var err error
-	var ok bool
 	var s bot.State
 
 	bts, err := ioutil.ReadAll(ctx.Request().Body)
@@ -532,11 +529,10 @@ func DebugStep(ctx echo.Context) error {
 	}
 
 	s = b.RunStep()
-	body.Blackboard, body.Change, body.RuntimeErr, ok = b.GetMetadata()
-	if !ok {
-		code = ErrMetaData
-		goto EXT
-	}
+	body.Blackboard = b.GetMetaInfo()
+	body.ThreadInfo = b.GetThreadInfo()
+
+	fmt.Println("step end")
 
 	if s == bot.SEnd {
 		code = ErrEnd

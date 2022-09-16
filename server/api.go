@@ -97,11 +97,8 @@ type StepRequest struct {
 }
 
 type StepResponse struct {
-	Prev       string
-	Cur        string
-	RuntimeErr string
 	Blackboard string
-	Change     string
+	ThreadInfo string
 }
 
 // debug.create

@@ -610,12 +610,6 @@ end
                   };
 
                   message.success("the end");
-                } else {
-                  message.error(json.Msg);
-                  changeInfo = {
-                    status: "error",
-                    msg: ErrMsgParse(json.Body.RuntimeErr),
-                  };
                 }
 
                 if (json.Code !== 1010) {
@@ -624,27 +618,33 @@ end
 
                 PubSub.publish(Topic.UpdateBlackboard, json.Body.Blackboard);
                 flag = false;
-                PubSub.publish(Topic.Focus, {
-                  Cur: "",
-                  Prev: "",
-                });
+                PubSub.publish(Topic.Focus, []);
+
               } else {
 
                 let metastr;
                 let meta = JSON.parse(json.Body.Blackboard);
-                let change = JSON.parse(json.Body.Change);
+                let threadinfo = JSON.parse(json.Body.ThreadInfo)
+
+                let focusLst = new Array()
+                threadinfo.forEach(element => {
+                  console.info("curid", element.Curid)
+                  focusLst.push(element.Curid)
+                });
 
                 metastr = JSON.stringify(meta);
 
                 PubSub.publish(Topic.UpdateBlackboard, metastr);
+
+                /*
                 PubSub.publish(Topic.UpdateChange, {
                   status: "",
                   msg: JSON.stringify(change, null, "\t"),
                 });
-                PubSub.publish(Topic.Focus, {
-                  Cur: json.Body.Cur,
-                  Prev: json.Body.Prev,
-                });
+                */
+
+                console.info("thread focus info", focusLst)
+                PubSub.publish(Topic.Focus, focusLst)
               }
 
             }

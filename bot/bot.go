@@ -2,6 +2,7 @@ package bot
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math/rand"
 	"strconv"
@@ -28,10 +29,11 @@ const (
 )
 
 type Thread struct {
-	number int    // 当前线程的编号
-	nodeid string // 当前线程处理的节点id
-	err    error  // 当前线程遇到的错误
-	ret    bool   // 判定类节点返回值
+	Number int    // 当前线程的编号
+	Preid  string // 上一个节点的id
+	Curid  string // 当前线程处理的节点id
+	Errmsg string // 当前线程遇到的错误
+	Ret    bool   // 判定类节点返回值
 }
 
 type Transaction struct {
@@ -66,8 +68,6 @@ type Bot struct {
 
 	donech chan<- string
 	errch  chan<- ErrInfo
-
-	runtimeErr string
 }
 
 const (
@@ -84,50 +84,70 @@ func (b *Bot) Name() string {
 	return b.name
 }
 
-func (b *Bot) GetMetadata() (string, string, string, bool) {
+func (b *Bot) GetMetaInfo() string {
+	tablemap := make(map[string]interface{})
+	table, ok := b.bs.L.GetGlobal("meta").(*lua.LTable)
 
-	var metaStr, changeStr string
+	var tableerr error
+	var byt []byte
 
 	if b.preloadErr != "" {
-		return b.preloadErr, "", "", true
+		byt, _ = json.Marshal(&tablemap)
+		goto ext
 	}
 
-	metaTable, ok := b.bs.L.GetGlobal("meta").(*lua.LTable)
 	if ok {
-		meta, err := utils.Table2Map(metaTable)
-		if err != nil {
-			return "", "", err.Error(), false
+		tablemap, tableerr = utils.Table2Map(table)
+		if tableerr != nil {
+			tablemap["err"] = tableerr.Error()
+			goto ext
 		}
 
-		metabyt, err := json.Marshal(&meta)
-		if err != nil {
-			return "", "", err.Error(), false
+		byt, tableerr = json.Marshal(&tablemap)
+		if tableerr != nil {
+			tablemap["err"] = tableerr.Error()
+			byt, _ = json.Marshal(&tablemap)
+			goto ext
 		}
 
-		metaStr = string(metabyt)
 	} else {
-		b.runtimeErr += "\nThe meta field is not obtained"
+
+		tablemap["err"] = errors.New("the meta field is not obtained")
+		byt, _ = json.Marshal(&tablemap)
+		goto ext
+
 	}
 
-	changeTable, ok := b.bs.L.GetGlobal("change").(*lua.LTable)
-	if ok {
-		change, err := utils.Table2Map(changeTable)
-		if err != nil {
-			return "", "", err.Error(), false
-		}
+ext:
+	return string(byt)
+}
 
-		changebyt, err := json.Marshal(&change)
-		if err != nil {
-			return "", "", err.Error(), false
-		}
+func (b *Bot) GetThreadInfo() string {
+	threadinfolst := []Thread{}
 
-		changeStr = string(changebyt)
-	} else {
-		b.runtimeErr += "\nThe change field is not obtained"
+	b.Lock()
+	defer b.Unlock()
+
+	for _, v := range b.threadLst {
+		fmt.Println("\t", v.Number, v.Curid, v.Errmsg)
+		threadinfolst = append(threadinfolst, Thread{
+			Number: v.Number,
+			Preid:  v.Preid,
+			Curid:  v.Curid,
+			Errmsg: v.Errmsg,
+			Ret:    v.Ret,
+		})
 	}
 
-	return metaStr, changeStr, b.runtimeErr, true
+	info, err := json.Marshal(&threadinfolst)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
 
+	fmt.Println("clean thread info")
+	b.threadLst = b.threadLst[:0]
+
+	return string(info)
 }
 
 func NewWithBehaviorTree(path string, bt *behavior.Tree, name string, idx int32, globalScript []string) *Bot {
@@ -179,7 +199,7 @@ func (b *Bot) fillThreadInfo(t *Thread) {
 	var f bool
 
 	for k, v := range b.threadLst {
-		if v.number == t.number {
+		if v.Number == t.Number {
 			b.threadLst[k] = t
 			f = true
 			break
@@ -201,23 +221,18 @@ func (b *Bot) fillThreadInfo(t *Thread) {
 
 }
 
-func (b *Bot) cleanThreadInfo() {
-	b.Lock()
-	b.threadLst = b.threadLst[:0]
-	b.Unlock()
-}
-
 func (b *Bot) next(parent *Transaction) {
 	var trans []*Transaction
 
 	fmt.Println("next", parent.cur.ID, parent.cur.Ty)
 
-	children := parent.cur.Next(parent.thread.ret)
+	children := parent.cur.Next(parent.thread.Ret)
 	for k := range children {
 
 		t := &Thread{
-			number: parent.thread.number,
-			nodeid: children[k].ID,
+			Number: parent.thread.Number,
+			Preid:  parent.cur.ID,
+			Curid:  children[k].ID,
 		}
 
 		trans = append(trans, &Transaction{
@@ -225,7 +240,6 @@ func (b *Bot) next(parent *Transaction) {
 			parent: parent.parent,
 			thread: t,
 		})
-		b.fillThreadInfo(t)
 	}
 
 	for _, v := range trans {
@@ -241,7 +255,7 @@ func (b *Bot) execute(t *Transaction) {
 
 	fmt.Println("execute", t.cur.ID, t.cur.Ty)
 
-	doscript := func(ty string, code string) (error, bool) {
+	doscript := func(id string, ty string, code string) (error, bool) {
 		err := DoString(b.bs.L, code)
 		if err != nil {
 			return err, false
@@ -251,7 +265,7 @@ func (b *Bot) execute(t *Transaction) {
 			Fn:      b.bs.L.GetGlobal("execute"),
 			NRet:    1,
 			Protect: true,
-		})
+		}, lua.LString(id))
 		if err != nil {
 			return err, false
 		}
@@ -269,14 +283,15 @@ func (b *Bot) execute(t *Transaction) {
 	// 1. 执行脚本
 	// 2. 进入到下一个节点
 	getchildren := func(nod *behavior.Tree) {
-		children := nod.Next(t.thread.ret)
+		children := nod.Next(t.thread.Ret)
 		if len(children) == 1 {
 			t := &Transaction{
 				cur:    children[0],
 				parent: nod,
 				thread: &Thread{
-					number: t.thread.number,
-					nodeid: children[0].ID,
+					Number: t.thread.Number,
+					Preid:  nod.ID,
+					Curid:  children[0].ID,
 				},
 			}
 
@@ -299,9 +314,9 @@ func (b *Bot) execute(t *Transaction) {
 	case behavior.LOOP, behavior.PARALLEL, behavior.SELETE, behavior.SEQUENCE, behavior.ROOT:
 		break
 	default: // script
-		err, ok := doscript(nod.Ty, nod.Code)
-		t.thread.err = err
-		t.thread.ret = ok
+		err, ok := doscript(nod.ID, nod.Ty, nod.Code)
+		t.thread.Errmsg = err.Error()
+		t.thread.Ret = ok
 		getchildren(nod)
 	}
 
@@ -313,15 +328,16 @@ func (b *Bot) loop() {
 
 		select {
 		case t := <-b.threadChan:
-
+			fmt.Println("fill thread info")
+			b.fillThreadInfo(t.thread)
 			if !behavior.IsScriptNode(t.cur.Ty) {
 				b.next(t)
 			} else {
 				b.execute(t)
 			}
 
-			if t.thread.err != nil {
-				b.errch <- ErrInfo{ID: b.id, Err: t.thread.err}
+			if t.thread.Errmsg != "" {
+				b.errch <- ErrInfo{ID: b.id, Err: errors.New(t.thread.Errmsg)}
 				goto ext
 			}
 
@@ -331,8 +347,10 @@ func (b *Bot) loop() {
 			}
 
 		case w := <-b.waitChan:
+			b.Lock()
 			fmt.Println("\t", "append", w.cur.ID, w.cur.Ty)
 			b.waitLst = append(b.waitLst, w)
+			b.Unlock()
 		case <-b.step.Done():
 			if b.step.HasOpend() {
 				fmt.Println("process wait list", len(b.waitLst))
@@ -365,7 +383,7 @@ func (b *Bot) Run(doneCh chan<- string, errch chan<- ErrInfo, mode RunMode) {
 		b.threadChan <- &Transaction{
 			cur:    b.tree.Children[0],
 			parent: b.tree,
-			thread: &Thread{number: int(atomic.AddInt32(&b.threadnum, 1)), nodeid: b.tree.ID},
+			thread: &Thread{Number: int(atomic.AddInt32(&b.threadnum, 1)), Curid: b.tree.ID},
 		}
 	}
 

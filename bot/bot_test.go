@@ -256,7 +256,6 @@ func TestLoad(t *testing.T) {
 
 	for i := 0; i < 20; i++ {
 		bot.RunStep()
-		fmt.Println(bot.GetMetadata())
 	}
 
 	t.Fail()
