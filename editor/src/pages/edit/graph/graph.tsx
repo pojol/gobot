@@ -8,6 +8,7 @@ import RootNode from "./shape/shape_root";
 import LoopNode from "./shape/shape_loop";
 import WaitNode from "./shape/shape_wait";
 import AssertNode from "./shape/shap_assert";
+import ParallelNode from "./shape/shap_parallel";
 
 /// <reference path="graph.d.ts" />
 
@@ -56,6 +57,7 @@ function NewStencil(graph: Graph) {
   var assertNod = new AssertNode();
   var loopNod = new LoopNode();
   var waitNod = new WaitNode();
+  var parallelNod = new ParallelNode();
   var title = "Components";
   var placeholder = "Search by shape name";
   var g1title = "Normal";
@@ -68,6 +70,7 @@ function NewStencil(graph: Graph) {
     assertNod.setAttrs({ label: { text: "Assert" } });
     loopNod.setAttrs({ label: { text: "Loop" } });
     waitNod.setAttrs({ label: { text: "Wait" } });
+    parallelNod.setAttrs({label: {text: "Parallel"}})
   } else if (moment.locale() === "zh-cn") {
     selectorNod.setAttrs({ label: { text: "选择" } });
     seqNod.setAttrs({ label: { text: "顺序" } });
@@ -75,6 +78,7 @@ function NewStencil(graph: Graph) {
     assertNod.setAttrs({ label: { text: "断言" } });
     loopNod.setAttrs({ label: { text: "循环" } });
     waitNod.setAttrs({ label: { text: "等待" } });
+    parallelNod.setAttrs({label: {text: "并行"}})
 
     title = "组件";
     placeholder = "通过节点名进行搜索";
@@ -97,8 +101,9 @@ function NewStencil(graph: Graph) {
     notFoundText: "Not Found",
     target: graph,
     collapsable: true,
+    
     stencilGraphWidth: stencilWidth,
-    stencilGraphHeight: 250,
+    stencilGraphHeight: 310,
     groups: [
       {
         name: "group1",
@@ -112,7 +117,7 @@ function NewStencil(graph: Graph) {
   });
 
   stencil.load(
-    [selectorNod, seqNod, condNod, assertNod, loopNod, waitNod],
+    [selectorNod, seqNod, parallelNod, condNod, assertNod, loopNod, waitNod],
     "group1"
   );
 

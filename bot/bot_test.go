@@ -196,7 +196,7 @@ end
 </code>
                 <alias>base/hero.lvup</alias>
               </children>
-              <loop>5</loop>
+              <loop>2</loop>
             </children>
           </children>
           <code>
@@ -236,7 +236,7 @@ end
         <alias></alias>
       </children>
     </children>
-    <loop>5</loop>
+    <loop>2</loop>
   </children>
 </behavior>
 
@@ -293,12 +293,13 @@ func TestDebug(t *testing.T) {
 
 	bot = NewWithBehaviorTree("../script/", tree, "test", 1, []string{})
 
-	for i := 0; i < 5; i++ {
+	for i := 0; i < 100; i++ {
 		fmt.Println("step", i)
 		bot.RunStep()
 		time.Sleep(time.Second)
 	}
 
+	t.FailNow()
 }
 
 func TestPool(t *testing.T) {
