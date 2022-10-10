@@ -9,11 +9,13 @@ services:
     restart: always
     networks:
       - gnet
+    ports:
+      - 3306:3306
     volumes:
       - db:/var/lib/mysql
     environment:
-      - MYSQL_ROOT_PASSWORD=
-      - MYSQL_PASSWORD=
+      - MYSQL_ROOT_PASSWORD=gobot
+      - MYSQL_PASSWORD=gobot
       - MYSQL_DATABASE=gobot
       - MYSQL_USER=gobot
 

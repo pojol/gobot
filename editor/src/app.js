@@ -32,7 +32,6 @@ import { Post, PostGetBlob, CheckHealth } from "./utils/request";
 import Api from "./constant/api";
 
 import { ReadOutlined, ApiFilled } from "@ant-design/icons";
-import { formatText } from "lua-fmt";
 
 const { TabPane } = Tabs;
 moment.locale("en");

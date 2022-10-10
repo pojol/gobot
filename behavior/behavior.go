@@ -21,13 +21,39 @@ type Tree struct {
 
 	Wait int32 `xml:"wait"`
 
-	Loop int32  `xml:"loop"`
-	Code string `xml:"code"`
+	Loop int32 `xml:"loop"` // 用于记录循环节点的循环次数
+
+	Freeze bool
 
 	Step int
+	Nods int
+
+	Code string `xml:"code"`
+	Succ bool
 
 	Parent   *Tree
 	Children []*Tree `xml:"children"`
+}
+
+var tickStrategy = map[string]func(int, *Tree) []*ThreadTree{
+	SELETE:    selectTick,
+	SEQUENCE:  sequenceTick,
+	CONDITION: conditionTick,
+	WAIT:      waitTick,
+	LOOP:      loopTick,
+	ASSERT:    assertTick,
+	"Script":  scriptTick,
+	PARALLEL:  parallelTick,
+}
+
+func (t *Tree) Tick(thread int) []*ThreadTree {
+
+	if t.Ty == ROOT {
+		return []*ThreadTree{}
+	}
+
+	return tickStrategy[t.Ty](thread, t)
+
 }
 
 func IsScriptNode(ty string) bool {
@@ -43,35 +69,33 @@ func IsScriptNode(ty string) bool {
 	return true
 }
 
-func (tree *Tree) Link(nod *Tree) {
+func (t *Tree) link(parent *Tree) {
 
-	tree.Parent = nod
-	for k := range tree.Children {
-		tree.Children[k].Link(tree)
+	t.Parent = parent
+	for k := range t.Children {
+		t.Children[k].link(t)
 	}
+
 }
 
 func New(f []byte) (*Tree, error) {
 
-	tree := &Tree{}
+	tree := &Tree{
+		Parent: nil,
+	}
 	err := xml.Unmarshal([]byte(f), &tree)
 	if err != nil {
 		panic(err)
 	}
-	/*
-		err = mapstructure.Decode(m, tree)
-		if err != nil {
-			return nil, fmt.Errorf("behavior tree decode fail %v", err.Error())
-		}
-	*/
-	tree.Parent = nil
+
 	for k := range tree.Children {
-		tree.Children[k].Link(tree)
+		tree.Children[k].link(tree)
 	}
 
 	return tree, nil
 }
 
+/*
 func (tree *Tree) resetChildren() {
 	for k := range tree.Children {
 
@@ -140,40 +164,6 @@ func (tree *Tree) Next(ret bool) []*Tree {
 	}
 
 ext:
-	return children
-}
-
-/*
-func (tree *Tree) Next() []*Tree {
-
-	var children []*Tree
-
-	if tree.Step < len(tree.Children) {
-		nextidx := tree.Step
-		tree.Step++
-		return tree.Children[nextidx]
-	} else {
-
-		if tree.Ty == LOOP {
-			if tree.Loop == 0 { // 永远循环
-				tree.Step = 0
-				tree.resetChildren()
-				return tree
-			} else {
-				tree.LoopStep++
-				if tree.LoopStep < tree.Loop {
-					tree.Step = 0
-					tree.resetChildren()
-					return tree
-				}
-			}
-		}
-
-		if tree.Parent != nil {
-			return tree.Parent.Next()
-		}
-	}
-
 	return children
 }
 */

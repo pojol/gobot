@@ -33,20 +33,6 @@ import { NodeTy } from "../constant/node_type";
 */
 
 
-function ErrMsgParse(msg) {
-  var arr = msg.split("\n");
-  var newmsg = "";
-
-  for (var i = 0; i < arr.length; i++) {
-    newmsg += "<u>" + (i + 1).toString() + "</u> " + arr[i] + "\n";
-  }
-
-  newmsg += "\n\n";
-
-  return newmsg;
-}
-
-const sleep = (delay) => new Promise((resolve) => setTimeout(resolve, delay));
 
 export default class TreeModel extends React.Component {
   constructor(props) {
@@ -141,7 +127,7 @@ end
           } catch (error) {
             console.error(error)
             console.error(ty, window.config.get(ty))
-          }          
+          }
       }
     }
 
@@ -591,82 +577,64 @@ end
 
       var botid = this.state.botid;
 
-      const step = async () => {
+      Post(localStorage.remoteAddr, Api.DebugStep, { BotID: botid }).then(
+        (json) => {
+          if (json.Code !== 200) {
+            let change;
+            let changeInfo = {};
 
-        for (let i = 0; i < cnt; i++) {
-          let flag = true;
+            if (json.Code === 1008) {
+              change = JSON.parse(json.Body.Change);
+              changeInfo = {
+                status: "",
+                msg: JSON.stringify(change, null, "\t"),
+              };
 
-          Post(localStorage.remoteAddr, Api.DebugStep, { BotID: botid }).then(
-            (json) => {
-              if (json.Code !== 200) {
-                let change;
-                let changeInfo = {};
-
-                if (json.Code === 1008) {
-                  change = JSON.parse(json.Body.Change);
-                  changeInfo = {
-                    status: "",
-                    msg: JSON.stringify(change, null, "\t"),
-                  };
-
-                  message.success("the end");
-                }
-
-                if (json.Code !== 1010) {
-                  PubSub.publish(Topic.UpdateChange, changeInfo);
-                }
-
-                PubSub.publish(Topic.UpdateBlackboard, json.Body.Blackboard);
-                flag = false;
-                PubSub.publish(Topic.Focus, []);
-
-              } else {
-
-                let metastr;
-                let meta = JSON.parse(json.Body.Blackboard);
-                let threadinfo = JSON.parse(json.Body.ThreadInfo)
-
-                let focusLst = new Array()
-                threadinfo.forEach(element => {
-                  console.info("curid", element.Curid)
-                  focusLst.push(element.Curid)
-                });
-
-                metastr = JSON.stringify(meta);
-
-                PubSub.publish(Topic.UpdateBlackboard, metastr);
-
-                /*
-                PubSub.publish(Topic.UpdateChange, {
-                  status: "",
-                  msg: JSON.stringify(change, null, "\t"),
-                });
-                */
-
-                console.info("thread focus info", focusLst)
-                PubSub.publish(Topic.Focus, focusLst)
-              }
-
+              message.success("the end");
             }
-          );
 
-          await sleep(200);
-          if (!flag) {
-            this.setState({ stepping: false })
-            break;
-          }
+            if (json.Code !== 1010) {
+              PubSub.publish(Topic.UpdateChange, changeInfo);
+            }
+
+            PubSub.publish(Topic.UpdateBlackboard, json.Body.Blackboard);
+            PubSub.publish(Topic.Focus, []);
+          } 
         }
+      );
 
-        this.setState({ stepping: false })
-      };
-
-      if (!this.state.stepping) {
-        this.setState({ stepping: true }, () => {
-          step();
-        })
-      }
+      
 
     });
+
+    setInterval(function () {
+
+      if (this.state.botid === ""){
+        return
+      }
+
+      Post(localStorage.remoteAddr, Api.DebugInfo, { BotID: this.state.botid }).then(
+        (json) => {
+          if (json.Code === 200) {
+            let metastr;
+            let meta = JSON.parse(json.Body.Blackboard);
+            metastr = JSON.stringify(meta);
+
+            PubSub.publish(Topic.UpdateBlackboard, metastr);
+
+            let threadinfo = JSON.parse(json.Body.ThreadInfo)
+
+            let focusLst = new Array()
+            threadinfo.forEach(element => {
+              focusLst.push(element.Curid)
+              PubSub.publish(Topic.UpdateChange, element)
+            });
+
+            PubSub.publish(Topic.Focus, focusLst)
+          }
+        }
+      );
+    }.bind(this), 200);
 
     PubSub.subscribe(Topic.FileSave, (topic, msg) => {
       var tree = this.getTree();

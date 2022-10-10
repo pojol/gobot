@@ -1,4 +1,4 @@
-package bot
+package behavior
 
 import (
 	"sync"
@@ -9,13 +9,12 @@ import (
 
 type lStatePool struct {
 	m     sync.Mutex
-	saved []*botState
+	saved []*BotState
 }
 
-type botState struct {
-	L *lua.LState
-
-	httpMod   *script.HttpModule
+type BotState struct {
+	L         *lua.LState
+	HttpMod   *script.HttpModule
 	protoMod  *script.ProtoModule
 	utilsMod  *script.UtilsModule
 	base64Mod *script.Base64Module
@@ -23,7 +22,7 @@ type botState struct {
 	md5Mod    *script.MD5Module
 }
 
-func (pl *lStatePool) Get() *botState {
+func (pl *lStatePool) Get() *BotState {
 	pl.m.Lock()
 	defer pl.m.Unlock()
 
@@ -37,11 +36,11 @@ func (pl *lStatePool) Get() *botState {
 	return x
 }
 
-func (pl *lStatePool) New() *botState {
+func (pl *lStatePool) New() *BotState {
 
-	b := &botState{
+	b := &BotState{
 		L:         lua.NewState(),
-		httpMod:   script.NewHttpModule(),
+		HttpMod:   script.NewHttpModule(),
 		protoMod:  &script.ProtoModule{},
 		utilsMod:  &script.UtilsModule{},
 		base64Mod: &script.Base64Module{},
@@ -50,7 +49,7 @@ func (pl *lStatePool) New() *botState {
 	}
 
 	b.L.PreloadModule("proto", b.protoMod.Loader)
-	b.L.PreloadModule("http", b.httpMod.Loader)
+	b.L.PreloadModule("http", b.HttpMod.Loader)
 	b.L.PreloadModule("utils", b.utilsMod.Loader)
 	b.L.PreloadModule("base64", b.base64Mod.Loader)
 	b.L.PreloadModule("mgo", b.mgoMod.Loader)
@@ -59,7 +58,7 @@ func (pl *lStatePool) New() *botState {
 	return b
 }
 
-func (pl *lStatePool) Put(bs *botState) {
+func (pl *lStatePool) Put(bs *BotState) {
 	pl.m.Lock()
 	defer pl.m.Unlock()
 	pl.saved = append(pl.saved, bs)
@@ -71,7 +70,15 @@ func (pl *lStatePool) Shutdown() {
 	}
 }
 
+func GetState() *BotState {
+	return luaPool.Get()
+}
+
+func PutState(state *BotState) {
+	luaPool.Put(state)
+}
+
 // Global LState pool
 var luaPool = &lStatePool{
-	saved: make([]*botState, 0, 128),
+	saved: make([]*BotState, 0, 128),
 }

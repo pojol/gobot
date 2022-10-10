@@ -10,7 +10,6 @@ import {
   Col,
   Row,
   Select,
-  Pagination,
 } from "antd";
 import React, { } from 'react';
 import {

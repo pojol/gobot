@@ -103,7 +103,9 @@ type StepResponse struct {
 
 // debug.create
 type CreateDebugBotResponse struct {
-	BotID string
+	BotID      string
+	Blackboard string
+	ThreadInfo string
 }
 
 type ConfigGetInfoResponse struct {

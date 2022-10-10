@@ -215,6 +215,11 @@ var lanMap = {
         "en" : "Number of reports archived",
         "zh-cn" : "报告存档数量"
     },
+
+    "app.msg.notdebugbot" : {
+        "en" : "Have not created bot",
+        "zh-cn" : "在步进前，需要创建调试机器人"
+    }
 }
 
 export default lanMap

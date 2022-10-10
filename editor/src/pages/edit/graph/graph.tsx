@@ -17,14 +17,16 @@ import {
   IsScriptNode,
   IsActionNode,
 } from "../../../constant/node_type";
-import { Button, Tooltip, Modal, Input, Badge, InputNumber } from "antd";
+import { Button, Tooltip, Modal, Input } from "antd";
 import {
   ZoomInOutlined,
   ZoomOutOutlined,
   AimOutlined,
-  UndoOutlined,
+  BugOutlined ,
   CloudUploadOutlined,
   DeleteOutlined,
+  UndoOutlined,
+  CaretRightOutlined,
 } from "@ant-design/icons";
 
 import "./graph.css";
@@ -203,12 +205,6 @@ export default class GraphView extends React.Component {
     behaviorName: "",
     platfrom: "",
     stencil: null,
-    btnReset: "Reset",
-    btnStep: "Step",
-    stepDisabled: false,
-    btnUpload: "Upload",
-    stepCnt: 0,
-    stepVal: 0,
     debugCreate: false,
     wflex: 0.6,
   };
@@ -220,16 +216,6 @@ export default class GraphView extends React.Component {
         this.stencilContainer.appendChild(stencil.container);
       }
     });
-
-    if (moment.locale() === "en") {
-      this.setState({
-        btnReset: "Reset",
-        btnStep: "Step",
-        btnUpload: "Upload",
-      });
-    } else if (moment.locale() === "zh-cn") {
-      this.setState({ btnReset: "重置", btnStep: "步进", btnUpload: "上传" });
-    }
   }
 
   componentDidMount() {
@@ -527,7 +513,6 @@ export default class GraphView extends React.Component {
           this.setState({ stepDisabled: false });
         }, 1000);
       } else {
-        this.setState({ stepCnt: this.state.stepCnt + 1 });
 
         info.forEach(element => {
           this.findNode(element, (nod) => {
@@ -833,18 +818,7 @@ export default class GraphView extends React.Component {
   };
 
   ClickStep = (e: any) => {
-    if (this.state.debugCreate === false) {
-      this.setState({ debugCreate: true });
-      PubSub.publish(Topic.Create, "");
-    } else {
-
-      let step = this.state.stepVal
-      if (step <= 0) {
-        step = 1
-      }
-      console.info("step", step)
-      PubSub.publish(Topic.Step, step);
-    }
+      PubSub.publish(Topic.Step, {});
   };
 
   cleanStepInfo = () => {
@@ -859,7 +833,6 @@ export default class GraphView extends React.Component {
         });
       });
     }
-    this.setState({ debugCreate: false, stepCnt: 0 });
   };
 
   onStepValueChange = (e: any) => {
@@ -868,6 +841,7 @@ export default class GraphView extends React.Component {
 
   ClickReset = (e: any) => {
     this.cleanStepInfo();
+    PubSub.publish(Topic.Create, {});
   };
 
   render() {
@@ -891,40 +865,28 @@ export default class GraphView extends React.Component {
           <Tooltip placement="leftTop" title="Delete [ del ]">
             <Button icon={<DeleteOutlined />} onClick={this.ClickDel} />
           </Tooltip>
-          <Badge
-            count={this.state.stepCnt}
-            style={{ backgroundColor: "#52c41a" }}
-          />
         </div>
 
         <div className={"app-step-" + this.state.platfrom}>
           <Tooltip placement="topRight" title={"Run to the next node [F10]"}>
-            <InputNumber
-              min={1}
-              max={1000}
-              defaultValue={1}
-              style={{ width: 60 }}
-              onChange={this.onStepValueChange}
-            />
             <Button
               type="primary"
               style={{ width: 70 }}
+              icon={<CaretRightOutlined />}
               onClick={this.ClickStep}
-              disabled={this.state.stepDisabled}
             >
-              {this.state.btnStep}
+              {}
             </Button>
           </Tooltip>
         </div>
         <div className={"app-reset-" + this.state.platfrom}>
-          <Tooltip placement="topRight" title={"Reset to starting point [F11]"}>
+          <Tooltip placement="topRight" title={"Create or reset to starting point [F11]"}>
             <Button
-              icon={<UndoOutlined />}
-              style={{ width: 100 }}
+              icon={<BugOutlined />}
+              style={{ width: 50 }}
               onClick={this.ClickReset}
             >
               {" "}
-              {this.state.btnReset}
             </Button>
           </Tooltip>
         </div>
@@ -932,11 +894,9 @@ export default class GraphView extends React.Component {
           <Tooltip placement="topRight" title={"Upload the bot to the server"}>
             <Button
               icon={<CloudUploadOutlined />}
-              style={{ width: 100 }}
+              style={{ width: 50 }}
               onClick={this.ClickUpload}
             >
-              {" "}
-              {this.state.btnUpload}
             </Button>
           </Tooltip>
         </div>

@@ -1,7 +1,9 @@
 package factory
 
 import (
+	"errors"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -119,15 +121,28 @@ func (f *Factory) GetBehaviors() []database.BehaviorInfo {
 }
 
 func (f *Factory) UploadConfig(name string, dat []byte) error {
-	return f.db.ConfigUpset(name, dat)
+
+	if name == "" {
+		return errors.New("upload config err : meaningless naming")
+	}
+
+	_name := strings.ToLower(name)
+
+	return f.db.ConfigUpset(_name, dat)
 }
 
 func (f *Factory) GetConfig(name string) (database.TemplateConfig, error) {
-	return f.db.ConfigFind(name)
+
+	_name := strings.ToLower(name)
+
+	return f.db.ConfigFind(_name)
 }
 
 func (f *Factory) RemoveConfig(name string) error {
-	return f.db.ConfigRemove(name)
+
+	_name := strings.ToLower(name)
+
+	return f.db.ConfigRemove(_name)
 }
 
 func (f *Factory) GetConfigList() ([]string, error) {

@@ -532,8 +532,6 @@ func DebugStep(ctx echo.Context) error {
 	body.Blackboard = b.GetMetaInfo()
 	body.ThreadInfo = b.GetThreadInfo()
 
-	fmt.Println("step end")
-
 	if s == bot.SEnd {
 		code = ErrEnd
 		defer factory.Global.RmvBot(req.BotID)
@@ -543,6 +541,48 @@ func DebugStep(ctx echo.Context) error {
 		defer factory.Global.RmvBot(req.BotID)
 		goto EXT
 	}
+
+EXT:
+	res.Code = int(code)
+	res.Msg = errmap[code]
+	res.Body = body
+
+	ctx.JSON(http.StatusOK, res)
+	return nil
+}
+
+func DebugInfo(ctx echo.Context) error {
+	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
+	res := &Response{}
+	req := &StepRequest{}
+	body := &StepResponse{}
+	code := Succ
+	var b *bot.Bot
+
+	var err error
+
+	bts, err := ioutil.ReadAll(ctx.Request().Body)
+	if err != nil {
+		code = ErrContentRead // tmp
+		fmt.Println(err.Error())
+		goto EXT
+	}
+
+	err = json.Unmarshal(bts, &req)
+	if err != nil {
+		code = ErrContentRead // tmp
+		fmt.Println(err.Error())
+		goto EXT
+	}
+
+	b = factory.Global.FindBot(req.BotID)
+	if b == nil {
+		code = ErrCantFindBot
+		goto EXT
+	}
+
+	body.Blackboard = b.GetMetaInfo()
+	body.ThreadInfo = b.GetThreadInfo()
 
 EXT:
 	res.Code = int(code)
@@ -576,6 +616,7 @@ func DebugCreate(ctx echo.Context) error {
 	}
 
 	body.BotID = b.ID()
+	body.ThreadInfo = b.GetThreadInfo()
 
 EXT:
 	res.Code = int(code)
@@ -622,6 +663,7 @@ func Route(e *echo.Echo) {
 
 	e.POST("/debug.create", DebugCreate) // 创建一个 edit 中的bot 实例、
 	e.POST("/debug.step", DebugStep)     // 单步运行 edit 中的bot
+	e.POST("/debug.info", DebugInfo)
 
 	e.POST("/report.info", GetReport)
 }
