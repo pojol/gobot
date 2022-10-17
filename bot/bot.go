@@ -10,7 +10,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/pojol/gobot/behavior"
+	"github.com/pojol/gobot/bot/behavior"
+	"github.com/pojol/gobot/bot/state"
 	script "github.com/pojol/gobot/script/module"
 	"github.com/pojol/gobot/utils"
 	lua "github.com/yuin/gopher-lua"
@@ -63,7 +64,7 @@ type Bot struct {
 	threadDone chan interface{}
 
 	sync.RWMutex
-	bs *behavior.BotState // lua state pool
+	bs *state.BotState // lua state pool
 
 	donech chan<- string
 	errch  chan<- ErrInfo
@@ -149,7 +150,7 @@ func NewWithBehaviorTree(path string, bt *behavior.Tree, name string, idx int32,
 	bot := &Bot{
 		id:         strconv.Itoa(int(idx)),
 		tree:       bt,
-		bs:         behavior.GetState(),
+		bs:         state.GetState(),
 		name:       name,
 		threadChan: make(chan *Transaction, 1),
 		waitChan:   make(chan *Transaction, 1),
@@ -161,13 +162,13 @@ func NewWithBehaviorTree(path string, bt *behavior.Tree, name string, idx int32,
 
 	// 加载预定义全局脚本文件
 	for _, gs := range globalScript {
-		behavior.DoString(bot.bs.L, gs)
+		state.DoString(bot.bs.L, gs)
 	}
 
 	// 这里要对script目录进行一次检查，将lua脚本都载入进来
 	preScripts := utils.GetDirectoryFiels(path, ".lua")
 	for _, v := range preScripts {
-		err := behavior.DoFile(bot.bs.L, path+v)
+		err := state.DoFile(bot.bs.L, path+v)
 		if err != nil {
 			fmt.Println("err", err.Error())
 			bot.preloadErr = fmt.Sprintf("load script %v err : %v", path+v, err.Error())
@@ -226,40 +227,6 @@ func getNodsName(nods []*behavior.Tree) []string {
 }
 
 func (b *Bot) next(parent *Transaction) bool {
-	trans := make(map[int]*Transaction)
-	var batch []*behavior.ThreadTree
-
-	for _, v := range parent.next {
-		tt := v.Tick(parent.thread.Number)
-		if len(tt.Children) > 0 {
-			batch = append(batch, tt)
-		}
-	}
-
-	if len(batch) == 0 {
-		return false
-	}
-
-	for _, b := range batch {
-
-		trans[b.ThreadNum] = &Transaction{
-			thread: &Thread{
-				Number:   b.ThreadNum,
-				PreNods:  getNodsName(parent.next),
-				NextNods: getNodsName(b.Children),
-			},
-			next: b.Children,
-		}
-
-	}
-
-	for _, v := range trans {
-		if b.mode == Batch {
-			b.threadChan <- v
-		} else if b.mode == Debug {
-			b.waitChan <- v
-		}
-	}
 
 	return true
 }
@@ -360,7 +327,7 @@ func (b *Bot) close() {
 	b.bs.L.DoString(`
 		meta = {}
 	`)
-	behavior.PutState(b.bs)
+	state.PutState(b.bs)
 }
 
 type State int32

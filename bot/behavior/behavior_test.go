@@ -1,23 +1,10 @@
-package bot
+package behavior
 
 import (
-	"os"
 	"testing"
 
-	"github.com/pojol/gobot/mock"
+	"github.com/stretchr/testify/assert"
 )
-
-func TestMain(m *testing.M) {
-	ms := mock.NewServer()
-	go ms.Start(":6666")
-
-	defer ms.Close()
-	os.Exit(m.Run())
-}
-
-type Metadata struct {
-	Val string
-}
 
 var compose = `
 <behavior>
@@ -190,7 +177,7 @@ end
 </code>
                 <alias>base/hero.lvup</alias>
               </children>
-              <loop>2</loop>
+              <loop>5</loop>
             </children>
           </children>
           <code>
@@ -230,127 +217,14 @@ end
         <alias></alias>
       </children>
     </children>
-    <loop>2</loop>
+    <loop>5</loop>
   </children>
 </behavior>
-
-
 `
 
-/*
-func TestLoad(t *testing.T) {
+func TestLoadTree(t *testing.T) {
 
-	var tree *behavior.Tree
-	var bot *Bot
-
-	tree, err := behavior.New([]byte(compose))
+	_, err := Load([]byte(compose))
 	assert.Equal(t, err, nil)
 
-	bot = NewWithBehaviorTree("../script/", tree, "test", 1, []string{})
-	defer bot.close()
-
-	for i := 0; i < 20; i++ {
-		bot.RunStep()
-	}
-
-	t.Fail()
 }
-
-func TestRuning(t *testing.T) {
-	var tree *behavior.Tree
-	var bot *Bot
-
-	tree, err := behavior.New([]byte(compose))
-	assert.Equal(t, err, nil)
-
-	bot = NewWithBehaviorTree("../script/", tree, "test", 1, []string{})
-
-	donech := make(chan string)
-	errch := make(chan ErrInfo)
-	bot.Run(donech, errch, Batch)
-
-	select {
-	case <-donech:
-		fmt.Println("running succ")
-		return
-	case e := <-errch:
-		fmt.Println("running", e.Err)
-		t.Fail()
-	}
-}
-
-func TestDebug(t *testing.T) {
-	var tree *behavior.Tree
-	var bot *Bot
-
-	tree, err := behavior.New([]byte(compose))
-	assert.Equal(t, err, nil)
-
-	bot = NewWithBehaviorTree("../script/", tree, "test", 1, []string{})
-
-	for i := 0; i < 100; i++ {
-		fmt.Println("step", i)
-		bot.RunStep()
-		time.Sleep(time.Second)
-	}
-
-	t.FailNow()
-}
-
-func TestPool(t *testing.T) {
-	var tree *behavior.Tree
-	var bot *Bot
-
-	tree, err := behavior.New([]byte(compose))
-	assert.Equal(t, err, nil)
-
-	bot = NewWithBehaviorTree("../script/", tree, "test", 1, []string{})
-	defer bot.close()
-
-	err = bot.RunByBlock()
-
-	assert.Equal(t, err, nil)
-}
-
-var luastruct = `
-meta = {
-    name = "Michel",
-    age  = 31,
-    fly = false,
-}
-
-function condition()
-    return meta.name == "joy"
-end
-`
-
-func TestScript(t *testing.T) {
-	L := lua.NewState()
-	defer L.Close()
-
-	if err := L.DoString(luastruct); err != nil {
-		panic(err)
-	}
-	if err := L.DoString(`meta.name="joy"`); err != nil {
-		panic(err)
-	}
-
-	if err := L.CallByParam(lua.P{
-		Fn:      L.GetGlobal("condition"),
-		NRet:    1,
-		Protect: true,
-	}); err != nil {
-		panic(err)
-	}
-	ret := L.Get(-1) // returned value
-	fmt.Println("condition ret", ret)
-	L.Pop(1) // remove received value
-
-	meta, err := utils.Table2Map(L.GetGlobal("meta").(*lua.LTable))
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Println(meta)
-}
-*/

@@ -7,8 +7,8 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
-	"github.com/pojol/gobot/behavior"
 	"github.com/pojol/gobot/bot"
+	"github.com/pojol/gobot/bot/behavior"
 	"github.com/pojol/gobot/database"
 	"github.com/pojol/gobot/factory"
 	"github.com/pojol/gobot/utils"
@@ -67,7 +67,7 @@ func FileBlobUpload(ctx echo.Context) error {
 		goto EXT
 	}
 
-	_, err = behavior.New(bts)
+	_, err = behavior.Load(bts)
 	if err != nil {
 		fmt.Println(err.Error())
 		code = ErrJsonInvalid
@@ -106,7 +106,7 @@ func FileTextUpload(ctx echo.Context) error {
 	}
 
 	name = upload.FileName()
-	_, err = behavior.New(fbyte)
+	_, err = behavior.Load(fbyte)
 	if err != nil {
 		fmt.Println(err.Error())
 		code = ErrJsonInvalid
@@ -421,7 +421,7 @@ func BotRun(ctx echo.Context) error {
 		goto EXT
 	}
 
-	tree, err = behavior.New(info.Dat)
+	tree, err = behavior.Load(info.Dat)
 	if err != nil {
 		code = Fail
 		goto EXT

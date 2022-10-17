@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pojol/gobot/behavior"
 	"github.com/pojol/gobot/bot"
+	"github.com/pojol/gobot/bot/behavior"
 	"github.com/pojol/gobot/database"
 	"github.com/pojol/gobot/utils"
 )
@@ -189,7 +189,7 @@ func (f *Factory) CreateTask(name string, num int) *Batch {
 func (f *Factory) CreateDebugBot(name string, fbyt []byte) *bot.Bot {
 	var b *bot.Bot
 
-	tree, err := behavior.New(fbyt)
+	tree, err := behavior.Load(fbyt)
 	if err != nil {
 		return nil
 	}

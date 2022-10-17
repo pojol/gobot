@@ -10,8 +10,8 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/google/uuid"
-	"github.com/pojol/gobot/behavior"
 	"github.com/pojol/gobot/bot"
+	"github.com/pojol/gobot/bot/behavior"
 	"github.com/pojol/gobot/utils"
 )
 
@@ -53,7 +53,7 @@ type Batch struct {
 
 func CreateBatch(scriptPath, name string, num int, tbyt []byte, batchsize int32, globalScript []string) *Batch {
 
-	tree, err := behavior.New(tbyt)
+	tree, err := behavior.Load(tbyt)
 	if err != nil {
 		return nil
 	}
