@@ -560,10 +560,11 @@ end
             let metaStr = JSON.stringify(JSON.parse(json.Body.Blackboard))
             let threadinfo = JSON.parse(json.Body.ThreadInfo)
 
+            PubSub.publish(Topic.UpdateChange, threadinfo)
+
             let focusLst = new Array()
             threadinfo.forEach(element => {
               focusLst.push(element.curnod)
-              //PubSub.publish(Topic.UpdateChange, element)
             });
 
             PubSub.publish(Topic.Focus, focusLst)

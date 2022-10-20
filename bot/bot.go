@@ -97,9 +97,13 @@ ext:
 
 func (b *Bot) GetThreadInfo() string {
 
-	info := b.bb.ThreadInfo()
-	fmt.Println("thread info", info)
-	return info
+	lst := b.bb.ThreadInfo()
+
+	info, err := json.Marshal(&lst)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	return string(info)
 }
 
 func NewWithBehaviorTree(path string, bt *behavior.Tree, name string, idx int32, globalScript []string, mod Mode) *Bot {
@@ -207,7 +211,6 @@ func (b *Bot) GetReport() []script.Report {
 func (b *Bot) close() {
 	b.bs.L.DoString(`
 		meta = {}
-		change = {}
 	`)
 	pool.PutState(b.bs)
 }

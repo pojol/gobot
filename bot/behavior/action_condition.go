@@ -67,7 +67,7 @@ func (a *ConditionAction) onTick(t *Tick) NodStatus {
 		Fn:      t.bs.L.GetGlobal("execute"),
 		NRet:    1,
 		Protect: true,
-	}, lua.LNumber(0))
+	})
 	if err != nil {
 		a.err = err
 		return NSErr

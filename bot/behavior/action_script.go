@@ -1,9 +1,11 @@
 package behavior
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/pojol/gobot/bot/pool"
+	"github.com/pojol/gobot/utils"
 	lua "github.com/yuin/gopher-lua"
 )
 
@@ -65,18 +67,38 @@ func (a *ScriptAction) onTick(t *Tick) NodStatus {
 		Fn:      t.bs.L.GetGlobal("execute"),
 		NRet:    1,
 		Protect: true,
-	}, lua.LNumber(a.getThread()))
+	})
 	if err != nil {
 		a.err = err
 		return NSErr
 	}
+
+	v := t.bs.L.Get(-1)
 	t.bs.L.Pop(1)
 
-	t.blackboard.ThreadFillInfo(ThreadInfo{
+	var changeStr string
+
+	tab, ok := v.(*lua.LTable)
+	if ok {
+		change, err := utils.Table2Map(tab)
+		if err != nil {
+			fmt.Println("script response 2 map err", err.Error())
+		}
+
+		changeByt, err := json.Marshal(&change)
+		if err != nil {
+			fmt.Println("marshal change info err", err.Error())
+		}
+		changeStr = string(changeByt)
+	}
+
+	info := ThreadInfo{
 		Num:    a.getThread(),
 		ErrMsg: "",
 		CurNod: a.id,
-	})
+		Change: changeStr,
+	}
+	t.blackboard.ThreadFillInfo(info)
 
 	return NSSucc
 }

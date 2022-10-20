@@ -33,10 +33,23 @@ export default class Blackboard extends React.Component {
       }
     });
 
-    PubSub.subscribe(Topic.UpdateChange, (topic, info) => {
+    PubSub.subscribe(Topic.UpdateChange, (topic, threadInfo) => {
       try {
-        info.msg += "\n\n";
-        this.setState({ context: info.msg });
+        let res = ""
+        threadInfo.forEach(element => {
+          res += "Thread[" + element.num + "]\n"
+
+          try {
+            res += JSON.stringify(JSON.parse(element.change), null, 2) + "\n"
+          } catch (error) {
+            console.warn(error)
+            res += element.change + "\n"
+          }
+
+          res += "------------------------------\n"
+        })
+
+        this.setState({ context: res });
       } catch (err) {
         message.warning("blackboard parse info err");
       }
@@ -82,7 +95,7 @@ export default class Blackboard extends React.Component {
             tab={
               <span>
                 <CodeOutlined />
-                Thread[1]
+                Response
               </span>
             }
             key="1"

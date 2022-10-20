@@ -1,19 +1,16 @@
 package behavior
 
-import (
-	"encoding/json"
-	"fmt"
-)
-
 type ThreadInfo struct {
 	Num    int    `json:"num"`
 	ErrMsg string `json:"errmsg"`
 	CurNod string `json:"curnod"`
+	Change string `json:"change"`
 }
 
 func (ti *ThreadInfo) reset() {
 	ti.ErrMsg = ""
 	ti.CurNod = ""
+	ti.Change = ""
 }
 
 type Blackboard struct {
@@ -46,9 +43,7 @@ func (b *Blackboard) ThreadRmv(num int) {
 func (b *Blackboard) ThreadFillInfo(info ThreadInfo) {
 	for k, v := range b.Threadlst {
 		if v.Num == info.Num {
-			b.Threadlst[k].reset()
-			b.Threadlst[k].CurNod = info.CurNod
-			b.Threadlst[k].ErrMsg = info.ErrMsg
+			b.Threadlst[k] = info
 		}
 	}
 }
@@ -59,7 +54,7 @@ func (b *Blackboard) ThreadInfoReset() {
 	}
 }
 
-func (b *Blackboard) ThreadInfo() string {
+func (b *Blackboard) ThreadInfo() []ThreadInfo {
 
 	lst := []ThreadInfo{}
 
@@ -69,12 +64,7 @@ func (b *Blackboard) ThreadInfo() string {
 		}
 	}
 
-	info, err := json.Marshal(&lst)
-	if err != nil {
-		fmt.Println(err.Error())
-	}
-
-	return string(info)
+	return lst
 }
 
 func (b *Blackboard) ThreadCurNum() int {
