@@ -62,8 +62,10 @@ end
     merge table
     overwrite t2 to t1
 ]]--
-function merge(t1, t2)
-    change = t2
+function merge(t1, t2, threadnum)
+    if threadnum ~= 0 then
+        change[threadnum] = t2
+    end
     _merge(t1,t2)
 end
 

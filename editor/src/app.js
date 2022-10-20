@@ -130,7 +130,6 @@ export default class App extends React.Component {
                   message.warning("get config byte length == 0")
                   return
                 }
-
                 window.config.set(element, reader.result)
                 PubSub.publish(Topic.ConfigUpdate, reader.result);
 

@@ -7,11 +7,10 @@ import (
 	"math/rand"
 	"strconv"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/pojol/gobot/bot/behavior"
-	"github.com/pojol/gobot/bot/state"
+	"github.com/pojol/gobot/bot/pool"
 	script "github.com/pojol/gobot/script/module"
 	"github.com/pojol/gobot/utils"
 	lua "github.com/yuin/gopher-lua"
@@ -22,52 +21,26 @@ type ErrInfo struct {
 	Err error
 }
 
-type RunMode int
+type Mode int
 
 const (
-	Debug RunMode = 1 + iota
-	Batch
+	Thread Mode = 1 + iota
+	Block
+	Step
 )
-
-type Thread struct {
-	Number int    // 当前线程的编号
-	ErrMsg string // 错误信息
-
-	PreNods  []string
-	NextNods []string
-}
-
-type Transaction struct {
-	next   []*behavior.Tree
-	thread *Thread
-}
 
 type Bot struct {
 	id   string
 	name string
-	mode RunMode
 
 	preloadErr string
 
-	tree    *behavior.Tree
-	running bool
-
-	threadnum     int32
-	threadDoneNum int32
-
-	threadChan chan *Transaction
-	waitChan   chan *Transaction
-	waitLst    []*Transaction
-	step       *utils.Switch
-
-	threadLst  []*Thread
-	threadDone chan interface{}
+	bb   *behavior.Blackboard
+	tick *behavior.Tick
 
 	sync.RWMutex
-	bs *state.BotState // lua state pool
+	bs *pool.BotState // lua state pool
 
-	donech chan<- string
-	errch  chan<- ErrInfo
 }
 
 const (
@@ -123,52 +96,40 @@ ext:
 }
 
 func (b *Bot) GetThreadInfo() string {
-	threadinfolst := []Thread{}
 
-	b.RLock()
-	defer b.RUnlock()
-
-	for _, v := range b.threadLst {
-		threadinfolst = append(threadinfolst, Thread{
-			Number:   v.Number,
-			ErrMsg:   v.ErrMsg,
-			PreNods:  v.PreNods,
-			NextNods: v.NextNods,
-		})
-	}
-
-	info, err := json.Marshal(&threadinfolst)
-	if err != nil {
-		fmt.Println(err.Error())
-	}
-
-	return string(info)
+	info := b.bb.ThreadInfo()
+	fmt.Println("thread info", info)
+	return info
 }
 
-func NewWithBehaviorTree(path string, bt *behavior.Tree, name string, idx int32, globalScript []string) *Bot {
+func NewWithBehaviorTree(path string, bt *behavior.Tree, name string, idx int32, globalScript []string, mod Mode) *Bot {
+
+	bb := &behavior.Blackboard{
+		Nods:      []behavior.INod{bt.GetRoot()},
+		Threadlst: []behavior.ThreadInfo{{Num: 1}},
+	}
+
+	state := pool.GetState()
 
 	bot := &Bot{
-		id:         strconv.Itoa(int(idx)),
-		tree:       bt,
-		bs:         state.GetState(),
-		name:       name,
-		threadChan: make(chan *Transaction, 1),
-		waitChan:   make(chan *Transaction, 1),
-		threadDone: make(chan interface{}),
-		step:       utils.NewSwitch(),
+		id:   strconv.Itoa(int(idx)),
+		bb:   bb,
+		tick: behavior.NewTick(bb, state),
+		bs:   state,
+		name: name,
 	}
 
 	rand.Seed(time.Now().UnixNano())
 
 	// 加载预定义全局脚本文件
 	for _, gs := range globalScript {
-		state.DoString(bot.bs.L, gs)
+		pool.DoString(bot.bs.L, gs)
 	}
 
 	// 这里要对script目录进行一次检查，将lua脚本都载入进来
 	preScripts := utils.GetDirectoryFiels(path, ".lua")
 	for _, v := range preScripts {
-		err := state.DoFile(bot.bs.L, path+v)
+		err := pool.DoFile(bot.bs.L, path+v)
 		if err != nil {
 			fmt.Println("err", err.Error())
 			bot.preloadErr = fmt.Sprintf("load script %v err : %v", path+v, err.Error())
@@ -187,114 +148,32 @@ func NewWithBehaviorTree(path string, bt *behavior.Tree, name string, idx int32,
 	return bot
 }
 
-func (b *Bot) fillThreadInfo(t *Thread) {
-
-	b.Lock()
-
-	var f bool
-
-	for k, v := range b.threadLst {
-		if v.Number == t.Number {
-			b.threadLst[k] = t
-			f = true
-			break
-		}
-	}
-
-	if !f {
-		b.threadLst = append(b.threadLst, t)
-	}
-
-	/*
-		fmt.Println("thread info ===>")
-		for _, v := range b.threadLst {
-			fmt.Println("\tthread"+strconv.Itoa(v.number), v.nodeid, v.err)
-		}
-	*/
-
-	b.Unlock()
-
-}
-
-func getNodsName(nods []*behavior.Tree) []string {
-
-	names := []string{}
-	for _, v := range nods {
-		names = append(names, v.ID)
-	}
-
-	return names
-}
-
-func (b *Bot) next(parent *Transaction) bool {
-
-	return true
-}
-
-func (b *Bot) loop() {
+func (b *Bot) loopThread(doneCh chan<- string, errch chan<- ErrInfo) {
 
 	for {
-
-		select {
-		case t := <-b.threadChan:
-			b.fillThreadInfo(t.thread)
-			b.next(t)
-
-			if t.thread.ErrMsg != "" {
-				b.errch <- ErrInfo{ID: b.id, Err: errors.New(t.thread.ErrMsg)}
-				goto ext
-			}
-
-			if atomic.LoadInt32(&b.threadnum) == b.threadDoneNum {
-				b.donech <- b.id
-				goto ext
-			}
-
-		case w := <-b.waitChan:
-			b.Lock()
-			for _, v := range w.next {
-				fmt.Printf("\t thread:%v id:%v type:%v\n", w.thread.Number, v.ID, v.Ty)
-			}
-
-			b.waitLst = append(b.waitLst, w)
-			b.Unlock()
-		case <-b.step.Done():
-			if b.step.HasOpend() {
-				fmt.Println("install:")
-				for _, v := range b.waitLst {
-					fmt.Printf("\t thread:%v\n", v.thread.Number)
-					b.threadChan <- v
-				}
-
-				b.waitLst = b.waitLst[:0]
-			}
-			b.step.Close()
+		err, end := b.tick.Do()
+		if end {
+			doneCh <- b.id
+			goto ext
 		}
+
+		if err != nil {
+			errch <- ErrInfo{
+				ID:  b.id,
+				Err: err,
+			}
+			goto ext
+		}
+		time.Sleep(time.Millisecond * 100)
 	}
 
 ext:
-	fmt.Println("clean")
-	// cleanup
 	b.close()
 }
 
-func (b *Bot) Run(doneCh chan<- string, errch chan<- ErrInfo, mode RunMode) {
+func (b *Bot) RunByThread(doneCh chan<- string, errch chan<- ErrInfo) {
 
-	b.donech = doneCh
-	b.errch = errch
-	b.mode = mode
-
-	go b.loop()
-
-	if len(b.tree.Children) != 0 {
-		b.threadChan <- &Transaction{
-			next: []*behavior.Tree{b.tree.Children[0]},
-			thread: &Thread{
-				Number:  int(atomic.AddInt32(&b.threadnum, 1)),
-				PreNods: []string{b.tree.Children[0].ID},
-			},
-		}
-	}
+	go b.loopThread(doneCh, errch)
 
 }
 
@@ -306,17 +185,19 @@ func (b *Bot) RunByBlock() error {
 		}
 	}()
 
-	donech := make(chan string)
-	errch := make(chan ErrInfo)
+	for {
+		err, end := b.tick.Do()
+		if end {
+			return nil
+		}
 
-	b.Run(donech, errch, Batch)
+		if err != nil {
+			return err
+		}
 
-	select {
-	case <-donech:
-		return nil
-	case e := <-errch:
-		return e.Err
+		time.Sleep(time.Millisecond * 100)
 	}
+
 }
 
 func (b *Bot) GetReport() []script.Report {
@@ -326,8 +207,9 @@ func (b *Bot) GetReport() []script.Report {
 func (b *Bot) close() {
 	b.bs.L.DoString(`
 		meta = {}
+		change = {}
 	`)
-	state.PutState(b.bs)
+	pool.PutState(b.bs)
 }
 
 type State int32
@@ -339,24 +221,16 @@ const (
 	SSucc
 )
 
-func (b *Bot) RunStep() State {
+func (b *Bot) RunByStep() State {
 
-	if b.running {
-		fmt.Println("")
-		fmt.Println("cmd : step ->")
-		b.Lock()
-		b.threadLst = b.threadLst[:0]
-		b.Unlock()
-		b.step.Open()
+	err, end := b.tick.Do()
+	if err != nil {
+		fmt.Println("run step err", err.Error())
+		return SBreak
+	}
 
-	} else {
-		fmt.Println("cmd : create ->")
-
-		donech := make(chan string)
-		errch := make(chan ErrInfo)
-
-		b.Run(donech, errch, Debug)
-		b.running = true
+	if end {
+		return SEnd
 	}
 
 	return SSucc

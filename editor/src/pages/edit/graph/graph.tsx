@@ -7,8 +7,9 @@ import SequenceNode from "./shape/shape_sequence";
 import RootNode from "./shape/shape_root";
 import LoopNode from "./shape/shape_loop";
 import WaitNode from "./shape/shape_wait";
-import AssertNode from "./shape/shap_assert";
 import ParallelNode from "./shape/shap_parallel";
+import { Interp } from '@antv/x6'
+
 
 /// <reference path="graph.d.ts" />
 
@@ -22,7 +23,7 @@ import {
   ZoomInOutlined,
   ZoomOutOutlined,
   AimOutlined,
-  BugOutlined ,
+  BugOutlined,
   CloudUploadOutlined,
   DeleteOutlined,
   UndoOutlined,
@@ -56,7 +57,6 @@ function NewStencil(graph: Graph) {
   var selectorNod = new SelectorNode();
   var seqNod = new SequenceNode();
   var condNod = new ConditionNode();
-  var assertNod = new AssertNode();
   var loopNod = new LoopNode();
   var waitNod = new WaitNode();
   var parallelNod = new ParallelNode();
@@ -69,18 +69,16 @@ function NewStencil(graph: Graph) {
     selectorNod.setAttrs({ label: { text: "Selector" } });
     seqNod.setAttrs({ label: { text: "Sequence" } });
     condNod.setAttrs({ label: { text: "Condition" } });
-    assertNod.setAttrs({ label: { text: "Assert" } });
     loopNod.setAttrs({ label: { text: "Loop" } });
     waitNod.setAttrs({ label: { text: "Wait" } });
-    parallelNod.setAttrs({label: {text: "Parallel"}})
+    parallelNod.setAttrs({ label: { text: "Parallel" } })
   } else if (moment.locale() === "zh-cn") {
     selectorNod.setAttrs({ label: { text: "选择" } });
     seqNod.setAttrs({ label: { text: "顺序" } });
     condNod.setAttrs({ label: { text: "条件" } });
-    assertNod.setAttrs({ label: { text: "断言" } });
     loopNod.setAttrs({ label: { text: "循环" } });
     waitNod.setAttrs({ label: { text: "等待" } });
-    parallelNod.setAttrs({label: {text: "并行"}})
+    parallelNod.setAttrs({ label: { text: "并行" } })
 
     title = "组件";
     placeholder = "通过节点名进行搜索";
@@ -103,9 +101,9 @@ function NewStencil(graph: Graph) {
     notFoundText: "Not Found",
     target: graph,
     collapsable: true,
-    
+
     stencilGraphWidth: stencilWidth,
-    stencilGraphHeight: 310,
+    stencilGraphHeight: 260,
     groups: [
       {
         name: "group1",
@@ -119,7 +117,7 @@ function NewStencil(graph: Graph) {
   });
 
   stencil.load(
-    [selectorNod, seqNod, parallelNod, condNod, assertNod, loopNod, waitNod],
+    [selectorNod, seqNod, parallelNod, condNod, loopNod, waitNod],
     "group1"
   );
 
@@ -386,7 +384,7 @@ export default class GraphView extends React.Component {
         silent = options.others.silent;
         build = options.others.build;
       }
-
+      console.info(GetNodInfo(node))
       PubSub.publish(Topic.NodeAdd, [GetNodInfo(node), build, silent]);
     });
 
@@ -507,24 +505,17 @@ export default class GraphView extends React.Component {
       // clean
       this.cleanStepInfo();
 
-      if (info.length === 0) {
-        this.setState({ stepDisabled: true });
-        setTimeout(() => {
-          this.setState({ stepDisabled: false });
-        }, 1000);
-      } else {
+      info.forEach(element => {
+        this.findNode(element, (nod) => {
 
-        info.forEach(element => {
-          this.findNode(element, (nod) => {
-            nod.setAttrs({
-              body: {
-                strokeWidth: 4,
-              },
-            });
-          });
+          nod.transition(
+            "attrs/body/strokeWidth", "4px", { 
+              interp: Interp.unit,
+              timing: 'bounce', // Timing.bounce
+            },
+          )()
         });
-
-      }
+      });
 
     });
 
@@ -604,11 +595,11 @@ export default class GraphView extends React.Component {
       case NodeTy.Loop:
         nod = new LoopNode({ id: child.id });
         break;
-      case NodeTy.Assert:
-        nod = new AssertNode({ id: child.id });
-        break;
       case NodeTy.Wait:
         nod = new WaitNode({ id: child.id });
+        break;
+      case NodeTy.Parallel:
+        nod = new ParallelNode({ id: child.id })
         break;
       default:
         nod = new ActionNode({ id: child.id });
@@ -685,6 +676,8 @@ export default class GraphView extends React.Component {
       nod.setAttrs({ label: { text: "seq" } });
     } else if (child.ty === NodeTy.Selector) {
       nod.setAttrs({ label: { text: "sel" } });
+    } else if (child.ty === NodeTy.Parallel) {
+      nod.setAttrs({ label: { text: "par" } });
     }
 
     if (child.children && child.children.length) {
@@ -818,7 +811,7 @@ export default class GraphView extends React.Component {
   };
 
   ClickStep = (e: any) => {
-      PubSub.publish(Topic.Step, {});
+    PubSub.publish(Topic.Step, {});
   };
 
   cleanStepInfo = () => {
@@ -875,7 +868,7 @@ export default class GraphView extends React.Component {
               icon={<CaretRightOutlined />}
               onClick={this.ClickStep}
             >
-              {}
+              { }
             </Button>
           </Tooltip>
         </div>

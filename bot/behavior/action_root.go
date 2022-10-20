@@ -1,34 +1,62 @@
 package behavior
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type RootAction struct {
 	INod
-	Nod
+
+	child []INod
+
+	id string
+	ty string
+
+	freeze bool
+
+	threadnum int
 }
 
-func (a *RootAction) Init(t *Tree) {
-	a.Nod.Init(t)
+func (a *RootAction) Init(t *Tree, parent INod) {
+	a.id = t.ID
+	a.ty = t.Ty
+
+	a.threadnum = 1
 }
+
 func (a *RootAction) ID() string {
-	return a.Nod.id
+	return a.id
 }
 
-func (a *RootAction) AddChild(child INod, parent INod) {
-	a.Nod.AddChild(child, parent)
+func (a *RootAction) setThread(num int) {
 }
 
-func (a *RootAction) Close(t *Tick) {
+func (a *RootAction) getThread() int {
+	return a.threadnum
+}
+
+func (a *RootAction) AddChild(child INod) {
+	a.child = append(a.child, child)
 }
 
 func (a *RootAction) onTick(t *Tick) NodStatus {
-	fmt.Println(a.Nod.tree.Ty, a.Nod.id)
+	fmt.Println("\t", a.ty, a.id)
+
+	t.blackboard.ThreadFillInfo(ThreadInfo{
+		Num:    a.getThread(),
+		ErrMsg: "",
+		CurNod: a.id,
+	})
+
 	return NSSucc
 }
 
 func (a *RootAction) onNext(t *Tick) {
-	if len(a.Nod.child) > 0 {
-		t.blackboard.Append([]INod{a.Nod.child[0]})
+	if len(a.child) > 0 && !a.freeze {
+		a.freeze = true
+		t.blackboard.Append([]INod{a.child[0]})
+	} else {
+		t.blackboard.End()
 	}
 }
 

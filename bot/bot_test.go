@@ -3,8 +3,11 @@ package bot
 import (
 	"os"
 	"testing"
+	"time"
 
+	"github.com/pojol/gobot/bot/behavior"
 	"github.com/pojol/gobot/mock"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMain(m *testing.M) {
@@ -233,29 +236,53 @@ end
     <loop>2</loop>
   </children>
 </behavior>
-
-
 `
 
-/*
-func TestLoad(t *testing.T) {
+func TestStepMode(t *testing.T) {
 
 	var tree *behavior.Tree
 	var bot *Bot
 
-	tree, err := behavior.New([]byte(compose))
+	tree, err := behavior.Load([]byte(compose))
 	assert.Equal(t, err, nil)
 
-	bot = NewWithBehaviorTree("../script/", tree, "test", 1, []string{})
+	bot = NewWithBehaviorTree("../script/", tree, "test", 1, []string{}, Step)
 	defer bot.close()
 
 	for i := 0; i < 20; i++ {
-		bot.RunStep()
+		bot.RunByStep()
 	}
 
-	t.Fail()
 }
 
+func TestThreadMode(t *testing.T) {
+	var tree *behavior.Tree
+	var bot *Bot
+
+	tree, err := behavior.Load([]byte(compose))
+	assert.Equal(t, err, nil)
+
+	bot = NewWithBehaviorTree("../script/", tree, "test", 1, []string{}, Thread)
+	defer bot.close()
+
+	time.Sleep(time.Second)
+}
+
+func TestBlockMode(t *testing.T) {
+	var tree *behavior.Tree
+	var bot *Bot
+
+	tree, err := behavior.Load([]byte(compose))
+	assert.Equal(t, err, nil)
+
+	bot = NewWithBehaviorTree("../script/", tree, "test", 1, []string{}, Block)
+	defer bot.close()
+
+	err = bot.RunByBlock()
+	assert.Equal(t, err, nil)
+}
+
+/*
 func TestRuning(t *testing.T) {
 	var tree *behavior.Tree
 	var bot *Bot

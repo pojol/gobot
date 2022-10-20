@@ -1,29 +1,32 @@
 package behavior
 
 import (
-	"fmt"
-
-	"github.com/pojol/gobot/bot/state"
+	"github.com/pojol/gobot/bot/pool"
 )
 
 type Tick struct {
 	blackboard *Blackboard
-	bs         *state.BotState
-	tick       int
+	bs         *pool.BotState
 }
 
-func (t *Tick) Do() error {
+func NewTick(bb *Blackboard, state *pool.BotState) *Tick {
+	t := &Tick{
+		blackboard: bb,
+		bs:         state,
+	}
+	return t
+}
+
+func (t *Tick) Do() (error, bool) {
 
 	nods := t.blackboard.GetOpenNods()
-	fmt.Println(t.tick)
+	t.blackboard.ThreadInfoReset()
 
 	for _, n := range nods {
-
 		ns := n.onTick(t)
 		if ns == NSFail {
-			return n.GetErr()
+			return n.GetErr(), false
 		}
-
 	}
 
 	t.blackboard.Reset()
@@ -32,7 +35,9 @@ func (t *Tick) Do() error {
 		n.onNext(t)
 	}
 
-	t.tick++
-	return nil
+	if t.blackboard.end {
+		return nil, true
+	}
 
+	return nil, false
 }

@@ -131,7 +131,7 @@ func (b *Batch) loop() {
 		select {
 		case botptr := <-b.pipeline:
 			b.push(botptr)
-			botptr.Run(b.botDoneCh, b.botErrCh, bot.Batch)
+			botptr.RunByThread(b.botDoneCh, b.botErrCh)
 		case id := <-b.botDoneCh:
 			if _, ok := b.bots[id]; ok {
 				b.pushReport(b.rep, b.bots[id])
@@ -172,7 +172,7 @@ func (b *Batch) run() {
 			}
 			for i := 0; i < int(curbatchnum); i++ {
 				atomic.AddInt32(&b.cursorNum, 1)
-				b.pipeline <- bot.NewWithBehaviorTree(b.path, b.tree, b.Name, atomic.LoadInt32(&b.cursorNum), b.globalScript)
+				b.pipeline <- bot.NewWithBehaviorTree(b.path, b.tree, b.Name, atomic.LoadInt32(&b.cursorNum), b.globalScript, bot.Thread)
 			}
 
 			b.bwg.Wait()

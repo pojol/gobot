@@ -8,30 +8,6 @@ import Api from "../constant/api";
 import Cmd from "../constant/cmd";
 import { NodeTy } from "../constant/node_type";
 
-/*!
-
-  // relation info
-  {
-    id : string,
-    children : []
-  }
-
-  // node info
-  {
-    id : string // node id
-    ty : string // node type
-    pos : {
-      x : number,
-      y : number,
-    },
-    code : "",
-    wait : 0,
-    loop : 0,
-    children : []
-  }
-
-*/
-
 
 
 export default class TreeModel extends React.Component {
@@ -42,12 +18,6 @@ export default class TreeModel extends React.Component {
       nods: [], //  root 记录节点的链路关系， window(map 记录节点的细节
       botid: "",
       behaviorTreeName: "",
-      assertTmp: `
--- Write expression to return true or false
-function execute()
-
-end
-      `,
       conditionTmp: `
 -- Write expression to return true or false
 function execute()
@@ -97,9 +67,6 @@ end
         case NodeTy.Condition:
           nod.code = this.state.conditionTmp;
           break
-        case NodeTy.Assert:
-          nod.code = this.state.assertTmp;
-          break
         case NodeTy.Loop:
           nod.loop = 1;
           break
@@ -109,24 +76,23 @@ end
         case NodeTy.Root:
         case NodeTy.Sequence:
         case NodeTy.Selector:
+        case NodeTy.Parallel:
           break
         default:
           let ty = nod.ty
           if (ty === "ActionNode") { // tmp
             ty = "HTTP"
           }
-
+          ty = ty.toLowerCase()
           let httpobj = window.config.get(ty);
 
           try {
             let jobj = JSON.parse(httpobj);
             nod.code = jobj["content"];
-
-            console.info("code get", ty, nod.code)
-
           } catch (error) {
             console.error(error)
-            console.error(ty, window.config.get(ty))
+            console.info(nod)
+            console.error("parse err", ty, window.config.get(ty))
           }
       }
     }
@@ -343,7 +309,6 @@ end
     if (edit) {
 
       switch (info.ty) {
-        case NodeTy.Assert:
         case NodeTy.Condition:
           org.code = info.code;
           break
@@ -579,62 +544,40 @@ end
 
       Post(localStorage.remoteAddr, Api.DebugStep, { BotID: botid }).then(
         (json) => {
+
+          PubSub.publish(Topic.Focus, []);  // reset focus
+
           if (json.Code !== 200) {
-            let change;
-            let changeInfo = {};
 
-            if (json.Code === 1008) {
-              change = JSON.parse(json.Body.Change);
-              changeInfo = {
-                status: "",
-                msg: JSON.stringify(change, null, "\t"),
-              };
-
+            if (json.Code === 1007) {  // end
               message.success("the end");
+              return;
             }
 
-            if (json.Code !== 1010) {
-              PubSub.publish(Topic.UpdateChange, changeInfo);
-            }
+            message.warning(json.Code.toString() + " " + json.Msg)
 
-            PubSub.publish(Topic.UpdateBlackboard, json.Body.Blackboard);
-            PubSub.publish(Topic.Focus, []);
-          } 
-        }
-      );
-
-      
-
-    });
-
-    setInterval(function () {
-
-      if (this.state.botid === ""){
-        return
-      }
-
-      Post(localStorage.remoteAddr, Api.DebugInfo, { BotID: this.state.botid }).then(
-        (json) => {
-          if (json.Code === 200) {
-            let metastr;
-            let meta = JSON.parse(json.Body.Blackboard);
-            metastr = JSON.stringify(meta);
-
-            PubSub.publish(Topic.UpdateBlackboard, metastr);
-
+          } else {
+            let metaStr = JSON.stringify(JSON.parse(json.Body.Blackboard))
             let threadinfo = JSON.parse(json.Body.ThreadInfo)
 
             let focusLst = new Array()
             threadinfo.forEach(element => {
-              focusLst.push(element.Curid)
-              PubSub.publish(Topic.UpdateChange, element)
+              focusLst.push(element.curnod)
+              //PubSub.publish(Topic.UpdateChange, element)
             });
 
             PubSub.publish(Topic.Focus, focusLst)
+            PubSub.publish(Topic.UpdateBlackboard, metaStr);
           }
+
         }
       );
-    }.bind(this), 200);
+
+    });
+
+    if (this.state.botid === "") {
+      return
+    }
 
     PubSub.subscribe(Topic.FileSave, (topic, msg) => {
       var tree = this.getTree();

@@ -10,7 +10,7 @@ type Tree struct {
 
 	Wait int32 `xml:"wait"`
 
-	Loop int32  `xml:"loop"` // 用于记录循环节点的循环次数
+	Loop int32  `xml:"loop"` // 用于记录循环节点的循环x次数
 	Code string `xml:"code"`
 
 	root INod
@@ -18,13 +18,17 @@ type Tree struct {
 	Children []*Tree `xml:"children"`
 }
 
+func (t *Tree) GetRoot() INod {
+	return t.root
+}
+
 func (t *Tree) link(self INod, parent INod) {
 
-	self.Init(t)
+	self.Init(t, parent)
 
 	for k := range t.Children {
 		child := NewNode(t.Children[k].Ty).(INod)
-		self.AddChild(child, parent)
+		self.AddChild(child)
 		t.Children[k].link(child, self)
 	}
 
@@ -39,13 +43,13 @@ func Load(f []byte) (*Tree, error) {
 	}
 
 	tree.root = NewNode(tree.Ty).(INod)
-	tree.root.Init(tree)
+	tree.root.Init(tree, nil)
 
 	for k := range tree.Children {
 
 		cn := NewNode(tree.Children[k].Ty).(INod)
-		cn.Init(tree.Children[k])
-		tree.root.AddChild(cn, tree.root)
+		cn.Init(tree.Children[k], tree.root)
+		tree.root.AddChild(cn)
 
 		tree.Children[k].link(cn, tree.root)
 	}

@@ -1,48 +1,88 @@
 package behavior
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type LoopAction struct {
 	INod
-	Nod
-	loop int
+
+	child  []INod
+	parent INod
+
+	id string
+	ty string
+
+	loop    int
+	curLoop int
+
+	threadnum int
 }
 
-func (a *LoopAction) Init(t *Tree) {
-	a.Nod.Init(t)
+func (a *LoopAction) Init(t *Tree, parent INod) {
+	a.id = t.ID
+	a.ty = t.Ty
+
+	a.loop = int(t.Loop)
+
+	a.parent = parent
 }
+
 func (a *LoopAction) ID() string {
-	return a.Nod.id
+	return a.id
 }
 
-func (a *LoopAction) AddChild(child INod, parent INod) {
-	a.Nod.AddChild(child, parent)
+func (a *LoopAction) setThread(num int) {
+	if a.threadnum == 0 {
+		a.threadnum = num
+	}
 }
 
-func (a *LoopAction) Close(t *Tick) {
+func (a *LoopAction) getThread() int {
+	if a.threadnum != 0 {
+		return a.threadnum
+	} else {
+		return a.parent.getThread()
+	}
+}
+
+func (a *LoopAction) AddChild(child INod) {
+	a.child = append(a.child, child)
 }
 
 func (a *LoopAction) onTick(t *Tick) NodStatus {
-	fmt.Println(a.Nod.tree.Ty, a.Nod.id)
-	a.loop++
+	fmt.Println("\t", a.ty, a.id)
+
+	t.blackboard.ThreadFillInfo(ThreadInfo{
+		Num:    a.getThread(),
+		ErrMsg: "",
+		CurNod: a.id,
+	})
+
 	return NSSucc
 }
 
 func (a *LoopAction) onNext(t *Tick) {
 
-	childnum := len(a.Nod.child)
+	childnum := len(a.child)
+	if childnum > 0 && a.curLoop < a.loop {
+		a.curLoop++
 
-	if childnum > 0 && a.loop < a.Nod.loop {
-		t.blackboard.Append([]INod{a.Nod.child[0]})
+		for _, child := range a.child {
+			child.onReset()
+		}
+
+		t.blackboard.Append([]INod{a.child[0]})
 	} else {
-		a.Nod.parent.onNext(t)
+		a.parent.onNext(t)
 	}
+
 }
 
 func (a *LoopAction) onReset() {
 
-	a.loop = 0
-	for _, child := range a.Nod.child {
+	a.curLoop = 0
+	for _, child := range a.child {
 		child.onReset()
 	}
 

@@ -47,10 +47,6 @@ var lanMap = {
         "en" : "Wait",
         "zh-cn" : "等待节点"
     },
-    "app.edit.tab.assert" : {
-        "en" : "Assert",
-        "zh-cn" : "断言节点"
-    },
     "app.edit.tab.other" : {
         "en" : "Other",
         "zh-cn" : "其他"

@@ -1,41 +1,70 @@
 package behavior
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type SequenceAction struct {
 	INod
-	Nod
+
+	child  []INod
+	parent INod
+
+	id string
+	ty string
+
 	step int
+
+	threadnum int
 }
 
-func (a *SequenceAction) Init(t *Tree) {
-	a.Nod.Init(t)
+func (a *SequenceAction) Init(t *Tree, parent INod) {
+	a.id = t.ID
+	a.ty = t.Ty
+
+	a.parent = parent
 }
+
 func (a *SequenceAction) ID() string {
-	return a.Nod.id
-}
-func (a *SequenceAction) AddChild(child INod, parent INod) {
-	a.Nod.AddChild(child, parent)
+	return a.id
 }
 
-func (a *SequenceAction) Close(t *Tick) {
-}
-
-func (a *SequenceAction) OnTick(t *Tick) NodStatus {
-	fmt.Println(a.Nod.tree.Ty, a.Nod.id)
-	ns := NSSucc
-
-	if a.step < len(a.Nod.child) {
-		a.step++
+func (a *SequenceAction) setThread(num int) {
+	if a.threadnum == 0 {
+		a.threadnum = num
 	}
+}
 
-	return ns
+func (a *SequenceAction) getThread() int {
+	if a.threadnum != 0 {
+		return a.threadnum
+	} else {
+		return a.parent.getThread()
+	}
+}
+
+func (a *SequenceAction) AddChild(child INod) {
+	a.child = append(a.child, child)
+}
+
+func (a *SequenceAction) onTick(t *Tick) NodStatus {
+	fmt.Println("\t", a.ty, a.id)
+
+	t.blackboard.ThreadFillInfo(ThreadInfo{
+		Num:    a.getThread(),
+		ErrMsg: "",
+		CurNod: a.id,
+	})
+
+	return NSSucc
 }
 
 func (a *SequenceAction) onNext(t *Tick) {
 
-	if a.step < len(a.Nod.child) {
-		t.blackboard.Append([]INod{a.Nod.child[a.step]})
+	if a.step < len(a.child) {
+		a.step++
+		t.blackboard.Append([]INod{a.child[a.step-1]})
+
 	} else {
 		a.parent.onNext(t)
 	}
@@ -45,7 +74,7 @@ func (a *SequenceAction) onNext(t *Tick) {
 func (a *SequenceAction) onReset() {
 	a.step = 0
 
-	for _, child := range a.Nod.child {
+	for _, child := range a.child {
 		child.onReset()
 	}
 }
