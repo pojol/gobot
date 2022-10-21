@@ -4,58 +4,42 @@ import "fmt"
 
 type ParallelAction struct {
 	INod
-
-	child  []INod
-	parent INod
-
-	id string
-	ty string
-
-	freeze bool
-
-	threadnum int
+	base Node
 }
 
-func (a *ParallelAction) Init(t *Tree, parent INod) {
-	a.id = t.ID
-	a.ty = t.Ty
-
-	a.parent = parent
+func (a *ParallelAction) Init(t *Tree, parent INod, mode Mode) {
+	a.base.Init(t, parent, mode)
 }
 
-func (a *ParallelAction) ID() string {
-	return a.id
-}
-
-func (a *ParallelAction) setThread(num int) {
-
+func (a *ParallelAction) AddChild(nod INod) {
+	a.base.AddChild(nod)
 }
 
 func (a *ParallelAction) getThread() int {
-	return a.parent.getThread()
+	return a.base.getThread()
 }
 
-func (a *ParallelAction) AddChild(child INod) {
-	a.child = append(a.child, child)
+func (a *ParallelAction) setThread(tn int) {
+	a.base.setThread(tn)
 }
 
-func (a *ParallelAction) onTick(t *Tick) NodStatus {
-	fmt.Println("\t", a.ty, a.id)
+func (a *ParallelAction) onTick(t *Tick) {
 
-	t.blackboard.ThreadFillInfo(ThreadInfo{
-		Num:    a.getThread(),
-		ErrMsg: "",
-		CurNod: a.id,
-	})
+	if a.base.mode == Step {
+		t.blackboard.ThreadFillInfo(ThreadInfo{
+			Number: a.getThread(),
+			ErrMsg: "",
+			CurNod: a.base.ID(),
+		}, nil)
+	}
 
-	return NSSucc
 }
 
 func (a *ParallelAction) onNext(t *Tick) {
-	if !a.freeze {
-		a.freeze = true
+	if !a.base.GetFreeze() {
+		a.base.SetFreeze(true)
 
-		for _, children := range a.child {
+		for _, children := range a.base.Children() {
 			t.blackboard.Append([]INod{children})
 
 			newthreadnum := t.blackboard.ThreadCurNum() + 1
@@ -65,20 +49,20 @@ func (a *ParallelAction) onNext(t *Tick) {
 		}
 
 	} else {
-		a.threadnum++
+		a.base.threadNumber++
 		fmt.Println("end thread")
 
-		if a.threadnum >= len(a.child) {
-			a.parent.onNext(t)
+		if a.base.threadNumber >= a.base.ChildrenNum() {
+			a.base.parent.onNext(t)
 		}
 	}
 }
 
 func (a *ParallelAction) onReset() {
-	a.freeze = false
-	a.threadnum = 0
+	a.base.SetFreeze(false)
+	a.base.threadNumber = 0
 
-	for _, child := range a.child {
+	for _, child := range a.base.Children() {
 		child.onReset()
 	}
 }

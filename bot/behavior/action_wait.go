@@ -1,68 +1,46 @@
 package behavior
 
 import (
-	"fmt"
 	"time"
 )
 
 type WaitAction struct {
 	INod
-
-	child  []INod
-	parent INod
-
-	id string
-	ty string
+	base Node
 
 	wait    int64
 	endtime int64
-
-	threadnum int
 }
 
-func (a *WaitAction) Init(t *Tree, parent INod) {
-	a.id = t.ID
-	a.ty = t.Ty
+func (a *WaitAction) Init(t *Tree, parent INod, mode Mode) {
+	a.base.Init(t, parent, mode)
 	a.wait = int64(t.Wait)
-
-	a.parent = parent
 }
 
-func (a *WaitAction) ID() string {
-	return a.id
-}
-
-func (a *WaitAction) setThread(num int) {
-	if a.threadnum == 0 {
-		a.threadnum = num
-	}
+func (a *WaitAction) AddChild(nod INod) {
+	a.base.AddChild(nod)
 }
 
 func (a *WaitAction) getThread() int {
-	if a.threadnum != 0 {
-		return a.threadnum
-	} else {
-		return a.parent.getThread()
-	}
+	return a.base.getThread()
 }
 
-func (a *WaitAction) AddChild(child INod) {
-	a.child = append(a.child, child)
+func (a *WaitAction) setThread(tn int) {
+	a.base.setThread(tn)
 }
 
-func (a *WaitAction) onTick(t *Tick) NodStatus {
-	fmt.Println("\t", a.ty, a.id)
+func (a *WaitAction) onTick(t *Tick) {
 	if a.endtime == 0 {
 		a.endtime = time.Now().UnixNano()/1000000 + int64(a.wait)
 	}
 
-	t.blackboard.ThreadFillInfo(ThreadInfo{
-		Num:    a.getThread(),
-		ErrMsg: "",
-		CurNod: a.id,
-	})
-
-	return NSSucc
+	if a.base.mode == Step {
+		t.blackboard.ThreadFillInfo(ThreadInfo{
+			Number: a.getThread(),
+			ErrMsg: "",
+			CurNod: a.base.ID(),
+		}, nil)
+	}
 }
 
 func (a *WaitAction) onNext(t *Tick) {
@@ -71,10 +49,10 @@ func (a *WaitAction) onNext(t *Tick) {
 	if currTime >= a.endtime {
 		a.endtime = 0
 
-		if len(a.child) > 0 {
-			t.blackboard.Append([]INod{a.child[0]})
+		if a.base.ChildrenNum() > 0 {
+			t.blackboard.Append([]INod{a.base.Children()[0]})
 		} else {
-			a.parent.onNext(t)
+			a.base.parent.onNext(t)
 		}
 
 	} else {
@@ -86,7 +64,7 @@ func (a *WaitAction) onNext(t *Tick) {
 func (a *WaitAction) onReset() {
 	a.endtime = 0
 
-	for _, child := range a.child {
+	for _, child := range a.base.Children() {
 		child.onReset()
 	}
 }

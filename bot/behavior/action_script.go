@@ -11,56 +11,37 @@ import (
 
 type ScriptAction struct {
 	INod
+	base Node
 
-	child  []INod
-	parent INod
-
-	id   string
-	ty   string
 	code string
-
-	freeze bool
-	err    error
-
-	threadnum int
 }
 
-func (a *ScriptAction) Init(t *Tree, parent INod) {
-	a.id = t.ID
-	a.ty = t.Ty
+func (a *ScriptAction) Init(t *Tree, parent INod, mode Mode) {
+	a.base.Init(t, parent, mode)
+
 	a.code = t.Code
-
-	a.parent = parent
 }
 
-func (a *ScriptAction) ID() string {
-	return a.id
-}
-
-func (a *ScriptAction) setThread(num int) {
-	if a.threadnum == 0 {
-		a.threadnum = num
-	}
+func (a *ScriptAction) AddChild(nod INod) {
+	a.base.AddChild(nod)
 }
 
 func (a *ScriptAction) getThread() int {
-	if a.threadnum != 0 {
-		return a.threadnum
-	} else {
-		return a.parent.getThread()
-	}
+	return a.base.getThread()
 }
 
-func (a *ScriptAction) AddChild(child INod) {
-	a.child = append(a.child, child)
+func (a *ScriptAction) setThread(tn int) {
+	a.base.setThread(tn)
 }
 
-func (a *ScriptAction) onTick(t *Tick) NodStatus {
-	fmt.Println("\t", a.ty, a.id)
-	err := pool.DoString(t.bs.L, a.code)
+func (a *ScriptAction) onTick(t *Tick) {
+	var v lua.LValue
+	var err error
+
+	err = pool.DoString(t.bs.L, a.code)
 	if err != nil {
-		a.err = err
-		return NSErr
+		err = fmt.Errorf("%v node %v dostring %w", a.base.Type(), a.base.ID(), err)
+		goto ext
 	}
 
 	err = t.bs.L.CallByParam(lua.P{
@@ -69,54 +50,56 @@ func (a *ScriptAction) onTick(t *Tick) NodStatus {
 		Protect: true,
 	})
 	if err != nil {
-		a.err = err
-		return NSErr
+		err = fmt.Errorf("%v node %v execute %w", a.base.Type(), a.base.ID(), err)
+		goto ext
 	}
 
-	v := t.bs.L.Get(-1)
+	v = t.bs.L.Get(-1)
 	t.bs.L.Pop(1)
 
-	var changeStr string
+ext:
 
-	tab, ok := v.(*lua.LTable)
-	if ok {
-		change, err := utils.Table2Map(tab)
-		if err != nil {
-			fmt.Println("script response 2 map err", err.Error())
+	if a.base.mode == Step {
+
+		var changeStr string
+
+		tab, ok := v.(*lua.LTable)
+		if ok {
+			change, err := utils.Table2Map(tab)
+			if err != nil {
+				fmt.Println("script response 2 map err", err.Error())
+			}
+
+			changeByt, err := json.Marshal(&change)
+			if err != nil {
+				fmt.Println("marshal change info err", err.Error())
+			}
+			changeStr = string(changeByt)
 		}
 
-		changeByt, err := json.Marshal(&change)
-		if err != nil {
-			fmt.Println("marshal change info err", err.Error())
+		info := ThreadInfo{
+			Number: a.getThread(),
+			CurNod: a.base.ID(),
+			Change: changeStr,
 		}
-		changeStr = string(changeByt)
+		t.blackboard.ThreadFillInfo(info, err)
 	}
-
-	info := ThreadInfo{
-		Num:    a.getThread(),
-		ErrMsg: "",
-		CurNod: a.id,
-		Change: changeStr,
-	}
-	t.blackboard.ThreadFillInfo(info)
-
-	return NSSucc
 }
 
 func (a *ScriptAction) onNext(t *Tick) {
 
-	if len(a.child) > 0 && !a.freeze {
-		a.freeze = true
-		t.blackboard.Append([]INod{a.child[0]})
+	if a.base.ChildrenNum() > 0 && !a.base.GetFreeze() {
+		a.base.SetFreeze(true)
+		t.blackboard.Append([]INod{a.base.Children()[0]})
 	} else {
-		a.parent.onNext(t)
+		a.base.parent.onNext(t)
 	}
 
 }
 
 func (a *ScriptAction) onReset() {
-	a.freeze = false
-	for _, child := range a.child {
+	a.base.SetFreeze(false)
+	for _, child := range a.base.Children() {
 		child.onReset()
 	}
 }

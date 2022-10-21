@@ -9,58 +9,38 @@ import (
 
 type ConditionAction struct {
 	INod
+	base Node
 
-	child  []INod
-	parent INod
-
-	id   string
-	ty   string
 	code string
-
-	succ   bool
-	freeze bool
-
-	threadnum int
-
-	err error
+	succ bool
 }
 
-func (a *ConditionAction) Init(t *Tree, parent INod) {
-	a.id = t.ID
-	a.ty = t.Ty
+func (a *ConditionAction) Init(t *Tree, parent INod, mode Mode) {
+	a.base.Init(t, parent, mode)
+
 	a.code = t.Code
-
-	a.parent = parent
 }
 
-func (a *ConditionAction) ID() string {
-	return a.id
-}
-
-func (a *ConditionAction) setThread(num int) {
-	if a.threadnum == 0 {
-		a.threadnum = num
-	}
+func (a *ConditionAction) AddChild(nod INod) {
+	a.base.AddChild(nod)
 }
 
 func (a *ConditionAction) getThread() int {
-	if a.threadnum != 0 {
-		return a.threadnum
-	} else {
-		return a.parent.getThread()
-	}
+	return a.base.getThread()
 }
 
-func (a *ConditionAction) AddChild(child INod) {
-	a.child = append(a.child, child)
+func (a *ConditionAction) setThread(tn int) {
+	a.base.setThread(tn)
 }
 
-func (a *ConditionAction) onTick(t *Tick) NodStatus {
-	fmt.Println("\t", a.ty, a.id)
-	err := pool.DoString(t.bs.L, a.code)
+func (a *ConditionAction) onTick(t *Tick) {
+	var v lua.LValue
+	var err error
+
+	err = pool.DoString(t.bs.L, a.code)
 	if err != nil {
-		a.err = err
-		return NSErr
+		err = fmt.Errorf("%v node %v dostring %w", a.base.Type(), a.base.ID(), err)
+		goto ext
 	}
 
 	err = t.bs.L.CallByParam(lua.P{
@@ -69,40 +49,41 @@ func (a *ConditionAction) onTick(t *Tick) NodStatus {
 		Protect: true,
 	})
 	if err != nil {
-		a.err = err
-		return NSErr
+		err = fmt.Errorf("%v node %v execute %w", a.base.Type(), a.base.ID(), err)
+		goto ext
 	}
 
-	v := t.bs.L.Get(-1)
+	v = t.bs.L.Get(-1)
+
 	t.bs.L.Pop(1)
-
 	a.succ = lua.LVAsBool(v)
-	t.blackboard.ThreadFillInfo(ThreadInfo{
-		Num:    a.getThread(),
-		ErrMsg: "",
-		CurNod: a.id,
-	})
 
-	return NSSucc
+ext:
+	if a.base.mode == Step {
+		t.blackboard.ThreadFillInfo(ThreadInfo{
+			Number: a.base.getThread(),
+			CurNod: a.base.ID(),
+		}, err)
+	}
 }
 
 func (a *ConditionAction) onNext(t *Tick) {
 
-	if len(a.child) > 0 && !a.freeze {
-		a.freeze = true
-		child := a.child[0]
+	if a.base.ChildrenNum() > 0 && !a.base.GetFreeze() {
+		a.base.SetFreeze(true)
+		child := a.base.Children()[0]
 		t.blackboard.Append([]INod{child})
 	} else {
-		a.parent.onNext(t)
+		a.base.parent.onNext(t)
 	}
 
 }
 
 func (a *ConditionAction) onReset() {
 	a.succ = false
-	a.freeze = false
+	a.base.SetFreeze(false)
 
-	for _, child := range a.child {
+	for _, child := range a.base.Children() {
 		child.onReset()
 	}
 }

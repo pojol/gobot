@@ -1,7 +1,7 @@
 package behavior
 
 type ThreadInfo struct {
-	Num    int    `json:"num"`
+	Number int    `json:"number"`
 	ErrMsg string `json:"errmsg"`
 	CurNod string `json:"curnod"`
 	Change string `json:"change"`
@@ -33,17 +33,30 @@ func (b *Blackboard) Reset() {
 }
 
 func (b *Blackboard) ThreadAdd(num int) {
-	b.Threadlst = append(b.Threadlst, ThreadInfo{Num: num})
+	b.Threadlst = append(b.Threadlst, ThreadInfo{Number: num})
 }
 
 func (b *Blackboard) ThreadRmv(num int) {
 
 }
 
-func (b *Blackboard) ThreadFillInfo(info ThreadInfo) {
+func (b *Blackboard) HaveErr() bool {
+	for _, v := range b.Threadlst {
+		if v.ErrMsg != "" {
+			return true
+		}
+	}
+	return false
+}
+
+func (b *Blackboard) ThreadFillInfo(info ThreadInfo, err error) {
 	for k, v := range b.Threadlst {
-		if v.Num == info.Num {
+		if v.Number == info.Number {
+
 			b.Threadlst[k] = info
+			if err != nil {
+				b.Threadlst[k].ErrMsg = err.Error()
+			}
 		}
 	}
 }
@@ -71,8 +84,8 @@ func (b *Blackboard) ThreadCurNum() int {
 	num := 1
 
 	for _, v := range b.Threadlst {
-		if v.Num > num {
-			num = v.Num
+		if v.Number > num {
+			num = v.Number
 		}
 	}
 

@@ -21,14 +21,6 @@ type ErrInfo struct {
 	Err error
 }
 
-type Mode int
-
-const (
-	Thread Mode = 1 + iota
-	Block
-	Step
-)
-
 type Bot struct {
 	id   string
 	name string
@@ -106,11 +98,11 @@ func (b *Bot) GetThreadInfo() string {
 	return string(info)
 }
 
-func NewWithBehaviorTree(path string, bt *behavior.Tree, name string, idx int32, globalScript []string, mod Mode) *Bot {
+func NewWithBehaviorTree(path string, bt *behavior.Tree, name string, idx int32, globalScript []string) *Bot {
 
 	bb := &behavior.Blackboard{
 		Nods:      []behavior.INod{bt.GetRoot()},
-		Threadlst: []behavior.ThreadInfo{{Num: 1}},
+		Threadlst: []behavior.ThreadInfo{{Number: 1}},
 	}
 
 	state := pool.GetState()

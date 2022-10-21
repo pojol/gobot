@@ -1,6 +1,8 @@
 package behavior
 
 import (
+	"errors"
+
 	"github.com/pojol/gobot/bot/pool"
 )
 
@@ -23,9 +25,9 @@ func (t *Tick) Do() (error, bool) {
 	t.blackboard.ThreadInfoReset()
 
 	for _, n := range nods {
-		ns := n.onTick(t)
-		if ns == NSFail {
-			return n.GetErr(), false
+		n.onTick(t)
+		if t.blackboard.HaveErr() {
+			return errors.New("thread have err"), false
 		}
 	}
 

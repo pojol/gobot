@@ -1,80 +1,61 @@
 package behavior
 
-import (
-	"fmt"
-)
+import "fmt"
 
 type LoopAction struct {
 	INod
-
-	child  []INod
-	parent INod
-
-	id string
-	ty string
+	base Node
 
 	loop    int
 	curLoop int
-
-	threadnum int
 }
 
-func (a *LoopAction) Init(t *Tree, parent INod) {
-	a.id = t.ID
-	a.ty = t.Ty
-
+func (a *LoopAction) Init(t *Tree, parent INod, mode Mode) {
+	a.base.Init(t, parent, mode)
 	a.loop = int(t.Loop)
-
-	a.parent = parent
 }
 
-func (a *LoopAction) ID() string {
-	return a.id
-}
-
-func (a *LoopAction) setThread(num int) {
-	if a.threadnum == 0 {
-		a.threadnum = num
-	}
+func (a *LoopAction) AddChild(nod INod) {
+	a.base.AddChild(nod)
 }
 
 func (a *LoopAction) getThread() int {
-	if a.threadnum != 0 {
-		return a.threadnum
-	} else {
-		return a.parent.getThread()
+	return a.base.getThread()
+}
+
+func (a *LoopAction) setThread(tn int) {
+	a.base.setThread(tn)
+}
+
+func (a *LoopAction) onTick(t *Tick) {
+
+	if a.base.mode == Step {
+		var err error
+
+		if a.loop <= 0 {
+			err = fmt.Errorf("%v node %v", a.base.Type(), a.base.ID())
+		}
+
+		t.blackboard.ThreadFillInfo(ThreadInfo{
+			Number: a.getThread(),
+			CurNod: a.base.ID(),
+		}, err)
 	}
-}
 
-func (a *LoopAction) AddChild(child INod) {
-	a.child = append(a.child, child)
-}
-
-func (a *LoopAction) onTick(t *Tick) NodStatus {
-	fmt.Println("\t", a.ty, a.id)
-
-	t.blackboard.ThreadFillInfo(ThreadInfo{
-		Num:    a.getThread(),
-		ErrMsg: "",
-		CurNod: a.id,
-	})
-
-	return NSSucc
 }
 
 func (a *LoopAction) onNext(t *Tick) {
 
-	childnum := len(a.child)
-	if childnum > 0 && a.curLoop < a.loop {
+	if a.base.ChildrenNum() > 0 && a.curLoop < a.loop {
 		a.curLoop++
 
-		for _, child := range a.child {
+		for _, child := range a.base.Children() {
 			child.onReset()
 		}
 
-		t.blackboard.Append([]INod{a.child[0]})
+		t.blackboard.Append([]INod{a.base.Children()[0]})
 	} else {
-		a.parent.onNext(t)
+		a.base.parent.onNext(t)
 	}
 
 }
@@ -82,7 +63,7 @@ func (a *LoopAction) onNext(t *Tick) {
 func (a *LoopAction) onReset() {
 
 	a.curLoop = 0
-	for _, child := range a.child {
+	for _, child := range a.base.Children() {
 		child.onReset()
 	}
 

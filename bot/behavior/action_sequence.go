@@ -1,72 +1,48 @@
 package behavior
 
-import (
-	"fmt"
-)
-
 type SequenceAction struct {
 	INod
-
-	child  []INod
-	parent INod
-
-	id string
-	ty string
+	base Node
 
 	step int
-
-	threadnum int
 }
 
-func (a *SequenceAction) Init(t *Tree, parent INod) {
-	a.id = t.ID
-	a.ty = t.Ty
-
-	a.parent = parent
+func (a *SequenceAction) Init(t *Tree, parent INod, mode Mode) {
+	a.base.Init(t, parent, mode)
 }
 
-func (a *SequenceAction) ID() string {
-	return a.id
-}
-
-func (a *SequenceAction) setThread(num int) {
-	if a.threadnum == 0 {
-		a.threadnum = num
-	}
+func (a *SequenceAction) AddChild(nod INod) {
+	a.base.AddChild(nod)
 }
 
 func (a *SequenceAction) getThread() int {
-	if a.threadnum != 0 {
-		return a.threadnum
-	} else {
-		return a.parent.getThread()
+	return a.base.getThread()
+}
+
+func (a *SequenceAction) setThread(tn int) {
+	a.base.setThread(tn)
+}
+
+func (a *SequenceAction) onTick(t *Tick) {
+
+	if a.base.mode == Step {
+		t.blackboard.ThreadFillInfo(ThreadInfo{
+			Number: a.getThread(),
+			ErrMsg: "",
+			CurNod: a.base.ID(),
+		}, nil)
 	}
-}
 
-func (a *SequenceAction) AddChild(child INod) {
-	a.child = append(a.child, child)
-}
-
-func (a *SequenceAction) onTick(t *Tick) NodStatus {
-	fmt.Println("\t", a.ty, a.id)
-
-	t.blackboard.ThreadFillInfo(ThreadInfo{
-		Num:    a.getThread(),
-		ErrMsg: "",
-		CurNod: a.id,
-	})
-
-	return NSSucc
 }
 
 func (a *SequenceAction) onNext(t *Tick) {
 
-	if a.step < len(a.child) {
+	if a.step < a.base.ChildrenNum() {
 		a.step++
-		t.blackboard.Append([]INod{a.child[a.step-1]})
+		t.blackboard.Append([]INod{a.base.Children()[a.step-1]})
 
 	} else {
-		a.parent.onNext(t)
+		a.base.parent.onNext(t)
 	}
 
 }
@@ -74,7 +50,7 @@ func (a *SequenceAction) onNext(t *Tick) {
 func (a *SequenceAction) onReset() {
 	a.step = 0
 
-	for _, child := range a.child {
+	for _, child := range a.base.Children() {
 		child.onReset()
 	}
 }

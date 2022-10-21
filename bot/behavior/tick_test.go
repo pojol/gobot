@@ -10,12 +10,12 @@ import (
 
 func TestTick(t *testing.T) {
 
-	tree, err := Load([]byte(compose))
+	tree, err := Load([]byte(compose), Step)
 	assert.Equal(t, err, nil)
 
 	bb := &Blackboard{
 		Nods:      []INod{tree.GetRoot()},
-		Threadlst: []ThreadInfo{{Num: 1}},
+		Threadlst: []ThreadInfo{{Number: 1}},
 	}
 
 	tick := &Tick{

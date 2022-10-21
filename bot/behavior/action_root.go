@@ -1,60 +1,43 @@
 package behavior
 
-import (
-	"fmt"
-)
-
 type RootAction struct {
 	INod
-
-	child []INod
-
-	id string
-	ty string
-
-	freeze bool
-
-	threadnum int
+	base Node
 }
 
-func (a *RootAction) Init(t *Tree, parent INod) {
-	a.id = t.ID
-	a.ty = t.Ty
-
-	a.threadnum = 1
+func (a *RootAction) Init(t *Tree, parent INod, mode Mode) {
+	a.base.Init(t, parent, mode)
+	a.base.threadNumber = 1
 }
 
-func (a *RootAction) ID() string {
-	return a.id
-}
-
-func (a *RootAction) setThread(num int) {
+func (a *RootAction) AddChild(nod INod) {
+	a.base.AddChild(nod)
 }
 
 func (a *RootAction) getThread() int {
-	return a.threadnum
+	return a.base.getThread()
 }
 
-func (a *RootAction) AddChild(child INod) {
-	a.child = append(a.child, child)
+func (a *RootAction) setThread(tn int) {
+	a.base.setThread(tn)
 }
 
-func (a *RootAction) onTick(t *Tick) NodStatus {
-	fmt.Println("\t", a.ty, a.id)
+func (a *RootAction) onTick(t *Tick) {
 
-	t.blackboard.ThreadFillInfo(ThreadInfo{
-		Num:    a.getThread(),
-		ErrMsg: "",
-		CurNod: a.id,
-	})
+	if a.base.mode == Step {
+		t.blackboard.ThreadFillInfo(ThreadInfo{
+			Number: a.getThread(),
+			ErrMsg: "",
+			CurNod: a.base.ID(),
+		}, nil)
+	}
 
-	return NSSucc
 }
 
 func (a *RootAction) onNext(t *Tick) {
-	if len(a.child) > 0 && !a.freeze {
-		a.freeze = true
-		t.blackboard.Append([]INod{a.child[0]})
+	if a.base.ChildrenNum() > 0 && !a.base.GetFreeze() {
+		a.base.SetFreeze(true)
+		t.blackboard.Append([]INod{a.base.Children()[0]})
 	} else {
 		t.blackboard.End()
 	}

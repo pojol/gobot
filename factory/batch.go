@@ -53,7 +53,7 @@ type Batch struct {
 
 func CreateBatch(scriptPath, name string, num int, tbyt []byte, batchsize int32, globalScript []string) *Batch {
 
-	tree, err := behavior.Load(tbyt)
+	tree, err := behavior.Load(tbyt, behavior.Thread)
 	if err != nil {
 		return nil
 	}
@@ -172,7 +172,7 @@ func (b *Batch) run() {
 			}
 			for i := 0; i < int(curbatchnum); i++ {
 				atomic.AddInt32(&b.cursorNum, 1)
-				b.pipeline <- bot.NewWithBehaviorTree(b.path, b.tree, b.Name, atomic.LoadInt32(&b.cursorNum), b.globalScript, bot.Thread)
+				b.pipeline <- bot.NewWithBehaviorTree(b.path, b.tree, b.Name, atomic.LoadInt32(&b.cursorNum), b.globalScript)
 			}
 
 			b.bwg.Wait()

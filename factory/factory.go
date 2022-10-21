@@ -189,12 +189,12 @@ func (f *Factory) CreateTask(name string, num int) *Batch {
 func (f *Factory) CreateDebugBot(name string, fbyt []byte) *bot.Bot {
 	var b *bot.Bot
 
-	tree, err := behavior.Load(fbyt)
+	tree, err := behavior.Load(fbyt, behavior.Step)
 	if err != nil {
 		return nil
 	}
 
-	b = bot.NewWithBehaviorTree(f.parm.ScriptPath, tree, name, 1, f.GetGlobalScript(), bot.Step)
+	b = bot.NewWithBehaviorTree(f.parm.ScriptPath, tree, name, 1, f.GetGlobalScript())
 	f.debugBots[b.ID()] = b
 
 	return b

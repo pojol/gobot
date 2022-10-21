@@ -67,7 +67,7 @@ func FileBlobUpload(ctx echo.Context) error {
 		goto EXT
 	}
 
-	_, err = behavior.Load(bts)
+	_, err = behavior.Load(bts, behavior.Step)
 	if err != nil {
 		fmt.Println(err.Error())
 		code = ErrJsonInvalid
@@ -106,7 +106,7 @@ func FileTextUpload(ctx echo.Context) error {
 	}
 
 	name = upload.FileName()
-	_, err = behavior.Load(fbyte)
+	_, err = behavior.Load(fbyte, behavior.Step)
 	if err != nil {
 		fmt.Println(err.Error())
 		code = ErrJsonInvalid
@@ -421,12 +421,12 @@ func BotRun(ctx echo.Context) error {
 		goto EXT
 	}
 
-	tree, err = behavior.Load(info.Dat)
+	tree, err = behavior.Load(info.Dat, behavior.Block)
 	if err != nil {
 		code = Fail
 		goto EXT
 	}
-	b = bot.NewWithBehaviorTree("script/", tree, req.Name, 1, factory.Global.GetGlobalScript(), bot.Block)
+	b = bot.NewWithBehaviorTree("script/", tree, req.Name, 1, factory.Global.GetGlobalScript())
 	err = b.RunByBlock()
 	if err != nil {
 		code = ErrRunningErr

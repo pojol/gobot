@@ -37,7 +37,7 @@ export default class Blackboard extends React.Component {
       try {
         let res = ""
         threadInfo.forEach(element => {
-          res += "Thread[" + element.num + "]\n"
+          res += "<b>Thread[" + element.number + "]</b>\n"
 
           try {
             res += JSON.stringify(JSON.parse(element.change), null, 2) + "\n"
