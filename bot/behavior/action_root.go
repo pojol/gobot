@@ -1,5 +1,7 @@
 package behavior
 
+import "fmt"
+
 type RootAction struct {
 	INod
 	base Node
@@ -23,6 +25,7 @@ func (a *RootAction) setThread(tn int) {
 }
 
 func (a *RootAction) onTick(t *Tick) {
+	a.base.onTick(t)
 
 	if a.base.mode == Step {
 		t.blackboard.ThreadFillInfo(ThreadInfo{
@@ -39,6 +42,7 @@ func (a *RootAction) onNext(t *Tick) {
 		a.base.SetFreeze(true)
 		t.blackboard.Append([]INod{a.base.Children()[0]})
 	} else {
+		fmt.Println(t.botid, "end")
 		t.blackboard.End()
 	}
 }

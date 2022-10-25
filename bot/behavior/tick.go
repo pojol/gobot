@@ -9,12 +9,14 @@ import (
 type Tick struct {
 	blackboard *Blackboard
 	bs         *pool.BotState
+	botid      string
 }
 
-func NewTick(bb *Blackboard, state *pool.BotState) *Tick {
+func NewTick(bb *Blackboard, state *pool.BotState, botid string) *Tick {
 	t := &Tick{
 		blackboard: bb,
 		bs:         state,
+		botid:      botid,
 	}
 	return t
 }

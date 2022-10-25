@@ -32,7 +32,7 @@ type Batch struct {
 	BatchNum  int32
 	Errors    int32
 
-	tree         *behavior.Tree
+	treeData     []byte
 	path         string
 	globalScript []string
 
@@ -53,11 +53,6 @@ type Batch struct {
 
 func CreateBatch(scriptPath, name string, num int, tbyt []byte, batchsize int32, globalScript []string) *Batch {
 
-	tree, err := behavior.Load(tbyt, behavior.Thread)
-	if err != nil {
-		return nil
-	}
-
 	b := &Batch{
 		ID:           uuid.New().String(),
 		Name:         name,
@@ -68,7 +63,7 @@ func CreateBatch(scriptPath, name string, num int, tbyt []byte, batchsize int32,
 		TotalNum:     int32(num),
 		bwg:          utils.NewSizeWaitGroup(int(batchsize)),
 		exit:         utils.NewSwitch(),
-		tree:         tree,
+		treeData:     tbyt,
 		pipeline:     make(chan *bot.Bot, num),
 		done:         make(chan interface{}, 1),
 		BatchDone:    make(chan interface{}, 1),
@@ -172,7 +167,9 @@ func (b *Batch) run() {
 			}
 			for i := 0; i < int(curbatchnum); i++ {
 				atomic.AddInt32(&b.cursorNum, 1)
-				b.pipeline <- bot.NewWithBehaviorTree(b.path, b.tree, b.Name, atomic.LoadInt32(&b.cursorNum), b.globalScript)
+
+				tree, _ := behavior.Load(b.treeData, behavior.Thread)
+				b.pipeline <- bot.NewWithBehaviorTree(b.path, tree, b.Name, atomic.LoadInt32(&b.cursorNum), b.globalScript)
 			}
 
 			b.bwg.Wait()

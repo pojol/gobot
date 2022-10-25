@@ -30,6 +30,8 @@ func (a *WaitAction) setThread(tn int) {
 }
 
 func (a *WaitAction) onTick(t *Tick) {
+	a.base.onTick(t)
+
 	if a.endtime == 0 {
 		a.endtime = time.Now().UnixNano()/1000000 + int64(a.wait)
 	}

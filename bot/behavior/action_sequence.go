@@ -24,6 +24,7 @@ func (a *SequenceAction) setThread(tn int) {
 }
 
 func (a *SequenceAction) onTick(t *Tick) {
+	a.base.onTick(t)
 
 	if a.base.mode == Step {
 		t.blackboard.ThreadFillInfo(ThreadInfo{

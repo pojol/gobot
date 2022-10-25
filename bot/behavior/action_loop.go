@@ -29,6 +29,8 @@ func (a *LoopAction) setThread(tn int) {
 
 func (a *LoopAction) onTick(t *Tick) {
 
+	a.base.onTick(t)
+
 	if a.base.mode == Step {
 		var err error
 

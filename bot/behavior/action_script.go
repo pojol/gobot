@@ -37,6 +37,7 @@ func (a *ScriptAction) setThread(tn int) {
 func (a *ScriptAction) onTick(t *Tick) {
 	var v lua.LValue
 	var err error
+	a.base.onTick(t)
 
 	err = pool.DoString(t.bs.L, a.code)
 	if err != nil {

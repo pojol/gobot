@@ -25,6 +25,7 @@ func (a *SelectAction) setThread(tn int) {
 
 func (a *SelectAction) onTick(t *Tick) {
 	var err error
+	a.base.onTick(t)
 
 	if a.base.ChildrenNum() <= 0 {
 		goto ext

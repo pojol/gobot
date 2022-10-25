@@ -77,6 +77,9 @@ func (a *Node) Children() []INod {
 	return a.child
 }
 
+func (a *Node) onTick(t *Tick) {
+}
+
 func (a *Node) setThread(number int) {
 	if a.threadNumber == 0 {
 		a.threadNumber = number

@@ -414,6 +414,7 @@ func BotRun(ctx echo.Context) error {
 		code = ErrWrongInput
 		goto EXT
 	}
+	fmt.Println(req.Name, "bot run block begin")
 
 	info, err = factory.Global.FindBehavior(req.Name)
 	if err != nil {
@@ -432,8 +433,8 @@ func BotRun(ctx echo.Context) error {
 		code = ErrRunningErr
 		errmap[code] = err.Error()
 	}
-
 EXT:
+	fmt.Println(req.Name, "bot run block end", err)
 	res.Code = int(code)
 	res.Msg = errmap[code]
 	ctx.JSON(http.StatusOK, res)

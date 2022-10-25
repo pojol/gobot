@@ -110,7 +110,7 @@ func NewWithBehaviorTree(path string, bt *behavior.Tree, name string, idx int32,
 	bot := &Bot{
 		id:   strconv.Itoa(int(idx)),
 		bb:   bb,
-		tick: behavior.NewTick(bb, state),
+		tick: behavior.NewTick(bb, state, strconv.Itoa(int(idx))),
 		bs:   state,
 		name: name,
 	}

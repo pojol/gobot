@@ -1,7 +1,5 @@
 package behavior
 
-import "fmt"
-
 type ParallelAction struct {
 	INod
 	base Node
@@ -24,6 +22,7 @@ func (a *ParallelAction) setThread(tn int) {
 }
 
 func (a *ParallelAction) onTick(t *Tick) {
+	a.base.onTick(t)
 
 	if a.base.mode == Step {
 		t.blackboard.ThreadFillInfo(ThreadInfo{
@@ -50,7 +49,6 @@ func (a *ParallelAction) onNext(t *Tick) {
 
 	} else {
 		a.base.threadNumber++
-		fmt.Println("end thread")
 
 		if a.base.threadNumber >= a.base.ChildrenNum() {
 			a.base.parent.onNext(t)
