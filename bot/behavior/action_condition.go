@@ -41,7 +41,7 @@ func (a *ConditionAction) onTick(t *Tick) {
 
 	err = pool.DoString(t.bs.L, a.code)
 	if err != nil {
-		err = fmt.Errorf("%v node %v dostring %w", a.base.Type(), a.base.ID(), err)
+		err = fmt.Errorf("%v node %v dostring \n%w", a.base.Type(), a.base.ID(), err)
 		goto ext
 	}
 
@@ -51,7 +51,7 @@ func (a *ConditionAction) onTick(t *Tick) {
 		Protect: true,
 	})
 	if err != nil {
-		err = fmt.Errorf("%v node %v execute %w", a.base.Type(), a.base.ID(), err)
+		err = fmt.Errorf("%v node %v execute \n%w", a.base.Type(), a.base.ID(), err)
 		goto ext
 	}
 
@@ -71,7 +71,7 @@ ext:
 
 func (a *ConditionAction) onNext(t *Tick) {
 
-	if a.base.ChildrenNum() > 0 && !a.base.GetFreeze() {
+	if (a.base.ChildrenNum() > 0 && !a.base.GetFreeze()) && a.succ {
 		a.base.SetFreeze(true)
 		child := a.base.Children()[0]
 		t.blackboard.Append([]INod{child})

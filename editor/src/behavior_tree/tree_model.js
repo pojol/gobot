@@ -554,6 +554,8 @@ end
               return;
             }
 
+            let threadinfo = JSON.parse(json.Body.ThreadInfo)
+            PubSub.publish(Topic.UpdateChange, threadinfo)
             message.warning(json.Code.toString() + " " + json.Msg)
 
           } else {
