@@ -12,7 +12,6 @@ import "./meta.css";
 require("medium-editor/dist/css/medium-editor.css");
 require("medium-editor/dist/css/themes/default.css");
 
-
 const { TabPane } = Tabs;
 
 export default class Blackboard extends React.Component {
@@ -20,7 +19,9 @@ export default class Blackboard extends React.Component {
     super(props);
     this.state = {
       metadata: {},
-      context: "",
+      change: "",
+      runtimeerr:"",
+      active:"2",
     };
   }
 
@@ -34,17 +35,43 @@ export default class Blackboard extends React.Component {
       }
     });
 
-    PubSub.subscribe(Topic.UpdateChange, (topic, info) => {
+    PubSub.subscribe(Topic.UpdateChange, (topic, threadInfo) => {
+      let msg = ""
+      let haveerr = false
+
       try {
-        info.msg += "\n\n"
-        this.setState({ context: info.msg });
+        threadInfo.forEach(element => {
+          msg += "<b>Thread[" + element.number + "]</b>\n"
+
+          if (element.errmsg !== "") {
+            msg += element.errmsg
+            msg += "------------------------------\n"
+            haveerr = true
+            throw new Error();
+          } 
+
+          try {
+            msg += JSON.stringify(JSON.parse(element.change), null, 2) + "\n"
+          } catch (error) {
+            console.warn(error)
+            msg += element.change + "\n"
+          }
+
+          msg += "------------------------------\n"
+        })
       } catch (err) {
-        message.warning("blackboard parse info err");
       }
+
+      if (haveerr) {
+        this.setState({ runtimeerr: msg, active: "3" });
+      } else {
+        this.setState({ change: msg });
+      }
+
     });
 
     PubSub.subscribe(Topic.Upload, (topic, info) => {
-      this.setState({ context: "" });
+      this.setState({ change: "" });
     });
 
     PubSub.subscribe(Topic.Upload, (topic, info) => {
@@ -56,10 +83,14 @@ export default class Blackboard extends React.Component {
     });
   }
 
+  clickTab = (e) => {
+    this.setState({active:e})
+  }
+
   render() {
     return (
       <div className="scroll-patch">
-        <Tabs defaultActiveKey="1">
+        <Tabs activeKey={this.state.active} onTabClick={this.clickTab}>
           <TabPane
             tab={
               <span>
@@ -67,7 +98,7 @@ export default class Blackboard extends React.Component {
                 Meta
               </span>
             }
-            key="2"
+            key="1"
           >
             <ReactJson
               name=""
@@ -86,7 +117,7 @@ export default class Blackboard extends React.Component {
                 Response
               </span>
             }
-            key="1"
+            key="2"
           >
             <Editor
               tag="pre"
@@ -95,10 +126,28 @@ export default class Blackboard extends React.Component {
                 placeholder: { text: "", hideOnClick: true },
                 disableEditing: true,
               }}
-              text={this.state.context}
+              text={this.state.change}
             />
           </TabPane>
-
+          <TabPane
+            tab={
+              <span>
+                <CodeOutlined />
+                RuntimeError
+              </span>
+            }
+            key="3"
+          >
+            <Editor
+              tag="pre"
+              //https://github.com/yabwe/medium-editor/blob/d113a74437fda6f1cbd5f146b0f2c46288b118ea/OPTIONS.md#disableediting
+              options={{
+                placeholder: { text: "", hideOnClick: true },
+                disableEditing: true,
+              }}
+              text={this.state.runtimeerr}
+            />
+          </TabPane>
         </Tabs>
       </div>
     );

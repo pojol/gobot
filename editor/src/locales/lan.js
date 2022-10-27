@@ -47,10 +47,6 @@ var lanMap = {
         "en" : "Wait",
         "zh-cn" : "等待节点"
     },
-    "app.edit.tab.assert" : {
-        "en" : "Assert",
-        "zh-cn" : "断言节点"
-    },
     "app.edit.tab.other" : {
         "en" : "Other",
         "zh-cn" : "其他"
@@ -215,6 +211,11 @@ var lanMap = {
         "en" : "Number of reports archived",
         "zh-cn" : "报告存档数量"
     },
+
+    "app.msg.notdebugbot" : {
+        "en" : "Have not created bot",
+        "zh-cn" : "在步进前，需要创建调试机器人"
+    }
 }
 
 export default lanMap

@@ -10,7 +10,6 @@ import {
   Col,
   Row,
   Select,
-  Pagination,
 } from "antd";
 import React, { } from 'react';
 import {
@@ -400,6 +399,11 @@ export default class BotList extends React.Component {
       onDrop(e) {
         console.log("Dropped files", e.dataTransfer.files);
       },
+      onChange(e) {
+        if (e.file.status === "done") {
+          PubSub.publish(Topic.BotsUpdate,{})
+        }
+      }
     };
 
     return (

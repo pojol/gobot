@@ -7,8 +7,8 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
-	"github.com/pojol/gobot/behavior"
 	"github.com/pojol/gobot/bot"
+	"github.com/pojol/gobot/bot/behavior"
 	"github.com/pojol/gobot/database"
 	"github.com/pojol/gobot/factory"
 	"github.com/pojol/gobot/utils"
@@ -24,7 +24,6 @@ const (
 	ErrJsonUnmarshal
 	ErrJsonInvalid
 	ErrPluginLoad
-	ErrMetaData
 	ErrEnd
 	ErrBreak
 	ErrCantFindBot
@@ -42,7 +41,6 @@ var errmap map[Err]string = map[Err]string{
 	ErrJsonUnmarshal: "json unmarshal err",
 	ErrWrongInput:    "bad request parameter",
 	ErrPluginLoad:    "failed to plugin load",
-	ErrMetaData:      "failed to get meta data",
 	ErrEnd:           "run to the end",
 	ErrBreak:         "run to the break",
 	ErrCantFindBot:   "can't find bot",
@@ -69,7 +67,7 @@ func FileBlobUpload(ctx echo.Context) error {
 		goto EXT
 	}
 
-	_, err = behavior.New(bts)
+	_, err = behavior.Load(bts, behavior.Step)
 	if err != nil {
 		fmt.Println(err.Error())
 		code = ErrJsonInvalid
@@ -108,7 +106,7 @@ func FileTextUpload(ctx echo.Context) error {
 	}
 
 	name = upload.FileName()
-	_, err = behavior.New(fbyte)
+	_, err = behavior.Load(fbyte, behavior.Step)
 	if err != nil {
 		fmt.Println(err.Error())
 		code = ErrJsonInvalid
@@ -416,6 +414,7 @@ func BotRun(ctx echo.Context) error {
 		code = ErrWrongInput
 		goto EXT
 	}
+	fmt.Println(req.Name, "bot run block begin")
 
 	info, err = factory.Global.FindBehavior(req.Name)
 	if err != nil {
@@ -423,7 +422,7 @@ func BotRun(ctx echo.Context) error {
 		goto EXT
 	}
 
-	tree, err = behavior.New(info.Dat)
+	tree, err = behavior.Load(info.Dat, behavior.Block)
 	if err != nil {
 		code = Fail
 		goto EXT
@@ -434,8 +433,8 @@ func BotRun(ctx echo.Context) error {
 		code = ErrRunningErr
 		errmap[code] = err.Error()
 	}
-
 EXT:
+	fmt.Println(req.Name, "bot run block end", err)
 	res.Code = int(code)
 	res.Msg = errmap[code]
 	ctx.JSON(http.StatusOK, res)
@@ -508,7 +507,6 @@ func DebugStep(ctx echo.Context) error {
 	var b *bot.Bot
 
 	var err error
-	var ok bool
 	var s bot.State
 
 	bts, err := ioutil.ReadAll(ctx.Request().Body)
@@ -531,14 +529,9 @@ func DebugStep(ctx echo.Context) error {
 		goto EXT
 	}
 
-	s = b.RunStep()
-	body.Blackboard, body.Change, body.RuntimeErr, ok = b.GetMetadata()
-	if !ok {
-		code = ErrMetaData
-		goto EXT
-	}
-	body.Cur = b.GetCurNodeID()
-	body.Prev = b.GetPrevNodeID()
+	s = b.RunByStep()
+	body.Blackboard = b.GetMetaInfo()
+	body.ThreadInfo = b.GetThreadInfo()
 
 	if s == bot.SEnd {
 		code = ErrEnd
@@ -582,6 +575,7 @@ func DebugCreate(ctx echo.Context) error {
 	}
 
 	body.BotID = b.ID()
+	body.ThreadInfo = b.GetThreadInfo()
 
 EXT:
 	res.Code = int(code)

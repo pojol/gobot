@@ -76,7 +76,7 @@ export default class App extends React.Component {
   componentDidMount() {
     PubSub.subscribe(Topic.FileLoad, (topic, info) => {
       this.setState({ tab: "Edit" });
-      PubSub.publish(Topic.FileLoadDraw, [info.Tree]);
+        PubSub.publish(Topic.FileLoadDraw, [info.Tree]);
     });
     
     this.checkheath()
@@ -130,7 +130,6 @@ export default class App extends React.Component {
                   message.warning("get config byte length == 0")
                   return
                 }
-
                 window.config.set(element, reader.result)
                 PubSub.publish(Topic.ConfigUpdate, reader.result);
 

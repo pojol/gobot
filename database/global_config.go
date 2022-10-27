@@ -71,7 +71,7 @@ func GetSystemParm(db IDatabase) SystemInfo {
 
 	err = json.Unmarshal(cfg.Dat, &sysinfo)
 	if err != nil {
-		fmt.Println("config unmarshal err", err.Error())
+		fmt.Println("system config unmarshal err", err.Error())
 		goto EXT
 	}
 

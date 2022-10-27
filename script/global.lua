@@ -38,10 +38,6 @@ meta = {
     Err = "",       -- debug log [err]
 }
 
-change = {
-
-}
-
 local function _merge(t1, t2)
     for k,v in pairs(t2) do
         if type(v) == "table" then
@@ -63,7 +59,6 @@ end
     overwrite t2 to t1
 ]]--
 function merge(t1, t2)
-    change = t2
     _merge(t1,t2)
 end
 

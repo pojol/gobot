@@ -7,7 +7,9 @@ import SequenceNode from "./shape/shape_sequence";
 import RootNode from "./shape/shape_root";
 import LoopNode from "./shape/shape_loop";
 import WaitNode from "./shape/shape_wait";
-import AssertNode from "./shape/shap_assert";
+import ParallelNode from "./shape/shap_parallel";
+import { Interp } from '@antv/x6'
+
 
 /// <reference path="graph.d.ts" />
 
@@ -16,14 +18,16 @@ import {
   IsScriptNode,
   IsActionNode,
 } from "../../../constant/node_type";
-import { Button, Tooltip, Modal, Input, Badge, InputNumber } from "antd";
+import { Button, Tooltip, Modal, Input } from "antd";
 import {
   ZoomInOutlined,
   ZoomOutOutlined,
   AimOutlined,
-  UndoOutlined,
+  BugOutlined,
   CloudUploadOutlined,
   DeleteOutlined,
+  UndoOutlined,
+  CaretRightOutlined,
 } from "@ant-design/icons";
 
 import "./graph.css";
@@ -53,9 +57,9 @@ function NewStencil(graph: Graph) {
   var selectorNod = new SelectorNode();
   var seqNod = new SequenceNode();
   var condNod = new ConditionNode();
-  var assertNod = new AssertNode();
   var loopNod = new LoopNode();
   var waitNod = new WaitNode();
+  var parallelNod = new ParallelNode();
   var title = "Components";
   var placeholder = "Search by shape name";
   var g1title = "Normal";
@@ -65,16 +69,16 @@ function NewStencil(graph: Graph) {
     selectorNod.setAttrs({ label: { text: "Selector" } });
     seqNod.setAttrs({ label: { text: "Sequence" } });
     condNod.setAttrs({ label: { text: "Condition" } });
-    assertNod.setAttrs({ label: { text: "Assert" } });
     loopNod.setAttrs({ label: { text: "Loop" } });
     waitNod.setAttrs({ label: { text: "Wait" } });
+    parallelNod.setAttrs({ label: { text: "Parallel" } })
   } else if (moment.locale() === "zh-cn") {
     selectorNod.setAttrs({ label: { text: "选择" } });
     seqNod.setAttrs({ label: { text: "顺序" } });
     condNod.setAttrs({ label: { text: "条件" } });
-    assertNod.setAttrs({ label: { text: "断言" } });
     loopNod.setAttrs({ label: { text: "循环" } });
     waitNod.setAttrs({ label: { text: "等待" } });
+    parallelNod.setAttrs({ label: { text: "并行" } })
 
     title = "组件";
     placeholder = "通过节点名进行搜索";
@@ -97,8 +101,9 @@ function NewStencil(graph: Graph) {
     notFoundText: "Not Found",
     target: graph,
     collapsable: true,
+
     stencilGraphWidth: stencilWidth,
-    stencilGraphHeight: 250,
+    stencilGraphHeight: 260,
     groups: [
       {
         name: "group1",
@@ -112,7 +117,7 @@ function NewStencil(graph: Graph) {
   });
 
   stencil.load(
-    [selectorNod, seqNod, condNod, assertNod, loopNod, waitNod],
+    [selectorNod, seqNod, parallelNod, condNod, loopNod, waitNod],
     "group1"
   );
 
@@ -198,12 +203,6 @@ export default class GraphView extends React.Component {
     behaviorName: "",
     platfrom: "",
     stencil: null,
-    btnReset: "Reset",
-    btnStep: "Step",
-    stepDisabled: false,
-    btnUpload: "Upload",
-    stepCnt: 0,
-    stepVal: 0,
     debugCreate: false,
     wflex: 0.6,
   };
@@ -215,16 +214,6 @@ export default class GraphView extends React.Component {
         this.stencilContainer.appendChild(stencil.container);
       }
     });
-
-    if (moment.locale() === "en") {
-      this.setState({
-        btnReset: "Reset",
-        btnStep: "Step",
-        btnUpload: "Upload",
-      });
-    } else if (moment.locale() === "zh-cn") {
-      this.setState({ btnReset: "重置", btnStep: "步进", btnUpload: "上传" });
-    }
   }
 
   componentDidMount() {
@@ -395,7 +384,7 @@ export default class GraphView extends React.Component {
         silent = options.others.silent;
         build = options.others.build;
       }
-
+      console.info(GetNodInfo(node))
       PubSub.publish(Topic.NodeAdd, [GetNodInfo(node), build, silent]);
     });
 
@@ -511,34 +500,23 @@ export default class GraphView extends React.Component {
       }
     );
 
-    PubSub.subscribe(Topic.Focus, (topic: string, info: any) => {
-      if (info.Cur !== "") {
-        this.setState({ stepCnt: this.state.stepCnt + 1 });
-        this.findNode(info.Cur, (nod) => {
-          nod.setAttrs({
-            body: {
-              strokeWidth: 4,
-            },
-          });
-        });
-      } else {
-        // clean
-        this.cleanStepInfo();
-        this.setState({ stepDisabled: true });
-        setTimeout(() => {
-          this.setState({ stepDisabled: false });
-        }, 1000);
-      }
+    PubSub.subscribe(Topic.Focus, (topic: string, info: Array<string>) => {
 
-      if (info.Prev !== "") {
-        this.findNode(info.Prev, (nod) => {
-          nod.setAttrs({
-            body: {
-              strokeWidth: 1,
+      // clean
+      this.cleanStepInfo();
+
+      info.forEach(element => {
+        this.findNode(element, (nod) => {
+
+          nod.transition(
+            "attrs/body/strokeWidth", "4px", { 
+              interp: Interp.unit,
+              timing: 'bounce', // Timing.bounce
             },
-          });
+          )()
         });
-      }
+      });
+
     });
 
     PubSub.subscribe(
@@ -617,11 +595,11 @@ export default class GraphView extends React.Component {
       case NodeTy.Loop:
         nod = new LoopNode({ id: child.id });
         break;
-      case NodeTy.Assert:
-        nod = new AssertNode({ id: child.id });
-        break;
       case NodeTy.Wait:
         nod = new WaitNode({ id: child.id });
+        break;
+      case NodeTy.Parallel:
+        nod = new ParallelNode({ id: child.id })
         break;
       default:
         nod = new ActionNode({ id: child.id });
@@ -698,6 +676,8 @@ export default class GraphView extends React.Component {
       nod.setAttrs({ label: { text: "seq" } });
     } else if (child.ty === NodeTy.Selector) {
       nod.setAttrs({ label: { text: "sel" } });
+    } else if (child.ty === NodeTy.Parallel) {
+      nod.setAttrs({ label: { text: "par" } });
     }
 
     if (child.children && child.children.length) {
@@ -831,18 +811,7 @@ export default class GraphView extends React.Component {
   };
 
   ClickStep = (e: any) => {
-    if (this.state.debugCreate === false) {
-      this.setState({ debugCreate: true });
-      PubSub.publish(Topic.Create, "");
-    } else {
-
-      let step = this.state.stepVal
-      if (step <= 0) {
-        step = 1
-      }
-      console.info("step", step)
-      PubSub.publish(Topic.Step, step);
-    }
+    PubSub.publish(Topic.Step, {});
   };
 
   cleanStepInfo = () => {
@@ -857,7 +826,6 @@ export default class GraphView extends React.Component {
         });
       });
     }
-    this.setState({ debugCreate: false, stepCnt: 0 });
   };
 
   onStepValueChange = (e: any) => {
@@ -866,6 +834,7 @@ export default class GraphView extends React.Component {
 
   ClickReset = (e: any) => {
     this.cleanStepInfo();
+    PubSub.publish(Topic.Create, {});
   };
 
   render() {
@@ -889,40 +858,28 @@ export default class GraphView extends React.Component {
           <Tooltip placement="leftTop" title="Delete [ del ]">
             <Button icon={<DeleteOutlined />} onClick={this.ClickDel} />
           </Tooltip>
-          <Badge
-            count={this.state.stepCnt}
-            style={{ backgroundColor: "#52c41a" }}
-          />
         </div>
 
         <div className={"app-step-" + this.state.platfrom}>
           <Tooltip placement="topRight" title={"Run to the next node [F10]"}>
-            <InputNumber
-              min={1}
-              max={1000}
-              defaultValue={1}
-              style={{ width: 60 }}
-              onChange={this.onStepValueChange}
-            />
             <Button
               type="primary"
               style={{ width: 70 }}
+              icon={<CaretRightOutlined />}
               onClick={this.ClickStep}
-              disabled={this.state.stepDisabled}
             >
-              {this.state.btnStep}
+              { }
             </Button>
           </Tooltip>
         </div>
         <div className={"app-reset-" + this.state.platfrom}>
-          <Tooltip placement="topRight" title={"Reset to starting point [F11]"}>
+          <Tooltip placement="topRight" title={"Create or reset to starting point [F11]"}>
             <Button
-              icon={<UndoOutlined />}
-              style={{ width: 100 }}
+              icon={<BugOutlined />}
+              style={{ width: 50 }}
               onClick={this.ClickReset}
             >
               {" "}
-              {this.state.btnReset}
             </Button>
           </Tooltip>
         </div>
@@ -930,11 +887,9 @@ export default class GraphView extends React.Component {
           <Tooltip placement="topRight" title={"Upload the bot to the server"}>
             <Button
               icon={<CloudUploadOutlined />}
-              style={{ width: 100 }}
+              style={{ width: 50 }}
               onClick={this.ClickUpload}
             >
-              {" "}
-              {this.state.btnUpload}
             </Button>
           </Tooltip>
         </div>

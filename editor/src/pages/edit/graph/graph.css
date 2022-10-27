@@ -40,14 +40,14 @@
 .app-step-mac {
   position: absolute;
   z-index: 10;
-  right:213px;
+  right:65px;
   bottom:3px;
 }
 
 .app-reset-mac {
   position: absolute;
   z-index: 10;
-  right:105px;
+  right:140px;
   bottom:3px;
 }
 
@@ -61,14 +61,14 @@
 .app-step-win {
   position: absolute;
   z-index: 10;
-  right:230px;
+  right:75px;
   bottom:18px;
 }
 
 .app-reset-win {
   position: absolute;
   z-index: 10;
-  right:120px;
+  right:150px;
   bottom:18px;
 }
 

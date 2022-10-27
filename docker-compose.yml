@@ -9,11 +9,13 @@ services:
     restart: always
     networks:
       - gnet
+    ports:
+      - 3306:3306
     volumes:
       - db:/var/lib/mysql
     environment:
-      - MYSQL_ROOT_PASSWORD=
-      - MYSQL_PASSWORD=
+      - MYSQL_ROOT_PASSWORD=gobot
+      - MYSQL_PASSWORD=gobot
       - MYSQL_DATABASE=gobot
       - MYSQL_USER=gobot
 
@@ -24,7 +26,7 @@ services:
       - gnet
     depends_on:
       - db
-    command: "-no_database=false -report_limit 100 -batch_size 1024 -script_path scipt/"
+    command: "-no_database=false -script_path scipt/"
     ports:
       - 8888:8888
     deploy:
