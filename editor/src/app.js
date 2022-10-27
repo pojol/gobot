@@ -199,7 +199,7 @@ export default class App extends React.Component {
             <Tooltip title={this.state.connectTxt}>
               <ApiFilled  style={{ color: this.state.connectColor }} />
             </Tooltip>
-            <Tag color="geekblue">v0.1.16</Tag>
+            <Tag color="geekblue">v0.2.1</Tag>
             <Tag
               icon={<ReadOutlined />}
               color="#108ee9"

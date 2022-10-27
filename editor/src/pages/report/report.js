@@ -11,7 +11,6 @@ import lanMap from "../../locales/lan";
 
 const { TabPane } = Tabs;
 
-
 export default class TestReport extends React.Component {
 
   constructor(props) {
@@ -22,6 +21,8 @@ export default class TestReport extends React.Component {
           title: "Time",
           dataIndex: "time",
           key: "time",
+          sorter: (a, b) => new Date(a.time) - new Date(b.time),
+          defaultSortOrder: "descend",
         },
         {
           title: "TPS",
@@ -84,7 +85,6 @@ export default class TestReport extends React.Component {
 
       var date = new Date(info[i].BeginTime*1000);
       var convdataTime = date.getFullYear() + '-'+date.getMonth()+'-'+date.getDate()+' '+date.getHours() + ':' + date.getMinutes() + ':' + date.getSeconds();
-
 
       newdata.push({
         key: info[i].ID,
