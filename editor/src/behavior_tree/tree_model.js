@@ -545,10 +545,14 @@ end
       Post(localStorage.remoteAddr, Api.DebugStep, { BotID: botid }).then(
         (json) => {
 
+          if (json.Code === 1009) {
+            message.warning(json.Code.toString() + " " + json.Msg)
+            return;
+          }
+
           PubSub.publish(Topic.Focus, []);  // reset focus
-
+          console.info("step", json.Code)
           if (json.Code !== 200) {
-
             if (json.Code === 1007) {  // end
               message.success("the end");
               return;

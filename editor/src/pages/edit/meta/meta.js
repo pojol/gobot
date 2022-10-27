@@ -44,6 +44,7 @@ export default class Blackboard extends React.Component {
           msg += "<b>Thread[" + element.number + "]</b>\n"
 
           if (element.errmsg !== "") {
+            PubSub.publish(Topic.Focus, [element.errmsg.substr(0,36)])
             msg += element.errmsg
             msg += "------------------------------\n"
             haveerr = true

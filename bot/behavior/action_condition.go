@@ -41,7 +41,7 @@ func (a *ConditionAction) onTick(t *Tick) {
 
 	err = pool.DoString(t.bs.L, a.code)
 	if err != nil {
-		err = fmt.Errorf("%v node %v dostring \n%w", a.base.Type(), a.base.ID(), err)
+		err = fmt.Errorf("%v node %v dostring \n%w", a.base.ID(), a.base.Type(), err)
 		goto ext
 	}
 
@@ -51,7 +51,7 @@ func (a *ConditionAction) onTick(t *Tick) {
 		Protect: true,
 	})
 	if err != nil {
-		err = fmt.Errorf("%v node %v execute \n%w", a.base.Type(), a.base.ID(), err)
+		err = fmt.Errorf("%v node %v execute \n%w", a.base.ID(), a.base.Type(), err)
 		goto ext
 	}
 

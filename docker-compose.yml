@@ -26,7 +26,7 @@ services:
       - gnet
     depends_on:
       - db
-    command: "-no_database=false -script_path scipt/"
+    command: "-no_database=false -mock=true -script_path scipt/"
     ports:
       - 8888:8888
     deploy:
