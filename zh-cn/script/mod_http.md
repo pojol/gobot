@@ -1,9 +1,10 @@
 # HTTP 模块
-
+```lua
+local http = require("http")
+```
 
 ### POST
 ```lua
-local http = require("http")
 
 -- 请求结构
 reqTable = {

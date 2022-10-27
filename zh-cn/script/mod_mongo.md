@@ -1,9 +1,13 @@
 # Mongo 模块
-
+```lua
+local mgo = require("mgo")
+```
 
 ### conn
 > 连接到数据库
 ```lua
+local mgo = require("mgo")
+
 -- "bot" 需要连接到的数据库
 -- "mongodb://" 连接字符串
     -- https://www.docs4dev.com/docs/zh/mongodb/v3.6/reference/reference-connection-string.html#connections-connection-examples

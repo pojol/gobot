@@ -1,4 +1,8 @@
-# 使用 protobuf 进行协议的编解码
+# Protobuf 模块
+> 使用 protobuf 进行协议的编解码
+```lua
+local proto = require("proto")
+```
 
 参考样例 --> [Sample](https://github.com/pojol/gobot-sample) <--
 
