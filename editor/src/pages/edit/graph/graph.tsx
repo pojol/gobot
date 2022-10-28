@@ -395,6 +395,8 @@ export default class GraphView extends React.Component {
     // node:mouseleave 消息容易获取不到，先每次获取到这个消息将所有节点都设置一下
     graph.on("node:mouseleave", ({ node }) => {
 
+      node.setPortProp(node.getPorts()[0].id as string, "attrs/portBody/r", 5)
+
       var nods = this.graph.getRootNodes();
       if (nods.length > 0) {
         iterate(nods[0], (nod) => {
