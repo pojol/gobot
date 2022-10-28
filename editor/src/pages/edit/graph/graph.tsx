@@ -388,6 +388,14 @@ export default class GraphView extends React.Component {
       PubSub.publish(Topic.NodeAdd, [GetNodInfo(node), build, silent]);
     });
 
+    //node:mouseleave
+    graph.on("node:mouseenter", ({node})=>{
+     node.setPortProp(node.getPorts()[0].id as string, "attrs/portBody/r", 10)
+    })
+    graph.on("node:mouseleave", ({node})=>{
+      node.setPortProp(node.getPorts()[0].id as string, "attrs/portBody/r", 5)
+     })
+
     graph.on("node:moved", ({ e, x, y, node, view: NodeView }) => {
       iterate(node, (nod) => {
         if (nod.getAttrs().type !== undefined) {
