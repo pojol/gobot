@@ -388,13 +388,25 @@ export default class GraphView extends React.Component {
       PubSub.publish(Topic.NodeAdd, [GetNodInfo(node), build, silent]);
     });
 
-    //node:mouseleave
-    graph.on("node:mouseenter", ({node})=>{
-     node.setPortProp(node.getPorts()[0].id as string, "attrs/portBody/r", 10)
+    graph.on("node:mouseenter", ({ node }) => {
+      node.setPortProp(node.getPorts()[0].id as string, "attrs/portBody/r", 10)
     })
-    graph.on("node:mouseleave", ({node})=>{
-      node.setPortProp(node.getPorts()[0].id as string, "attrs/portBody/r", 5)
-     })
+
+    // node:mouseleave 消息容易获取不到，先每次获取到这个消息将所有节点都设置一下
+    graph.on("node:mouseleave", ({ node }) => {
+
+      var nods = this.graph.getRootNodes();
+      if (nods.length > 0) {
+        iterate(nods[0], (nod) => {
+
+          if (nod.getAttrs().type !== undefined) {
+            nod.setPortProp(nod.getPorts()[0].id as string, "attrs/portBody/r", 5)
+          }
+
+        });
+      }
+
+    })
 
     graph.on("node:moved", ({ e, x, y, node, view: NodeView }) => {
       iterate(node, (nod) => {
@@ -517,10 +529,10 @@ export default class GraphView extends React.Component {
         this.findNode(element, (nod) => {
 
           nod.transition(
-            "attrs/body/strokeWidth", "4px", { 
-              interp: Interp.unit,
-              timing: 'bounce', // Timing.bounce
-            },
+            "attrs/body/strokeWidth", "4px", {
+            interp: Interp.unit,
+            timing: 'bounce', // Timing.bounce
+          },
           )()
         });
       });
@@ -757,8 +769,6 @@ export default class GraphView extends React.Component {
       }
     }
   };
-
-  debug = () => { };
 
   ClickZoomIn = () => {
     this.graph.zoomTo(this.graph.zoom() * 1.2);
