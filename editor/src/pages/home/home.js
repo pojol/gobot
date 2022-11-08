@@ -10,7 +10,6 @@ import {
   Col,
   Row,
   Select,
-  Pagination,
 } from "antd";
 import React, { } from 'react';
 import {
@@ -316,15 +315,13 @@ export default class BotList extends React.Component {
         row.name
       ).then((file) => {
 
-        var tree = LoadBehaviorWithFile(row.name, file.blob);
-        if (tree !== null) {
+        LoadBehaviorWithFile(row.name, file.blob, (tree) => {
           PubSub.publish(Topic.FileLoad, {
             Name: row.name,
             Tree: tree,
           });
-        } else {
-          message.warning("文件解析失败");
-        }
+        });
+
       });
     }
 
@@ -402,6 +399,11 @@ export default class BotList extends React.Component {
       onDrop(e) {
         console.log("Dropped files", e.dataTransfer.files);
       },
+      onChange(e) {
+        if (e.file.status === "done") {
+          PubSub.publish(Topic.BotsUpdate,{})
+        }
+      }
     };
 
     return (

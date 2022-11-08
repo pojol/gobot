@@ -36,8 +36,6 @@ func (f *MemoryAdapter) Init() error {
 		}
 	}
 
-	fmt.Println("memory init succ")
-
 	return nil
 }
 

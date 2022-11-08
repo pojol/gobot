@@ -240,6 +240,7 @@ func NewServer() *echo.Echo {
 	rand.Seed(time.Now().UnixNano())
 
 	mock := echo.New()
+	mock.HideBanner = true
 	mock.POST("/login/guest", routeGuest)
 	mock.POST("/base/acc.info", routeAccInfo)
 	mock.POST("/base/hero.info", routeHeroInfo)

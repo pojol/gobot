@@ -21,11 +21,12 @@ var (
 
 	dbmode     bool
 	scriptPath string
+	openmock   bool
 )
 
 const (
 	// Version of gobot driver
-	Version = "v0.1.10"
+	Version = "v0.2.1"
 
 	banner = `
               __              __      
@@ -45,6 +46,7 @@ func initFlag() {
 	flag.BoolVar(&help, "h", false, "this help")
 
 	flag.BoolVar(&dbmode, "no_database", false, "Run in local mode")
+	flag.BoolVar(&openmock, "mock", false, "open mock server")
 	flag.StringVar(&scriptPath, "script_path", "script/", "Path to bot script")
 }
 
@@ -72,27 +74,25 @@ func main() {
 		panic(err)
 	}
 
-	ms := mock.NewServer()
-	go ms.Start(":6666")
+	if openmock {
+		ms := mock.NewServer()
+		go ms.Start(":6666")
+		defer ms.Close()
+	}
 
 	go func() {
 		http.ListenAndServe(":6060", nil)
 	}()
 
-	e := echo.New()
-	e.Use(middleware.CORS())
-	/*
-		e.Use(middleware.RecoverWithConfig(middleware.RecoverConfig{
-			Skipper:   middleware.DefaultSkipper,
-			StackSize: 4 << 10, // 4 KB
-			LogLevel:  0,
-		}))
-	*/
-	server.Route(e)
-	e.Start(":8888")
-
 	fmt.Printf(banner, Version)
 
+	e := echo.New()
+	e.HideBanner = true
+	e.Use(middleware.CORS())
+	e.Use(middleware.Recover())
+
+	server.Route(e)
+	e.Start(":8888")
 	// Stop the service gracefully.
 	if err := e.Shutdown(context.TODO()); err != nil {
 		panic(err)

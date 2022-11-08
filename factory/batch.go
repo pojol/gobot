@@ -10,8 +10,8 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/google/uuid"
-	"github.com/pojol/gobot/behavior"
 	"github.com/pojol/gobot/bot"
+	"github.com/pojol/gobot/bot/behavior"
 	"github.com/pojol/gobot/utils"
 )
 
@@ -32,7 +32,7 @@ type Batch struct {
 	BatchNum  int32
 	Errors    int32
 
-	tree         *behavior.Tree
+	treeData     []byte
 	path         string
 	globalScript []string
 
@@ -53,11 +53,6 @@ type Batch struct {
 
 func CreateBatch(scriptPath, name string, num int, tbyt []byte, batchsize int32, globalScript []string) *Batch {
 
-	tree, err := behavior.New(tbyt)
-	if err != nil {
-		return nil
-	}
-
 	b := &Batch{
 		ID:           uuid.New().String(),
 		Name:         name,
@@ -68,7 +63,7 @@ func CreateBatch(scriptPath, name string, num int, tbyt []byte, batchsize int32,
 		TotalNum:     int32(num),
 		bwg:          utils.NewSizeWaitGroup(int(batchsize)),
 		exit:         utils.NewSwitch(),
-		tree:         tree,
+		treeData:     tbyt,
 		pipeline:     make(chan *bot.Bot, num),
 		done:         make(chan interface{}, 1),
 		BatchDone:    make(chan interface{}, 1),
@@ -113,8 +108,6 @@ func (b *Batch) pop(id string) {
 	b.bwg.Done()
 	atomic.AddInt32(&b.CurNum, 1)
 
-	b.bots[id].Close()
-
 	if atomic.LoadInt32(&b.CurNum) >= b.TotalNum {
 		b.done <- 1
 	}
@@ -131,9 +124,9 @@ func (b *Batch) loop() {
 
 	for {
 		select {
-		case bot := <-b.pipeline:
-			b.push(bot)
-			bot.Run(b.botDoneCh, b.botErrCh)
+		case botptr := <-b.pipeline:
+			b.push(botptr)
+			botptr.RunByThread(b.botDoneCh, b.botErrCh)
 		case id := <-b.botDoneCh:
 			if _, ok := b.bots[id]; ok {
 				b.pushReport(b.rep, b.bots[id])
@@ -174,7 +167,9 @@ func (b *Batch) run() {
 			}
 			for i := 0; i < int(curbatchnum); i++ {
 				atomic.AddInt32(&b.cursorNum, 1)
-				b.pipeline <- bot.NewWithBehaviorTree(b.path, b.tree, b.Name, atomic.LoadInt32(&b.cursorNum), b.globalScript)
+
+				tree, _ := behavior.Load(b.treeData, behavior.Thread)
+				b.pipeline <- bot.NewWithBehaviorTree(b.path, tree, b.Name, atomic.LoadInt32(&b.cursorNum), b.globalScript)
 			}
 
 			b.bwg.Wait()
@@ -261,9 +256,9 @@ func (b *Batch) record() {
 	b.rep.Dura = duration
 
 	if b.rep.ErrNum != 0 {
-		b.colorer.Printf("robot : %d req count : %d duration : %s qps : %d errors : %v\n", b.rep.BotNum, b.rep.ReqNum, duration, qps, utils.Red(b.rep.ErrNum))
+		b.colorer.Printf("robot : %d match to %d APIs req count : %d duration : %s qps : %d errors : %v\n", b.rep.BotNum, len(b.rep.UrlMap), b.rep.ReqNum, duration, qps, utils.Red(b.rep.ErrNum))
 	} else {
-		fmt.Printf("robot : %d req count : %d duration : %s qps : %d errors : %d\n", b.rep.BotNum, b.rep.ReqNum, duration, qps, b.rep.ErrNum)
+		fmt.Printf("robot : %d match to %d APIs req count : %d duration : %s qps : %d errors : %d\n", b.rep.BotNum, len(b.rep.UrlMap), b.rep.ReqNum, duration, qps, b.rep.ErrNum)
 	}
 
 }

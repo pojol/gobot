@@ -81,8 +81,6 @@ func (f *MysqlAdapter) Init() error {
 		}
 	}
 
-	fmt.Println("mysql init", err)
-
 	return err
 }
 

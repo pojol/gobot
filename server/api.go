@@ -97,16 +97,15 @@ type StepRequest struct {
 }
 
 type StepResponse struct {
-	Prev       string
-	Cur        string
-	RuntimeErr string
 	Blackboard string
-	Change     string
+	ThreadInfo string
 }
 
 // debug.create
 type CreateDebugBotResponse struct {
-	BotID string
+	BotID      string
+	Blackboard string
+	ThreadInfo string
 }
 
 type ConfigGetInfoResponse struct {

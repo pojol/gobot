@@ -1,25 +1,24 @@
 import { Shape } from "@antv/x6";
 
-class AssertNode extends Shape.Polygon {}
+class ParallelNode extends Shape.Rect {}
 
-AssertNode.config({
+ParallelNode.config({
   attrs: {
     root: {
       magnet: true,
     },
     body: {
       fill: "#f5f5f5",
-      stroke: "#E04D01",
+      stroke: "#5AA897",
       strokeWidth: 1,
-      refPoints: "0,5 2.5,0 5,5",
     },
     label: {
-      text: "Assert",
+      text: "Parallel",
     },
-    type: "AssertNode",
+    type : "ParallelNode"
   },
-  width: 20,
-  height: 20,
+  width: 30,
+  height: 30,
   ports: {
     items: [
       {
@@ -51,4 +50,4 @@ AssertNode.config({
   ],
 });
 
-export default AssertNode;
+export default ParallelNode;

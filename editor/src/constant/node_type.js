@@ -6,8 +6,6 @@ const NodeTy = {
   Action: "ActionNode",
   // 脚本条件节点
   Condition: "ConditionNode",
-  // 脚本断言节点
-  Assert: "AssertNode",
 
   // 循环次数节点
   Loop: "LoopNode",
@@ -16,6 +14,7 @@ const NodeTy = {
 
   Selector: "SelectorNode",
   Sequence: "SequenceNode",
+  Parallel: "ParallelNode",
 };
 
 function IsScriptNode(ty) {
@@ -26,6 +25,7 @@ function IsScriptNode(ty) {
     case NodeTy.Wait:
     case NodeTy.Selector:
     case NodeTy.Sequence:
+    case NodeTy.Parallel:
       return false
     default:
       return true
@@ -40,8 +40,8 @@ function IsActionNode(ty) {
     case NodeTy.Wait:
     case NodeTy.Selector:
     case NodeTy.Sequence:
-    case NodeTy.Assert:
     case NodeTy.Condition:
+    case NodeTy.Parallel:
       return false
     default:
       return true

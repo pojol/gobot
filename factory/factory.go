@@ -1,12 +1,14 @@
 package factory
 
 import (
+	"errors"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
-	"github.com/pojol/gobot/behavior"
 	"github.com/pojol/gobot/bot"
+	"github.com/pojol/gobot/bot/behavior"
 	"github.com/pojol/gobot/database"
 	"github.com/pojol/gobot/utils"
 )
@@ -119,15 +121,28 @@ func (f *Factory) GetBehaviors() []database.BehaviorInfo {
 }
 
 func (f *Factory) UploadConfig(name string, dat []byte) error {
-	return f.db.ConfigUpset(name, dat)
+
+	if name == "" {
+		return errors.New("upload config err : meaningless naming")
+	}
+
+	_name := strings.ToLower(name)
+
+	return f.db.ConfigUpset(_name, dat)
 }
 
 func (f *Factory) GetConfig(name string) (database.TemplateConfig, error) {
-	return f.db.ConfigFind(name)
+
+	_name := strings.ToLower(name)
+
+	return f.db.ConfigFind(_name)
 }
 
 func (f *Factory) RemoveConfig(name string) error {
-	return f.db.ConfigRemove(name)
+
+	_name := strings.ToLower(name)
+
+	return f.db.ConfigRemove(_name)
 }
 
 func (f *Factory) GetConfigList() ([]string, error) {
@@ -174,7 +189,7 @@ func (f *Factory) CreateTask(name string, num int) *Batch {
 func (f *Factory) CreateDebugBot(name string, fbyt []byte) *bot.Bot {
 	var b *bot.Bot
 
-	tree, err := behavior.New(fbyt)
+	tree, err := behavior.Load(fbyt, behavior.Step)
 	if err != nil {
 		return nil
 	}
@@ -197,7 +212,6 @@ func (f *Factory) FindBot(botid string) *bot.Bot {
 func (f *Factory) RmvBot(botid string) {
 
 	if _, ok := f.debugBots[botid]; ok {
-		f.debugBots[botid].Close()
 		delete(f.debugBots, botid)
 	}
 

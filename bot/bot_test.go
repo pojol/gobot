@@ -1,15 +1,13 @@
 package bot
 
 import (
-	"fmt"
 	"os"
 	"testing"
+	"time"
 
-	"github.com/pojol/gobot/behavior"
+	"github.com/pojol/gobot/bot/behavior"
 	"github.com/pojol/gobot/mock"
-	"github.com/pojol/gobot/utils"
 	"github.com/stretchr/testify/assert"
-	lua "github.com/yuin/gopher-lua"
 )
 
 func TestMain(m *testing.M) {
@@ -195,7 +193,7 @@ end
 </code>
                 <alias>base/hero.lvup</alias>
               </children>
-              <loop>5</loop>
+              <loop>2</loop>
             </children>
           </children>
           <code>
@@ -235,15 +233,57 @@ end
         <alias></alias>
       </children>
     </children>
-    <loop>5</loop>
+    <loop>2</loop>
   </children>
 </behavior>
-
-
 `
 
-func TestLoad(t *testing.T) {
+func TestStepMode(t *testing.T) {
 
+	var tree *behavior.Tree
+	var bot *Bot
+
+	tree, err := behavior.Load([]byte(compose), behavior.Step)
+	assert.Equal(t, err, nil)
+
+	bot = NewWithBehaviorTree("../script/", tree, "test", 1, []string{})
+	defer bot.close()
+
+	for i := 0; i < 20; i++ {
+		bot.RunByStep()
+	}
+
+}
+
+func TestThreadMode(t *testing.T) {
+	var tree *behavior.Tree
+	var bot *Bot
+
+	tree, err := behavior.Load([]byte(compose), behavior.Thread)
+	assert.Equal(t, err, nil)
+
+	bot = NewWithBehaviorTree("../script/", tree, "test", 1, []string{})
+	defer bot.close()
+
+	time.Sleep(time.Second)
+}
+
+func TestBlockMode(t *testing.T) {
+	var tree *behavior.Tree
+	var bot *Bot
+
+	tree, err := behavior.Load([]byte(compose), behavior.Block)
+	assert.Equal(t, err, nil)
+
+	bot = NewWithBehaviorTree("../script/", tree, "test", 1, []string{})
+	defer bot.close()
+
+	err = bot.RunByBlock()
+	assert.Equal(t, err, nil)
+}
+
+/*
+func TestRuning(t *testing.T) {
 	var tree *behavior.Tree
 	var bot *Bot
 
@@ -251,14 +291,37 @@ func TestLoad(t *testing.T) {
 	assert.Equal(t, err, nil)
 
 	bot = NewWithBehaviorTree("../script/", tree, "test", 1, []string{})
-	defer bot.Close()
 
-	for i := 0; i < 20; i++ {
+	donech := make(chan string)
+	errch := make(chan ErrInfo)
+	bot.Run(donech, errch, Batch)
+
+	select {
+	case <-donech:
+		fmt.Println("running succ")
+		return
+	case e := <-errch:
+		fmt.Println("running", e.Err)
+		t.Fail()
+	}
+}
+
+func TestDebug(t *testing.T) {
+	var tree *behavior.Tree
+	var bot *Bot
+
+	tree, err := behavior.New([]byte(compose))
+	assert.Equal(t, err, nil)
+
+	bot = NewWithBehaviorTree("../script/", tree, "test", 1, []string{})
+
+	for i := 0; i < 100; i++ {
+		fmt.Println("step", i)
 		bot.RunStep()
-		fmt.Println(bot.GetMetadata())
+		time.Sleep(time.Second)
 	}
 
-	t.Fail()
+	t.FailNow()
 }
 
 func TestPool(t *testing.T) {
@@ -269,7 +332,7 @@ func TestPool(t *testing.T) {
 	assert.Equal(t, err, nil)
 
 	bot = NewWithBehaviorTree("../script/", tree, "test", 1, []string{})
-	defer bot.Close()
+	defer bot.close()
 
 	err = bot.RunByBlock()
 
@@ -285,7 +348,7 @@ meta = {
 
 function condition()
     return meta.name == "joy"
-end 
+end
 `
 
 func TestScript(t *testing.T) {
@@ -317,3 +380,4 @@ func TestScript(t *testing.T) {
 
 	fmt.Println(meta)
 }
+*/

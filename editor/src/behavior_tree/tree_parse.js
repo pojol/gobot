@@ -73,7 +73,7 @@ function LoadBehaviorWithBlob(url, methon, name) {
 }
 
 
-function LoadBehaviorWithFile(name, blob) {
+function LoadBehaviorWithFile(name, blob, callback) {
     let reader = new FileReader();
     let tree = {};
 
@@ -107,14 +107,14 @@ function LoadBehaviorWithFile(name, blob) {
                 })
                 tree.children = [];
 
-                console.info("root", tree)
-
                 if (children !== undefined) {
                     parseChildren(
                         children,
                         tree.children
                     );
                 }
+
+                callback(tree)
             }
 
         } catch (err) {

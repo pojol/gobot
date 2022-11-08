@@ -1,3 +1,17 @@
+## v0.2.1
+* feature
+    - 添加了新的并行节点
+    - 删除原有的 assert 节点类型
+    - 新增了 runtime err 栏用于输出运行时错误信息
+    - 重构了 bot 的运行时逻辑
+    - response 栏中引入了展示 thread 信息的逻辑（并行节点将创建新的 thread）
+    - 运行到节点时添加了个小动画（提示优化
+
+## v0.1.17
+* feature
+* fix 
+    - 修复异步加载行为树的逻辑错误
+
 ## v0.1.16
 * feature 
     - 为lua代码提供fmt功能

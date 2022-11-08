@@ -8,45 +8,7 @@ import Api from "../constant/api";
 import Cmd from "../constant/cmd";
 import { NodeTy } from "../constant/node_type";
 
-/*!
 
-  // relation info
-  {
-    id : string,
-    children : []
-  }
-
-  // node info
-  {
-    id : string // node id
-    ty : string // node type
-    pos : {
-      x : number,
-      y : number,
-    },
-    code : "",
-    wait : 0,
-    loop : 0,
-    children : []
-  }
-
-*/
-
-
-function ErrMsgParse(msg) {
-  var arr = msg.split("\n");
-  var newmsg = "";
-
-  for (var i = 0; i < arr.length; i++) {
-    newmsg += "<u>" + (i + 1).toString() + "</u> " + arr[i] + "\n";
-  }
-
-  newmsg += "\n\n";
-
-  return newmsg;
-}
-
-const sleep = (delay) => new Promise((resolve) => setTimeout(resolve, delay));
 
 export default class TreeModel extends React.Component {
   constructor(props) {
@@ -56,12 +18,6 @@ export default class TreeModel extends React.Component {
       nods: [], //  root 记录节点的链路关系， window(map 记录节点的细节
       botid: "",
       behaviorTreeName: "",
-      assertTmp: `
--- Write expression to return true or false
-function execute()
-
-end
-      `,
       conditionTmp: `
 -- Write expression to return true or false
 function execute()
@@ -111,9 +67,6 @@ end
         case NodeTy.Condition:
           nod.code = this.state.conditionTmp;
           break
-        case NodeTy.Assert:
-          nod.code = this.state.assertTmp;
-          break
         case NodeTy.Loop:
           nod.loop = 1;
           break
@@ -123,25 +76,24 @@ end
         case NodeTy.Root:
         case NodeTy.Sequence:
         case NodeTy.Selector:
+        case NodeTy.Parallel:
           break
         default:
           let ty = nod.ty
           if (ty === "ActionNode") { // tmp
             ty = "HTTP"
           }
-
+          ty = ty.toLowerCase()
           let httpobj = window.config.get(ty);
 
           try {
             let jobj = JSON.parse(httpobj);
             nod.code = jobj["content"];
-
-            console.info("code get", ty, nod.code)
-
           } catch (error) {
             console.error(error)
-            console.error(ty, window.config.get(ty))
-          }          
+            console.info(nod)
+            console.error("parse err", ty, window.config.get(ty))
+          }
       }
     }
 
@@ -357,7 +309,6 @@ end
     if (edit) {
 
       switch (info.ty) {
-        case NodeTy.Assert:
         case NodeTy.Condition:
           org.code = info.code;
           break
@@ -591,82 +542,49 @@ end
 
       var botid = this.state.botid;
 
-      const step = async () => {
+      Post(localStorage.remoteAddr, Api.DebugStep, { BotID: botid }).then(
+        (json) => {
 
-        for (let i = 0; i < cnt; i++) {
-          let flag = true;
-
-          Post(localStorage.remoteAddr, Api.DebugStep, { BotID: botid }).then(
-            (json) => {
-              if (json.Code !== 200) {
-                let change;
-                let changeInfo = {};
-
-                if (json.Code === 1008) {
-                  change = JSON.parse(json.Body.Change);
-                  changeInfo = {
-                    status: "",
-                    msg: JSON.stringify(change, null, "\t"),
-                  };
-
-                  message.success("the end");
-                } else {
-                  message.error(json.Msg);
-                  changeInfo = {
-                    status: "error",
-                    msg: ErrMsgParse(json.Body.RuntimeErr),
-                  };
-                }
-
-                if (json.Code !== 1010) {
-                  PubSub.publish(Topic.UpdateChange, changeInfo);
-                }
-
-                PubSub.publish(Topic.UpdateBlackboard, json.Body.Blackboard);
-                flag = false;
-                PubSub.publish(Topic.Focus, {
-                  Cur: "",
-                  Prev: "",
-                });
-              } else {
-
-                let metastr;
-                let meta = JSON.parse(json.Body.Blackboard);
-                let change = JSON.parse(json.Body.Change);
-
-                metastr = JSON.stringify(meta);
-
-                PubSub.publish(Topic.UpdateBlackboard, metastr);
-                PubSub.publish(Topic.UpdateChange, {
-                  status: "",
-                  msg: JSON.stringify(change, null, "\t"),
-                });
-                PubSub.publish(Topic.Focus, {
-                  Cur: json.Body.Cur,
-                  Prev: json.Body.Prev,
-                });
-              }
-
-            }
-          );
-
-          await sleep(200);
-          if (!flag) {
-            this.setState({ stepping: false })
-            break;
+          if (json.Code === 1009) {
+            message.warning(json.Code.toString() + " " + json.Msg)
+            return;
           }
+
+          PubSub.publish(Topic.Focus, []);  // reset focus
+          console.info("step", json.Code)
+          if (json.Code !== 200) {
+            if (json.Code === 1007) {  // end
+              message.success("the end");
+              return;
+            }
+
+            let threadinfo = JSON.parse(json.Body.ThreadInfo)
+            PubSub.publish(Topic.UpdateChange, threadinfo)
+            message.warning(json.Code.toString() + " " + json.Msg)
+
+          } else {
+            let metaStr = JSON.stringify(JSON.parse(json.Body.Blackboard))
+            let threadinfo = JSON.parse(json.Body.ThreadInfo)
+
+            PubSub.publish(Topic.UpdateChange, threadinfo)
+
+            let focusLst = new Array()
+            threadinfo.forEach(element => {
+              focusLst.push(element.curnod)
+            });
+
+            PubSub.publish(Topic.Focus, focusLst)
+            PubSub.publish(Topic.UpdateBlackboard, metaStr);
+          }
+
         }
-
-        this.setState({ stepping: false })
-      };
-
-      if (!this.state.stepping) {
-        this.setState({ stepping: true }, () => {
-          step();
-        })
-      }
+      );
 
     });
+
+    if (this.state.botid === "") {
+      return
+    }
 
     PubSub.subscribe(Topic.FileSave, (topic, msg) => {
       var tree = this.getTree();

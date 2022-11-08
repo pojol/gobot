@@ -20,6 +20,7 @@ const Api = {
     */
     DebugCreate: "debug.create",
     DebugStep: "debug.step",
+    DebugInfo : "debug.info",
 
     /*
         Bot
