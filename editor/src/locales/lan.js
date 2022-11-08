@@ -30,6 +30,10 @@ var lanMap = {
         "en" : "Config",
         "zh-cn" : "配置"
     },
+    "app.tab.prefab" : {
+        "en" : "Prefab",
+        "zh-cn" : "预制"
+    },
 
     "app.edit.tab.condition" : {
         "en" : "Condition",

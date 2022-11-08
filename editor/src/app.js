@@ -22,6 +22,7 @@ import ReportPage from "./pages/report/report";
 import ConfigPage from "./pages/config/config";
 import EditPage from "./pages/edit/edit";
 import RunningPage from "./pages/runing/runing";
+import BotPrefab from "./pages/prefab/prefab";
 
 import enUS from "antd/lib/locale/en_US";
 import zhCN from "antd/lib/locale/zh_CN";
@@ -76,9 +77,9 @@ export default class App extends React.Component {
   componentDidMount() {
     PubSub.subscribe(Topic.FileLoad, (topic, info) => {
       this.setState({ tab: "Edit" });
-        PubSub.publish(Topic.FileLoadDraw, [info.Tree]);
+      PubSub.publish(Topic.FileLoadDraw, [info.Tree]);
     });
-    
+
     this.checkheath()
     window.addEventListener("resize", this.resizeHandler, false);
   }
@@ -98,11 +99,11 @@ export default class App extends React.Component {
   };
 
   checkheath() {
-    CheckHealth(localStorage.remoteAddr).then((res=>{
+    CheckHealth(localStorage.remoteAddr).then((res => {
       if (res.code === 200) {
-        this.setState({connectColor:"#4caf50", connectTxt:"Connecting"})
+        this.setState({ connectColor: "#4caf50", connectTxt: "Connecting" })
       } else {
-        this.setState({connectColor:"red", connectTxt:"Not connected to server, please set in config"})
+        this.setState({ connectColor: "red", connectTxt: "Not connected to server, please set in config" })
       }
     }));
   }
@@ -197,7 +198,7 @@ export default class App extends React.Component {
         <dev className="ver">
           <Space>
             <Tooltip title={this.state.connectTxt}>
-              <ApiFilled  style={{ color: this.state.connectColor }} />
+              <ApiFilled style={{ color: this.state.connectColor }} />
             </Tooltip>
             <Tag color="geekblue">v0.2.1</Tag>
             <Tag
@@ -252,6 +253,9 @@ export default class App extends React.Component {
           </TabPane>
           <TabPane tab={lanMap["app.tab.config"][moment.locale()]} key="Config">
             <ConfigPage />
+          </TabPane>
+          <TabPane tab={lanMap["app.tab.prefab"][moment.locale()]} key="Prefab">
+            <BotPrefab />
           </TabPane>
         </Tabs>
 

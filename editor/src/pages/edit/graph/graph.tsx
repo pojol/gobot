@@ -389,20 +389,20 @@ export default class GraphView extends React.Component {
     });
 
     graph.on("node:mouseenter", ({ node }) => {
-      node.setPortProp(node.getPorts()[0].id as string, "attrs/portBody/r", 10)
+      node.setPortProp(node.getPorts()[0].id as string, "attrs/portBody/r", 8)
     })
 
     // node:mouseleave 消息容易获取不到，先每次获取到这个消息将所有节点都设置一下
     graph.on("node:mouseleave", ({ node }) => {
 
-      node.setPortProp(node.getPorts()[0].id as string, "attrs/portBody/r", 5)
+      node.setPortProp(node.getPorts()[0].id as string, "attrs/portBody/r", 4)
 
       var nods = this.graph.getRootNodes();
       if (nods.length > 0) {
         iterate(nods[0], (nod) => {
 
           if (nod.getAttrs().type !== undefined) {
-            nod.setPortProp(nod.getPorts()[0].id as string, "attrs/portBody/r", 5)
+            nod.setPortProp(nod.getPorts()[0].id as string, "attrs/portBody/r", 4)
           }
 
         });
