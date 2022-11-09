@@ -114,11 +114,11 @@ export default class BotPrefab extends React.Component {
                         (file) => {
                             let reader = new FileReader();
                             reader.onload = function (ev) {
-                                console.info("element", element)
-                                if (element !== "system" && element != "global") {
-
+                                let lowElement = element.toLowerCase()
+                                console.info("element", lowElement)
+                                if (lowElement !== "system" && lowElement != "global") {
                                     var jobj = JSON.parse(reader.result);
-                                    dat.push({ key: jobj["title"], name: jobj["title"], code: jobj["content"] })
+                                    dat.push({ key: jobj["title"].toLowerCase(), name: jobj["title"].toLowerCase(), code: jobj["content"] })
                                 }
 
                                 counter++;

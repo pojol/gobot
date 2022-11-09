@@ -251,12 +251,13 @@ export default class App extends React.Component {
               <ReportPage />
             </Layout>
           </TabPane>
-          <TabPane tab={lanMap["app.tab.config"][moment.locale()]} key="Config">
-            <ConfigPage />
-          </TabPane>
           <TabPane tab={lanMap["app.tab.prefab"][moment.locale()]} key="Prefab">
             <BotPrefab />
           </TabPane>
+          <TabPane tab={lanMap["app.tab.config"][moment.locale()]} key="Config">
+            <ConfigPage />
+          </TabPane>
+
         </Tabs>
 
         <Modal

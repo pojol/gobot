@@ -110,11 +110,13 @@ export default class BotConfig extends React.Component {
               let reader = new FileReader();
               reader.onload = function (ev) {
 
-                console.info("load config", element)
-                if (element === "system") {
+                let lowElement = element.toLowerCase()
+
+                console.info("load config", lowElement)
+                if (lowElement === "system") {
                   PubSub.publish(Topic.SystemConfigUpdate, reader.result)
-                } else if (element === "global") {
-                  window.config.set(element, reader.result);
+                } else if (lowElement === "global") {
+                  window.config.set(lowElement, reader.result);
 
                   jobj = JSON.parse(reader.result);
                   callback()
