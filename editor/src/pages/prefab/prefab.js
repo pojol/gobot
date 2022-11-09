@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import {
     Space, Table, Button, message, Input, Popconfirm,
     Tooltip, Modal
@@ -35,45 +35,8 @@ import "react-reflex/styles.css";
 import { ReflexContainer, ReflexSplitter, ReflexElement } from "react-reflex";
 
 
-export default class BotPrefab extends React.Component {
 
-    columns = [
-        {
-            title: 'Name',
-            dataIndex: 'name',
-            key: 'name',
-            ...(dataIndex) => ({
-                filterDropdown: ({ setSelectedKeys, selectedKeys, confirm }) => (
-                    <div
-                        style={{
-                            padding: 8,
-                        }}
-                    >
-                        <Input
-                            placeholder={`Search ${dataIndex}`}
-                            value={this.state.selectedKey}
-                            onChange={(e) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
-                            onPressEnter={() => this.handleSearch(selectedKeys, confirm, dataIndex)}
-                            style={{
-                                marginBottom: 8,
-                                display: 'block',
-                            }}
-                        />
-                    </div>
-                ),
-                filterIcon: (filtered) => (
-                    <SearchOutlined
-                        style={{
-                            color: filtered ? '#1890ff' : undefined,
-                        }}
-                    />
-                ),
-                onFilter: (value, record) =>
-                    record[dataIndex].toString().toLowerCase().includes(value.toLowerCase()),
-                render: (text) => <a>{text.toLowerCase()}</a>
-            })('name')
-        }
-    ];
+export default class BotPrefab extends React.Component {
 
     constructor(props) {
         super(props);
@@ -83,13 +46,53 @@ export default class BotPrefab extends React.Component {
             selectedKey: "",
             isModalVisible: false,
             newPrefabName: "",
+            searchText:"",
+            setSearchText:"",
+            searchedColumn:"",
+            searchInput:"",
         };
     }
 
     componentDidMount() {
         this.syncConfig()
     }
+    
+    handleSearch = (selectedKeys, confirm, dataIndex) => {
+        confirm();
+        this.setState({setSearchText:selectedKeys[0]})
+    };
 
+    getColumnSearchProps = (dataIndex) => ({
+        filterDropdown: ({ setSelectedKeys, selectedKeys, confirm }) => (
+            <div
+                style={{
+                    padding: 8,
+                }}
+            >
+                <Input
+                    placeholder={`Search ${dataIndex}`}
+                    value={selectedKeys[0]}
+                    onChange={(e) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+                    onPressEnter={() => this.handleSearch(selectedKeys, confirm, dataIndex)}
+                    style={{
+                        marginBottom: 8,
+                        display: 'block',
+                    }}
+                />
+            </div>
+        ),
+        filterIcon: (filtered) => (
+            <SearchOutlined
+                style={{
+                    color: filtered ? '#1890ff' : undefined,
+                }}
+            />
+        ),
+        onFilter: (value, record) =>
+            record[dataIndex].toString().toLowerCase().includes(value.toLowerCase()),
+        render: (text) => <a>{text.toLowerCase()}</a>
+    })
+    
     syncConfig = () => {
         Post(localStorage.remoteAddr, Api.ConfigList, {}).then((json) => {
             if (json.Code !== 200) {
@@ -272,7 +275,14 @@ export default class BotPrefab extends React.Component {
                     <ReflexElement className="left-pane" flex={0.3} minSize="200">
 
                         <Table
-                            columns={this.columns}
+                            columns={[
+                                {
+                                    title: 'Name',
+                                    dataIndex: 'name',
+                                    key: 'name',
+                                    ...this.getColumnSearchProps('name')
+                                }
+                            ]}
                             onRow={(record) => {
                                 return {
                                     onClick: (e) => {
