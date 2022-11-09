@@ -184,8 +184,8 @@ var lanMap = {
         "zh-cn" : "应用新的服务器地址"
     },
     "app.config.template" : {
-        "en" : "Prefab script node",
-        "zh-cn" : "预制脚本节点"
+        "en" : "Global script node",
+        "zh-cn" : "全局脚本节点"
     },
     "app.config.theme" : {
         "en" : "Select a codebox theme",
@@ -214,6 +214,19 @@ var lanMap = {
     "app.config.reportsize" : {
         "en" : "Number of reports archived",
         "zh-cn" : "报告存档数量"
+    },
+
+    "app.prefab.remove.desc" : {
+        "en" : "Delete the selected prefab node",
+        "zh-cn" : "删除选中的预制节点"
+    },
+    "app.prefab.remove.confirm" : {
+        "en" : "Are you sure you want to delete the selected prefab node?",
+        "zh-cn" : "你确定要删除选中的这个预制节点嘛?"
+    },
+    "app.prefab.add.placeholder" : {
+        "en" : "Fill in the new prefab node name",
+        "zh-cn" : "填入新的预制节点名称"
     },
 
     "app.msg.notdebugbot" : {
