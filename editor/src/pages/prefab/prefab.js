@@ -46,20 +46,20 @@ export default class BotPrefab extends React.Component {
             selectedKey: "",
             isModalVisible: false,
             newPrefabName: "",
-            searchText:"",
-            setSearchText:"",
-            searchedColumn:"",
-            searchInput:"",
+            searchText: "",
+            setSearchText: "",
+            searchedColumn: "",
+            searchInput: "",
         };
     }
 
     componentDidMount() {
         this.syncConfig()
     }
-    
+
     handleSearch = (selectedKeys, confirm, dataIndex) => {
         confirm();
-        this.setState({setSearchText:selectedKeys[0]})
+        this.setState({ setSearchText: selectedKeys[0] })
     };
 
     getColumnSearchProps = (dataIndex) => ({
@@ -92,7 +92,7 @@ export default class BotPrefab extends React.Component {
             record[dataIndex].toString().toLowerCase().includes(value.toLowerCase()),
         render: (text) => <a>{text.toLowerCase()}</a>
     })
-    
+
     syncConfig = () => {
         Post(localStorage.remoteAddr, Api.ConfigList, {}).then((json) => {
             if (json.Code !== 200) {
@@ -105,6 +105,12 @@ export default class BotPrefab extends React.Component {
                 let dat = []
 
                 let callback = () => {
+                    dat.sort(function (a, b) {
+                        if (a.name < b.name) { return -1; }
+                        if (a.name > b.name) { return 1; }
+                        return 0;
+                    });
+
                     this.setState({ data: dat })
                 };
 

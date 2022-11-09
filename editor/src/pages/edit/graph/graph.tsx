@@ -86,6 +86,8 @@ function NewStencil(graph: Graph) {
     g2title = "预制节点";
   }
 
+  let configmap = (window as any).config as Map<string, string>;
+
   var stencil = new Stencil({
     title: title,
     search(nod, keyword) {
@@ -112,6 +114,7 @@ function NewStencil(graph: Graph) {
       {
         name: "group2",
         title: g2title,
+        graphHeight:configmap.size * 45,
       },
     ],
   });
@@ -121,13 +124,11 @@ function NewStencil(graph: Graph) {
     "group1"
   );
 
-  let configmap = (window as any).config as Map<string, string>;
   let prefabnods: Node[] = [];
 
   configmap.forEach((value: string, key: string) => {
     var jobj = JSON.parse(value);
-
-    if (jobj["prefab"] === true) {
+    if (key !== "system" && key !== "global" && key !== "") {
       var nod = new ActionNode();
       nod.setAttrs({
         type: jobj["title"],
