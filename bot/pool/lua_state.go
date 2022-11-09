@@ -28,7 +28,7 @@ func (pl *lStatePool) Get() *BotState {
 
 	n := len(pl.saved)
 	if n == 0 {
-		return pl.New()
+		return _new_state()
 	}
 	x := pl.saved[n-1]
 	pl.saved = pl.saved[0 : n-1]
@@ -36,7 +36,7 @@ func (pl *lStatePool) Get() *BotState {
 	return x
 }
 
-func (pl *lStatePool) New() *BotState {
+func _new_state() *BotState {
 
 	b := &BotState{
 		L:         lua.NewState(),
@@ -76,6 +76,14 @@ func GetState() *BotState {
 
 func PutState(state *BotState) {
 	luaPool.Put(state)
+}
+
+func NewState() *BotState {
+	return _new_state()
+}
+
+func FreeState(state *BotState) {
+	state.L.Close()
 }
 
 // Global LState pool

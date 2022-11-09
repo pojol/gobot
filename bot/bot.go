@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/pojol/gobot/bot/behavior"
 	"github.com/pojol/gobot/bot/pool"
 	script "github.com/pojol/gobot/script/module"
@@ -29,6 +30,7 @@ type Bot struct {
 
 	bb   *behavior.Blackboard
 	tick *behavior.Tick
+	bt   *behavior.Tree
 
 	sync.RWMutex
 	bs *pool.BotState // lua state pool
@@ -105,12 +107,22 @@ func NewWithBehaviorTree(path string, bt *behavior.Tree, name string, idx int32,
 		Threadlst: []behavior.ThreadInfo{{Number: 1}},
 	}
 
-	state := pool.GetState()
+	var state *pool.BotState
+	var id string
+
+	if bt.GetMode() == behavior.Thread {
+		state = pool.GetState()
+		id = strconv.Itoa(int(idx))
+	} else {
+		state = pool.NewState()
+		id = uuid.NewString()
+	}
 
 	bot := &Bot{
-		id:   strconv.Itoa(int(idx)),
+		id:   id,
 		bb:   bb,
 		tick: behavior.NewTick(bb, state, strconv.Itoa(int(idx))),
+		bt:   bt,
 		bs:   state,
 		name: name,
 	}
@@ -201,10 +213,16 @@ func (b *Bot) GetReport() []script.Report {
 }
 
 func (b *Bot) close() {
-	b.bs.L.DoString(`
+
+	if b.bt.GetMode() == behavior.Thread {
+		b.bs.L.DoString(`
 		meta = {}
 	`)
-	pool.PutState(b.bs)
+		pool.PutState(b.bs)
+	} else {
+		pool.FreeState(b.bs)
+	}
+
 }
 
 type State int32
