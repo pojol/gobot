@@ -31,6 +31,10 @@ func (t *Tree) GetRoot() INod {
 	return t.root
 }
 
+func (t *Tree) GetMode() Mode {
+	return t.mode
+}
+
 func (t *Tree) link(self INod, parent INod, mode Mode) {
 
 	self.Init(t, parent, mode)

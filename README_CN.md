@@ -53,10 +53,7 @@ end
 
 
 ## 编辑器预览
-[![botgif2.gif](https://pojol.oss-cn-shanghai.aliyuncs.com/gobot/botgif2.gif
+[![botgif3.gif](https://i.postimg.cc/s2y4MDZv/botgif3.gif
 )](https://www.bilibili.com/video/BV1sS4y1z7Dg?share_source=copy_web)
 
-[![image.png](https://pojol.oss-cn-shanghai.aliyuncs.com/gobot/report.png
-)](https://www.bilibili.com/video/BV1sS4y1z7Dg?share_source=copy_web)
-
-[![image.png](https://pojol.oss-cn-shanghai.aliyuncs.com/gobot/gobot_qps.png)
+[![botgif2.gif](https://i.postimg.cc/SNKQG50m/botgif2.gif)](https://postimg.cc/s1tRjTDL)

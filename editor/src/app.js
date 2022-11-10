@@ -122,6 +122,7 @@ export default class App extends React.Component {
         var counter = 0;
 
         lst.forEach(function (element) {
+          console.info("get config", element)
           PostGetBlob(localStorage.remoteAddr, Api.ConfigGet, element).then(
             (file) => {
               let reader = new FileReader();
@@ -131,11 +132,13 @@ export default class App extends React.Component {
                   message.warning("get config byte length == 0")
                   return
                 }
-                window.config.set(element, reader.result)
+
+                window.config.set(element.toLowerCase(), reader.result)
                 PubSub.publish(Topic.ConfigUpdate, reader.result);
 
                 counter++
                 if (counter === lst.length) {
+                  console.info("update config", counter)
                   PubSub.publish(Topic.ConfigUpdateAll, {})
                 }
               };
@@ -251,12 +254,13 @@ export default class App extends React.Component {
               <ReportPage />
             </Layout>
           </TabPane>
-          <TabPane tab={lanMap["app.tab.config"][moment.locale()]} key="Config">
-            <ConfigPage />
-          </TabPane>
           <TabPane tab={lanMap["app.tab.prefab"][moment.locale()]} key="Prefab">
             <BotPrefab />
           </TabPane>
+          <TabPane tab={lanMap["app.tab.config"][moment.locale()]} key="Config">
+            <ConfigPage />
+          </TabPane>
+
         </Tabs>
 
         <Modal

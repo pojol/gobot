@@ -1,11 +1,8 @@
 import {
   Input,
   Button,
-  Tabs,
   message,
   Select,
-  Modal,
-  Switch,
   Collapse,
   InputNumber,
 } from "antd";
@@ -21,7 +18,6 @@ import "codemirror/theme/yonce.css";
 import "codemirror/theme/neo.css";
 import "codemirror/theme/zenburn.css";
 import "codemirror/mode/lua/lua";
-import { SwatchesPicker } from "react-color";
 
 import Topic from "../../constant/topic";
 import moment from "moment";
@@ -30,7 +26,6 @@ import Api from "../../constant/api";
 import { PostBlob, PostGetBlob, CheckHealth, Post } from "../../utils/request";
 
 const { Search } = Input;
-const { TabPane } = Tabs;
 const { Option } = Select;
 const { Panel } = Collapse;
 
@@ -41,11 +36,8 @@ export default class BotConfig extends React.Component {
     super(props);
     this.state = {
       driveAddr: "",
-      activeKey: "Global",
-      panes: [],
+      globalPrefab: "",
       theme: "ayu-dark",
-      isModalVisible: false,
-      modalConfig: "",
       switchChecked: true,
       reportsize: 0,
       channelsize: 0,
@@ -59,21 +51,6 @@ export default class BotConfig extends React.Component {
 
       this.syncConfig()
     }
-
-    PubSub.subscribe(Topic.ConfigUpdate, (topic, info) => {
-      var oldpanes = this.state.panes;
-      var jobj = JSON.parse(info);
-
-      oldpanes.push({
-        title: jobj["title"],
-        content: jobj["content"],
-        key: jobj["title"],
-        closable: jobj["closable"],
-        prefab: jobj["prefab"],
-      });
-
-      this.setState({ panes: oldpanes });
-    });
 
     PubSub.subscribe(Topic.SystemConfigUpdate, (topic, info) => {
       let jobj = JSON.parse(info)
@@ -121,7 +98,11 @@ export default class BotConfig extends React.Component {
         );
       } else {
         let lst = json.Body.Lst;
-        var counter = 0;
+        let jobj
+
+        let callback = () => {
+          this.setState({ globalPrefab: jobj["content"] })
+        }
 
         lst.forEach(function (element) {
           PostGetBlob(localStorage.remoteAddr, Api.ConfigGet, element).then(
@@ -129,20 +110,18 @@ export default class BotConfig extends React.Component {
               let reader = new FileReader();
               reader.onload = function (ev) {
 
-                console.info("load config", element)
-                if (element !== "system") {
-                  window.config.set(element, reader.result);
-                  PubSub.publish(Topic.ConfigUpdate, reader.result);
-                } else {
-                  PubSub.publish(Topic.SystemConfigUpdate, reader.result)
-                }
+                let lowElement = element.toLowerCase()
 
-                counter++;
-                if (counter === lst.length) {
-                  PubSub.publish(Topic.ConfigUpdateAll, {});
+                console.info("load config", lowElement)
+                if (lowElement === "system") {
+                  PubSub.publish(Topic.SystemConfigUpdate, reader.result)
+                } else if (lowElement === "global") {
+                  window.config.set(lowElement, reader.result);
+
+                  jobj = JSON.parse(reader.result);
+                  callback()
                 }
               };
-
               reader.readAsText(file.blob);
             }
           );
@@ -163,7 +142,6 @@ export default class BotConfig extends React.Component {
           // reset
           window.config = new Map();
           localStorage.remoteAddr = driveAddr;
-          this.setState({ panes: [] });
           this.syncConfig();
         }
       });
@@ -173,50 +151,37 @@ export default class BotConfig extends React.Component {
   };
 
   onApplyCode = () => {
-    const { panes, activeKey } = this.state;
-    const selectPanes = panes.filter((pane) => pane.key === activeKey);
+    var templatecode = JSON.stringify({
+      title: "global",
+      content: this.state.globalPrefab,
+      key: "global",
+    });
+    var blob = new Blob([templatecode], {
+      type: "application/json",
+    });
 
-    if (selectPanes.length) {
-      let selectPane = selectPanes[0];
+    console.info("apply config code", templatecode);
 
-      var templatecode = JSON.stringify(selectPane);
-      var blob = new Blob([templatecode], {
-        type: "application/json",
-      });
+    PostBlob(
+      localStorage.remoteAddr,
+      Api.ConfigUpload,
+      "global",
+      blob
+    ).then((json) => {
+      if (json.Code !== 200) {
+        message.error(
+          "upload fail:" + String(json.Code) + " msg: " + json.Msg
+        );
+      } else {
+        message.success("upload succ ");
+        window.config.set("global", templatecode);
+      }
+    });
 
-      console.info("apply config code", templatecode);
-
-      PostBlob(
-        localStorage.remoteAddr,
-        Api.ConfigUpload,
-        selectPane["title"],
-        blob
-      ).then((json) => {
-        if (json.Code !== 200) {
-          message.error(
-            "upload fail:" + String(json.Code) + " msg: " + json.Msg
-          );
-        } else {
-          message.success("upload succ ");
-          window.config.set(activeKey, templatecode);
-          PubSub.publish(Topic.ConfigUpdateAll, {}); // reload
-        }
-      });
-    }
   };
 
   onBeforeChange = (editor, data, value) => {
-    console.info(this.state.activeKey, value);
-    let activeKey = this.state.activeKey;
-
-    let newPanes = this.state.panes;
-    for (var i = 0; i < newPanes.length; i++) {
-      if (newPanes[i].key === activeKey) {
-        newPanes[i].content = value;
-      }
-    }
-
-    this.setState({ panes: newPanes });
+    this.setState({ globalPrefab: value });
   };
 
   onTableChange = (activeKey) => {
@@ -228,128 +193,10 @@ export default class BotConfig extends React.Component {
     this[action](targetKey);
   };
 
-  add = () => {
-    this.setState({ modalConfig: "" });
-    this.showModal();
-  };
-
-  remove = (targetKey) => {
-    const { panes, activeKey } = this.state;
-    let newActiveKey = activeKey;
-    let lastIndex;
-    let find;
-    panes.forEach((pane, i) => {
-      if (pane.key === targetKey) {
-        lastIndex = i - 1;
-        find = true;
-      }
-    });
-
-    if (!find) {
-      message.warning("unknow template : " + targetKey);
-      return;
-    }
-
-    const newPanes = panes.filter((pane) => pane.key !== targetKey);
-    if (newPanes.length && newActiveKey === targetKey) {
-      if (lastIndex >= 0) {
-        newActiveKey = newPanes[lastIndex].key;
-      } else {
-        newActiveKey = newPanes[0].key;
-      }
-    }
-
-    this.setState(
-      {
-        panes: newPanes,
-        activeKey: newActiveKey,
-      },
-      () => {
-        Post(localStorage.remoteAddr, Api.ConfigRemove, {
-          Name: targetKey,
-        }).then((json) => {
-          if (json.Code !== 200) {
-            message.error(
-              "remove template err:" + String(json.Code) + " msg: " + json.Msg
-            );
-          } else {
-            window.config.delete(targetKey);
-            PubSub.publish(Topic.ConfigUpdateAll, {}); // reload
-            message.success("remove template " + targetKey + " succ");
-          }
-        });
-      }
-    );
-  };
-
   clickTheme = (e) => {
     this.setState({ theme: e }, () => {
       localStorage.theme = e;
     });
-  };
-
-  showModal = () => {
-    this.setState({ isModalVisible: true });
-  };
-
-  modalConfigChange = (e) => {
-    this.setState({ modalConfig: e.target.value });
-  };
-
-  modalHandleOk = () => {
-    this.setState({ isModalVisible: false });
-    if (this.state.modalConfig !== "") {
-      const { panes, modalConfig, switchChecked } = this.state;
-      var out = false;
-
-      panes.forEach(function (value) {
-        if (value.title === modalConfig) {
-          message.warning("Duplicate titles cannot be used!");
-          out = true;
-          throw new Error("break")
-        }
-
-        if (modalConfig === "system") {
-          message.warning("Can't use keywords `system`");
-          out = true;
-          throw new Error("break")
-        }
-      });
-
-      if (out) {
-        return;
-      }
-
-      const newPanes = [...panes];
-      newPanes.push({
-        title: modalConfig,
-        content: "Content of new Tab",
-        key: modalConfig,
-        prefab: switchChecked,
-      });
-      this.setState({
-        panes: newPanes,
-        activeKey: modalConfig,
-        modalConfig: "",
-      });
-    }
-  };
-
-  modalHandleCancel = () => {
-    this.setState({ isModalVisible: false });
-  };
-
-  switchChange = (checked) => {
-    this.setState({ switchChecked: checked });
-  };
-
-  handleColorChange = (color) => {
-    console.info(color.hex);
-    this.setState({ color: color.hex });
-  };
-
-  handleOnRemove = (value) => {
-    this.remove(value);
   };
 
   changeChannelSize = (val) => {
@@ -359,8 +206,8 @@ export default class BotConfig extends React.Component {
   onClickSubmit = () => {
 
     var templatecode = JSON.stringify({
-      "channelsize":this.state.channelsize,
-      "reportsize":this.state.reportsize,
+      "channelsize": this.state.channelsize,
+      "reportsize": this.state.reportsize,
     });
     var blob = new Blob([templatecode], {
       type: "application/json",
@@ -395,8 +242,6 @@ export default class BotConfig extends React.Component {
       lineNumbers: true,
     };
 
-    const { panes, activeKey, isModalVisible } = this.state;
-
     return (
       <div>
         <Collapse defaultActiveKey={["1", "2", "3", "4", "5"]}>
@@ -427,31 +272,14 @@ export default class BotConfig extends React.Component {
             header={lanMap["app.config.template"][moment.locale()]}
             key="3"
           >
-            <Tabs
-              type="editable-card"
-              onChange={this.onTableChange}
-              activeKey={activeKey}
-              onEdit={this.onTableEdit}
-            >
-              {panes.map((pane) => (
-                <TabPane tab={pane.title} key={pane.key} closable={false}>
-                  <CodeMirror
-                    value={pane.content}
-                    options={options}
-                    onBeforeChange={this.onBeforeChange}
-                  />
-                </TabPane>
-              ))}
-            </Tabs>
+            <CodeMirror
+              value={this.state.globalPrefab}
+              options={options}
+              onBeforeChange={this.onBeforeChange}
+            />
             <Button type="primary" onClick={this.onApplyCode}>
               {lanMap["app.config.code.apply"][moment.locale()]}
             </Button>
-            <Search
-              placeholder="remove prefab script node by name"
-              allowClear
-              enterButton="Remove prefab"
-              onSearch={this.handleOnRemove}
-            />
           </Panel>
           <Panel
             header={lanMap["app.config.channelsize"][moment.locale()]}
@@ -487,32 +315,6 @@ export default class BotConfig extends React.Component {
             </Input.Group>
           </Panel>
         </Collapse>
-
-        <Modal
-          visible={isModalVisible}
-          onOk={this.modalHandleOk}
-          onCancel={this.modalHandleCancel}
-        >
-          <Input
-            placeholder={lanMap["app.config.modal.input"][moment.locale()]}
-            onChange={this.modalConfigChange}
-            value={this.state.modalConfig}
-          />
-          <Switch
-            checkedChildren={
-              lanMap["app.config.modal.checked"][moment.locale()]
-            }
-            unCheckedChildren={
-              lanMap["app.config.modal.uncheked"][moment.locale()]
-            }
-            onChange={this.switchChange}
-            defaultChecked
-          />
-          <SwatchesPicker
-            color={this.state.color}
-            onChange={this.handleColorChange}
-          />
-        </Modal>
       </div>
     );
   }
