@@ -103,7 +103,7 @@ function NewStencil(graph: Graph) {
     notFoundText: "Not Found",
     target: graph,
     collapsable: true,
-
+    stencilGraphPadding :10,
     stencilGraphWidth: stencilWidth,
     stencilGraphHeight: 260,
     groups: [
@@ -114,7 +114,9 @@ function NewStencil(graph: Graph) {
       {
         name: "group2",
         title: g2title,
-        graphHeight:configmap.size * 45,
+        graphWidth:160,
+        graphHeight:configmap.size * 35,
+        layoutOptions: {columns:1,columnWidth:"auto",rowHeight:35}
       },
     ],
   });
@@ -127,13 +129,12 @@ function NewStencil(graph: Graph) {
   let prefabnods: Node[] = [];
 
   configmap.forEach((value: string, key: string) => {
-    var jobj = JSON.parse(value);
     if (key !== "system" && key !== "global" && key !== "") {
       var nod = new ActionNode();
       nod.setAttrs({
-        type: jobj["title"],
         label: { text: key },
       });
+      nod.setSize(140,20)
 
       prefabnods.push(nod);
     }
@@ -385,7 +386,12 @@ export default class GraphView extends React.Component {
         silent = options.others.silent;
         build = options.others.build;
       }
-      console.info(GetNodInfo(node))
+
+      if (node.getAttrs().type.toString() === "ActionNode"){
+        node.setSize(40,20)
+      }
+      console.info("node:added",GetNodInfo(node))
+
       PubSub.publish(Topic.NodeAdd, [GetNodInfo(node), build, silent]);
     });
 
