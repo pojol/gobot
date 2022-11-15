@@ -20,8 +20,8 @@ export default class Blackboard extends React.Component {
     this.state = {
       metadata: {},
       change: "",
-      runtimeerr:"",
-      active:"2",
+      runtimeerr: "",
+      active: "2",
     };
   }
 
@@ -44,12 +44,12 @@ export default class Blackboard extends React.Component {
           msg += "<b>Thread[" + element.number + "]</b>\n"
 
           if (element.errmsg !== "") {
-            PubSub.publish(Topic.Focus, [element.errmsg.substr(0,36)])
+            PubSub.publish(Topic.Focus, [element.errmsg.substr(0, 36)])
             msg += element.errmsg
             msg += "------------------------------\n"
             haveerr = true
             throw new Error();
-          } 
+          }
 
           try {
             msg += JSON.stringify(JSON.parse(element.change), null, 2) + "\n"
@@ -80,12 +80,13 @@ export default class Blackboard extends React.Component {
     });
 
     PubSub.subscribe(Topic.Create, (topic, info) => {
-      this.setState({ metadata: JSON.parse("{}") });
+      this.setState({ metadata: JSON.parse("{}"), runtimeerr: "" });
+      console.info(this.state.runtimeerr)
     });
   }
 
   clickTab = (e) => {
-    this.setState({active:e})
+    this.setState({ active: e })
   }
 
   render() {

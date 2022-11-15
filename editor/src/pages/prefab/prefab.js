@@ -6,7 +6,7 @@ import {
 import PubSub from "pubsub-js";
 import { formatText } from 'lua-fmt';
 import {
-    SearchOutlined
+    FilterTwoTone 
 } from "@ant-design/icons";
 
 import { Controlled as CodeMirror } from "react-codemirror2";
@@ -82,11 +82,7 @@ export default class BotPrefab extends React.Component {
             </div>
         ),
         filterIcon: (filtered) => (
-            <SearchOutlined
-                style={{
-                    color: filtered ? '#1890ff' : undefined,
-                }}
-            />
+            <FilterTwoTone />
         ),
         onFilter: (value, record) =>
             record[dataIndex].toString().toLowerCase().includes(value.toLowerCase()),

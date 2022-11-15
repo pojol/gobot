@@ -13,7 +13,7 @@ ActionNode.config({
       strokeWidth: 1,
       borderRadius: 2,
     },
-    type : ""
+    type : "ActionNode"
   },
   width: 40,
   height: 20,
