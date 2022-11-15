@@ -234,7 +234,11 @@ const (
 	SSucc
 )
 
+var stepmu sync.Mutex
+
 func (b *Bot) RunByStep() State {
+	stepmu.Lock()
+	defer stepmu.Unlock()
 
 	err, end := b.tick.Do()
 	if err != nil {
