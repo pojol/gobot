@@ -114,9 +114,9 @@ function NewStencil(graph: Graph) {
       {
         name: "group2",
         title: g2title,
-        graphWidth:160,
-        graphHeight:configmap.size * 35,
-        layoutOptions: {columns:1,columnWidth:"auto",rowHeight:35}
+        graphWidth:200,
+        graphHeight:configmap.size * 30,
+        layoutOptions: {columns:1,columnWidth:"auto",rowHeight:30}
       },
     ],
   });
@@ -135,6 +135,7 @@ function NewStencil(graph: Graph) {
         label: { text: key },
       });
       nod.setSize(140,20)
+      nod.removePortAt(0)
 
       prefabnods.push(nod);
     }
@@ -293,6 +294,11 @@ export default class GraphView extends React.Component {
         modifiers: ["alt", "meta"],
       },
     });
+    /*
+    graph.drawBackground({
+      color:"#D6E4E5"
+    })
+    */
 
     var root = new RootNode();
     root.setPosition((graph.getGraphArea().width / 2) + (stencilWidth / 2), (graph.getGraphArea().height / 2) - 200)
@@ -390,6 +396,7 @@ export default class GraphView extends React.Component {
       if (node.getAttrs().type.toString() === "ActionNode"){
         node.setSize(40,20)
       }
+      //node.setAttrs( { body: {fill:"#D6E4E5"}})
       console.info("node:added",GetNodInfo(node))
 
       PubSub.publish(Topic.NodeAdd, [GetNodInfo(node), build, silent]);
