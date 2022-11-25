@@ -10,7 +10,7 @@ WaitNode.config({
     },
     body: {
       fill: "#f5f5f5",
-      stroke: "#DDDDDD",
+      stroke: "#76549A",
       strokeWidth: 1,
       borderRadius: 2,
       rx: 3,

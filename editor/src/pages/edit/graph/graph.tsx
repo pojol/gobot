@@ -135,6 +135,7 @@ function NewStencil(graph: Graph) {
         label: { text: key },
       });
       nod.setSize(140,20)
+      nod.setAttrs({body: {rx:3,ry:3,stroke:"#497174"}})
       nod.removePortAt(0)
 
       prefabnods.push(nod);
