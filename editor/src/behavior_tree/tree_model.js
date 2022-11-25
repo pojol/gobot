@@ -549,7 +549,7 @@ end
             message.warning(json.Code.toString() + " " + json.Msg)
             return;
           }
-
+          let threadinfo = []
           PubSub.publish(Topic.Focus, []);  // reset focus
           console.info("step", json.Code)
           if (json.Code !== 200) {
@@ -557,26 +557,20 @@ end
               message.success("the end");
               return;
             }
-
-            let threadinfo = JSON.parse(json.Body.ThreadInfo)
-            PubSub.publish(Topic.UpdateChange, threadinfo)
             message.warning(json.Code.toString() + " " + json.Msg)
-
           } else {
-            let metaStr = JSON.stringify(JSON.parse(json.Body.Blackboard))
-            let threadinfo = JSON.parse(json.Body.ThreadInfo)
-
-            PubSub.publish(Topic.UpdateChange, threadinfo)
-
+            threadinfo = JSON.parse(json.Body.ThreadInfo)
             let focusLst = new Array()
             threadinfo.forEach(element => {
               focusLst.push(element.curnod)
             });
-
             PubSub.publish(Topic.Focus, focusLst)
-            PubSub.publish(Topic.UpdateBlackboard, metaStr);
           }
 
+          let metaStr = JSON.stringify(JSON.parse(json.Body.Blackboard))
+          PubSub.publish(Topic.UpdateBlackboard, metaStr);
+
+          PubSub.publish(Topic.UpdateChange, threadinfo)
         }
       );
 
