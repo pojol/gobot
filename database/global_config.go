@@ -15,11 +15,6 @@ type CodeTemplate struct {
 	Lst []CodeTemplateInfo
 }
 
-type SystemInfo struct {
-	ChannelSize int32 `json:"channelsize"`
-	ReportSize  int32 `json:"reportsize"`
-}
-
 func GetGlobalScript(db IDatabase) []string {
 	globalScript := []string{}
 
@@ -57,11 +52,6 @@ func GetGlobalScript(db IDatabase) []string {
 }
 
 func GetSystemParm(db IDatabase) SystemInfo {
-
-	sysinfo := SystemInfo{
-		ReportSize:  100,
-		ChannelSize: 128,
-	}
 
 	cfg, err := db.ConfigFind("system")
 	if err != nil {

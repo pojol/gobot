@@ -1,0 +1,114 @@
+.dnd-wrap {
+    width: 250px;
+    padding: 10px;
+    border: 1px solid #f0f0f0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    user-select: none;
+}
+
+.dnd-warp-prefab {
+    width: 250px;
+    height: 500px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow: auto;
+}
+
+.dnd-selector {
+    width: 70px;
+    height: 20px;
+    border-radius: 2px;
+    background-color: #5AA897;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    line-height: 20px;
+    margin: 0px;
+    cursor: move;
+}
+
+.dnd-sequence {
+    width: 70px;
+    height: 20px;
+    border-radius: 2px;
+    background-color: #5AA897;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    line-height: 20px;
+    margin: 0px;
+    cursor: move;
+}
+
+.dnd-parallel {
+    width: 40px;
+    height: 40px;
+    border-radius: 2px;
+    background-color: #5AA897;
+    text-align: center;
+    line-height: 30px;
+    margin: 0px;
+    cursor: move;
+}
+
+.dnd-loop {
+    width: 50px;
+    height: 30px;
+    border-radius: 50%;
+    background-color: #FFD384;
+    text-align: center;
+    line-height: 20px;
+    margin: 0px;
+    cursor: move;
+}
+
+.dnd-wait {
+    width: 20px;
+    height: 20px;
+    border-radius: 2px;
+    background-color: #76549A;
+    text-align: center;
+    line-height: 20px;
+    margin: 0px;
+    cursor: move;
+}
+
+
+.dnd-prefab {
+    width: 200px;
+    height: 30px;
+    border: 1px solid #579BB1;
+    text-align: center;
+    line-height: 30px;
+    margin: 2px;
+    cursor: move;
+}
+
+.dnd-condition {
+    width: 0;
+    height: 0;
+    border: 20px solid transparent;
+    border-bottom-color: #FF884B;
+    position: relative;
+    top: -20px;
+    text-align: center;
+  }
+  .dnd-condition:after {
+    content: '';
+    position: absolute;
+    left: -20px;
+    top: 20px;
+    width: 0;
+    height: 0;
+    border: 20px solid transparent;
+    border-top-color: #FF884B;
+    text-align: center;
+    text-overflow: ellipsis;
+  }

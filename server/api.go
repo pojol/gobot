@@ -1,6 +1,7 @@
 package server
 
 import (
+	"github.com/pojol/gobot/config"
 	"github.com/pojol/gobot/database"
 	"github.com/pojol/gobot/factory"
 )
@@ -49,6 +50,10 @@ type SetBehaviorTagsReq struct {
 
 type SetBehaviorTagsRes struct {
 	Bots []behaviorInfo
+}
+
+type SetSystemConfigReq struct {
+	Cfg config.SystemCfg
 }
 
 type SetConfigReq struct {

@@ -9,6 +9,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/pojol/gobot/bot"
 	"github.com/pojol/gobot/bot/behavior"
+	"github.com/pojol/gobot/config"
 	"github.com/pojol/gobot/database"
 	"github.com/pojol/gobot/factory"
 	"github.com/pojol/gobot/utils"
@@ -324,23 +325,72 @@ EXT:
 	return nil
 }
 
-func ConfigGetInfo(ctx echo.Context) error {
+func ConfigGetSysInfo(ctx echo.Context) error {
 	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
 	code := Succ
 	res := &Response{}
-	name := ctx.Request().Header.Get("FileName")
 
-	cfg, err := factory.Global.GetConfig(name)
+	syscfg := config.GetSystemConfig()
+	dat, _ := json.Marshal(&syscfg)
+
+	res.Code = int(code)
+	ctx.Blob(http.StatusOK, "text/plain;charset=utf-8", dat)
+	return nil
+}
+
+func ConfigSetSysInfo(ctx echo.Context) error {
+	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
+	code := Succ
+	res := &Response{}
+
+	req := &SetSystemConfigReq{}
+	bts, err := ioutil.ReadAll(ctx.Request().Body)
 	if err != nil {
-		fmt.Println("get config", err.Error())
-		code = ErrGetConfig
-		res.Msg = err.Error()
+		fmt.Println(err.Error())
 		goto EXT
 	}
 
+	err = json.Unmarshal(bts, &req)
+	if err != nil {
+		fmt.Println(err.Error())
+		goto EXT
+	}
+
+	config.SetSystemConfig(req.Cfg)
+
 EXT:
 	res.Code = int(code)
-	ctx.Blob(http.StatusOK, "text/plain;charset=utf-8", cfg.Dat)
+	ctx.Blob(http.StatusOK, "text/plain;charset=utf-8", nil)
+	return nil
+}
+
+func ConfigGetGlobalInfo(ctx echo.Context) error {
+	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
+	code := Succ
+	res := &Response{}
+
+	res.Code = int(code)
+	ctx.Blob(http.StatusOK, "text/plain;charset=utf-8", config.GetGlobalDefine())
+	return nil
+}
+
+func ConfigSetGlobalInfo(ctx echo.Context) error {
+	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
+	code := Succ
+	res := &Response{}
+
+	bts, err := ioutil.ReadAll(ctx.Request().Body)
+	if err != nil {
+		code = ErrContentRead // tmp
+		fmt.Println(err.Error())
+		goto EXT
+	}
+
+	config.SetGlobalDefine(bts)
+
+EXT:
+	res.Code = int(code)
+	ctx.Blob(http.StatusOK, "text/plain;charset=utf-8", nil)
 	return nil
 }
 
@@ -611,10 +661,15 @@ func Route(e *echo.Echo) {
 	e.POST("/file.get", FileGetBlob)
 	e.POST("/file.setTags", FileSetTags)
 
-	e.POST("/config.get", ConfigGetInfo)
-	e.POST("/config.list", ConfigListInfo)
-	e.POST("/config.rmv", ConfigRemove)
-	e.POST("/config.upload", ConfigUpload)
+	//e.POST("/prefab.list", PrefabList)
+	//e.POST("/prefab.get", PrefabGetInfo)
+	//e.POST("/prefab.rmv", PrefabRmv)
+	//e.POST("/prefab.setTags", PrefabSetTags)
+	//e.POST("/prefab.upload", PrefabUpload)
+
+	//e.POST("/config.list", ConfigListInfo)
+	//e.POST("/config.rmv", ConfigRemove)
+	//e.POST("/config.upload", ConfigUpload)
 
 	e.POST("/bot.run", BotRun)
 	e.POST("/bot.batch", BotCreateBatch) // 创建一批bot
@@ -623,5 +678,10 @@ func Route(e *echo.Echo) {
 	e.POST("/debug.create", DebugCreate) // 创建一个 edit 中的bot 实例、
 	e.POST("/debug.step", DebugStep)     // 单步运行 edit 中的bot
 
-	e.POST("/report.info", GetReport)
+	e.POST("/config.sys.info", ConfigGetSysInfo)
+	e.POST("/config.sys.set", ConfigSetSysInfo)
+	e.POST("/config.global.info", ConfigGetGlobalInfo)
+	e.POST("/config.global.set", ConfigSetGlobalInfo)
+
+	e.POST("/report.get", GetReport)
 }

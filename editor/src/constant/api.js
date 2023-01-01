@@ -9,11 +9,6 @@ const Api = {
     FileRemove: "file.remove",
     FileSetTags: "file.setTags",
 
-    ConfigUpload : "config.upload",
-    ConfigGet : "config.get",
-    ConfigList : "config.list",
-    ConfigRemove : "config.rmv",
-
     /*
         Debug
     */
@@ -31,7 +26,12 @@ const Api = {
     /*
         Report
     */
-    ReportInfo: "report.info"
+    ReportInfo: "report.get",
+
+    /*
+        Config
+    */
+    ConfigGet : "config.get"
 }
 
 

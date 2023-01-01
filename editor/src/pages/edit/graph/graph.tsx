@@ -35,10 +35,11 @@ import { message } from "antd";
 import PubSub from "pubsub-js";
 import Topic from "../../../constant/topic";
 
-import moment from "moment";
+//import moment from "moment";
 import Constant from "../../../constant/constant";
+import EditSidePlane from "../side/side";
 
-const { Dnd, Stencil } = Addon;
+const { Dnd } = Addon;
 
 // 高亮
 const magnetAvailabilityHighlighter = {
@@ -51,8 +52,8 @@ const magnetAvailabilityHighlighter = {
   },
 };
 
-const stencilWidth = 180;
 
+/*
 function NewStencil(graph: Graph) {
   var selectorNod = new SelectorNode();
   var seqNod = new SequenceNode();
@@ -146,7 +147,7 @@ function NewStencil(graph: Graph) {
 
   return stencil;
 }
-
+*/
 function fillChildInfo(child: Node, info: any) {
   var childInfo = {
     id: child.id,
@@ -211,6 +212,7 @@ export default class GraphView extends React.Component {
     wflex: 0.6,
   };
 
+  /*
   reloadStencil() {
     this.setState({ stencil: NewStencil(this.graph) }, () => {
       if (this.state.stencil != null) {
@@ -219,11 +221,12 @@ export default class GraphView extends React.Component {
       }
     });
   }
+  */
 
   componentDidMount() {
     // 新建画布
     const graph = new Graph({
-      width: document.body.clientWidth * this.state.wflex - stencilWidth,
+      width: document.body.clientWidth * this.state.wflex,
       height: document.body.clientHeight - 62,
       container: this.container,
       highlighting: {
@@ -302,7 +305,7 @@ export default class GraphView extends React.Component {
     */
 
     var root = new RootNode();
-    root.setPosition((graph.getGraphArea().width / 2) + (stencilWidth / 2), (graph.getGraphArea().height / 2) - 200)
+    root.setPosition((graph.getGraphArea().width / 2) + 80, (graph.getGraphArea().height / 2) - 200)
     graph.addNode(root);
 
     PubSub.publish(Topic.NodeAdd, [GetNodInfo(root), true, false]);
@@ -483,10 +486,10 @@ export default class GraphView extends React.Component {
     });
     this.graph = graph;
 
-    this.reloadStencil();
+    //this.reloadStencil();
 
     PubSub.subscribe(Topic.ConfigUpdateAll, (topic: string, info: any) => {
-      this.reloadStencil();
+     // this.reloadStencil();
     });
 
     PubSub.subscribe(Topic.UpdateNodeParm, (topic: string, info: any) => {
@@ -579,7 +582,7 @@ export default class GraphView extends React.Component {
     });
 
     PubSub.subscribe(Topic.LanuageChange, () => {
-      this.reloadStencil();
+      //this.reloadStencil();
     });
 
     var agent = navigator.userAgent.toLowerCase();
@@ -608,7 +611,7 @@ export default class GraphView extends React.Component {
 
   // 重绘视口
   resizeViewpoint() {
-    var width = document.body.clientWidth * this.state.wflex - stencilWidth;
+    var width = document.body.clientWidth * this.state.wflex;
 
     console.info("resize panel", this.state.wflex, document.body.clientHeight);
 
@@ -875,8 +878,9 @@ export default class GraphView extends React.Component {
   render() {
     return (
       <div className="app">
-        <div className="app-stencil" ref={this.refStencil} />
+        <EditSidePlane graph={this.graph}></EditSidePlane>
         <div className="app-content" ref={this.refContainer} />
+        
         <div className={"app-zoom-" + this.state.platfrom}>
           <Tooltip placement="leftTop" title="ZoomIn">
             <Button icon={<ZoomInOutlined />} onClick={this.ClickZoomIn} />

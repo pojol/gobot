@@ -33,6 +33,7 @@ import { Post, PostGetBlob, CheckHealth } from "./utils/request";
 import Api from "./constant/api";
 
 import { ReadOutlined, ApiFilled } from "@ant-design/icons";
+import 'antd/dist/antd.variable.min.css';
 
 const { TabPane } = Tabs;
 moment.locale("en");
@@ -71,7 +72,7 @@ export default class App extends React.Component {
     } else {
       this.syncTemplateCode();
     }
-
+    
   }
 
   componentDidMount() {

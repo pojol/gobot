@@ -6,7 +6,7 @@ import {
 import PubSub from "pubsub-js";
 import { formatText } from 'lua-fmt';
 import {
-    FilterTwoTone 
+    FilterTwoTone
 } from "@ant-design/icons";
 
 import { Controlled as CodeMirror } from "react-codemirror2";
@@ -23,6 +23,8 @@ import Topic from "../../constant/topic";
 import Api from "../../constant/api";
 import moment from 'moment';
 import lanMap from "../../locales/lan";
+
+import HomeTagGroup from '../home/home_tags';
 
 import { Post, PostGetBlob, PostBlob } from "../../utils/request";
 
@@ -247,6 +249,25 @@ export default class BotPrefab extends React.Component {
         this.setState({ isModalVisible: false });
     };
 
+    updateTags(name, tags) {
+        /*
+        var bots = this.state.Bots
+        var tagSet = new Set()
+
+        for (var i = 0; i < bots.length; i++) {
+            if (bots[i].Name === name) {
+                bots[i].Tags = tags   // update tags
+            }
+
+            if (bots[i].Tags) {
+                for (var j = 0; j < bots[i].Tags.length; j++) {
+                    tagSet.add(bots[i].Tags[j])
+                }
+            }
+        }
+        */
+    }
+
     render() {
 
         const { isModalVisible } = this.state;
@@ -283,7 +304,17 @@ export default class BotPrefab extends React.Component {
                                     dataIndex: 'name',
                                     key: 'name',
                                     ...this.getColumnSearchProps('name')
-                                }
+                                },
+                                {
+                                    title: "Tags",
+                                    dataIndex: "tags",
+                                    key: "tags",
+                                    render: (text, record) => (
+                                        <HomeTagGroup record={record} onChange={(tags) => {
+                                            this.updateTags(record.name, tags)
+                                        }} ></HomeTagGroup>
+                                    ),
+                                },
                             ]}
                             onRow={(record) => {
                                 return {
