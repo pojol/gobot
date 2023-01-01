@@ -4,13 +4,6 @@
   position: relative;
 }
 
-.app-stencil {
-  width: 180px;
-  border: 1px solid #f0f0f0;
-  position: relative;
-
-}
-
 .app-content {
   flex: 1;
   z-index: 1;
@@ -40,21 +33,21 @@
   position: absolute;
   z-index: 10;
   right:65px;
-  bottom:3px;
+  bottom:63px;
 }
 
 .app-reset-mac {
   position: absolute;
   z-index: 10;
   right:140px;
-  bottom:3px;
+  bottom:63px;
 }
 
 .app-upload-mac {
   position: absolute;
   z-index: 10;
   right:3px;
-  bottom:3px;
+  bottom:63px;
 }
 
 .app-step-win {
