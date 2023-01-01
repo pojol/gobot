@@ -9,7 +9,7 @@ SequenceNode.config({
     },
     body: {
       fill: "#f5f5f5",
-      stroke: "#5AA897",
+      stroke: "#A7C1D5",
       strokeWidth: 1,
       borderRadius: 2,
       rx: 3, // 圆角矩形
