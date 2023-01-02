@@ -26,8 +26,7 @@ type Factory struct {
 
 	pipelineCache []TaskInfo
 	batches       []*Batch
-	lru           database.LRUCache
-	db            database.IDatabase
+	db            *database.Cache
 
 	batchLock sync.Mutex
 
@@ -50,20 +49,13 @@ func Create(opts ...Option) (*Factory, error) {
 		opt(&p)
 	}
 
-	var dbmode string
-	if p.NoDBMode {
-		dbmode = database.Momory
-	} else {
-		dbmode = database.Mysql
-	}
-
+	db := database.Create()
 	f := &Factory{
 		parm:      p,
-		db:        database.Lookup(dbmode),
+		db:        db,
 		debugBots: make(map[string]*bot.Bot),
 		exit:      utils.NewSwitch(),
-		lru:       database.Constructor(100),
-		report:    NewReport(int32(p.ReportLimit), database.Lookup(dbmode)),
+		report:    NewReport(int32(p.ReportLimit), db),
 	}
 
 	go f.taskLoop()
@@ -92,7 +84,6 @@ func (f *Factory) AddBehavior(name string, byt []byte) {
 		fmt.Println("AddBehavior ", err.Error())
 	}
 
-	f.lru.Put(name, byt)
 }
 
 func (f *Factory) RmvBehavior(name string) {
@@ -167,23 +158,19 @@ func (f *Factory) CreateTask(name string, num int) *Batch {
 
 	var dat []byte
 
-	ok, byt := f.lru.Get(name)
-	if ok {
-		dat = byt.([]byte)
-
-	} else {
-		info, err := f.db.FindFile(name)
-		if err != nil {
-			return nil
-		}
-
-		dat = info.Dat
-		f.lru.Put(name, info.Dat)
+	info, err := f.db.FindFile(name)
+	if err != nil {
+		return nil
 	}
 
-	sysinfo := database.GetSystemParm(f.db)
+	dat = info.Dat
 
-	return CreateBatch(f.parm.ScriptPath, name, num, dat, sysinfo.ChannelSize, f.GetGlobalScript())
+	return CreateBatch(f.parm.ScriptPath,
+		name,
+		num,
+		dat,
+		int32(config.GetChannelSize()),
+		string(config.GetGlobalDefine()))
 }
 
 func (f *Factory) CreateDebugBot(name string, fbyt []byte) *bot.Bot {
@@ -194,7 +181,7 @@ func (f *Factory) CreateDebugBot(name string, fbyt []byte) *bot.Bot {
 		return nil
 	}
 
-	b = bot.NewWithBehaviorTree(f.parm.ScriptPath, tree, name, 1, f.GetGlobalScript())
+	b = bot.NewWithBehaviorTree(f.parm.ScriptPath, tree, name, 1, string(config.GetGlobalDefine()))
 	f.debugBots[b.ID()] = b
 
 	return b
@@ -210,11 +197,7 @@ func (f *Factory) FindBot(botid string) *bot.Bot {
 }
 
 func (f *Factory) RmvBot(botid string) {
-
-	if _, ok := f.debugBots[botid]; ok {
-		delete(f.debugBots, botid)
-	}
-
+	delete(f.debugBots, botid)
 }
 
 func (f *Factory) taskLoop() {
@@ -273,34 +256,3 @@ func (f *Factory) GetBatchInfo() []BatchInfo {
 	f.batchLock.Unlock()
 	return lst
 }
-
-func (f *Factory) GetGlobalScript() []string {
-	return database.GetGlobalScript(f.db)
-}
-
-/*
-func (f *Factory) router() {
-
-
-	for {
-		select {
-		case bot := <-f.translateCh:
-			f.push(bot)
-			rep.Name = bot.Name()
-			bot.Run(f.exit, f.doneCh, f.errCh)
-		case id := <-f.doneCh:
-			f.pop(id, nil, rep)
-		case err := <-f.errCh:
-			f.pop(err.ID, err.Err, rep)
-		case <-f.batchDone:
-			goto ext
-		}
-	}
-ext:
-	atomic.AddInt64(&f.IncID, 1)
-	// report
-	f.Report(rep)
-
-	f.running = false
-}
-*/

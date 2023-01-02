@@ -3,7 +3,6 @@ package database
 import (
 	"database/sql/driver"
 	"encoding/json"
-	"fmt"
 	"sync"
 
 	"gorm.io/gorm"
@@ -30,12 +29,6 @@ type BotConfig struct {
 
 	Name string `gorm:"<-"`
 	Addr string `gorm:"<-"` // bot driver address
-}
-
-type TemplateConfig struct {
-	gorm.Model
-	Name string `gorm:"<-"`
-	Dat  []byte `gorm:"<-"`
 }
 
 type ReportApiInfo struct {
@@ -79,55 +72,21 @@ var (
 	}
 )
 
-type IDatabase interface {
-	Init() error
-
-	UpsetFile(string, []byte) error
-	DelFile(string) error
-	FindFile(string) (BehaviorInfo, error)
-	GetAllFiles() ([]BehaviorInfo, error)
-
-	UpdateState(name string, status string) error
-	UpdateTags(name string, tags []byte) error
-
-	ConfigFind(name string) (TemplateConfig, error)
-	ConfigList() ([]string, error)
-	ConfigUpset(name string, byt []byte) error
-	ConfigRemove(name string) error
-
-	RemoveReport(id string) error
-	AppendReport(info ReportInfo) error
-	GetReport() []ReportInfo
+type Cache struct {
+	conf Conf
 }
 
-var registry = struct {
-	sync.Mutex
-	once    sync.Once
-	dbpoint map[string]IDatabase
-}{
-	dbpoint: make(map[string]IDatabase),
+var db *Cache
+var once sync.Once
+
+func Create() *Cache {
+	once.Do(func() {
+		db = &Cache{}
+	})
+
+	return db
 }
 
-func Register(component IDatabase, name string) {
-	registry.Lock()
-	defer registry.Unlock()
-
-	if _, ok := registry.dbpoint[name]; !ok {
-		registry.dbpoint[name] = component
-	}
-}
-
-func Lookup(name string) IDatabase {
-	if _, ok := registry.dbpoint[name]; ok {
-		registry.once.Do(func() {
-			err := registry.dbpoint[name].Init()
-			if err != nil {
-				panic(fmt.Errorf("loop up %v database fail %v", name, err.Error()))
-			}
-		})
-
-		return registry.dbpoint[name]
-	}
-
-	return nil
+func init() {
+	db = &Cache{}
 }

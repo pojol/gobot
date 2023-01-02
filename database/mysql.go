@@ -22,7 +22,7 @@ const (
 )
 
 func init() {
-	Register(&MysqlAdapter{}, Mysql)
+	register(&MysqlAdapter{}, Mysql)
 }
 
 func (f *MysqlAdapter) Init() error {

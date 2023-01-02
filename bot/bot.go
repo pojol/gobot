@@ -100,7 +100,7 @@ func (b *Bot) GetThreadInfo() string {
 	return string(info)
 }
 
-func NewWithBehaviorTree(path string, bt *behavior.Tree, name string, idx int32, globalScript []string) *Bot {
+func NewWithBehaviorTree(path string, bt *behavior.Tree, name string, idx int32, globalScript string) *Bot {
 
 	bb := &behavior.Blackboard{
 		Nods:      []behavior.INod{bt.GetRoot()},
@@ -130,8 +130,8 @@ func NewWithBehaviorTree(path string, bt *behavior.Tree, name string, idx int32,
 	rand.Seed(time.Now().UnixNano())
 
 	// 加载预定义全局脚本文件
-	for _, gs := range globalScript {
-		pool.DoString(bot.bs.L, gs)
+	if globalScript != "" {
+		pool.DoString(bot.bs.L, globalScript)
 	}
 
 	// 这里要对script目录进行一次检查，将lua脚本都载入进来

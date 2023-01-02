@@ -35,10 +35,10 @@ type ReportDetail struct {
 type Report struct {
 	Arr   []database.ReportInfo
 	Limit int32
-	db    database.IDatabase
+	db    *database.Cache
 }
 
-func NewReport(limit int32, db database.IDatabase) *Report {
+func NewReport(limit int32, db *database.Cache) *Report {
 
 	if limit == 0 {
 		panic(errors.New("report limit cannot be zero!"))
