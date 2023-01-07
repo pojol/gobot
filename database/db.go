@@ -1,68 +1,14 @@
 package database
 
 import (
-	"database/sql/driver"
-	"encoding/json"
+	"errors"
+	"fmt"
+	"os"
 	"sync"
 
+	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
-
-type BehaviorInfo struct {
-	gorm.Model
-	Name       string `gorm:"<-"`
-	Dat        []byte `gorm:"<-"`
-	UpdateTime int64  `gorm:"<-"`
-	Status     string `gorm:"<-"`
-	TagDat     []byte `gorm:"<-"`
-}
-
-type BotTemplateConfig struct {
-	gorm.Model
-
-	Name string `gorm:"<-"`
-	Tpl  []byte `gorm:"<-"`
-}
-
-type BotConfig struct {
-	gorm.Model
-
-	Name string `gorm:"<-"`
-	Addr string `gorm:"<-"` // bot driver address
-}
-
-type ReportApiInfo struct {
-	Api        string
-	ReqNum     int
-	ErrNum     int
-	ConsumeNum int64
-
-	ReqSize int64
-	ResSize int64
-}
-
-type ReportApiArr []ReportApiInfo
-
-func (p ReportApiArr) Value() (driver.Value, error) {
-	return json.Marshal(p)
-}
-
-func (p *ReportApiArr) Scan(data interface{}) error {
-	return json.Unmarshal(data.([]byte), &p)
-}
-
-type ReportInfo struct {
-	gorm.Model
-	ID         string
-	Name       string
-	BotNum     int
-	ReqNum     int
-	ErrNum     int
-	Tps        int
-	Dura       string
-	BeginTime  int64
-	ApiInfoLst ReportApiArr `gorm:"column:childrens;type:longtext"`
-}
 
 var (
 	DefaultConfig = map[string]string{
@@ -73,15 +19,78 @@ var (
 )
 
 type Cache struct {
-	conf Conf
+	conf     *Conf
+	behavior *Behavior
+	prefab   *Prefab
+	report   *Report
+
+	mysqlptr *gorm.DB
 }
 
 var db *Cache
 var once sync.Once
 
-func Create() *Cache {
+func GetConfig() *Conf {
+	return db.conf
+}
+
+func GetPrefab() *Prefab {
+	return db.prefab
+}
+
+func GetReport() *Report {
+	return db.report
+}
+
+func GetBehavior() *Behavior {
+	return db.behavior
+}
+
+func Init() *Cache {
 	once.Do(func() {
-		db = &Cache{}
+
+		pwd := os.Getenv("MYSQL_PASSWORD")
+		if pwd == "" {
+			panic(errors.New("mysql password is not defined"))
+		}
+
+		name := os.Getenv("MYSQL_DATABASE")
+		if name == "" {
+			panic(errors.New("mysql database is not defined"))
+		}
+
+		host := os.Getenv("MYSQL_HOST")
+		if host == "" {
+			panic(errors.New("mysql host is not defined"))
+		}
+
+		user := os.Getenv("MYSQL_USER")
+		if user == "" {
+			panic(errors.New("mysql user is not defined"))
+		}
+
+		dsn := user + ":" + pwd + "@tcp(" + host + ")/" + name + "?charset=utf8&parseTime=True&loc=Local"
+
+		mysqlptr, err := gorm.Open(mysql.New(mysql.Config{
+			DSN:                       dsn,   // data source name
+			DefaultStringSize:         256,   // default size for string fields
+			DisableDatetimePrecision:  true,  // disable datetime precision, which not supported before MySQL 5.6
+			DontSupportRenameIndex:    true,  // drop & create when rename index, rename index not supported before MySQL 5.7, MariaDB
+			DontSupportRenameColumn:   true,  // `change` when rename column, rename column not supported before MySQL 8, MariaDB
+			SkipInitializeWithVersion: false, // auto configure based on currently MySQL version
+		}), &gorm.Config{})
+		if err != nil {
+			fmt.Println("open mysql err", err.Error())
+			return
+		}
+
+		db = &Cache{
+			mysqlptr: mysqlptr,
+			conf:     CreateConfig(mysqlptr),
+			prefab:   CreatePrefab(mysqlptr),
+			behavior: CreateBehavior(mysqlptr),
+			report:   CreateReport(mysqlptr),
+		}
 	})
 
 	return db

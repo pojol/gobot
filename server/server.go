@@ -9,7 +9,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/pojol/gobot/bot"
 	"github.com/pojol/gobot/bot/behavior"
-	"github.com/pojol/gobot/config"
 	"github.com/pojol/gobot/database"
 	"github.com/pojol/gobot/factory"
 	"github.com/pojol/gobot/utils"
@@ -74,7 +73,8 @@ func FileBlobUpload(ctx echo.Context) error {
 		code = ErrJsonInvalid
 		goto EXT
 	}
-	factory.Global.AddBehavior(name, bts)
+
+	database.GetBehavior().Upset(name, bts)
 
 EXT:
 	res.Code = int(code)
@@ -113,12 +113,143 @@ func FileTextUpload(ctx echo.Context) error {
 		code = ErrJsonInvalid
 		goto EXT
 	}
-	factory.Global.AddBehavior(name, fbyte)
+
+	database.GetBehavior().Upset(name, fbyte)
 
 EXT:
 	res.Code = int(code)
 	res.Msg = errmap[code]
 
+	ctx.JSON(http.StatusOK, res)
+	return nil
+}
+
+func PrefabUpload(ctx echo.Context) error {
+	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
+	res := &Response{
+		Code: int(Succ),
+	}
+
+	name := ctx.Request().Header.Get("FileName")
+	bts, err := ioutil.ReadAll(ctx.Request().Body)
+	if err != nil {
+		res.Code = ErrContentRead // tmp
+		goto ext
+	}
+
+	if name != "" {
+		database.GetPrefab().Upset(name, bts)
+	}
+
+ext:
+	ctx.JSON(http.StatusOK, res)
+	return nil
+}
+
+func PrefabList(ctx echo.Context) error {
+	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
+	res := &Response{
+		Code: int(Succ),
+	}
+	body := PrefabListRes{}
+
+	tabs, _ := database.GetPrefab().List()
+	for _, v := range tabs {
+
+		tags := []string{}
+		json.Unmarshal(v.Tags, &tags)
+
+		body.Lst = append(body.Lst, PrefabInfo{
+			Name: v.Name,
+			Tags: tags,
+		})
+
+	}
+
+	res.Body = body
+	ctx.JSON(http.StatusOK, res)
+	return nil
+}
+
+func PrefabGetInfo(ctx echo.Context) error {
+	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
+
+	name := ctx.Request().Header.Get("FileName")
+
+	tab, _ := database.GetPrefab().Find(name)
+
+	ctx.Blob(http.StatusOK, "text/plain;charset=utf-8", tab.Code)
+	return nil
+}
+
+func PrefabRmv(ctx echo.Context) error {
+
+	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
+	res := &Response{
+		Code: int(Succ),
+	}
+	req := &PrefabRmvReq{}
+
+	bts, err := ioutil.ReadAll(ctx.Request().Body)
+	if err != nil {
+		fmt.Println(err.Error())
+		res.Code = ErrContentRead
+		goto ext
+	}
+
+	err = json.Unmarshal(bts, &req)
+	if err != nil {
+		res.Code = ErrJsonInvalid
+		fmt.Println(err.Error())
+		goto ext
+	}
+
+	if req.Name != "" {
+		err = database.GetPrefab().Rmv(req.Name)
+		if err != nil {
+			res.Code = int(Fail)
+			res.Msg = err.Error()
+		}
+	}
+
+ext:
+	ctx.JSON(http.StatusOK, res)
+	return nil
+}
+
+func PrefabSetTags(ctx echo.Context) error {
+	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
+	res := &Response{
+		Code: int(Succ),
+	}
+	req := &PrefabSetTagsReq{}
+	var tagdat []byte
+
+	bts, err := ioutil.ReadAll(ctx.Request().Body)
+	if err != nil {
+		fmt.Println(err.Error())
+		res.Code = ErrContentRead
+		goto ext
+	}
+
+	err = json.Unmarshal(bts, &req)
+	if err != nil {
+		res.Code = ErrJsonInvalid
+		fmt.Println(err.Error())
+		goto ext
+	}
+
+	tagdat, err = json.Marshal(req.Tags)
+	if err != nil {
+		res.Code = ErrTagsFormat
+		res.Msg = err.Error()
+		goto ext
+	}
+
+	fmt.Println("set tags", req.Name, string(tagdat))
+	database.GetPrefab().UpdateTags(req.Name, tagdat)
+
+ext:
 	ctx.JSON(http.StatusOK, res)
 	return nil
 }
@@ -129,6 +260,7 @@ func FileRemove(ctx echo.Context) error {
 	res := &Response{}
 	req := &FileRemoveReq{}
 	body := &FileRemoveRes{}
+	var info []database.BehaviorTable
 
 	bts, err := ioutil.ReadAll(ctx.Request().Body)
 	if err != nil {
@@ -144,11 +276,17 @@ func FileRemove(ctx echo.Context) error {
 		goto EXT
 	}
 
-	factory.Global.RmvBehavior(req.Name)
-	for _, v := range factory.Global.GetBehaviors() {
+	database.GetBehavior().Rmv(req.Name)
+	info, err = database.GetBehavior().List()
+
+	for _, v := range info {
+		tags := []string{}
+		json.Unmarshal(v.Tags, &tags)
 		body.Bots = append(body.Bots, behaviorInfo{
 			Name:   v.Name,
 			Update: v.UpdateTime,
+			Status: v.Status,
+			Tags:   tags,
 		})
 	}
 
@@ -163,15 +301,21 @@ EXT:
 
 func FileGetList(ctx echo.Context) error {
 	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
-	code := Succ
-	res := &Response{}
+	res := &Response{
+		Code: int(Succ),
+	}
 	body := &BehaviorListRes{}
 
-	info := factory.Global.GetBehaviors()
+	info, err := database.GetBehavior().List()
+	if err != nil {
+		res.Code = int(Fail)
+		res.Msg = err.Error()
+		goto ext
+	}
+
 	for _, v := range info {
 		tags := []string{}
-		json.Unmarshal(v.TagDat, &tags)
-
+		json.Unmarshal(v.Tags, &tags)
 		body.Bots = append(body.Bots, behaviorInfo{
 			Name:   v.Name,
 			Update: v.UpdateTime,
@@ -180,8 +324,7 @@ func FileGetList(ctx echo.Context) error {
 		})
 	}
 
-	res.Code = int(code)
-	res.Msg = errmap[code]
+ext:
 	res.Body = body
 
 	ctx.JSON(http.StatusOK, res)
@@ -194,7 +337,7 @@ func FileSetTags(ctx echo.Context) error {
 	res := &Response{}
 	req := &SetBehaviorTagsReq{}
 	body := &SetBehaviorTagsRes{}
-	var info []database.BehaviorInfo
+	var info []database.BehaviorTable
 	var jdat []byte
 
 	bts, err := ioutil.ReadAll(ctx.Request().Body)
@@ -216,10 +359,17 @@ func FileSetTags(ctx echo.Context) error {
 		goto EXT
 	}
 
-	info = factory.Global.UpdateBehaviorTags(req.Name, jdat)
+	database.GetBehavior().UpdateTags(req.Name, jdat)
+	info, err = database.GetBehavior().List()
+	if err != nil {
+		res.Code = int(Fail)
+		res.Msg = err.Error()
+		goto EXT
+	}
+
 	for _, v := range info {
 		tags := []string{}
-		json.Unmarshal(v.TagDat, &tags)
+		json.Unmarshal(v.Tags, &tags)
 		body.Bots = append(body.Bots, behaviorInfo{
 			Name:   v.Name,
 			Update: v.UpdateTime,
@@ -237,113 +387,39 @@ EXT:
 	return nil
 }
 
-func ConfigUpload(ctx echo.Context) error {
-	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
-	code := Succ
-	res := &Response{}
-
-	name := ctx.Request().Header.Get("FileName")
-
-	bts, err := ioutil.ReadAll(ctx.Request().Body)
-	if err != nil {
-		code = ErrContentRead // tmp
-		fmt.Println(err.Error())
-		goto EXT
-	}
-
-	if len(bts) == 0 {
-		code = ErrContentRead // tmp
-		fmt.Println("bytes is empty!")
-		goto EXT
-	}
-
-	err = factory.Global.UploadConfig(name, bts)
-	if err != nil {
-		code = ErrUploadConfig
-		res.Msg = err.Error()
-		goto EXT
-	}
-
-EXT:
-
-	res.Code = int(code)
-	ctx.JSON(http.StatusOK, res)
-	return nil
-}
-
-func ConfigRemove(ctx echo.Context) error {
-	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
-	code := Succ
-	res := &Response{}
-	req := ConfigRemoveReq{}
-
-	bts, err := ioutil.ReadAll(ctx.Request().Body)
-	if err != nil {
-		fmt.Println(err.Error())
-		goto EXT
-	}
-
-	err = json.Unmarshal(bts, &req)
-	if err != nil {
-		code = ErrJsonInvalid
-		fmt.Println(err.Error())
-		goto EXT
-	}
-
-	err = factory.Global.RemoveConfig(req.Name)
-	if err != nil {
-		fmt.Println("remove config", err.Error())
-		code = ErrGetConfig
-		goto EXT
-	}
-
-EXT:
-	res.Code = int(code)
-	ctx.JSON(http.StatusOK, res)
-	return nil
-}
-
-func ConfigListInfo(ctx echo.Context) error {
-	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
-	code := Succ
-	res := &Response{}
-
-	lst, err := factory.Global.GetConfigList()
-	if err != nil {
-		fmt.Println("config get list err", err.Error())
-		code = ErrGetConfig
-		goto EXT
-	}
-
-	res.Body = ConfigGetListInfoRes{
-		Lst: lst,
-	}
-
-EXT:
-	res.Code = int(code)
-	ctx.JSON(http.StatusOK, res)
-	return nil
-}
-
 func ConfigGetSysInfo(ctx echo.Context) error {
 	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
-	code := Succ
-	res := &Response{}
+	res := &Response{
+		Code: int(Succ),
+	}
+	body := ConfigGetSysInfoRes{}
 
-	syscfg := config.GetSystemConfig()
-	dat, _ := json.Marshal(&syscfg)
+	conf, err := database.GetConfig().Get()
+	if err != nil {
+		res.Code = int(Fail)
+		res.Msg = err.Error()
+		goto ext
+	}
 
-	res.Code = int(code)
-	ctx.Blob(http.StatusOK, "text/plain;charset=utf-8", dat)
+	body.ChannelSize = conf.ChannelSize
+	body.ReportSize = conf.ReportSize
+
+ext:
+	res.Body = body
+	ctx.JSON(http.StatusOK, res)
 	return nil
 }
 
 func ConfigSetSysInfo(ctx echo.Context) error {
 	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
-	code := Succ
-	res := &Response{}
+	res := &Response{
+		Code: int(Succ),
+	}
+	body := ConfigSetSysInfoRes{}
+	req := &ConfigSetSysInfoReq{}
+	conf := database.GetConfig()
+	var newtab database.ConfTable
 
-	req := &SetSystemConfigReq{}
 	bts, err := ioutil.ReadAll(ctx.Request().Body)
 	if err != nil {
 		fmt.Println(err.Error())
@@ -356,11 +432,26 @@ func ConfigSetSysInfo(ctx echo.Context) error {
 		goto EXT
 	}
 
-	config.SetSystemConfig(req.Cfg)
+	if req.ChannelSize != 0 {
+		conf.UpdateChannelSize(req.ChannelSize)
+	}
+	if req.ReportSize != 0 {
+		conf.UpdateReportSize(req.ReportSize)
+	}
+
+	newtab, err = conf.Get()
+	if err != nil {
+		res.Code = int(Fail)
+		res.Msg = err.Error()
+		goto EXT
+	}
+
+	body.ReportSize = newtab.ReportSize
+	body.ChannelSize = newtab.ChannelSize
 
 EXT:
-	res.Code = int(code)
-	ctx.Blob(http.StatusOK, "text/plain;charset=utf-8", nil)
+	res.Body = body
+	ctx.JSON(http.StatusOK, res)
 	return nil
 }
 
@@ -370,34 +461,41 @@ func ConfigGetGlobalInfo(ctx echo.Context) error {
 	res := &Response{}
 
 	res.Code = int(code)
-	ctx.Blob(http.StatusOK, "text/plain;charset=utf-8", config.GetGlobalDefine())
+
+	conf, _ := database.GetConfig().Get()
+	ctx.Blob(http.StatusOK, "text/plain;charset=utf-8", conf.GlobalCode)
 	return nil
 }
 
 func ConfigSetGlobalInfo(ctx echo.Context) error {
 	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
-	code := Succ
-	res := &Response{}
+	res := &Response{
+		Code: int(Succ),
+	}
 
 	bts, err := ioutil.ReadAll(ctx.Request().Body)
 	if err != nil {
-		code = ErrContentRead // tmp
+		res.Code = ErrContentRead // tmp
 		fmt.Println(err.Error())
 		goto EXT
 	}
 
-	config.SetGlobalDefine(bts)
+	err = database.GetConfig().UpdateGlobalDefine(bts)
+	if err != nil {
+		res.Code = int(Fail)
+		res.Msg = err.Error()
+		goto EXT
+	}
 
 EXT:
-	res.Code = int(code)
-	ctx.Blob(http.StatusOK, "text/plain;charset=utf-8", nil)
+	ctx.JSON(http.StatusOK, res)
 	return nil
 }
 
 func FileGetBlob(ctx echo.Context) error {
 	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
 	req := &FindBehaviorReq{}
-	info := database.BehaviorInfo{}
+	info := database.BehaviorTable{}
 
 	bts, err := ioutil.ReadAll(ctx.Request().Body)
 	if err != nil {
@@ -411,26 +509,31 @@ func FileGetBlob(ctx echo.Context) error {
 		goto EXT
 	}
 
-	info, err = factory.Global.FindBehavior(req.Name)
+	info, err = database.GetBehavior().Find(req.Name)
 	if err != nil {
 		fmt.Println(err.Error())
 		goto EXT
 	}
 
 EXT:
-	ctx.Blob(http.StatusOK, "text/plain;charset=utf-8", info.Dat)
+	ctx.Blob(http.StatusOK, "text/plain;charset=utf-8", info.File)
 	return nil
 }
 
 func GetReport(ctx echo.Context) error {
 	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
-	res := &Response{}
-	body := &ReportRes{
-		Info: factory.Global.GetReport(),
+	res := &Response{
+		Code: int(Succ),
+	}
+	body := &ReportRes{}
+	var err error
+
+	body.Info, err = database.GetReport().List()
+	if err != nil {
+		res.Code = int(Fail)
+		res.Msg = err.Error()
 	}
 
-	res.Code = int(Succ)
-	res.Msg = ""
 	res.Body = body
 
 	ctx.JSON(http.StatusOK, res)
@@ -442,7 +545,7 @@ func BotRun(ctx echo.Context) error {
 	res := &Response{}
 	req := &BotRunRequest{}
 	code := Succ
-	var info database.BehaviorInfo
+	var info database.BehaviorTable
 	var tree *behavior.Tree
 	var b *bot.Bot
 
@@ -466,18 +569,18 @@ func BotRun(ctx echo.Context) error {
 	}
 	fmt.Println(req.Name, "bot run block begin")
 
-	info, err = factory.Global.FindBehavior(req.Name)
+	info, err = database.GetBehavior().Find(req.Name)
 	if err != nil {
 		code = Fail
 		goto EXT
 	}
 
-	tree, err = behavior.Load(info.Dat, behavior.Block)
+	tree, err = behavior.Load(info.File, behavior.Block)
 	if err != nil {
 		code = Fail
 		goto EXT
 	}
-	b = bot.NewWithBehaviorTree("script/", tree, req.Name, 1, string(config.GetGlobalDefine()))
+	b = bot.NewWithBehaviorTree("script/", tree, req.Name, 1, string(info.File))
 	err = b.RunByBlock()
 	if err != nil {
 		code = ErrRunningErr
@@ -661,15 +764,11 @@ func Route(e *echo.Echo) {
 	e.POST("/file.get", FileGetBlob)
 	e.POST("/file.setTags", FileSetTags)
 
-	//e.POST("/prefab.list", PrefabList)
-	//e.POST("/prefab.get", PrefabGetInfo)
-	//e.POST("/prefab.rmv", PrefabRmv)
-	//e.POST("/prefab.setTags", PrefabSetTags)
-	//e.POST("/prefab.upload", PrefabUpload)
-
-	//e.POST("/config.list", ConfigListInfo)
-	//e.POST("/config.rmv", ConfigRemove)
-	//e.POST("/config.upload", ConfigUpload)
+	e.POST("/prefab.list", PrefabList)
+	e.POST("/prefab.get", PrefabGetInfo)
+	e.POST("/prefab.rmv", PrefabRmv)
+	e.POST("/prefab.setTags", PrefabSetTags)
+	e.POST("/prefab.upload", PrefabUpload)
 
 	e.POST("/bot.run", BotRun)
 	e.POST("/bot.batch", BotCreateBatch) // 创建一批bot

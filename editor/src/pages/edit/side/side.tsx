@@ -16,6 +16,7 @@ import Topic from "../../../constant/topic";
 import {
   NodeTy,
 } from "../../../constant/node_type";
+import ActionNode from "../graph/shape/shape_action";
 
 const { Dnd } = Addon
 
@@ -23,6 +24,15 @@ interface SideProps {
   graph: Graph
 }
 
+interface PrefabInfo {
+  name: string,
+  tags: string[],
+  code: string,
+}
+
+interface PrefabTagInfo {
+  value: string
+}
 
 export default class EditSidePlane extends React.Component<SideProps> {
   private graph: Graph
@@ -30,7 +40,9 @@ export default class EditSidePlane extends React.Component<SideProps> {
   private dnd: any
 
   state = {
-    prefabLst: []
+    prefabLst: [],
+    tags: [],
+    selectTags: [],
   }
 
   componentWillReceiveProps(newProps: SideProps) {
@@ -57,20 +69,53 @@ export default class EditSidePlane extends React.Component<SideProps> {
     })
   }
 
+  matchTags(tags: string[]): boolean {
+
+    let selecttags = this.state.selectTags
+    for (var i = 0; i < selecttags.length; i++) {
+      for (var j = 0; j < tags.length; j++) {
+        if (tags[j] == selecttags[i]) {
+          console.info(tags[j], "match", selecttags[i])
+          return true
+        }
+      }
+    }
+
+    return false
+  }
+
   reloadPrefab() {
-    let configmap = (window as any).config as Map<string, string>;
+    let configmap = (window as any).prefab as Map<string, PrefabInfo>;
 
-    this.setState({ prefabLst: [] })
+    this.setState({ prefabLst: [], tags: [] })
     let tmplst = new Array<string>()
+    let taglst = new Array<PrefabTagInfo>()
+    var tagSet = new Set<string>()
 
-    configmap.forEach((value: string, key: string) => {
-      if (key !== "system" && key !== "global" && key !== "") {
-        console.info("reload prefab", key)
+    console.info("select tags", this.state.selectTags.length)
+
+    configmap.forEach((value: PrefabInfo, key: string) => {
+
+      if (this.state.selectTags.length !== 0) {
+        console.info("need match")
+        if (this.matchTags(value.tags)) {
+          tmplst.push(key)
+        }
+      } else {
         tmplst.push(key)
+      }
+
+      for (var i = 0; i < value.tags.length; i++) {
+        tagSet.add(value.tags[i])
       }
     });
 
-    this.setState({ prefabLst: tmplst })
+    tagSet.forEach(element => {
+      taglst.push({ value: element })
+    });
+
+    console.info("prefab lst", tmplst, "reload tags", taglst)
+    this.setState({ prefabLst: tmplst, tags: taglst })
   }
 
   resizeSidePane() {
@@ -86,7 +131,7 @@ export default class EditSidePlane extends React.Component<SideProps> {
 
   componentWillMount() {
 
-    PubSub.subscribe(Topic.ConfigUpdateAll, (topic: string, info: any) => {
+    PubSub.subscribe(Topic.PrefabUpdateAll, (topic: string, info: any) => {
       this.reloadPrefab()
     });
 
@@ -108,10 +153,10 @@ export default class EditSidePlane extends React.Component<SideProps> {
 
   startDrag = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     const target = e.currentTarget
-    const type = target.getAttribute('data-type')
+    const ty = target.getAttribute('data-type') as any
     var nod = new Node;
-    
-    switch (type) {
+
+    switch (ty) {
       case NodeTy.Selector:
         nod = new SelectorNode();
         break;
@@ -131,6 +176,8 @@ export default class EditSidePlane extends React.Component<SideProps> {
         nod = new ParallelNode()
         break;
       default:
+        nod = new ActionNode()
+        nod.setAttrs({ type: ty })
     }
 
     this.dnd.start(nod, e.nativeEvent as any)
@@ -141,11 +188,12 @@ export default class EditSidePlane extends React.Component<SideProps> {
   }
 
   onSelectChange = (value: string[]) => {
-    console.log(`selected ${value}`);
+    this.setState({ selectTags: value }, ()=>{
+      this.reloadPrefab()
+    })
   };
 
   render() {
-    const options = [{ value: 'gold' }, { value: 'lime' }, { value: 'green' }, { value: 'cyan' }];
 
     return (
       <div className="dnd-wrap" ref={this.dndContainerRef}>
@@ -214,9 +262,8 @@ export default class EditSidePlane extends React.Component<SideProps> {
         <Select
           mode="multiple"
           showArrow
-          defaultValue={['gold', 'cyan']}
           style={{ width: '100%' }}
-          options={options}
+          options={this.state.tags}
           onChange={this.onSelectChange}
         />
 
@@ -225,7 +272,7 @@ export default class EditSidePlane extends React.Component<SideProps> {
         <div id="prefab-pane" className="dnd-warp-prefab">
           {this.state.prefabLst.map((item: string) =>
             <div
-              data-type="rect"
+              data-type={item}
               className="dnd-prefab"
               onMouseDown={this.startDrag}
             >

@@ -1,7 +1,6 @@
 package server
 
 import (
-	"github.com/pojol/gobot/config"
 	"github.com/pojol/gobot/database"
 	"github.com/pojol/gobot/factory"
 )
@@ -39,7 +38,7 @@ type FindBehaviorReq struct {
 }
 
 type FindBehaviorRes struct {
-	Info database.BehaviorInfo
+	Info database.BehaviorTable
 }
 
 // file.setTags
@@ -52,8 +51,22 @@ type SetBehaviorTagsRes struct {
 	Bots []behaviorInfo
 }
 
-type SetSystemConfigReq struct {
-	Cfg config.SystemCfg
+type ConfigGetSysInfoReq struct {
+}
+
+type ConfigGetSysInfoRes struct {
+	ReportSize  int
+	ChannelSize int
+}
+
+type ConfigSetSysInfoReq struct {
+	ReportSize  int
+	ChannelSize int
+}
+
+type ConfigSetSysInfoRes struct {
+	ReportSize  int
+	ChannelSize int
 }
 
 type SetConfigReq struct {
@@ -62,7 +75,7 @@ type SetConfigReq struct {
 }
 
 type ReportRes struct {
-	Info []database.ReportInfo
+	Info []database.ReportTable
 }
 
 //
@@ -113,6 +126,23 @@ type CreateDebugBotResponse struct {
 	ThreadInfo string
 }
 
-type ConfigGetInfoResponse struct {
-	Lst []database.TemplateConfig
+type PrefabListReq struct {
+}
+
+type PrefabInfo struct {
+	Name string   `json:"name"`
+	Tags []string `json:"tags"`
+}
+
+type PrefabListRes struct {
+	Lst []PrefabInfo
+}
+
+type PrefabRmvReq struct {
+	Name string `json:"name"`
+}
+
+type PrefabSetTagsReq struct {
+	Name string   `json:"name"`
+	Tags []string `json:"tags"`
 }

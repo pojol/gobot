@@ -12,6 +12,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/pojol/gobot/bot"
 	"github.com/pojol/gobot/bot/behavior"
+	"github.com/pojol/gobot/database"
 	"github.com/pojol/gobot/utils"
 )
 
@@ -38,7 +39,7 @@ type Batch struct {
 
 	bots    map[string]*bot.Bot
 	colorer *color.Color
-	rep     *ReportDetail
+	rep     *database.ReportDetail
 
 	bwg  utils.SizeWaitGroup
 	exit *utils.Switch
@@ -93,7 +94,7 @@ func (b *Batch) Info() BatchInfo {
 	}
 }
 
-func (b *Batch) Report() ReportDetail {
+func (b *Batch) Report() database.ReportDetail {
 	return *b.rep
 }
 
@@ -115,11 +116,11 @@ func (b *Batch) pop(id string) {
 
 func (b *Batch) loop() {
 
-	b.rep = &ReportDetail{
+	b.rep = &database.ReportDetail{
 		ID:        b.ID,
 		Name:      b.Name,
 		BeginTime: time.Now(),
-		UrlMap:    make(map[string]*urlDetail),
+		UrlMap:    make(map[string]*database.ApiDetail),
 	}
 
 	for {
@@ -184,14 +185,14 @@ func (b *Batch) Close() {
 
 }
 
-func (b *Batch) pushReport(rep *ReportDetail, bot *bot.Bot) {
+func (b *Batch) pushReport(rep *database.ReportDetail, bot *bot.Bot) {
 	rep.BotNum++
 	robotReport := bot.GetReport()
 
 	rep.ReqNum += len(robotReport)
 	for _, v := range robotReport {
 		if _, ok := rep.UrlMap[v.Api]; !ok {
-			rep.UrlMap[v.Api] = &urlDetail{}
+			rep.UrlMap[v.Api] = &database.ApiDetail{}
 		}
 
 		rep.UrlMap[v.Api].ReqNum++

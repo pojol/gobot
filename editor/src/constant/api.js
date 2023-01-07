@@ -24,6 +24,15 @@ const Api = {
     BotList: "bot.list",
 
     /*
+        Prefab
+    */
+    PrefabUpload: "prefab.upload",
+    PrefabList : "prefab.list",
+    PrefabGet: "prefab.get",
+    PrefabRemove : "prefab.rmv",
+    PrefabSetTags : "prefab.setTags",
+
+    /*
         Report
     */
     ReportInfo: "report.get",
@@ -31,7 +40,10 @@ const Api = {
     /*
         Config
     */
-    ConfigGet : "config.get"
+    ConfigSystemInfo : "config.sys.info",
+    ConfigSystemSet : "config.sys.set",
+    ConfigGlobalInfo : "config.global.info",
+    ConfigGlobalSet : "config.global.set"
 }
 
 

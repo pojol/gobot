@@ -92,12 +92,13 @@ export default class BotPrefab extends React.Component {
     })
 
     syncConfig = () => {
-        Post(localStorage.remoteAddr, Api.ConfigList, {}).then((json) => {
+        Post(localStorage.remoteAddr, Api.PrefabList, {}).then((json) => {
             if (json.Code !== 200) {
                 message.error(
                     "get config list fail:" + String(json.Code) + " msg: " + json.Msg
                 );
             } else {
+                console.info("prefab lst", json.Body.Lst)
                 let lst = json.Body.Lst;
                 var counter = 0;
                 let dat = []
@@ -113,22 +114,23 @@ export default class BotPrefab extends React.Component {
                 };
 
                 lst.forEach(function (element) {
-
-                    PostGetBlob(localStorage.remoteAddr, Api.ConfigGet, element).then(
+                    PostGetBlob(localStorage.remoteAddr, Api.PrefabGet, element.name).then(
                         (file) => {
                             let reader = new FileReader();
                             reader.onload = function (ev) {
-                                let lowElement = element.toLowerCase()
-                                console.info("element", lowElement)
-                                if (lowElement !== "system" && lowElement != "global") {
-                                    var jobj = JSON.parse(reader.result);
-                                    dat.push({ key: jobj["title"].toLowerCase(), name: jobj["title"].toLowerCase(), code: jobj["content"] })
-                                }
+
+                                dat.push({ key: element.name, name: element.name, tags: element.tags, code: reader.result })
+
+                                window.prefab.set(element.name, {
+                                    name:element.name,
+                                    tags:element.tags,
+                                    code:reader.result,
+                                });
 
                                 counter++;
                                 if (counter === lst.length) {
                                     callback()
-                                    PubSub.publish(Topic.ConfigUpdateAll, {})
+                                    PubSub.publish(Topic.PrefabUpdateAll, {})
                                 }
                             };
 
@@ -146,20 +148,13 @@ export default class BotPrefab extends React.Component {
     };
 
     uploadPrefab = (name, code) => {
-        var templatecode = JSON.stringify({
-            title: name,
-            content: code,
-            key: name,
-        });
-        var blob = new Blob([templatecode], {
+        var blob = new Blob([code], {
             type: "application/json",
         });
 
-        console.info(name, "apply config code", templatecode);
-
         PostBlob(
             localStorage.remoteAddr,
-            Api.ConfigUpload,
+            Api.PrefabUpload,
             name,
             blob
         ).then((json) => {
@@ -169,7 +164,6 @@ export default class BotPrefab extends React.Component {
                 );
             } else {
                 message.success(name + " upload succ");
-                window.config.set(name, templatecode);
             }
 
             this.syncConfig()
@@ -195,7 +189,7 @@ export default class BotPrefab extends React.Component {
             return
         }
 
-        Post(localStorage.remoteAddr, Api.ConfigRemove, {
+        Post(localStorage.remoteAddr, Api.PrefabRemove, {
             Name: targetKey,
         }).then((json) => {
             if (json.Code !== 200) {
@@ -203,8 +197,8 @@ export default class BotPrefab extends React.Component {
                     "remove prefab err:" + String(json.Code) + " msg: " + json.Msg
                 );
             } else {
-                window.config.delete(targetKey);
-                PubSub.publish(Topic.ConfigUpdateAll, {}); // reload
+                window.prefab.delete(targetKey);
+                PubSub.publish(Topic.PrefabUpdateAll, {}); // reload
                 message.success("remove prefab " + targetKey + " succ");
             }
 
@@ -250,22 +244,31 @@ export default class BotPrefab extends React.Component {
     };
 
     updateTags(name, tags) {
-        /*
-        var bots = this.state.Bots
+
+        var prefabs = this.state.data
         var tagSet = new Set()
 
-        for (var i = 0; i < bots.length; i++) {
-            if (bots[i].Name === name) {
-                bots[i].Tags = tags   // update tags
+        for (var i = 0; i < prefabs.length; i++) {
+            if (prefabs[i].name === name) {
+                console.info("update tags" , name , tags)
+                prefabs[i].tags = tags   // update tags
+                Post(localStorage.remoteAddr, Api.PrefabSetTags, {name:name, tags:tags}).then((json)=>{
+                    if (json.Code !== 200) {
+                        message.error("updaet tags fail:" + String(json.Code) + " msg: " + json.Msg);
+                      } else {
+                        message.success("update tags succ!")
+                      }
+                })
             }
 
-            if (bots[i].Tags) {
-                for (var j = 0; j < bots[i].Tags.length; j++) {
-                    tagSet.add(bots[i].Tags[j])
+            if (prefabs[i].Tags) {
+                for (var j = 0; j < prefabs[i].Tags.length; j++) {
+                    tagSet.add(prefabs[i].Tags[j])
                 }
             }
         }
-        */
+
+        this.syncConfig()
     }
 
     render() {
