@@ -51,16 +51,6 @@ export default class BotConfig extends React.Component {
 
       this.syncConfig()
     }
-
-    PubSub.subscribe(Topic.SystemConfigUpdate, (topic, info) => {
-      let jobj = JSON.parse(info)
-
-      let reportsize = jobj["reportsize"]
-      let channelsize = jobj["channelsize"]
-
-      this.setState({ reportsize: reportsize, channelsize: channelsize })
-      console.info("system config", reportsize, channelsize)
-    })
   }
 
   appendPane(val) { }
@@ -91,44 +81,32 @@ export default class BotConfig extends React.Component {
   };
 
   syncConfig = () => {
-    Post(localStorage.remoteAddr, Api.ConfigList, {}).then((json) => {
+    console.info("syncConfig ======>")
+    Post(localStorage.remoteAddr, Api.ConfigSystemInfo, {}).then((json) => {
       if (json.Code !== 200) {
         message.error(
-          "get config list fail:" + String(json.Code) + " msg: " + json.Msg
+          "get system config fail:" + String(json.Code) + " msg: " + json.Msg
         );
       } else {
-        let lst = json.Body.Lst;
-        let jobj
-
-        let callback = () => {
-          this.setState({ globalPrefab: jobj["content"] })
-        }
-
-        lst.forEach(function (element) {
-          PostGetBlob(localStorage.remoteAddr, Api.ConfigGet, element).then(
-            (file) => {
-              let reader = new FileReader();
-              reader.onload = function (ev) {
-
-                let lowElement = element.toLowerCase()
-
-                console.info("load config", lowElement)
-                if (lowElement === "system") {
-                  PubSub.publish(Topic.SystemConfigUpdate, reader.result)
-                } else if (lowElement === "global") {
-                  window.config.set(lowElement, reader.result);
-
-                  jobj = JSON.parse(reader.result);
-                  callback()
-                }
-              };
-              reader.readAsText(file.blob);
-            }
-          );
-        });
+        console.info(json.Body)
+        this.setState({ "reportsize": json.Body.ReportSize, "channelsize": json.Body.ChannelSize })
       }
-    });
-  };
+    })
+
+    PostGetBlob(localStorage.remoteAddr, Api.ConfigGlobalInfo, {}).then((file) => {
+
+      let callback = (content) => {
+        this.setState({ globalPrefab: content })
+      }
+
+      let reader = new FileReader();
+      reader.onload = function (ev) {
+        callback(reader.result)
+      }
+      reader.readAsText(file.blob);
+    }
+
+    )};
 
   onApplyDriveAddr = () => {
     if (this.isUrl(this.state.driveAddr)) {
@@ -140,7 +118,7 @@ export default class BotConfig extends React.Component {
           message.error("server connection error " + res.code.toString());
         } else {
           // reset
-          window.config = new Map();
+          window.prefab = new Map();
           localStorage.remoteAddr = driveAddr;
           this.syncConfig();
         }
@@ -151,20 +129,14 @@ export default class BotConfig extends React.Component {
   };
 
   onApplyCode = () => {
-    var templatecode = JSON.stringify({
-      title: "global",
-      content: this.state.globalPrefab,
-      key: "global",
-    });
-    var blob = new Blob([templatecode], {
+    
+    var blob = new Blob([this.state.globalPrefab], {
       type: "application/json",
     });
 
-    console.info("apply config code", templatecode);
-
     PostBlob(
       localStorage.remoteAddr,
-      Api.ConfigUpload,
+      Api.ConfigGlobalSet,
       "global",
       blob
     ).then((json) => {
@@ -174,7 +146,6 @@ export default class BotConfig extends React.Component {
         );
       } else {
         message.success("upload succ ");
-        window.config.set("global", templatecode);
       }
     });
 
@@ -204,35 +175,26 @@ export default class BotConfig extends React.Component {
   }
 
   onClickSubmit = () => {
-
-    var templatecode = JSON.stringify({
-      "channelsize": this.state.channelsize,
-      "reportsize": this.state.reportsize,
-    });
-    var blob = new Blob([templatecode], {
-      type: "application/json",
-    });
-
-    PostBlob(
-      localStorage.remoteAddr,
-      Api.ConfigUpload,
-      "system",
-      blob
-    ).then((json) => {
+    
+    Post(localStorage.remoteAddr, Api.ConfigSystemSet, {
+      "ChannelSize": this.state.channelsize,
+      "ReportSize": this.state.reportsize,
+    }).then((json)=>{
       if (json.Code !== 200) {
         message.error(
-          "upload config fail:" + String(json.Code) + " msg: " + json.Msg
+          "set config fail:" + String(json.Code) + " msg: " + json.Msg
         );
       } else {
+        console.info(json.Body)
         message.success("upload succ ");
       }
-    });
+    })
+
   }
 
   changeReportSize = (val) => {
     this.setState({ reportsize: val })
   }
-
 
   render() {
     const addr = this.state.driveAddr;

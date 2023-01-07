@@ -79,20 +79,10 @@ end
         case NodeTy.Parallel:
           break
         default:
-          let ty = nod.ty
-          if (ty === "ActionNode") { // tmp
-            ty = "HTTP"
-          }
-          ty = ty.toLowerCase()
-          let httpobj = window.config.get(ty);
-
-          try {
-            let jobj = JSON.parse(httpobj);
-            nod.code = jobj["content"];
-          } catch (error) {
-            console.error(error)
-            console.info(nod)
-            console.error("parse err", ty, window.config.get(ty))
+          let ty = nod.ty.toLowerCase()
+          let prefabobj = window.prefab.get(ty);
+          if (prefabobj !== undefined) {
+            nod.code = prefabobj.code
           }
       }
     }
@@ -425,7 +415,7 @@ end
 
   componentWillMount() {
     window.tree = new Map(); // 主要维护的是 editor 节点编辑后的数据
-    window.config = new Map();
+    window.prefab = new Map();
     this.setState({ tree: {} }); // 主要维护的是 graph 中节点的数据
 
     PubSub.subscribe(Topic.NodeAdd, (topic, addinfo) => {

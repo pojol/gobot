@@ -9,7 +9,7 @@ ParallelNode.config({
     },
     body: {
       fill: "#f5f5f5",
-      stroke: "#5AA897",
+      stroke: "#B3CDAE",
       strokeWidth: 1,
     },
     label: {

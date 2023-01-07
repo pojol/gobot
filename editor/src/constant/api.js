@@ -9,11 +9,6 @@ const Api = {
     FileRemove: "file.remove",
     FileSetTags: "file.setTags",
 
-    ConfigUpload : "config.upload",
-    ConfigGet : "config.get",
-    ConfigList : "config.list",
-    ConfigRemove : "config.rmv",
-
     /*
         Debug
     */
@@ -29,9 +24,26 @@ const Api = {
     BotList: "bot.list",
 
     /*
+        Prefab
+    */
+    PrefabUpload: "prefab.upload",
+    PrefabList : "prefab.list",
+    PrefabGet: "prefab.get",
+    PrefabRemove : "prefab.rmv",
+    PrefabSetTags : "prefab.setTags",
+
+    /*
         Report
     */
-    ReportInfo: "report.info"
+    ReportInfo: "report.get",
+
+    /*
+        Config
+    */
+    ConfigSystemInfo : "config.sys.info",
+    ConfigSystemSet : "config.sys.set",
+    ConfigGlobalInfo : "config.global.info",
+    ConfigGlobalSet : "config.global.set"
 }
 
 

@@ -10,7 +10,7 @@ SelectorNode.config({
     },
     body: {
       fill: "#f5f5f5",
-      stroke: "#5AA897",
+      stroke: "#AAD2D2",
       strokeWidth: 1,
       borderRadius: 2,
     },

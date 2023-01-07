@@ -246,7 +246,7 @@ func TestStepMode(t *testing.T) {
 	tree, err := behavior.Load([]byte(compose), behavior.Step)
 	assert.Equal(t, err, nil)
 
-	bot = NewWithBehaviorTree("../script/", tree, "test", 1, []string{})
+	bot = NewWithBehaviorTree("../script/", tree, "test", 1, "")
 	defer bot.close()
 
 	for i := 0; i < 20; i++ {
@@ -262,7 +262,7 @@ func TestThreadMode(t *testing.T) {
 	tree, err := behavior.Load([]byte(compose), behavior.Thread)
 	assert.Equal(t, err, nil)
 
-	bot = NewWithBehaviorTree("../script/", tree, "test", 1, []string{})
+	bot = NewWithBehaviorTree("../script/", tree, "test", 1, "")
 	defer bot.close()
 
 	time.Sleep(time.Second)
@@ -275,7 +275,7 @@ func TestBlockMode(t *testing.T) {
 	tree, err := behavior.Load([]byte(compose), behavior.Block)
 	assert.Equal(t, err, nil)
 
-	bot = NewWithBehaviorTree("../script/", tree, "test", 1, []string{})
+	bot = NewWithBehaviorTree("../script/", tree, "test", 1, "")
 	defer bot.close()
 
 	err = bot.RunByBlock()
