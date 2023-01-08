@@ -54,21 +54,21 @@
   position: absolute;
   z-index: 10;
   right:75px;
-  bottom:18px;
+  bottom:75px;
 }
 
 .app-reset-win {
   position: absolute;
   z-index: 10;
   right:150px;
-  bottom:18px;
+  bottom:75px;
 }
 
 .app-upload-win {
   position: absolute;
   z-index: 10;
   right:18px;
-  bottom:18px;
+  bottom:75px;
 }
 
 
