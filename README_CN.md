@@ -53,7 +53,4 @@ end
 
 
 ## 编辑器预览
-[![botgif3.gif](https://i.postimg.cc/s2y4MDZv/botgif3.gif
-)](https://www.bilibili.com/video/BV1sS4y1z7Dg?share_source=copy_web)
-
-[![botgif2.gif](https://i.postimg.cc/SNKQG50m/botgif2.gif)](https://postimg.cc/s1tRjTDL)
+[![2023-01-07-23-09-48.png](https://i.postimg.cc/4xYsWPzb/2023-01-07-23-09-48.png)](https://postimg.cc/75rF6gtf)
