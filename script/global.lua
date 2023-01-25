@@ -38,6 +38,12 @@ meta = {
     Err = "",       -- debug log [err]
 }
 
+state = {
+    Succ    = "Succ",   -- 脚本节点返回成功状态
+    Exit    = "Exit",   -- 脚本节点返回退出状态（中断执行
+    Error   = "Error"   -- 脚本节点返回错误状态（中断执行，且带有错误信息
+}
+
 local function _merge(t1, t2)
     for k,v in pairs(t2) do
         if type(v) == "table" then

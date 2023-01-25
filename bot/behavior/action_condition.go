@@ -29,11 +29,23 @@ func (a *ConditionAction) getThread() int {
 	return a.base.getThread()
 }
 
+func (a *ConditionAction) getMode() Mode {
+	return a.base.getMode()
+}
+
+func (a *ConditionAction) getType() string {
+	return CONDITION
+}
+
+func (a *ConditionAction) getID() string {
+	return a.base.ID()
+}
+
 func (a *ConditionAction) setThread(tn int) {
 	a.base.setThread(tn)
 }
 
-func (a *ConditionAction) onTick(t *Tick) {
+func (a *ConditionAction) onTick(t *Tick) error {
 	var v lua.LValue
 	var err error
 
@@ -61,12 +73,7 @@ func (a *ConditionAction) onTick(t *Tick) {
 	a.succ = lua.LVAsBool(v)
 
 ext:
-	if a.base.mode == Step {
-		t.blackboard.ThreadFillInfo(ThreadInfo{
-			Number: a.base.getThread(),
-			CurNod: a.base.ID(),
-		}, err)
-	}
+	return err
 }
 
 func (a *ConditionAction) onNext(t *Tick) {

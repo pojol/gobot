@@ -25,24 +25,30 @@ func (a *WaitAction) getThread() int {
 	return a.base.getThread()
 }
 
+func (a *WaitAction) getMode() Mode {
+	return a.base.getMode()
+}
+
+func (a *WaitAction) getID() string {
+	return a.base.ID()
+}
+
+func (a *WaitAction) getType() string {
+	return WAIT
+}
+
 func (a *WaitAction) setThread(tn int) {
 	a.base.setThread(tn)
 }
 
-func (a *WaitAction) onTick(t *Tick) {
+func (a *WaitAction) onTick(t *Tick) error {
 	a.base.onTick(t)
 
 	if a.endtime == 0 {
 		a.endtime = time.Now().UnixNano()/1000000 + int64(a.wait)
 	}
 
-	if a.base.mode == Step {
-		t.blackboard.ThreadFillInfo(ThreadInfo{
-			Number: a.getThread(),
-			ErrMsg: "",
-			CurNod: a.base.ID(),
-		}, nil)
-	}
+	return nil
 }
 
 func (a *WaitAction) onNext(t *Tick) {

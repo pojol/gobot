@@ -23,27 +23,31 @@ func (a *LoopAction) getThread() int {
 	return a.base.getThread()
 }
 
+func (a *LoopAction) getID() string {
+	return a.base.ID()
+}
+
+func (a *LoopAction) getType() string {
+	return LOOP
+}
+
+func (a *LoopAction) getMode() Mode {
+	return a.base.getMode()
+}
+
 func (a *LoopAction) setThread(tn int) {
 	a.base.setThread(tn)
 }
 
-func (a *LoopAction) onTick(t *Tick) {
+func (a *LoopAction) onTick(t *Tick) error {
 
 	a.base.onTick(t)
 
-	if a.base.mode == Step {
-		var err error
-
-		if a.loop <= 0 {
-			err = fmt.Errorf("%v node %v", a.base.Type(), a.base.ID())
-		}
-
-		t.blackboard.ThreadFillInfo(ThreadInfo{
-			Number: a.getThread(),
-			CurNod: a.base.ID(),
-		}, err)
+	if a.loop <= 0 {
+		return fmt.Errorf("%v node %v", a.base.Type(), a.base.ID())
 	}
 
+	return nil
 }
 
 func (a *LoopAction) onNext(t *Tick) {

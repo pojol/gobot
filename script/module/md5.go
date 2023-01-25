@@ -10,6 +10,7 @@ type MD5Module struct {
 }
 
 func (m *MD5Module) Loader(l *lua.LState) int {
+
 	mod := l.SetFuncs(l.NewTable(), map[string]lua.LGFunction{
 		"sum": m.Sum,
 	})

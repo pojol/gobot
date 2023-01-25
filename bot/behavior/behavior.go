@@ -7,9 +7,9 @@ import (
 type Mode int
 
 const (
-	Thread Mode = 1 + iota
-	Block
-	Step
+	Thread Mode = 1 + iota // 线程运行模式（一般用于压测
+	Block                  // 阻塞运行模式（一般用于http调用
+	Step                   // 步进运行模式（一般用于调试
 )
 
 type Tree struct {

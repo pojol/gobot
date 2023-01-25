@@ -20,21 +20,26 @@ func (a *RootAction) getThread() int {
 	return a.base.getThread()
 }
 
+func (a *RootAction) getID() string {
+	return a.base.ID()
+}
+
+func (a *RootAction) getType() string {
+	return ROOT
+}
+
+func (a *RootAction) getMode() Mode {
+	return a.base.getMode()
+}
+
 func (a *RootAction) setThread(tn int) {
 	a.base.setThread(tn)
 }
 
-func (a *RootAction) onTick(t *Tick) {
+func (a *RootAction) onTick(t *Tick) error {
 	a.base.onTick(t)
 
-	if a.base.mode == Step {
-		t.blackboard.ThreadFillInfo(ThreadInfo{
-			Number: a.getThread(),
-			ErrMsg: "",
-			CurNod: a.base.ID(),
-		}, nil)
-	}
-
+	return nil
 }
 
 func (a *RootAction) onNext(t *Tick) {

@@ -19,12 +19,23 @@ func (a *SelectAction) getThread() int {
 	return a.base.getThread()
 }
 
+func (a *SelectAction) getID() string {
+	return a.base.ID()
+}
+
+func (a *SelectAction) getType() string {
+	return SELETE
+}
+
+func (a *SelectAction) getMode() Mode {
+	return a.base.getMode()
+}
+
 func (a *SelectAction) setThread(tn int) {
 	a.base.setThread(tn)
 }
 
-func (a *SelectAction) onTick(t *Tick) {
-	var err error
+func (a *SelectAction) onTick(t *Tick) error {
 	a.base.onTick(t)
 
 	if a.base.ChildrenNum() <= 0 {
@@ -41,13 +52,7 @@ func (a *SelectAction) onTick(t *Tick) {
 
 ext:
 
-	if a.base.mode == Step {
-		t.blackboard.ThreadFillInfo(ThreadInfo{
-			Number: a.getThread(),
-			CurNod: a.base.ID(),
-		}, err)
-	}
-
+	return nil
 }
 
 func (a *SelectAction) onNext(t *Tick) {

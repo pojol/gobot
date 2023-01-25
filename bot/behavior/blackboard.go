@@ -49,14 +49,10 @@ func (b *Blackboard) HaveErr() bool {
 	return false
 }
 
-func (b *Blackboard) ThreadFillInfo(info ThreadInfo, err error) {
+func (b *Blackboard) ThreadFillInfo(info ThreadInfo) {
 	for k, v := range b.Threadlst {
 		if v.Number == info.Number {
-
 			b.Threadlst[k] = info
-			if err != nil {
-				b.Threadlst[k].ErrMsg = err.Error()
-			}
 		}
 	}
 }

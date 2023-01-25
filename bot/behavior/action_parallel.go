@@ -17,21 +17,25 @@ func (a *ParallelAction) getThread() int {
 	return a.base.getThread()
 }
 
+func (a *ParallelAction) getMode() Mode {
+	return a.base.getMode()
+}
+
+func (a *ParallelAction) getID() string {
+	return a.base.ID()
+}
+
+func (a *ParallelAction) getType() string {
+	return PARALLEL
+}
+
 func (a *ParallelAction) setThread(tn int) {
 	a.base.setThread(tn)
 }
 
-func (a *ParallelAction) onTick(t *Tick) {
+func (a *ParallelAction) onTick(t *Tick) error {
 	a.base.onTick(t)
-
-	if a.base.mode == Step {
-		t.blackboard.ThreadFillInfo(ThreadInfo{
-			Number: a.getThread(),
-			ErrMsg: "",
-			CurNod: a.base.ID(),
-		}, nil)
-	}
-
+	return nil
 }
 
 func (a *ParallelAction) onNext(t *Tick) {

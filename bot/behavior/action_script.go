@@ -1,11 +1,9 @@
 package behavior
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/pojol/gobot/bot/pool"
-	"github.com/pojol/gobot/utils"
 	lua "github.com/yuin/gopher-lua"
 )
 
@@ -30,12 +28,23 @@ func (a *ScriptAction) getThread() int {
 	return a.base.getThread()
 }
 
+func (a *ScriptAction) getID() string {
+	return a.base.ID()
+}
+
+func (a *ScriptAction) getType() string {
+	return SCRIPT
+}
+
+func (a *ScriptAction) getMode() Mode {
+	return a.base.getMode()
+}
+
 func (a *ScriptAction) setThread(tn int) {
 	a.base.setThread(tn)
 }
 
-func (a *ScriptAction) onTick(t *Tick) {
-	var v lua.LValue
+func (a *ScriptAction) onTick(t *Tick) error {
 	var err error
 	a.base.onTick(t)
 
@@ -47,7 +56,7 @@ func (a *ScriptAction) onTick(t *Tick) {
 
 	err = t.bs.L.CallByParam(lua.P{
 		Fn:      t.bs.L.GetGlobal("execute"),
-		NRet:    1,
+		NRet:    2,
 		Protect: true,
 	})
 	if err != nil {
@@ -55,35 +64,8 @@ func (a *ScriptAction) onTick(t *Tick) {
 		goto ext
 	}
 
-	v = t.bs.L.Get(-1)
-	t.bs.L.Pop(1)
 ext:
-
-	if a.base.mode == Step {
-
-		var changeStr string
-
-		tab, ok := v.(*lua.LTable)
-		if ok {
-			change, err := utils.Table2Map(tab)
-			if err != nil {
-				fmt.Println("script response 2 map err", err.Error())
-			}
-
-			changeByt, err := json.Marshal(&change)
-			if err != nil {
-				fmt.Println("marshal change info err", err.Error())
-			}
-			changeStr = string(changeByt)
-		}
-
-		info := ThreadInfo{
-			Number: a.getThread(),
-			CurNod: a.base.ID(),
-			Change: changeStr,
-		}
-		t.blackboard.ThreadFillInfo(info, err)
-	}
+	return err
 }
 
 func (a *ScriptAction) onNext(t *Tick) {
