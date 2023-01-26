@@ -38,10 +38,12 @@ meta = {
     Err = "",       -- debug log [err]
 }
 
+-- 脚本节点返回状态
 state = {
     Succ    = "Succ",   -- 脚本节点返回成功状态
-    Exit    = "Exit",   -- 脚本节点返回退出状态（中断执行
-    Error   = "Error"   -- 脚本节点返回错误状态（中断执行，且带有错误信息
+    Error   = "Error",   -- 脚本节点返回错误状态（正常执行，但携带错误
+    Break   = "Break",  -- 返回中断状态（中断执行，且携带错误
+    Exit    = "Exit",   -- =返回退出状态（中断执行，正常退出
 }
 
 local function _merge(t1, t2)

@@ -74,7 +74,7 @@ export default class EditSidePlane extends React.Component<SideProps> {
     let selecttags = this.state.selectTags
     for (var i = 0; i < selecttags.length; i++) {
       for (var j = 0; j < tags.length; j++) {
-        if (tags[j] == selecttags[i]) {
+        if (tags[j] === selecttags[i]) {
           console.info(tags[j], "match", selecttags[i])
           return true
         }
@@ -154,7 +154,7 @@ export default class EditSidePlane extends React.Component<SideProps> {
   startDrag = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     const target = e.currentTarget
     const ty = target.getAttribute('data-type') as any
-    var nod = new Node;
+    var nod = new Node();
 
     switch (ty) {
       case NodeTy.Selector:

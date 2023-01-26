@@ -535,32 +535,34 @@ end
       Post(localStorage.remoteAddr, Api.DebugStep, { BotID: botid }).then(
         (json) => {
 
-          if (json.Code === 1009) {
-            message.warning(json.Code.toString() + " " + json.Msg)
-            return;
-          }
-          let threadinfo = []
-          PubSub.publish(Topic.Focus, []);  // reset focus
-          console.info("step", json.Code)
           if (json.Code !== 200) {
-            if (json.Code === 1007) {  // end
-              message.success("the end");
+            if (json.Code === 1009) {
+              message.warning(json.Code.toString() + " " + json.Msg)
               return;
+            } else if (json.Code === 1007) {
+              message.success("the end");
+            } else {
+              message.warning(json.Code.toString() + " " + json.Msg)
             }
-            message.warning(json.Code.toString() + " " + json.Msg)
-          } else {
-            threadinfo = JSON.parse(json.Body.ThreadInfo)
-            let focusLst = new Array()
-            threadinfo.forEach(element => {
-              focusLst.push(element.curnod)
-            });
-            PubSub.publish(Topic.Focus, focusLst)
           }
 
+          PubSub.publish(Topic.Focus, []);  // reset focus
+          console.info("step", json.Code, json)
+
+          // 推送 reponse 面板信息
+          let threadinfo = JSON.parse(json.Body.ThreadInfo)
+          PubSub.publish(Topic.UpdateChange, threadinfo)
+
+          // 推送当前节点信息
+          let focusLst = []
+          threadinfo.forEach(element => {
+            focusLst.push(element.curnod)
+          });
+          PubSub.publish(Topic.Focus, focusLst)
+
+          // 推送 meta 面板信息
           let metaStr = JSON.stringify(JSON.parse(json.Body.Blackboard))
           PubSub.publish(Topic.UpdateBlackboard, metaStr);
-
-          PubSub.publish(Topic.UpdateChange, threadinfo)
         }
       );
 

@@ -7,7 +7,6 @@ import {
   InputNumber,
 } from "antd";
 import * as React from "react";
-import PubSub from "pubsub-js";
 
 import { Controlled as CodeMirror } from "react-codemirror2";
 import "codemirror/lib/codemirror.css";
@@ -19,7 +18,6 @@ import "codemirror/theme/neo.css";
 import "codemirror/theme/zenburn.css";
 import "codemirror/mode/lua/lua";
 
-import Topic from "../../constant/topic";
 import moment from "moment";
 import lanMap from "../../locales/lan";
 import Api from "../../constant/api";

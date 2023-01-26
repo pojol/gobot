@@ -119,7 +119,6 @@ export default class App extends React.Component {
         );
       } else {
         let lst = json.Body.Lst;
-        let dat = []
         var counter = 0;
 
         lst.forEach(function (element) {
