@@ -11,6 +11,14 @@
 ]]--
 meta = {
 }
+
+-- 脚本节点返回状态
+state = {
+    Succ    = "Succ",   -- 脚本节点返回成功状态
+    Error   = "Error",  -- 脚本节点返回错误状态（正常执行，但携带错误
+    Break   = "Break",  -- 返回中断状态（中断执行，且携带错误
+    Exit    = "Exit",   -- =返回退出状态（中断执行，正常退出
+}
 ```
 
 ### 脚本样例
@@ -49,7 +57,8 @@ function execute()
   	body = json.decode(res["body"])
   	merge(meta, body.Body)  -- 将 res 数据合并到 meta 结构中（覆盖
 
-    return body -- 将http response传递给 editor 中的 response 栏
+    -- 将http response传递给 editor 中的 response 栏
+    return state.Succ, body.Body 
 end
 ```
 
