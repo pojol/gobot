@@ -24,24 +24,12 @@ func (a *ScriptAction) AddChild(nod INod) {
 	a.base.AddChild(nod)
 }
 
-func (a *ScriptAction) getThread() int {
-	return a.base.getThread()
-}
-
-func (a *ScriptAction) getID() string {
-	return a.base.ID()
+func (a *ScriptAction) getBase() *Node {
+	return &a.base
 }
 
 func (a *ScriptAction) getType() string {
 	return SCRIPT
-}
-
-func (a *ScriptAction) getMode() Mode {
-	return a.base.getMode()
-}
-
-func (a *ScriptAction) setThread(tn int) {
-	a.base.setThread(tn)
 }
 
 func (a *ScriptAction) onTick(t *Tick) error {

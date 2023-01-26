@@ -93,11 +93,11 @@ func (t *Tick) Do() (state string, end bool) {
 	for _, n := range nods {
 		err = n.onTick(t)
 
-		state, msg, parseerr = t.stateCheck(n.getMode(), n.getType())
+		state, msg, parseerr = t.stateCheck(n.getBase().getMode(), n.getType())
 
 		threadInfo := ThreadInfo{
-			Number: n.getThread(),
-			CurNod: n.getID(),
+			Number: n.getBase().getThread(),
+			CurNod: n.getBase().ID(),
 			Change: msg,
 		}
 

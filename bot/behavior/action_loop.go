@@ -19,24 +19,12 @@ func (a *LoopAction) AddChild(nod INod) {
 	a.base.AddChild(nod)
 }
 
-func (a *LoopAction) getThread() int {
-	return a.base.getThread()
-}
-
-func (a *LoopAction) getID() string {
-	return a.base.ID()
-}
-
 func (a *LoopAction) getType() string {
 	return LOOP
 }
 
-func (a *LoopAction) getMode() Mode {
-	return a.base.getMode()
-}
-
-func (a *LoopAction) setThread(tn int) {
-	a.base.setThread(tn)
+func (a *LoopAction) getBase() *Node {
+	return &a.base
 }
 
 func (a *LoopAction) onTick(t *Tick) error {

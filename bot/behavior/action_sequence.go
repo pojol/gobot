@@ -15,24 +15,12 @@ func (a *SequenceAction) AddChild(nod INod) {
 	a.base.AddChild(nod)
 }
 
-func (a *SequenceAction) getThread() int {
-	return a.base.getThread()
-}
-
-func (a *SequenceAction) getMode() Mode {
-	return a.base.getMode()
-}
-
 func (a *SequenceAction) getType() string {
 	return SEQUENCE
 }
 
-func (a *SequenceAction) getID() string {
-	return a.base.ID()
-}
-
-func (a *SequenceAction) setThread(tn int) {
-	a.base.setThread(tn)
+func (a *SequenceAction) getBase() *Node {
+	return &a.base
 }
 
 func (a *SequenceAction) onTick(t *Tick) error {

@@ -28,4 +28,4 @@ Gobot is a stateful api testing tool that supports graph editing, api calling, a
 Try the editor out [on website](http://123.60.17.61:7777)
 
 ## Preview
-[![2023-01-07-23-09-48.png](https://i.postimg.cc/4xYsWPzb/2023-01-07-23-09-48.png)](https://postimg.cc/75rF6gtf)
+[![image.png](https://i.postimg.cc/x1cFp5vF/image.png)](https://postimg.cc/dhcBL8S8)

@@ -16,24 +16,12 @@ func (a *RootAction) AddChild(nod INod) {
 	a.base.AddChild(nod)
 }
 
-func (a *RootAction) getThread() int {
-	return a.base.getThread()
-}
-
-func (a *RootAction) getID() string {
-	return a.base.ID()
-}
-
 func (a *RootAction) getType() string {
 	return ROOT
 }
 
-func (a *RootAction) getMode() Mode {
-	return a.base.getMode()
-}
-
-func (a *RootAction) setThread(tn int) {
-	a.base.setThread(tn)
+func (a *RootAction) getBase() *Node {
+	return &a.base
 }
 
 func (a *RootAction) onTick(t *Tick) error {

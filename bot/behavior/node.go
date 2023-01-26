@@ -32,12 +32,8 @@ type INod interface {
 	Init(*Tree, INod, Mode)
 	AddChild(INod)
 
-	getMode() Mode
-	getID() string
+	getBase() *Node
 	getType() string
-
-	getThread() int
-	setThread(int)
 
 	onTick(*Tick) error
 	onNext(*Tick)
@@ -107,7 +103,7 @@ func (a *Node) getThread() int {
 	if a.threadNumber != 0 {
 		return a.threadNumber
 	} else {
-		return a.parent.getThread()
+		return a.parent.getBase().getThread()
 	}
 }
 

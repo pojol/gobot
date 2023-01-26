@@ -15,24 +15,12 @@ func (a *SelectAction) AddChild(nod INod) {
 	a.base.AddChild(nod)
 }
 
-func (a *SelectAction) getThread() int {
-	return a.base.getThread()
-}
-
-func (a *SelectAction) getID() string {
-	return a.base.ID()
-}
-
 func (a *SelectAction) getType() string {
 	return SELETE
 }
 
-func (a *SelectAction) getMode() Mode {
-	return a.base.getMode()
-}
-
-func (a *SelectAction) setThread(tn int) {
-	a.base.setThread(tn)
+func (a *SelectAction) getBase() *Node {
+	return &a.base
 }
 
 func (a *SelectAction) onTick(t *Tick) error {

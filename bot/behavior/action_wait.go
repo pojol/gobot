@@ -21,24 +21,12 @@ func (a *WaitAction) AddChild(nod INod) {
 	a.base.AddChild(nod)
 }
 
-func (a *WaitAction) getThread() int {
-	return a.base.getThread()
-}
-
-func (a *WaitAction) getMode() Mode {
-	return a.base.getMode()
-}
-
-func (a *WaitAction) getID() string {
-	return a.base.ID()
-}
-
 func (a *WaitAction) getType() string {
 	return WAIT
 }
 
-func (a *WaitAction) setThread(tn int) {
-	a.base.setThread(tn)
+func (a *WaitAction) getBase() *Node {
+	return &a.base
 }
 
 func (a *WaitAction) onTick(t *Tick) error {

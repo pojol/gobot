@@ -25,24 +25,12 @@ func (a *ConditionAction) AddChild(nod INod) {
 	a.base.AddChild(nod)
 }
 
-func (a *ConditionAction) getThread() int {
-	return a.base.getThread()
-}
-
-func (a *ConditionAction) getMode() Mode {
-	return a.base.getMode()
+func (a *ConditionAction) getBase() *Node {
+	return &a.base
 }
 
 func (a *ConditionAction) getType() string {
 	return CONDITION
-}
-
-func (a *ConditionAction) getID() string {
-	return a.base.ID()
-}
-
-func (a *ConditionAction) setThread(tn int) {
-	a.base.setThread(tn)
 }
 
 func (a *ConditionAction) onTick(t *Tick) error {
