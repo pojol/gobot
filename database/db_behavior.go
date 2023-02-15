@@ -71,6 +71,8 @@ func (b *Behavior) Upset(name string, file []byte) {
 		}
 	} else {
 		t.UpdateTime = time.Now().Unix()
+		t.File = make([]byte, len(file))
+		copy(t.File, file)
 		res = b.db.Model(&BehaviorTable{}).Where("name = ?", name).Updates(&t)
 		if res.Error != nil {
 			fmt.Println("behavior upset update err", res.Error)
