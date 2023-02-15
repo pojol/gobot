@@ -100,7 +100,7 @@ func (b *Batch) Report() database.ReportDetail {
 
 func (b *Batch) push(bot *bot.Bot) {
 	b.bwg.Add()
-	fmt.Println("bot", bot.ID(), "running", atomic.LoadInt32(&b.cursorNum), "=>", b.TotalNum)
+	fmt.Println("bot", bot.ID(), "push", atomic.LoadInt32(&b.cursorNum), "=>", b.TotalNum)
 
 	b.bots[bot.ID()] = bot
 }
@@ -109,6 +109,7 @@ func (b *Batch) pop(id string) {
 	b.bwg.Done()
 	atomic.AddInt32(&b.CurNum, 1)
 
+	fmt.Println("bot", id, "pop", atomic.LoadInt32(&b.CurNum), "=>", b.TotalNum)
 	if atomic.LoadInt32(&b.CurNum) >= b.TotalNum {
 		b.done <- 1
 	}
@@ -156,6 +157,7 @@ func (b *Batch) run() {
 		for {
 
 			if b.exit.HasOpend() {
+				fmt.Println("break running")
 				break
 			}
 
@@ -166,6 +168,7 @@ func (b *Batch) run() {
 			} else {
 				curbatchnum = last
 			}
+
 			for i := 0; i < int(curbatchnum); i++ {
 				atomic.AddInt32(&b.cursorNum, 1)
 
@@ -174,6 +177,7 @@ func (b *Batch) run() {
 			}
 
 			b.bwg.Wait()
+			fmt.Println("next batch", atomic.LoadInt32(&b.CurNum), "=>", b.TotalNum)
 			time.Sleep(time.Millisecond * 100)
 		}
 
