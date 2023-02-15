@@ -16,25 +16,18 @@ func (a *RootAction) AddChild(nod INod) {
 	a.base.AddChild(nod)
 }
 
-func (a *RootAction) getThread() int {
-	return a.base.getThread()
+func (a *RootAction) getType() string {
+	return ROOT
 }
 
-func (a *RootAction) setThread(tn int) {
-	a.base.setThread(tn)
+func (a *RootAction) getBase() *Node {
+	return &a.base
 }
 
-func (a *RootAction) onTick(t *Tick) {
+func (a *RootAction) onTick(t *Tick) error {
 	a.base.onTick(t)
 
-	if a.base.mode == Step {
-		t.blackboard.ThreadFillInfo(ThreadInfo{
-			Number: a.getThread(),
-			ErrMsg: "",
-			CurNod: a.base.ID(),
-		}, nil)
-	}
-
+	return nil
 }
 
 func (a *RootAction) onNext(t *Tick) {

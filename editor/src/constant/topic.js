@@ -25,11 +25,11 @@ const Topic = {
 
     // config
     ConfigUpdate : "topic_config_update",   // 配置项更新
-    SystemConfigUpdate : "topic_system_config_update",
-    ConfigUpdateAll : "topic_config_update_all",
     BotsUpdate : "topic_bots_update",
     RunningUpdate: "topic_running_update",
     ReportUpdate : "topic_report_update",
+
+    PrefabUpdateAll : "topic_prefab_update_all",
 
     FileSave : "topic_file_save",
     FileLoad : "topic_file_load",

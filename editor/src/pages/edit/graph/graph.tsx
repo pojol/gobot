@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Graph, Addon, Shape, Cell, Node } from "@antv/x6";
+import { Graph, Shape, Cell, Node } from "@antv/x6";
 import ActionNode from "./shape/shape_action";
 import ConditionNode from "./shape/shape_condition";
 import SelectorNode from "./shape/shape_selector";
@@ -35,10 +35,9 @@ import { message } from "antd";
 import PubSub from "pubsub-js";
 import Topic from "../../../constant/topic";
 
-import moment from "moment";
+//import moment from "moment";
 import Constant from "../../../constant/constant";
-
-const { Dnd, Stencil } = Addon;
+import EditSidePlane from "../side/side";
 
 // 高亮
 const magnetAvailabilityHighlighter = {
@@ -50,101 +49,6 @@ const magnetAvailabilityHighlighter = {
     },
   },
 };
-
-const stencilWidth = 180;
-
-function NewStencil(graph: Graph) {
-  var selectorNod = new SelectorNode();
-  var seqNod = new SequenceNode();
-  var condNod = new ConditionNode();
-  var loopNod = new LoopNode();
-  var waitNod = new WaitNode();
-  var parallelNod = new ParallelNode();
-  var title = "Components";
-  var placeholder = "Search by shape name";
-  var g1title = "Normal";
-  var g2title = "Prefab";
-
-  if (moment.locale() === "en") {
-    selectorNod.setAttrs({ label: { text: "Selector" } });
-    seqNod.setAttrs({ label: { text: "Sequence" } });
-    condNod.setAttrs({ label: { text: "Condition" } });
-    loopNod.setAttrs({ label: { text: "Loop" } });
-    waitNod.setAttrs({ label: { text: "Wait" } });
-    parallelNod.setAttrs({ label: { text: "Parallel" } })
-  } else if (moment.locale() === "zh-cn") {
-    selectorNod.setAttrs({ label: { text: "选择" } });
-    seqNod.setAttrs({ label: { text: "顺序" } });
-    condNod.setAttrs({ label: { text: "条件" } });
-    loopNod.setAttrs({ label: { text: "循环" } });
-    waitNod.setAttrs({ label: { text: "等待" } });
-    parallelNod.setAttrs({ label: { text: "并行" } })
-
-    title = "组件";
-    placeholder = "通过节点名进行搜索";
-    g1title = "默认节点";
-    g2title = "预制节点";
-  }
-
-  let configmap = (window as any).config as Map<string, string>;
-
-  var stencil = new Stencil({
-    title: title,
-    search(nod, keyword) {
-      var attr = nod.getAttrs();
-      var label = attr.label.text as String;
-      if (label !== null) {
-        return label.toLowerCase().indexOf(keyword.toLowerCase()) !== -1;
-      }
-
-      return false;
-    },
-    placeholder: placeholder,
-    notFoundText: "Not Found",
-    target: graph,
-    collapsable: true,
-    stencilGraphPadding :10,
-    stencilGraphWidth: stencilWidth,
-    stencilGraphHeight: 260,
-    groups: [
-      {
-        name: "group1",
-        title: g1title,
-      },
-      {
-        name: "group2",
-        title: g2title,
-        graphWidth:200,
-        graphHeight:configmap.size * 30,
-        layoutOptions: {columns:1,columnWidth:"auto",rowHeight:30}
-      },
-    ],
-  });
-
-  stencil.load(
-    [selectorNod, seqNod, parallelNod, condNod, loopNod, waitNod],
-    "group1"
-  );
-
-  let prefabnods: Node[] = [];
-
-  configmap.forEach((value: string, key: string) => {
-    if (key !== "system" && key !== "global" && key !== "") {
-      var nod = new ActionNode();
-      nod.setAttrs({
-        label: { text: key },
-      });
-      nod.setSize(140,20)
-      nod.removePortAt(0)
-
-      prefabnods.push(nod);
-    }
-  });
-
-  stencil.load(prefabnods, "group2");
-
-  return stencil;
-}
 
 function fillChildInfo(child: Node, info: any) {
   var childInfo = {
@@ -198,7 +102,6 @@ function iterate(nod: Node, callback: (nod: Node) => void) {
 export default class GraphView extends React.Component {
   graph: Graph;
   container: HTMLElement;
-  dnd: any;
   stencilContainer: HTMLDivElement;
 
   state = {
@@ -210,19 +113,10 @@ export default class GraphView extends React.Component {
     wflex: 0.6,
   };
 
-  reloadStencil() {
-    this.setState({ stencil: NewStencil(this.graph) }, () => {
-      if (this.state.stencil != null) {
-        var stencil = this.state.stencil as Addon.Stencil;
-        this.stencilContainer.appendChild(stencil.container);
-      }
-    });
-  }
-
   componentDidMount() {
     // 新建画布
     const graph = new Graph({
-      width: document.body.clientWidth * this.state.wflex - stencilWidth,
+      width: document.body.clientWidth * this.state.wflex,
       height: document.body.clientHeight - 62,
       container: this.container,
       highlighting: {
@@ -301,7 +195,7 @@ export default class GraphView extends React.Component {
     */
 
     var root = new RootNode();
-    root.setPosition((graph.getGraphArea().width / 2) + (stencilWidth / 2), (graph.getGraphArea().height / 2) - 200)
+    root.setPosition((graph.getGraphArea().width / 2) + 80, (graph.getGraphArea().height / 2) - 200)
     graph.addNode(root);
 
     PubSub.publish(Topic.NodeAdd, [GetNodInfo(root), true, false]);
@@ -475,18 +369,7 @@ export default class GraphView extends React.Component {
     // 居中显示
     //graph.centerContent();
 
-    this.dnd = new Dnd({
-      target: graph,
-      scaled: false,
-      animation: true,
-    });
     this.graph = graph;
-
-    this.reloadStencil();
-
-    PubSub.subscribe(Topic.ConfigUpdateAll, (topic: string, info: any) => {
-      this.reloadStencil();
-    });
 
     PubSub.subscribe(Topic.UpdateNodeParm, (topic: string, info: any) => {
       if (IsActionNode(info.parm.ty)) {
@@ -578,7 +461,7 @@ export default class GraphView extends React.Component {
     });
 
     PubSub.subscribe(Topic.LanuageChange, () => {
-      this.reloadStencil();
+      //this.reloadStencil();
     });
 
     var agent = navigator.userAgent.toLowerCase();
@@ -607,7 +490,7 @@ export default class GraphView extends React.Component {
 
   // 重绘视口
   resizeViewpoint() {
-    var width = document.body.clientWidth * this.state.wflex - stencilWidth;
+    var width = document.body.clientWidth * this.state.wflex;
 
     console.info("resize panel", this.state.wflex, document.body.clientHeight);
 
@@ -639,7 +522,6 @@ export default class GraphView extends React.Component {
         break;
       default:
         nod = new ActionNode({ id: child.id });
-        console.info("redraw node", child.ty);
         nod.setAttrs({ type: child.ty });
     }
 
@@ -874,8 +756,9 @@ export default class GraphView extends React.Component {
   render() {
     return (
       <div className="app">
-        <div className="app-stencil" ref={this.refStencil} />
+        <EditSidePlane graph={this.graph}></EditSidePlane>
         <div className="app-content" ref={this.refContainer} />
+        
         <div className={"app-zoom-" + this.state.platfrom}>
           <Tooltip placement="leftTop" title="ZoomIn">
             <Button icon={<ZoomInOutlined />} onClick={this.ClickZoomIn} />

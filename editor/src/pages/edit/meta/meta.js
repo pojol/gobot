@@ -51,11 +51,16 @@ export default class Blackboard extends React.Component {
             throw new Error();
           }
 
+          let changemsg = "{}"
+          if (element.change !== "") {
+            changemsg = element.change
+          }
+
           try {
-            msg += JSON.stringify(JSON.parse(element.change), null, 2) + "\n"
+            msg += JSON.stringify(JSON.parse(changemsg), null, 2) + "\n"
           } catch (error) {
             console.warn(error)
-            msg += element.change + "\n"
+            msg += changemsg + "\n"
           }
 
           msg += "------------------------------\n"

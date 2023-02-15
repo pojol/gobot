@@ -13,25 +13,17 @@ func (a *ParallelAction) AddChild(nod INod) {
 	a.base.AddChild(nod)
 }
 
-func (a *ParallelAction) getThread() int {
-	return a.base.getThread()
+func (a *ParallelAction) getType() string {
+	return PARALLEL
 }
 
-func (a *ParallelAction) setThread(tn int) {
-	a.base.setThread(tn)
+func (a *ParallelAction) getBase() *Node {
+	return &a.base
 }
 
-func (a *ParallelAction) onTick(t *Tick) {
+func (a *ParallelAction) onTick(t *Tick) error {
 	a.base.onTick(t)
-
-	if a.base.mode == Step {
-		t.blackboard.ThreadFillInfo(ThreadInfo{
-			Number: a.getThread(),
-			ErrMsg: "",
-			CurNod: a.base.ID(),
-		}, nil)
-	}
-
+	return nil
 }
 
 func (a *ParallelAction) onNext(t *Tick) {
@@ -44,7 +36,7 @@ func (a *ParallelAction) onNext(t *Tick) {
 			newthreadnum := t.blackboard.ThreadCurNum() + 1
 			t.blackboard.ThreadAdd(newthreadnum)
 
-			children.setThread(newthreadnum)
+			children.getBase().setThread(newthreadnum)
 		}
 
 	} else {

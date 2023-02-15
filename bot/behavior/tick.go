@@ -1,9 +1,13 @@
 package behavior
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 
 	"github.com/pojol/gobot/bot/pool"
+	"github.com/pojol/gobot/utils"
+	lua "github.com/yuin/gopher-lua"
 )
 
 type Tick struct {
@@ -11,6 +15,10 @@ type Tick struct {
 	bs         *pool.BotState
 	botid      string
 }
+
+var (
+	ErrorNodeHaveErr = errors.New("node script have error")
+)
 
 func NewTick(bb *Blackboard, state *pool.BotState, botid string) *Tick {
 	t := &Tick{
@@ -21,15 +29,100 @@ func NewTick(bb *Blackboard, state *pool.BotState, botid string) *Tick {
 	return t
 }
 
-func (t *Tick) Do() (error, bool) {
+func (t *Tick) stateCheck(mode Mode, ty string) (string, string, error) {
+
+	var r1, r2 lua.LValue
+	var err error
+	var changestr string
+	var changeByt []byte
+	var changetab map[string]interface{}
+	state := Succ
+
+	if ty != SCRIPT { // 不是脚本节点不需要进行返回值处理
+		goto ext
+	}
+
+	r1 = t.bs.L.Get(-1)
+	if r1.Type() != lua.LTNil {
+		t.bs.L.Pop(1)
+	}
+	r2 = t.bs.L.Get(-1)
+	if r2.Type() != lua.LTNil {
+		t.bs.L.Pop(1)
+		state = r2.String()
+
+		if mode == Step {
+			if state == Succ || state == Exit {
+				tab, ok := r1.(*lua.LTable)
+				if ok {
+					changetab, err = utils.Table2Map(tab)
+					if err != nil {
+						goto ext
+					}
+
+					changeByt, err = json.Marshal(&changetab)
+					if err != nil {
+						goto ext
+					}
+					changestr = string(changeByt)
+				}
+
+			} else {
+				changestr = r1.String()
+			}
+
+		}
+
+	} else {
+		goto ext //没有返回值，不需要处理
+	}
+
+ext:
+	//
+	return state, changestr, err
+}
+
+func (t *Tick) Do() (state string, end bool) {
 
 	nods := t.blackboard.GetOpenNods()
 	t.blackboard.ThreadInfoReset()
 
+	var err, parseerr error
+	var msg string
+
 	for _, n := range nods {
-		n.onTick(t)
-		if t.blackboard.HaveErr() {
-			return errors.New("thread have err"), false
+		err = n.onTick(t)
+
+		state, msg, parseerr = t.stateCheck(n.getBase().getMode(), n.getType())
+
+		threadInfo := ThreadInfo{
+			Number: n.getBase().getThread(),
+			CurNod: n.getBase().ID(),
+			Change: msg,
+		}
+
+		if err != nil {
+			threadInfo.ErrMsg = fmt.Sprintf("tick err %v", err.Error())
+		}
+		if parseerr != nil {
+			threadInfo.ErrMsg = fmt.Sprintf("%v parse err %v", threadInfo.ErrMsg, parseerr.Error())
+		}
+
+		if state != Succ {
+			if state == Exit {
+				end = true
+			} else if state == Break {
+				end = true
+				threadInfo.ErrMsg = fmt.Sprintf("script break err %v", msg)
+			} else if state == Error {
+				// 节点脚本出错，脚本逻辑自行抛出的错误
+				threadInfo.ErrMsg = fmt.Sprintf("script err %v", msg)
+			}
+		}
+
+		t.blackboard.ThreadFillInfo(threadInfo)
+		if end {
+			goto ext
 		}
 	}
 
@@ -40,8 +133,10 @@ func (t *Tick) Do() (error, bool) {
 	}
 
 	if t.blackboard.end {
-		return nil, true
+		state = Exit
+		goto ext
 	}
 
-	return nil, false
+ext:
+	return state, end
 }

@@ -19,31 +19,23 @@ func (a *LoopAction) AddChild(nod INod) {
 	a.base.AddChild(nod)
 }
 
-func (a *LoopAction) getThread() int {
-	return a.base.getThread()
+func (a *LoopAction) getType() string {
+	return LOOP
 }
 
-func (a *LoopAction) setThread(tn int) {
-	a.base.setThread(tn)
+func (a *LoopAction) getBase() *Node {
+	return &a.base
 }
 
-func (a *LoopAction) onTick(t *Tick) {
+func (a *LoopAction) onTick(t *Tick) error {
 
 	a.base.onTick(t)
 
-	if a.base.mode == Step {
-		var err error
-
-		if a.loop <= 0 {
-			err = fmt.Errorf("%v node %v", a.base.Type(), a.base.ID())
-		}
-
-		t.blackboard.ThreadFillInfo(ThreadInfo{
-			Number: a.getThread(),
-			CurNod: a.base.ID(),
-		}, err)
+	if a.loop <= 0 {
+		return fmt.Errorf("%v node %v", a.base.Type(), a.base.ID())
 	}
 
+	return nil
 }
 
 func (a *LoopAction) onNext(t *Tick) {

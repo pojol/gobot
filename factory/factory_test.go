@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pojol/gobot/database"
 	"github.com/pojol/gobot/mock"
 )
 
@@ -229,7 +230,7 @@ func TestLoop(t *testing.T) {
 		panic(err)
 	}
 
-	f.AddBehavior("behavior", []byte(compose))
+	database.GetBehavior().Upset("behavior", []byte(compose))
 
 	for i := 0; i < 10; i++ {
 		f.AddTask("behavior", 10)

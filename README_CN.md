@@ -1,5 +1,5 @@
 # gobot
-Gobot是一个有状态的api测试工具，支持图形编辑、api调用、绑定脚本执行。
+Gobot是一个有状态的api/协议测试工具，支持图形化的行为编辑/调试、脚本节点、压力测试、测试报告等。
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/pojol/gobot)](https://goreportcard.com/report/github.com/pojol/gobot)
 [![](https://img.shields.io/badge/%E6%96%87%E6%A1%A3-Doc-2ca5e0?style=flat&logo=github)](https://pojol.gitee.io/gobot/#/)
@@ -8,12 +8,12 @@ Gobot是一个有状态的api测试工具，支持图形编辑、api调用、绑
 
 
 ## 特性
-* 使用`行为树`控制机器人的运行顺序，使用`脚本`控制节点的具体行为（比如发起一次http请求
+* 使用`行为树`控制机器人的运行逻辑，使用`脚本`控制节点的具体行为（比如发起一次http请求
 * 提供图形化的编辑，调试能力
-* 可以在配置页中`预制`模版节点，在编辑器中进行节点的`复用`
-* 可以通过 http `api` 进行驱动（`post /bot.run -d '{"Name":"某个机器人"}'` 可以方便的集成进CI
-* 进行`压力测试`（可以在配置页设置并发数
-* 提供报告查看页（一些简略的统计信息
+* 可以`预制`模版节点，在编辑器中直接使用预制过的节点（可通过标签筛选
+* 可以通过 http api `'curl post /bot.run -d '{"Name":"某个机器人"}'` 驱动一个阻塞式的机器人，通过这种方式可以方便的集成进`CI`中的测试流程
+* 可以进行`压力测试`（可以在配置页设置并发数
+* 提供压力测试后的API/协议`报告`查看
 
 ## 节点脚本
 > 通过内置的模块+脚本可以使我们拥有丰富的逻辑表达能力，也可以使用全局的（单个bot）meta 结构来维护 bot 的各种状态变更
@@ -53,7 +53,4 @@ end
 
 
 ## 编辑器预览
-[![botgif3.gif](https://i.postimg.cc/s2y4MDZv/botgif3.gif
-)](https://www.bilibili.com/video/BV1sS4y1z7Dg?share_source=copy_web)
-
-[![botgif2.gif](https://i.postimg.cc/SNKQG50m/botgif2.gif)](https://postimg.cc/s1tRjTDL)
+[![image.png](https://i.postimg.cc/x1cFp5vF/image.png)](https://postimg.cc/dhcBL8S8)

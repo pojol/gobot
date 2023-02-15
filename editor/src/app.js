@@ -33,6 +33,7 @@ import { Post, PostGetBlob, CheckHealth } from "./utils/request";
 import Api from "./constant/api";
 
 import { ReadOutlined, ApiFilled } from "@ant-design/icons";
+import 'antd/dist/antd.variable.min.css';
 
 const { TabPane } = Tabs;
 moment.locale("en");
@@ -71,7 +72,7 @@ export default class App extends React.Component {
     } else {
       this.syncTemplateCode();
     }
-
+    
   }
 
   componentDidMount() {
@@ -111,35 +112,31 @@ export default class App extends React.Component {
   syncTemplateCode() {
     console.info("sync templete config", localStorage.remoteAddr);
 
-    Post(localStorage.remoteAddr, Api.ConfigList, {}).then((json) => {
+    Post(localStorage.remoteAddr, Api.PrefabList, {}).then((json) => {
       if (json.Code !== 200) {
         message.error(
           "get config list fail:" + String(json.Code) + " msg: " + json.Msg
         );
       } else {
         let lst = json.Body.Lst;
-
         var counter = 0;
 
         lst.forEach(function (element) {
-          console.info("get config", element)
-          PostGetBlob(localStorage.remoteAddr, Api.ConfigGet, element).then(
+          PostGetBlob(localStorage.remoteAddr, Api.PrefabGet, element.name).then(
             (file) => {
               let reader = new FileReader();
               reader.onload = function (ev) {
 
-                if (reader.result.byteLength === 0) {
-                  message.warning("get config byte length == 0")
-                  return
-                }
-
-                window.config.set(element.toLowerCase(), reader.result)
-                PubSub.publish(Topic.ConfigUpdate, reader.result);
+                window.prefab.set(element.name, {
+                  name:element.name,
+                  tags:element.tags,
+                  code:reader.result,
+              });
 
                 counter++
                 if (counter === lst.length) {
-                  console.info("update config", counter)
-                  PubSub.publish(Topic.ConfigUpdateAll, {})
+                  console.info("load prefab", counter)
+                  PubSub.publish(Topic.PrefabUpdateAll, {})
                 }
               };
 

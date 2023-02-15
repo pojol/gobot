@@ -97,10 +97,11 @@ func (b *Bot) GetThreadInfo() string {
 	if err != nil {
 		fmt.Println(err.Error())
 	}
+
 	return string(info)
 }
 
-func NewWithBehaviorTree(path string, bt *behavior.Tree, name string, idx int32, globalScript []string) *Bot {
+func NewWithBehaviorTree(path string, bt *behavior.Tree, name string, idx int32, globalScript string) *Bot {
 
 	bb := &behavior.Blackboard{
 		Nods:      []behavior.INod{bt.GetRoot()},
@@ -130,8 +131,8 @@ func NewWithBehaviorTree(path string, bt *behavior.Tree, name string, idx int32,
 	rand.Seed(time.Now().UnixNano())
 
 	// 加载预定义全局脚本文件
-	for _, gs := range globalScript {
-		pool.DoString(bot.bs.L, gs)
+	if globalScript != "" {
+		pool.DoString(bot.bs.L, globalScript)
 	}
 
 	// 这里要对script目录进行一次检查，将lua脚本都载入进来
@@ -159,19 +160,20 @@ func NewWithBehaviorTree(path string, bt *behavior.Tree, name string, idx int32,
 func (b *Bot) loopThread(doneCh chan<- string, errch chan<- ErrInfo) {
 
 	for {
-		err, end := b.tick.Do()
+		state, end := b.tick.Do()
 		if end {
 			doneCh <- b.id
 			goto ext
 		}
 
-		if err != nil {
+		if state == behavior.Break || state == behavior.Exit {
 			errch <- ErrInfo{
 				ID:  b.id,
-				Err: err,
+				Err: nil,
 			}
 			goto ext
 		}
+
 		time.Sleep(time.Millisecond * 100)
 	}
 
@@ -194,13 +196,13 @@ func (b *Bot) RunByBlock() error {
 	}()
 
 	for {
-		err, end := b.tick.Do()
+		state, end := b.tick.Do()
 		if end {
 			return nil
 		}
 
-		if err != nil {
-			return err
+		if state == behavior.Break || state == behavior.Exit {
+			return behavior.ErrorNodeHaveErr
 		}
 
 		time.Sleep(time.Millisecond * 100)
@@ -240,13 +242,14 @@ func (b *Bot) RunByStep() State {
 	stepmu.Lock()
 	defer stepmu.Unlock()
 
-	err, end := b.tick.Do()
-	if err != nil {
-		fmt.Println("run step err", err.Error())
-		return SBreak
+	state, end := b.tick.Do()
+	if end {
+		return SEnd
 	}
 
-	if end {
+	if state == behavior.Break {
+		return SBreak
+	} else if state == behavior.Exit {
 		return SEnd
 	}
 

@@ -29,7 +29,7 @@ export default class ActionTab extends React.Component {
   componentDidMount() {
     PubSub.subscribe(Topic.NodeEditorClick, (topic, dat) => {
       var obj = window.tree.get(dat.id);
-
+      console.info("click", dat.id, obj)
       if (obj !== undefined) {
         let target = { ...obj };
         delete target.pos;
