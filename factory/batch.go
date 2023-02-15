@@ -99,7 +99,6 @@ func (b *Batch) Report() database.ReportDetail {
 }
 
 func (b *Batch) push(bot *bot.Bot) {
-	b.bwg.Add()
 	fmt.Println("bot", bot.ID(), "push", atomic.LoadInt32(&b.cursorNum), "=>", b.TotalNum)
 
 	b.bots[bot.ID()] = bot
@@ -169,15 +168,17 @@ func (b *Batch) run() {
 				curbatchnum = last
 			}
 
+			fmt.Println("batch begin size =", curbatchnum)
 			for i := 0; i < int(curbatchnum); i++ {
 				atomic.AddInt32(&b.cursorNum, 1)
+				b.bwg.Add()
 
 				tree, _ := behavior.Load(b.treeData, behavior.Thread)
 				b.pipeline <- bot.NewWithBehaviorTree(b.path, tree, b.Name, atomic.LoadInt32(&b.cursorNum), b.globalScript)
 			}
 
 			b.bwg.Wait()
-			fmt.Println("next batch", atomic.LoadInt32(&b.CurNum), "=>", b.TotalNum)
+			fmt.Println("batch end", atomic.LoadInt32(&b.CurNum), "=>", b.TotalNum)
 			time.Sleep(time.Millisecond * 100)
 		}
 
