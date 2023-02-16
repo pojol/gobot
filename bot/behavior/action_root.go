@@ -1,7 +1,5 @@
 package behavior
 
-import "fmt"
-
 type RootAction struct {
 	INod
 	base Node
@@ -35,7 +33,6 @@ func (a *RootAction) onNext(t *Tick) {
 		a.base.SetFreeze(true)
 		t.blackboard.Append([]INod{a.base.Children()[0]})
 	} else {
-		fmt.Println(t.botid, "end")
 		t.blackboard.End()
 	}
 }
