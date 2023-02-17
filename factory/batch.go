@@ -109,9 +109,6 @@ func (b *Batch) pop(id string) {
 	atomic.AddInt32(&b.CurNum, 1)
 
 	fmt.Println("bot", id, "pop", atomic.LoadInt32(&b.CurNum), "=>", b.TotalNum)
-	if atomic.LoadInt32(&b.CurNum) >= b.TotalNum {
-		b.done <- 1
-	}
 }
 
 func (b *Batch) loop() {
@@ -168,7 +165,7 @@ func (b *Batch) run() {
 				curbatchnum = last
 			}
 
-			fmt.Println("batch begin size =", curbatchnum)
+			fmt.Println("batch", b.ID, "begin size =", curbatchnum)
 			for i := 0; i < int(curbatchnum); i++ {
 				atomic.AddInt32(&b.cursorNum, 1)
 				b.bwg.Add()
@@ -178,7 +175,11 @@ func (b *Batch) run() {
 			}
 
 			b.bwg.Wait()
-			fmt.Println("batch end", atomic.LoadInt32(&b.CurNum), "=>", b.TotalNum)
+			fmt.Println("batch", b.ID, "end", atomic.LoadInt32(&b.CurNum), "=>", b.TotalNum)
+			if atomic.LoadInt32(&b.CurNum) >= b.TotalNum {
+				b.done <- 1
+			}
+
 			time.Sleep(time.Millisecond * 100)
 		}
 
