@@ -88,5 +88,5 @@ func FreeState(state *BotState) {
 
 // Global LState pool
 var luaPool = &lStatePool{
-	saved: make([]*BotState, 0, 128),
+	saved: make([]*BotState, 0, 512),
 }

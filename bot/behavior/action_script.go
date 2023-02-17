@@ -42,6 +42,10 @@ func (a *ScriptAction) onTick(t *Tick) error {
 		goto ext
 	}
 
+	for i := 0; i < t.bs.L.GetTop(); i++ {
+		t.bs.L.Pop(1) // clean stack
+	}
+
 	err = t.bs.L.CallByParam(lua.P{
 		Fn:      t.bs.L.GetGlobal("execute"),
 		NRet:    2,
