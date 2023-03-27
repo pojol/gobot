@@ -6,6 +6,7 @@ import (
 	"os"
 	"sync"
 
+	"github.com/glebarez/sqlite"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -46,7 +47,7 @@ func GetBehavior() *Behavior {
 	return db.behavior
 }
 
-func Init() *Cache {
+func Init(NoDBMode bool) *Cache {
 	once.Do(func() {
 
 		pwd := os.Getenv("MYSQL_PASSWORD")
@@ -71,25 +72,33 @@ func Init() *Cache {
 
 		dsn := user + ":" + pwd + "@tcp(" + host + ")/" + name + "?charset=utf8&parseTime=True&loc=Local"
 
-		mysqlptr, err := gorm.Open(mysql.New(mysql.Config{
-			DSN:                       dsn,   // data source name
-			DefaultStringSize:         256,   // default size for string fields
-			DisableDatetimePrecision:  true,  // disable datetime precision, which not supported before MySQL 5.6
-			DontSupportRenameIndex:    true,  // drop & create when rename index, rename index not supported before MySQL 5.7, MariaDB
-			DontSupportRenameColumn:   true,  // `change` when rename column, rename column not supported before MySQL 8, MariaDB
-			SkipInitializeWithVersion: false, // auto configure based on currently MySQL version
-		}), &gorm.Config{})
+		var sqlptr *gorm.DB
+		var err error
+
+		if NoDBMode {
+			sqlptr, err = gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
+		} else {
+			sqlptr, err = gorm.Open(mysql.New(mysql.Config{
+				DSN:                       dsn,   // data source name
+				DefaultStringSize:         256,   // default size for string fields
+				DisableDatetimePrecision:  true,  // disable datetime precision, which not supported before MySQL 5.6
+				DontSupportRenameIndex:    true,  // drop & create when rename index, rename index not supported before MySQL 5.7, MariaDB
+				DontSupportRenameColumn:   true,  // `change` when rename column, rename column not supported before MySQL 8, MariaDB
+				SkipInitializeWithVersion: false, // auto configure based on currently MySQL version
+			}), &gorm.Config{})
+		}
+
 		if err != nil {
 			fmt.Println("open mysql err", err.Error())
 			return
 		}
 
 		db = &Cache{
-			mysqlptr: mysqlptr,
-			conf:     CreateConfig(mysqlptr),
-			prefab:   CreatePrefab(mysqlptr),
-			behavior: CreateBehavior(mysqlptr),
-			report:   CreateReport(mysqlptr),
+			mysqlptr: sqlptr,
+			conf:     CreateConfig(sqlptr),
+			prefab:   CreatePrefab(sqlptr),
+			behavior: CreateBehavior(sqlptr),
+			report:   CreateReport(sqlptr),
 		}
 	})
 

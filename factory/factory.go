@@ -46,7 +46,7 @@ func Create(opts ...Option) (*Factory, error) {
 		opt(&p)
 	}
 
-	db := database.Init()
+	db := database.Init(p.NoDBMode)
 	f := &Factory{
 		parm:      p,
 		db:        db,
