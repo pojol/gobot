@@ -1,124 +1,45 @@
 {
-  "name": "gobot",
-  "version": "0.1.6",
-  "main": "public/electron.js",
-  "homepage": "./",
+  "private": true,
+  "author": "pojol <pojol@outlook.com>",
+  "scripts": {
+    "dev": "umi dev",
+    "build": "umi build",
+    "postinstall": "umi setup",
+    "setup": "umi setup",
+    "start": "npm run dev"
+  },
   "dependencies": {
-    "@ant-design/charts": "^1.2.11",
+    "@ant-design/charts": "^1.4.2",
+    "@ant-design/pro-layout": "^7.6.1",
     "@antv/x6": "1.27.2",
-    "antd": "4.19.0",
+    "@octokit/request": "^6.2.3",
+    "@reduxjs/toolkit": "^1.9.3",
+    "@tanstack/react-query": "^4.24.6",
+    "@umijs/hooks": "^1.9.3",
+    "@umijs/plugin-model": "^2.6.2",
+    "antd": "^5.1.7",
+    "axios": "^1.2.6",
     "codemirror": "^5.62.3",
-    "electron-is-dev": "^2.0.0",
-    "electron-packager": "^15.4.0",
-    "lua-fmt": "^2.6.0",
+    "dva": "^2.4.1",
+    "model": "link:@umijs/plugins/dist/model",
     "object-to-xml": "^2.0.0",
-    "pubsub-js": "^1.9.3",
-    "rc-tween-one": "^3.0.3",
-    "react": "^16.13.1",
+    "pubsub-js": "^1.9.4",
+    "rc-tween-one": "^3.0.6",
     "react-codemirror2": "^7.2.1",
-    "react-color": "^2.19.3",
-    "react-dom": "^16.13.1",
     "react-json-view": "^1.21.3",
     "react-medium-editor": "^1.8.1",
+    "react-redux": "^8.0.5",
     "react-reflex": "^4.0.9",
-    "react-scripts": "^3.4.1",
-    "rimraf": "^3.0.2",
-    "xml2json": "^0.12.0"
+    "tasktimer": "^3.0.0",
+    "tiny-timer": "^1.6.0",
+    "umi": "^4.0.61",
+    "use-http": "^1.0.27",
+    "use-timer": "^2.0.1"
   },
   "devDependencies": {
-    "@types/react": "^16.9.19",
-    "@types/react-dom": "^16.9.5",
-    "electron": "^18.0.4",
+    "@types/react": "^18.0.0",
+    "@types/react-dom": "^18.0.0",
+    "@umijs/plugins": "^4.0.47",
     "typescript": "^4.1.2"
-  },
-  "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject",
-    "electron-dev": "electron .",
-    "pack": "electron-builder",
-    "prepack": "react-scripts build",
-    "pack:dir": "electron-builder --dir",
-    "package_win32_x64": "electron-packager . Gobot --platform=win32 --icon=./public/gobot.ico --arch=x64 --out=./dist --asar --app-version=1.0.0 --overwrite",
-    "package_darwin_arm64": "electron-packager . Gobot --platform=darwin --icon=./public/gobot.ico --arch=arm64 --out=./dist --asar --app-version=1.0.0 --overwrite",
-    "package_darwin_x64": "electron-packager . Gobot --platform=darwin --icon=./public/gobot.ico --arch=x64 --out=./dist --asar --app-version=1.0.0 --overwrite"
-  },
-  "eslintConfig": {
-    "extends": "react-app"
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
-  },
-  "license": "MIT",
-  "build": {
-    "extends": null,
-    "productName": "Gobot",
-    "copyright": "©2021 pojol, Inc.",
-    "appId": "com.electron.gobot.0.1.5",
-    "asar": true,
-    "directories": {
-      "output": "build"
-    },
-    "files": [
-      "public/**/*",
-      "build/**/*"
-    ],
-    "win": {
-      "icon": "build/gobot.ico",
-      "target": [
-        {
-          "target": "nsis",
-          "arch": [
-            "x64"
-          ]
-        }
-      ]
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowElevation": true,
-      "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true,
-      "installerIcon": "./build/gobot.ico",
-      "uninstallerIcon": "./build/gobot.ico",
-      "installerHeaderIcon": "./build/gobot.ico",
-      "shortcutName": "Gobot"
-    },
-    "mac": {
-      "category": "public.app-category.productivity"
-    },
-    "dmg": {
-      "background": "./appdmg.png",
-      "icon": "./icon.icns",
-      "iconSize": 100,
-      "contents": [
-        {
-          "x": 380,
-          "y": 280,
-          "type": "link",
-          "path": "/Applications"
-        },
-        {
-          "x": 110,
-          "y": 280,
-          "type": "file"
-        }
-      ],
-      "window": {
-        "width": 500,
-        "height": 500
-      }
-    }
   }
 }

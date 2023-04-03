@@ -1,5 +1,5 @@
 
-export function Post(url, methon, formData) {
+function Post(url, methon, formData) {
   return new Promise(function (resolve, reject) {
     fetch(url + "/" + methon, {
       method: "POST",
@@ -26,8 +26,7 @@ export function Post(url, methon, formData) {
 }
 
 
-
-export function PostGetBlob(url, methon, name) {
+function PostGetBlob(url, methon, name) {
   return new Promise(function (resolve, reject) {
 
     var headers = new Headers();
@@ -81,13 +80,13 @@ function fetch_timeout(fecthPromise, timeout = 5000, controller) {
 }
 
 
-export function CheckHealth(url) {
+function CheckHealth(url) {
 
   let controller = new AbortController();
   const signal = controller.signal;
-  
+
   return fetch_timeout(
-    fetch(url+"/health", {
+    fetch(url + "/health", {
       method: "GET",
       mode: 'cors',
       headers: {
@@ -97,13 +96,13 @@ export function CheckHealth(url) {
     }), 3000, controller
   ).then(function (response) {
     if (response.ok) {
-      return ({code: 200})
+      return ({ code: 200 })
     } else {
       return ({ code: response.status });
     }
   }).catch(function (e) {
     console.error(e)
-    return ({code : 404})
+    return ({ code: 404 })
   })
 
 }
@@ -120,7 +119,7 @@ var str2utf8 = window.TextEncoder ? function (str) {
   return eval('\'' + encodeURI(str).replace(/%/gm, '\\x') + '\'');
 }
 
-export function PostBlob(url, methon, name, data) {
+function PostBlob(url, methon, name, data) {
   return new Promise(function (resolve, reject) {
     var headers = new Headers();
     headers.append("Content-Type", "text/html");
@@ -148,3 +147,5 @@ export function PostBlob(url, methon, name, data) {
       });
   });
 }
+
+module.exports = { Post, PostGetBlob, CheckHealth, PostBlob };
