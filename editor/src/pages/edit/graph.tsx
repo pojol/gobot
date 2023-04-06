@@ -108,14 +108,17 @@ function GetNodInfo(prefab: Array<PrefabInfo>, nod: Node, code: string): NodeNot
         }
     }
 
-
-    if (info.code === "" && info.ty === NodeTy.Condition) {
-        info.code = `
+    if (info.ty === NodeTy.Condition) {
+        if (code !== "") {
+            info.code = code
+        } else {
+            info.code = `
 -- Write expression to return true or false
 function execute()
 
 end
         `;
+        }
     }
 
     nod.eachChild((child, idx) => {
@@ -653,11 +656,14 @@ const GraphView1 = (props: GraphViewProps) => {
         switch (child.ty) {
             case NodeTy.Selector:
             case NodeTy.Sequence:
-            case NodeTy.Condition:
             case NodeTy.Loop:
             case NodeTy.Wait:
             case NodeTy.Parallel:
                 nod = GetNode(child.ty, { id: child.id });
+                break;
+            case NodeTy.Condition:
+                nod = GetNode(child.ty, { id: child.id });
+                others.code = child.code
                 break;
             default:
                 nod = GetNode(child.ty, { id: child.id });
