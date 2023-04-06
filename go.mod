@@ -1,6 +1,6 @@
 module github.com/pojol/gobot
 
-go 1.17
+go 1.18
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -15,18 +15,20 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/yuin/gopher-lua v0.0.0-20210529063254-f4c35e4016d9
 	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5 // indirect
-	gorm.io/driver/mysql v1.1.2
+	gorm.io/driver/mysql v1.4.7
 	gorm.io/gorm v1.24.5
 )
 
-require go.mongodb.org/mongo-driver v1.5.3
+require (
+	github.com/glebarez/sqlite v1.7.0
+	go.mongodb.org/mongo-driver v1.5.3
+)
 
 require (
 	github.com/aws/aws-sdk-go v1.34.28 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/glebarez/go-sqlite v1.20.3 // indirect
-	github.com/glebarez/sqlite v1.7.0 // indirect
-	github.com/go-sql-driver/mysql v1.6.0 // indirect
+	github.com/go-sql-driver/mysql v1.7.0 // indirect
 	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/golang/snappy v0.0.1 // indirect
