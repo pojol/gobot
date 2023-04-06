@@ -174,7 +174,7 @@ func (b *Bot) loopThread(doneCh chan<- string, errch chan<- ErrInfo) {
 			goto ext
 		}
 
-		time.Sleep(time.Millisecond * 100)
+		time.Sleep(time.Millisecond * 10)
 	}
 
 ext:
@@ -205,7 +205,7 @@ func (b *Bot) RunByBlock() error {
 			return behavior.ErrorNodeHaveErr
 		}
 
-		time.Sleep(time.Millisecond * 100)
+		time.Sleep(time.Millisecond * 10)
 	}
 
 }
