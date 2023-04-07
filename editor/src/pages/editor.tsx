@@ -16,8 +16,6 @@ import Blackboard from "./edit/blackboard";
 import Nodes from "./edit/node/tab"
 
 import { NodeTy } from "@/constant/node_type";
-import Tree from "./edit/tree/tree";
-
 
 export default class Editor extends React.Component {
 

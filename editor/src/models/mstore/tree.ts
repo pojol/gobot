@@ -47,6 +47,7 @@ const initialState: TreeState = {
     currentTreeName: "",
     treeState: treeStateInit(),
     currentDebugBot: "",
+    currentDebugTree: getDefaultNodeNotifyInfo(),
 };
 
 function _getChildrenRelationInfo(
@@ -303,47 +304,18 @@ function CreateDebugBot(state: TreeState) {
     state.currentDebugTree = _getTree(state);
 }
 
-function BotStep(state: TreeState) {
-    if (state.currentDebugBot === "") {
-        message.warning("have not created bot");
-        return;
+function UpdateEditInfo(state:TreeState, info :NodeNotifyInfo) {
+    let tnode = window.tree.get(info.id);
+    if (tnode === undefined) {
+      tnode = getDefaultNodeNotifyInfo()
+    }
+    _fillData(tnode, info, false, true);
+
+    if (info.notify) {
+      message.success("apply info succ");
     }
 
-    var botid = state.currentDebugBot
-
-    Post(localStorage.remoteAddr, Api.DebugStep, { BotID: botid }).then(
-        (json: any) => {
-
-            if (json.Code !== 200) {
-                if (json.Code === 1009) {
-                    message.warning(json.Code.toString() + " " + json.Msg)
-                    return;
-                } else if (json.Code === 1007) {
-                    message.success("the end");
-                } else {
-                    message.warning(json.Code.toString() + " " + json.Msg)
-                }
-            }
-
-            PubSub.publish(Topic.DebugFocus, []);  // reset focus
-            console.info("step", json.Code, json)
-
-            // 推送 reponse 面板信息
-            let threadinfo = JSON.parse(json.Body.ThreadInfo) as Array<ThreadInfo>
-            PubSub.publish(Topic.DebugUpdateChange, threadinfo)
-
-            // 推送当前节点信息
-            let focusLst = new Array<string>
-            threadinfo.forEach(element => {
-                focusLst.push(element.curnod)
-            });
-            PubSub.publish(Topic.DebugFocus, focusLst)
-
-            // 推送 meta 面板信息
-            let metaStr = JSON.stringify(JSON.parse(json.Body.Blackboard))
-            PubSub.publish(Topic.DebugUpdateBlackboard, metaStr);
-        }
-    );
+    window.tree.set(info.id, tnode);
 }
 
 const treeSlice = createSlice({
@@ -364,6 +336,10 @@ const treeSlice = createSlice({
             let info = action.payload
             Unlink(state, info.targetid, info.silent)
         },
+        nodeUpdate(state, action: PayloadAction<NodeNotifyInfo>) {
+            let info = action.payload
+            UpdateEditInfo(state, info);
+        },
         cleanTree(state, action: PayloadAction<void>) {
             window.tree = new Map();
 
@@ -381,11 +357,8 @@ const treeSlice = createSlice({
             CreateDebugBot(state);
             callback(state.currentDebugTree)
         },
-        step(state, action: PayloadAction<void>) {
-            BotStep(state)
-        }
     },
 });
 
-export const { nodeAdd, nodeLink, nodeUnlink, cleanTree, debug, step, setCurrentDebugBot } = treeSlice.actions;
+export const { nodeAdd, nodeLink, nodeUnlink, cleanTree, debug, setCurrentDebugBot } = treeSlice.actions;
 export default treeSlice;

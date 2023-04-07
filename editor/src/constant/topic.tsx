@@ -20,16 +20,6 @@ const Topic = {
 
     ReportSelect : "topic_report_select",
 
-    // c2s
-    DebugUpload : "topic_debug_upload",    // 上传行为树模版文件
-    DebugCreate : "topic_debug_create",    // 基于某个模版，创建一个可运行的 Bot
-    DebugStep : "topic_debug_step",        // 单步运行某个 Bot
-    
-    // s2c
-    DebugUpdateBlackboard : "topic_debug_update_blackboard",    // 将运行 Bot 返回的数据写入到 blackboard
-    DebugUpdateChange : "topic_debug_update_change",
-    DebugFocus: "topic_debug_focus", // 加亮显示当前运行到的某个 Node
-
 }
 
 export default Topic;

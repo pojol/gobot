@@ -67,7 +67,6 @@ export default function TestReport() {
         </>
       ),
     }
-
   ]
 
   const [reports, setReports] = useState([]);

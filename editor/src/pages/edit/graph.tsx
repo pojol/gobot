@@ -14,10 +14,11 @@ import {
     nodeAdd,
     nodeLink,
     nodeUnlink,
-    step,
     debug,
-    setCurrentDebugBot
+    setCurrentDebugBot,
 } from "@/models/mstore/tree";
+import { setDebugInfo } from "@/models/mstore/debuginfo";
+
 import { history } from "umi";
 
 import {
@@ -48,7 +49,7 @@ const {
     LoadBehaviorWithBlob,
     LoadBehaviorWithFile,
 } = require("../../utils/parse");
-const { PostBlob } = require("../../utils/request");
+const { PostBlob, Post } = require("../../utils/request");
 
 
 
@@ -143,13 +144,14 @@ function iterate(nod: Node, callback: (nod: Node) => void) {
 const mapStateToProps = (state: RootState) => ({
     prefabMap: state.prefabSlice.pmap,
     tree: state.treeSlice,
+    debugInfo: state.debugInfoSlice,
 });
 
 const connector = connect(mapStateToProps);
 type PropsFromRedux = ConnectedProps<typeof connector>;
 interface GraphViewProps extends PropsFromRedux { }
 
-const GraphView1 = (props: GraphViewProps) => {
+const GraphView = (props: GraphViewProps) => {
 
     const graphRef = React.useRef<Graph>();
     const containerRef = React.useRef<HTMLDivElement>(null);
@@ -481,26 +483,6 @@ const GraphView1 = (props: GraphViewProps) => {
             }
         );
 
-
-        PubSub.subscribe(Topic.DebugFocus, (topic: string, info: Array<string>) => {
-
-            // clean
-            cleanStepInfo();
-
-            info.forEach(element => {
-                findNode(element, (nod) => {
-                    nod.transition(
-                        "attrs/body/strokeWidth", "4px", {
-                        //interp: Interp.unit,
-                        timing: 'bounce', // Timing.bounce
-                    },
-                    )()
-                });
-            });
-
-        });
-
-
         /*
                 PubSub.subscribe(
                     Topic.EditPanelEditCodeResize,
@@ -769,6 +751,24 @@ const GraphView1 = (props: GraphViewProps) => {
         }
     }
 
+    // 加亮显示当前运行到的某个 Node
+    const debugFocus = (info: Array<string>) => {
+        // clean
+        cleanStepInfo();
+
+        info.forEach(element => {
+            findNode(element, (nod) => {
+                nod.transition(
+                    "attrs/body/strokeWidth", "4px", {
+                    //interp: Interp.unit,
+                    timing: 'bounce', // Timing.bounce
+                },
+                )()
+            });
+        });
+
+    }
+
     const removeCell = (cell: Cell) => {
         if (cell.getParent() == null) {
             if (graphRef.current) {
@@ -800,8 +800,11 @@ const GraphView1 = (props: GraphViewProps) => {
         setModalVisible(true);
     };
 
+    // 基于某个模版，创建一个可运行的 Bot
     const ClickCreateDebug = (e: any) => {
         cleanStepInfo();
+
+        props.dispatch(setDebugInfo({ metaInfo: "{}", threadInfo: [] }))
         props.dispatch(debug((tree: NodeNotifyInfo) => {
             var xmltree = {
                 behavior: tree,
@@ -825,7 +828,6 @@ const GraphView1 = (props: GraphViewProps) => {
             );
         }))
 
-        PubSub.publish(Topic.DebugCreate, {});
     };
 
     const ClickZoomIn = () => {
@@ -847,7 +849,48 @@ const GraphView1 = (props: GraphViewProps) => {
     };
 
     const ClickStep = (e: any) => {
-        props.dispatch(step())
+        if (props.tree.currentDebugBot === "") {
+            message.warning("have not created bot");
+            return;
+        }
+
+        var botid = props.tree.currentDebugBot
+
+        Post(localStorage.remoteAddr, Api.DebugStep, { BotID: botid }).then(
+            (json: any) => {
+
+                if (json.Code !== 200) {
+                    if (json.Code === 1009) {
+                        message.warning(json.Code.toString() + " " + json.Msg)
+                        return;
+                    } else if (json.Code === 1007) {
+                        message.success("the end");
+                    } else {
+                        message.warning(json.Code.toString() + " " + json.Msg)
+                    }
+                }
+
+                debugFocus([]); // clean
+
+                // 推送 reponse 面板信息
+                let threadinfo = JSON.parse(json.Body.ThreadInfo) as Array<ThreadInfo>
+
+                // 推送当前节点信息
+                let focusLst = new Array<string>
+                threadinfo.forEach(element => {
+                    focusLst.push(element.curnod)
+                });
+                debugFocus(focusLst)
+
+                // 推送 meta 面板信息
+                let metaStr = JSON.stringify(JSON.parse(json.Body.Blackboard))
+                props.dispatch(setDebugInfo({
+                    metaInfo: metaStr,
+                    threadInfo: threadinfo,
+                }))
+            }
+        );
+
     };
 
     const behaviorNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -968,4 +1011,4 @@ const GraphView1 = (props: GraphViewProps) => {
     )
 }
 
-export default connector(GraphView1);
+export default connector(GraphView);
