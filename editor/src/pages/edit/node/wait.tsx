@@ -1,4 +1,4 @@
-import * as React from "react";
+import React, { useState, useEffect } from "react";
 import {
     InputNumber,
     Row,
@@ -9,116 +9,110 @@ import {
     Space,
     Input,
 } from "antd";
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from "@/models/store";
 
 
-import PubSub from "pubsub-js";
-import Topic from "@/constant/topic";
+import { getDefaultNodeNotifyInfo,nodeUpdate } from "@/models/mstore/tree";
 
 const Min = 1;
 const Max = 60 * 60 * 1000; // 1 hour
 
 const { Search } = Input;
 
-export default class WaitTab extends React.Component {
-    state = {
-        nod: {id:"", wait:0},
+export default function WaitTab() {
+
+    const [state, setState] = useState({
+        nod: { id: "", wait: 0 },
         node_ty: "WaitNode",
         inputValue: 1,
-        defaultAlias:""
-    };
+        defaultAlias: ""
+    });
+    const { currentClickNode } = useSelector((state: RootState) => state.treeSlice);
+    const dispatch = useDispatch()
 
-    componentDidMount() {
-        PubSub.subscribe(Topic.NodeEditorClick, (topic: string, dat: NodeNotifyInfo) => {
-            var obj = window.tree.get(dat.id);
+    useEffect(() => {
+        var obj = window.tree.get(currentClickNode.id);
 
-            if (obj !== undefined && obj.ty === this.state.node_ty) {
-                let target = { ...obj };
-                delete target.pos;
-                delete target.children;
+        if (obj !== undefined && obj.ty === state.node_ty) {
+            let target = { ...obj };
+            delete target.pos;
+            delete target.children;
 
-                this.setState({
-                    nod: target,
-                });
-            } else {
-                this.setState({
-                    nod: {},
-                    inputValue: 1,
-                });
-            }
-        });
-    }
+            setState({
+                ...state,
+                nod: target,
+            })
+        } else {
+            setState({
+                ...state,
+                nod: { id: "", wait: 0 },
+                inputValue: 1,
+            })
+        }
+    }, [currentClickNode])
 
 
-    onChange = (value:any) => {
-        this.setState({
+    const onChange = (value: any) => {
+        setState({
+            ...state,
             inputValue: value,
-        });
+        })
     };
 
-    formatter = (value:any) => {
+    const formatter = (value: any) => {
         return `Delay ${value} ms`;
     };
 
-    applyClick = () => {
-        if (this.state.nod.id === "") {
+    const applyClick = () => {
+        if (state.nod.id === "") {
             message.warning("节点未被选中");
             return;
         }
 
-        /*
-        PubSub.publish(Topic.UpdateNodeParm, {
-            parm: {
-                id: this.state.nod.id,
-                ty: this.state.node_ty,
-                wait: this.state.inputValue,
-            },
-            notify: true,
-        });
-*/
-        var nod = this.state.nod;
-        nod.wait = this.state.inputValue;
-        this.setState({ nod: nod });
+        let info = getDefaultNodeNotifyInfo()
+        info.id = state.nod.id
+        info.ty = state.node_ty
+        info.wait = state.inputValue
+        info.notify = true
+
+        dispatch(nodeUpdate(info))
     };
 
-    render() {
-        const { inputValue } = this.state;
-        const nod = this.state.nod;
+    return (
+        <div>
 
-        return (
-            <div>
+            <Space direction="vertical">
+                <Row>
+                    <Col span={12}>
+                        <Slider
+                            tipFormatter={formatter}
+                            min={Min}
+                            max={Max}
+                            onChange={onChange}
+                            value={typeof state.inputValue === "number" ? state.inputValue : 1}
+                        />
+                    </Col>
+                    <Col span={4}>
+                        <InputNumber
+                            min={Min}
+                            max={Max}
+                            style={{ margin: "0 26px" }}
+                            value={state.inputValue}
+                            onChange={onChange}
+                        />
+                    </Col>
+                </Row>
+                <Search
+                    width={200}
+                    enterButton={"apply"}
+                    value={state.defaultAlias}
+                    onSearch={applyClick}
+                />
+                <Button type="dashed">{state.nod.id}</Button>
 
-                <Space direction="vertical">
-                    <Row>
-                        <Col span={12}>
-                            <Slider
-                                tipFormatter={this.formatter}
-                                min={Min}
-                                max={Max}
-                                onChange={this.onChange}
-                                value={typeof inputValue === "number" ? inputValue : 1}
-                            />
-                        </Col>
-                        <Col span={4}>
-                            <InputNumber
-                                min={Min}
-                                max={Max}
-                                style={{ margin: "0 26px" }}
-                                value={inputValue}
-                                onChange={this.onChange}
-                            />
-                        </Col>
-                    </Row>
-                    <Search
-                        width={200}
-                        enterButton={"apply"}
-                        value={this.state.defaultAlias}
-                        onSearch={this.applyClick}
-                    />
-                    <Button type="dashed">{nod.id}</Button>
+            </Space>{" "}
 
-                </Space>{" "}
-
-            </div>
-        );
-    }
+        </div>
+    );
 }

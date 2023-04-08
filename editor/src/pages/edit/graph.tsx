@@ -16,6 +16,8 @@ import {
     nodeUnlink,
     debug,
     setCurrentDebugBot,
+    nodeUpdate,
+    nodeClick,
 } from "@/models/mstore/tree";
 import { setDebugInfo } from "@/models/mstore/debuginfo";
 
@@ -252,8 +254,7 @@ const GraphView = (props: GraphViewProps) => {
                 silent: false,
             })
         );
-        PubSub.publish(Topic.NodeHistoryClean, {});
-
+        props.dispatch(cleanTree())
 
         graph.bindKey("del", () => {
             ClickDel();
@@ -323,10 +324,7 @@ const GraphView = (props: GraphViewProps) => {
         });
 
         graph.on("node:click", ({ node }) => {
-            PubSub.publish(Topic.NodeGraphClick, {
-                id: node.id,
-                type: node.getAttrs().type.name,
-            });
+            props.dispatch(nodeClick({id: node.id, type : node.getAttrs().type.name as string}))
         });
 
         graph.on("node:added", ({ node, index, options }) => {
@@ -479,7 +477,7 @@ const GraphView = (props: GraphViewProps) => {
                     redraw(element, true);
                 });
 
-                PubSub.publish(Topic.NodeHistoryClean, {});
+                props.dispatch(cleanTree())
             }
         );
 
@@ -691,29 +689,41 @@ const GraphView = (props: GraphViewProps) => {
 
         if (IsScriptNode(child.ty)) {
             nod.setAttrs({ label: { text: child.alias } });
-            PubSub.publish(Topic.NodeUpdateParm, {
-                id: nod.id,
-                ty: child.ty,
-                code: child.code,
-                alias: child.alias,
-                notify: false,
-            });
+            let info = getDefaultNodeNotifyInfo()
+            info.id = nod.id
+            info.ty = child.ty
+            info.code = child.code
+            info.alias = child.alias
+            info.notify = false
+            info.pos = {
+                x:nod.position().x,
+                y:nod.position().y,
+            }
+            props.dispatch(nodeUpdate(info))
         } else if (child.ty === NodeTy.Loop) {
             nod.setAttrs({ label: { text: getLoopLabel(child.loop) } });
-            PubSub.publish(Topic.NodeUpdateParm, {
-                id: nod.id,
-                ty: child.ty,
-                loop: child.loop,
-                notify: false,
-            });
+            let info = getDefaultNodeNotifyInfo()
+            info.id = nod.id
+            info.ty = child.ty
+            info.loop = child.loop
+            info.notify = false
+            info.pos = {
+                x:nod.position().x,
+                y:nod.position().y,
+            }
+            props.dispatch(nodeUpdate(info))
         } else if (child.ty === NodeTy.Wait) {
             nod.setAttrs({ label: { text: child.wait.toString() + " ms" } });
-            PubSub.publish(Topic.NodeUpdateParm, {
-                id: nod.id,
-                ty: child.ty,
-                wait: child.wait,
-                notify: false,
-            });
+            let info = getDefaultNodeNotifyInfo()
+            info.id = nod.id
+            info.ty = child.ty
+            info.wait = child.wait
+            info.notify = false
+            info.pos = {
+                x:nod.position().x,
+                y:nod.position().y,
+            }
+            props.dispatch(nodeUpdate(info))
         } else if (child.ty === NodeTy.Sequence) {
             nod.setAttrs({ label: { text: "seq" } });
         } else if (child.ty === NodeTy.Selector) {

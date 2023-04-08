@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   InputNumber,
   Row,
@@ -10,8 +10,10 @@ import {
   Input,
 } from "antd";
 
-import PubSub from "pubsub-js";
-import Topic from "../../../constant/topic";
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from "@/models/store";
+import { getDefaultNodeNotifyInfo, nodeUpdate } from "@/models/mstore/tree";
+
 
 const Min = 0;
 const Max = 10000;
@@ -25,6 +27,30 @@ export default function LoopTab() {
     node_ty: "LoopNode",
     defaultAlias: "",
   });
+
+  const { currentClickNode } = useSelector((state: RootState) => state.treeSlice);
+  const dispatch = useDispatch()
+
+  useEffect(() => {
+    var obj = window.tree.get(currentClickNode.id);
+    if (obj !== undefined && obj.ty === state.node_ty) {
+      let target = { ...obj };
+      delete target.pos;
+      delete target.children;
+
+      setState({
+        ...state,
+        nod: target,
+        inputValue: target.loop,
+      });
+    } else {
+      setState({
+        ...state,
+        nod: { id: "", loop: 0 },
+        inputValue: 0,
+      });
+    }
+  }, [currentClickNode])
 
   const onChange = (value: any) => {
     setState({
@@ -47,16 +73,12 @@ export default function LoopTab() {
       return;
     }
 
-    /*
-        PubSub.publish(Topic.UpdateNodeParm, {
-            parm: {
-                id: this.state.nod.id,
-                ty: this.state.node_ty,
-                loop: this.state.inputValue,
-            },
-            notify: true,
-        });
-        */
+    let info = getDefaultNodeNotifyInfo()
+    info.id = state.nod.id
+    info.ty = state.node_ty
+    info.loop = state.inputValue
+    info.notify = true
+    dispatch(nodeUpdate(info))
 
     var nod = state.nod;
     nod.loop = state.inputValue;
@@ -65,28 +87,6 @@ export default function LoopTab() {
       nod: nod,
     });
   };
-
-  PubSub.subscribe(Topic.NodeEditorClick, (topic: string, dat: any) => {
-    console.info("Topic loop, componentDidMount");
-    var obj = window.tree.get(dat.id);
-    if (obj !== undefined && obj.ty === state.node_ty) {
-      let target = { ...obj };
-      delete target.pos;
-      delete target.children;
-
-      setState({
-        ...state,
-        nod: target,
-        inputValue: target.loop,
-      });
-    } else {
-      setState({
-        ...state,
-        nod: { id: "", loop: 0 },
-        inputValue: 0,
-      });
-    }
-  });
 
   return (
     <div>

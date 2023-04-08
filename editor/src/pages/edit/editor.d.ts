@@ -26,6 +26,11 @@ interface NodeNotifyInfo {
     notify:boolean,
 }
 
+interface NodeClickInfo {
+    id : string,
+    type : string,
+}
+
 interface NodeAddInfo {
     info: NodeNotifyInfo,
     build: boolean,

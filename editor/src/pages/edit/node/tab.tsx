@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from 'react';
 
 import { NodeTy } from "../../../constant/node_type";
 
@@ -9,13 +9,14 @@ import SequenceTab from "./sequence";
 
 import PubSub from "pubsub-js";
 import Topic from "../../../constant/topic";
+import { useSelector } from "react-redux";
+import { RootState } from "@/models/store";
 
 /// <reference path="node.d.ts" />
 
-function GetPane(state: any) {
-  const nodety = state.nodety;
+function GetPane(clickinfo: NodeClickInfo) {
 
-  switch (nodety) {
+  switch (clickinfo.type) {
     case NodeTy.Sequence:
     case NodeTy.Selector:
     case NodeTy.Root:
@@ -23,34 +24,23 @@ function GetPane(state: any) {
     case NodeTy.Wait:
       return <WaitTab />;
     case NodeTy.Loop:
-      return <LoopTab  />;
+      return <LoopTab />;
     default:
-      return <ActionTab  />;
+      return <ActionTab />;
   }
 }
 
-export default class Nodes extends React.Component<Props, {}> {
-  state = {
-    nodety: "",
-    nodeid: "",
-  };
+export default function Nodes() {
 
-  componentDidMount() {
-    PubSub.subscribe(Topic.NodeGraphClick, (topic: string, dat: any) => {
-      if (this.state.nodeid !== dat.id) {
-        this.setState({ nodety: dat.type, nodeid: dat.id }, () => {
-          console.info("pub editor click", dat.type, dat.id);
-          PubSub.publish(Topic.NodeEditorClick, dat);
-        });
-      }
-    });
-  }
+  const { currentClickNode } = useSelector((state: RootState) => state.treeSlice);
 
-  render() {
-    return (
-      <div>
-        <GetPane {...this.state} />
-      </div>
-    );
-  }
+  useEffect(() => {
+
+  },[currentClickNode])
+
+  return (
+    <div>
+      <GetPane {...currentClickNode} />
+    </div>
+  );
 }

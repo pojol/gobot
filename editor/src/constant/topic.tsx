@@ -1,11 +1,7 @@
 
 
 const Topic = {
-    NodeRmv : "topic_node_remove",
-    NodeHistoryClean : "topic_history_clean",   // 清空 cmd list
-    NodeUpdateParm: "topic_node_update_parm",
 
-    NodeGraphClick: "topic_node_graph_click",  // 在editor的编辑器视图中点击节点
     NodeEditorClick: "topic_node_editor_click",    //在editor的edit框中点击节点类型
 
     ThemeChange: "theme_change",

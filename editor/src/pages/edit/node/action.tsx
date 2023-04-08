@@ -1,12 +1,17 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from 'react';
 import { Controlled as CodeMirror } from "react-codemirror2";
 import "codemirror/lib/codemirror.css";
 import "codemirror/theme/solarized.css";
 import "codemirror/mode/lua/lua";
 import { Input, Button, message, Space } from "antd";
 
-import PubSub from "pubsub-js";
-import Topic from "../../../constant/topic";
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from "@/models/store";
+
+import {
+  getDefaultNodeNotifyInfo,
+  nodeUpdate,
+} from "@/models/mstore/tree";
 
 /// <reference path="node.d.ts" />
 
@@ -22,6 +27,31 @@ export default function ActionTab() {
     wflex: 0,
     editor: undefined,
   });
+
+  const { currentClickNode } = useSelector((state: RootState) => state.treeSlice);
+  const dispatch = useDispatch()
+
+  useEffect(() => {
+    var obj = window.tree.get(currentClickNode.id);
+    if (obj !== undefined) {
+      let target = { ...obj };
+      delete target.pos;
+      delete target.children;
+
+      setState({
+        ...state,
+        nod: target,
+        code: target.code,
+        defaultAlias: target.alias,
+        node_ty: target.ty,
+      });
+    } else {
+      setState({
+        ...state,
+        nod: { id: "" },
+      });
+    }
+  },[currentClickNode])
 
   /*
 PubSub.subscribe(Topic.EditPanelCodeMetaResize, (topic, flex) => {
@@ -50,30 +80,13 @@ PubSub.subscribe(Topic.EditPanelCodeMetaResize, (topic, flex) => {
       return;
     }
 
-    /*
-    PubSub.publish(Topic.UpdateNodeParm, {
-      parm: {
-        id: state.nod.id,
-        ty: state.node_ty,
-        code: state.code,
-        alias: state.defaultAlias,
-      },
-      notify: true,
-    });
-    */
-
-    var nod = { ...state.nod };
-    //nod.alias = state.defaultAlias;
-
-    //PubSub.publish(Topic.UpdateNode, nod);
-
-    message.success("修改成功");
-  };
-
-  const onSearch = (value: any) => {
-    if (value !== "") {
-      //PubSub.publish(Topic.SearchNode, value);
-    }
+    let info = getDefaultNodeNotifyInfo()
+    info.id = state.nod.id
+    info.ty = state.node_ty
+    info.code = state.code
+    info.alias = state.defaultAlias
+    info.notify = true
+    dispatch(nodeUpdate(info))
   };
 
   const handleChange = (editor: any, data: any, value: any) => {
@@ -89,28 +102,6 @@ PubSub.subscribe(Topic.EditPanelCodeMetaResize, (topic, flex) => {
       defaultAlias: event.target.value,
     });
   };
-
-  PubSub.subscribe(Topic.NodeEditorClick, (topic: string, dat: any) => {
-    var obj = window.tree.get(dat.id);
-    if (obj !== undefined) {
-      let target = { ...obj };
-      delete target.pos;
-      delete target.children;
-
-      setState({
-        ...state,
-        nod: target,
-        code: target.code,
-        defaultAlias: target.alias,
-        node_ty: target.ty,
-      });
-    } else {
-      setState({
-        ...state,
-        nod: { id: "" },
-      });
-    }
-  });
 
   return (
     <Space direction="vertical" style={{ width: "100%" }}>
@@ -144,7 +135,7 @@ PubSub.subscribe(Topic.EditPanelCodeMetaResize, (topic, flex) => {
           value={state.defaultAlias}
           enterButton={"Apply"}
           onChange={handleAliasChange}
-          onSearch={onSearch}
+          onSearch={applyClick}
         />
         <Button type="dashed">{state.nod.id}</Button>
       </Space>

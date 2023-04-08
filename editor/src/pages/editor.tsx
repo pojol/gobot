@@ -59,7 +59,7 @@ export default class Editor extends React.Component {
             <ReflexElement className="right-pane" flex={0.4} minSize={100}>
               <ReflexContainer orientation="horizontal">
                 <ReflexElement className="left-pane" minSize={100} propagateDimensions={true} onStopResize={this.onResizeEditPane}>
-                  <Nodes {...{ nodety: NodeTy.Action, dimensions: { width: 0, height: 0 } }}/>
+                  <Nodes />
                 </ReflexElement>
 
                 <ReflexSplitter />

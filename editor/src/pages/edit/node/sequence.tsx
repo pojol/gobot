@@ -1,4 +1,4 @@
-import * as React from "react";
+import React, { useState, useEffect } from "react";
 import {
     InputNumber,
     Row,
@@ -9,28 +9,17 @@ import {
     Space,
     Input,
 } from "antd";
+import {  useSelector } from 'react-redux';
+import { RootState } from "@/models/store";
 
 /// <reference path="node.d.ts" />
 
-import PubSub from "pubsub-js";
-import Topic from "@/constant/topic";
+export default function SequenceTab() {
+    const { currentClickNode } = useSelector((state: RootState) => state.treeSlice);
 
-export default class SequenceTab extends React.Component {
-    state = {
-        node_id: ""
-    };
-
-    componentDidMount() {
-        PubSub.subscribe(Topic.NodeEditorClick, (topic: string, dat: NodeNotifyInfo) => {
-            this.setState({ node_id: dat.id })
-        })
-    }
-
-    render() {
-        return (
-            <div>
-                <Button type="dashed">{this.state.node_id}</Button>
-            </div>
-        );
-    }
+    return (
+        <div>
+            <Button type="dashed">{currentClickNode.id}</Button>
+        </div>
+    );
 }

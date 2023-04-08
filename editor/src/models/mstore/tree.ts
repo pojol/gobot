@@ -16,6 +16,7 @@ interface TreeState {
     currentTreeName: string;
     currentDebugTree: NodeNotifyInfo;
     currentDebugBot: string;
+    currentClickNode: NodeClickInfo;
 }
 
 export function getDefaultNodeNotifyInfo(): NodeNotifyInfo {
@@ -48,6 +49,7 @@ const initialState: TreeState = {
     treeState: treeStateInit(),
     currentDebugBot: "",
     currentDebugTree: getDefaultNodeNotifyInfo(),
+    currentClickNode: { id: "", type: "" },
 };
 
 function _getChildrenRelationInfo(
@@ -291,6 +293,9 @@ function _getTree(state: TreeState): NodeNotifyInfo {
     }
 
     console.info("root:", root, "tree", window.tree)
+    if (root === undefined) {
+        return getDefaultNodeNotifyInfo()
+    }
 
     _fillData(root, window.tree.get(root.id), true, false);
     if (root && root.children.length) {
@@ -340,6 +345,9 @@ const treeSlice = createSlice({
             let info = action.payload
             UpdateEditInfo(state, info);
         },
+        nodeClick(state, action:PayloadAction<NodeClickInfo>) {
+            state.currentClickNode = action.payload
+        },
         cleanTree(state, action: PayloadAction<void>) {
             window.tree = new Map();
 
@@ -360,5 +368,5 @@ const treeSlice = createSlice({
     },
 });
 
-export const { nodeAdd, nodeLink, nodeUnlink, cleanTree, debug, setCurrentDebugBot } = treeSlice.actions;
+export const { nodeAdd, nodeLink, nodeUnlink, cleanTree, debug, setCurrentDebugBot ,nodeUpdate, nodeClick} = treeSlice.actions;
 export default treeSlice;
