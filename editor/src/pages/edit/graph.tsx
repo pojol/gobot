@@ -15,6 +15,7 @@ import {
     nodeLink,
     nodeUnlink,
     debug,
+    save,
     setCurrentDebugBot,
     nodeUpdate,
     nodeClick,
@@ -910,7 +911,7 @@ const GraphView = (props: GraphViewProps) => {
     const modalHandleOk = () => {
         setModalVisible(false);
         if (behaviorName !== "") {
-            // PubSub.publish(Topic.Upload, this.state.behaviorName);
+            props.dispatch(save(behaviorName))
         } else {
             message.warning("please enter the file name of the behavior tree");
         }

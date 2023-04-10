@@ -3,10 +3,8 @@ import { createAction, createSlice, PayloadAction } from "@reduxjs/toolkit";
 const { Post, PostBlob, PostGetBlob } = require("../../utils/request");
 import Cmd from "@/constant/cmd";
 import { message } from "antd";
+import OBJ2XML from "object-to-xml";
 import Api from "@/constant/api";
-import Topic from "@/constant/topic";
-import PubSub from "pubsub-js";
-import { useDispatch } from "react-redux";
 
 interface TreeState {
     nodes: Array<NodeNotifyInfo>;
@@ -307,18 +305,45 @@ function CreateDebugBot(state: TreeState) {
     state.currentDebugTree = _getTree(state);
 }
 
-function UpdateEditInfo(state:TreeState, info :NodeNotifyInfo) {
+function UpdateEditInfo(state: TreeState, info: NodeNotifyInfo) {
     let tnode = window.tree.get(info.id);
     if (tnode === undefined) {
-      tnode = getDefaultNodeNotifyInfo()
+        tnode = getDefaultNodeNotifyInfo()
     }
     _fillData(tnode, info, false, true);
 
     if (info.notify) {
-      message.success("apply info succ");
+        message.success("apply info succ");
     }
 
     window.tree.set(info.id, tnode);
+}
+
+function SaveBehavior(state: TreeState, name: string) {
+    let root = _getTree(state);
+    var xmltree = {
+        behavior: root,
+    };
+
+    var blob = new Blob([OBJ2XML(xmltree)], {
+        type: "application/json",
+    });
+
+    PostBlob(
+        localStorage.remoteAddr,
+        Api.FileBlobUpload,
+        name,
+        blob
+    ).then((json: any) => {
+        if (json.Code !== 200) {
+            message.error(
+                "upload fail:" + String(json.Code) + " msg: " + json.Msg
+            );
+        } else {
+            console.info(json.Body)
+            message.success("upload succ ");
+        }
+    });
 }
 
 const treeSlice = createSlice({
@@ -343,7 +368,7 @@ const treeSlice = createSlice({
             let info = action.payload
             UpdateEditInfo(state, info);
         },
-        nodeClick(state, action:PayloadAction<NodeClickInfo>) {
+        nodeClick(state, action: PayloadAction<NodeClickInfo>) {
             state.currentClickNode = action.payload
         },
         cleanTree(state, action: PayloadAction<void>) {
@@ -358,6 +383,10 @@ const treeSlice = createSlice({
             let botid = action.payload
             state.currentDebugBot = botid
         },
+        save(state, action: PayloadAction<string>) {
+            let behavirName = action.payload
+            SaveBehavior(state, behavirName)
+        },
         debug(state, action: PayloadAction<(tree: NodeNotifyInfo) => void>) {
             let callback = action.payload
             CreateDebugBot(state);
@@ -366,5 +395,5 @@ const treeSlice = createSlice({
     },
 });
 
-export const { nodeAdd, nodeLink, nodeUnlink, cleanTree, debug, setCurrentDebugBot ,nodeUpdate, nodeClick} = treeSlice.actions;
+export const { nodeAdd, nodeLink, nodeUnlink, cleanTree, debug, save, setCurrentDebugBot, nodeUpdate, nodeClick } = treeSlice.actions;
 export default treeSlice;
