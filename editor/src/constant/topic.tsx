@@ -1,6 +1,7 @@
 
 
 const Topic = {
+    UpdateNodeParm : "topic_node_parm_update",   //更新节点参数
 
     NodeEditorClick: "topic_node_editor_click",    //在editor的edit框中点击节点类型
 

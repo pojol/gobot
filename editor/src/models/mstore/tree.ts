@@ -231,7 +231,6 @@ function Unlink(state: TreeState, childid: string, silent: boolean) {
     state.nodes = onods
 };
 
-
 function _fillData(
     org: NodeNotifyInfo,
     info: NodeNotifyInfo,
@@ -281,7 +280,6 @@ function _foreachRelation(parent: NodeNotifyInfo) {
         }
     }
 }
-
 
 function _getTree(state: TreeState): NodeNotifyInfo {
     let root!: NodeNotifyInfo

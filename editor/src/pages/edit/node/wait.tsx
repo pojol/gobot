@@ -12,6 +12,8 @@ import {
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from "@/models/store";
 
+import PubSub from "pubsub-js";
+import Topic from "@/constant/topic";
 
 import { getDefaultNodeNotifyInfo,nodeUpdate } from "@/models/mstore/tree";
 
@@ -77,6 +79,7 @@ export default function WaitTab() {
         info.notify = true
 
         dispatch(nodeUpdate(info))
+        PubSub.publish(Topic.UpdateNodeParm, info)
     };
 
     return (

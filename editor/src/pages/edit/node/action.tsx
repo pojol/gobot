@@ -8,6 +8,9 @@ import { Input, Button, message, Space } from "antd";
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from "@/models/store";
 
+import PubSub from "pubsub-js";
+import Topic from "@/constant/topic";
+
 import {
   getDefaultNodeNotifyInfo,
   nodeUpdate,
@@ -87,6 +90,7 @@ PubSub.subscribe(Topic.EditPanelCodeMetaResize, (topic, flex) => {
     info.alias = state.defaultAlias
     info.notify = true
     dispatch(nodeUpdate(info))
+    PubSub.publish(Topic.UpdateNodeParm, info)
   };
 
   const handleChange = (editor: any, data: any, value: any) => {

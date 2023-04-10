@@ -34,7 +34,7 @@ import {
     ZoomOutOutlined,
 } from "@ant-design/icons";
 import { Button, Input, Modal, Tooltip } from "antd";
-import { IsScriptNode, NodeTy } from "../../constant/node_type";
+import { IsActionNode, IsScriptNode, NodeTy } from "../../constant/node_type";
 
 import { message } from "antd";
 import { ConnectedProps, connect } from "react-redux";
@@ -324,7 +324,7 @@ const GraphView = (props: GraphViewProps) => {
         });
 
         graph.on("node:click", ({ node }) => {
-            props.dispatch(nodeClick({id: node.id, type : node.getAttrs().type.name as string}))
+            props.dispatch(nodeClick({ id: node.id, type: node.getAttrs().type.name as string }))
         });
 
         graph.on("node:added", ({ node, index, options }) => {
@@ -427,45 +427,43 @@ const GraphView = (props: GraphViewProps) => {
         // 调整画布大小
         graph.resizeGraph(1024, 1024);
         // 居中显示
-        //graph.centerContent();
+        graph.centerContent();
 
-        /*
-                PubSub.subscribe(Topic.UpdateNodeParm, (topic: string, info: any) => {
-                    if (IsActionNode(info.parm.ty)) {
-                        this.findNode(info.parm.id, (nod) => {
-                            nod.setAttrs({
-                                label: { text: info.parm.alias },
-                            });
-                        });
-                    } else if (info.parm.ty === NodeTy.Loop) {
-                        this.findNode(info.parm.id, (nod) => {
-                            nod.setAttrs({
-                                label: { text: this.getLoopLabel(info.parm.loop) },
-                            });
-                        });
-                    } else if (info.parm.ty === NodeTy.Wait) {
-                        this.findNode(info.parm.id, (nod) => {
-                            nod.setAttrs({
-                                label: { text: info.parm.wait.toString() + " ms" },
-                            });
-                        });
-                    }
+        const updateNodeSub = PubSub.subscribe(Topic.UpdateNodeParm, (topic: string, info: NodeNotifyInfo) => {
+            if (IsActionNode(info.ty)) {
+                findNode(info.id, (nod) => {
+                    nod.setAttrs({
+                        label: { text: info.alias },
+                    });
                 });
-                */
+            } else if (info.ty === NodeTy.Loop) {
+                findNode(info.id, (nod) => {
+                    nod.setAttrs({
+                        label: { text: getLoopLabel(info.loop) },
+                    });
+                });
+            } else if (info.ty === NodeTy.Wait) {
+                findNode(info.id, (nod) => {
+                    nod.setAttrs({
+                        label: { text: info.wait.toString() + " ms" },
+                    });
+                });
+            }
+        });
 
         /*
-                PubSub.subscribe(
-                    Topic.FileLoadRedraw,
-                    (topic: string, treearr: Array<any>) => {
-                        this.graph.clearCells();
-                        console.info("redraw by undo");
-        
-                        treearr.forEach((element) => {
-                            this.redraw(element, false);
-                        });
-                    }
-                );
-                */
+            PubSub.subscribe(
+                Topic.FileLoadRedraw,
+                (topic: string, treearr: Array<any>) => {
+                    this.graph.clearCells();
+                    console.info("redraw by undo");
+    
+                    treearr.forEach((element) => {
+                        this.redraw(element, false);
+                    });
+                }
+            );
+            */
 
         PubSub.subscribe(
             Topic.FileLoadDraw,
@@ -567,6 +565,10 @@ const GraphView = (props: GraphViewProps) => {
         //containerRef.current.appendChild(graph.container);
         //stencilContainerRef.current.appendChild(graph.container);
 
+        return () => {
+            // 取消订阅
+            PubSub.unsubscribe(updateNodeSub);
+        };
     }, []);
 
 
@@ -696,8 +698,8 @@ const GraphView = (props: GraphViewProps) => {
             info.alias = child.alias
             info.notify = false
             info.pos = {
-                x:nod.position().x,
-                y:nod.position().y,
+                x: nod.position().x,
+                y: nod.position().y,
             }
             props.dispatch(nodeUpdate(info))
         } else if (child.ty === NodeTy.Loop) {
@@ -708,8 +710,8 @@ const GraphView = (props: GraphViewProps) => {
             info.loop = child.loop
             info.notify = false
             info.pos = {
-                x:nod.position().x,
-                y:nod.position().y,
+                x: nod.position().x,
+                y: nod.position().y,
             }
             props.dispatch(nodeUpdate(info))
         } else if (child.ty === NodeTy.Wait) {
@@ -720,8 +722,8 @@ const GraphView = (props: GraphViewProps) => {
             info.wait = child.wait
             info.notify = false
             info.pos = {
-                x:nod.position().x,
-                y:nod.position().y,
+                x: nod.position().x,
+                y: nod.position().y,
             }
             props.dispatch(nodeUpdate(info))
         } else if (child.ty === NodeTy.Sequence) {

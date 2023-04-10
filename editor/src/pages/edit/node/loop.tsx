@@ -14,6 +14,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from "@/models/store";
 import { getDefaultNodeNotifyInfo, nodeUpdate } from "@/models/mstore/tree";
 
+import PubSub from "pubsub-js";
+import Topic from "@/constant/topic";
 
 const Min = 0;
 const Max = 10000;
@@ -79,6 +81,7 @@ export default function LoopTab() {
     info.loop = state.inputValue
     info.notify = true
     dispatch(nodeUpdate(info))
+    PubSub.publish(Topic.UpdateNodeParm, info)
 
     var nod = state.nod;
     nod.loop = state.inputValue;
