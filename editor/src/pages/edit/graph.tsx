@@ -426,8 +426,6 @@ const GraphView = (props: GraphViewProps) => {
 
         // 调整画布大小
         graph.resizeGraph(1024, 1024);
-        // 居中显示
-        graph.centerContent();
 
         const updateNodeSub = PubSub.subscribe(Topic.UpdateNodeParm, (topic: string, info: NodeNotifyInfo) => {
             if (IsActionNode(info.ty)) {
