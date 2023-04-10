@@ -35,7 +35,6 @@ import { HomeTag } from "./tags/tags";
 import { cleanTree } from "@/models/mstore/tree";
 
 const { Post } = require("../utils/request");
-const SaveAs = require("../utils/saveas")
 const { LoadBehaviorWithBlob, LoadBehaviorWithFile } = require('../utils/parse');
 
 
@@ -360,8 +359,30 @@ const Bots = (props: BotsProps) => {
         Api.FileGet,
         row.name
       ).then((file: any) => {
+        console.info("file =>", file)
         // 创建一个blob的对象，把Json转化为字符串作为我们的值
-        SaveAs(file.blob, file.name)
+        if (window.navigator.msSaveOrOpenBlob) {
+          navigator.msSaveBlob(file.blob, file.name)
+        } else {
+
+          // 上面这个是创建一个blob的对象连链接，
+          // 创建一个链接元素，是属于 a 标签的链接元素，所以括号里才是a，
+          var link = document.createElement("a");
+          let body = document.querySelector("body")
+
+          link.href = window.URL.createObjectURL(file.blob);
+          link.download = file.name;
+
+          // firefox
+          link.style.display = "node"
+          body.appendChild(link)
+
+          // 使用js点击这个链接
+          link.click();
+          body.removeChild(link)
+
+          window.URL.revokeObjectURL(link.href)
+        }
       });
     }
 
