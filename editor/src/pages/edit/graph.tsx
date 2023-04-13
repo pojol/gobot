@@ -86,7 +86,7 @@ function fillChildInfo(child: Node, info: any) {
     });
 }
 
-function GetNodInfo(prefab: Array<PrefabInfo>, nod: Node, code: string): NodeNotifyInfo {
+function GetNodInfo(prefab: Array<PrefabInfo>, nod: Node, code: string, alias: string): NodeNotifyInfo {
     var info = getDefaultNodeNotifyInfo();
     info.id = nod.id;
     info.ty = nod.getAttrs().type.name as string;
@@ -95,20 +95,27 @@ function GetNodInfo(prefab: Array<PrefabInfo>, nod: Node, code: string): NodeNot
         y: nod.position().y,
     };
 
-    if (info.ty === NodeTy.Action) {
+    if (info.ty === NodeTy.Action || IsActionNode(info.ty)) {
         if (code !== "") {
             info.code = code
         } else {
             prefab.forEach((p) => {
-                console.info(p.name, info.ty)
                 if (p.name === info.ty) {
                     info.code = p.code;
+                }
+
+                if (alias === ""){
+                    info.alias = info.ty
                 }
             })
 
             if (info.code === "") {
 
             }
+        }
+
+        if (alias !== "") {
+            info.alias = alias
         }
     }
 
@@ -250,7 +257,7 @@ const GraphView = (props: GraphViewProps) => {
 
         props.dispatch(
             nodeAdd({
-                info: GetNodInfo(props.prefabMap, root, ""),
+                info: GetNodInfo(props.prefabMap, root, "",""),
                 build: true,
                 silent: false,
             })
@@ -331,12 +338,14 @@ const GraphView = (props: GraphViewProps) => {
         graph.on("node:added", ({ node, index, options }) => {
             let silent = false;
             let build = true;
-            let code = ""
+            let code = "";
+            let alias = "";
 
             if (options.others !== undefined) {
                 silent = options.others.silent;
                 build = options.others.build;
                 code = options.others.code;
+                alias = options.others.alias
             }
 
             if (node.getAttrs().type.toString() === "ActionNode") {
@@ -345,7 +354,7 @@ const GraphView = (props: GraphViewProps) => {
 
             props.dispatch(
                 nodeAdd({
-                    info: GetNodInfo(props.prefabMap, node, code),
+                    info: GetNodInfo(props.prefabMap, node, code, alias),
                     build: build,
                     silent: silent,
                 })
@@ -632,7 +641,7 @@ const GraphView = (props: GraphViewProps) => {
             return
         }
 
-        let others = { build: build, silent: true, code: "" }
+        let others = { build: build, silent: true, code: "", alias: "" }
 
         switch (child.ty) {
             case NodeTy.Selector:
@@ -649,6 +658,12 @@ const GraphView = (props: GraphViewProps) => {
             default:
                 nod = GetNode(child.ty, { id: child.id });
                 others.code = child.code
+                console.info("alias", child.alias, child.ty)
+                if (child.alias === "") {
+                    others.alias = child.ty
+                } else {
+                    others.alias = child.alias
+                }
                 nod.setAttrs({ type: { name: child.ty } });
         }
 

@@ -109,7 +109,6 @@ class EditSidePlane extends React.Component<SideProps> {
     prefabMap.forEach((value: PrefabInfo) => {
 
       if (this.state.selectTags.length !== 0) {
-        console.info("need match")
         if (this.matchTags(value.tags)) {
           tmplst.push(value.name)
         }

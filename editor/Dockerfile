@@ -1,8 +1,8 @@
 FROM nginx:1.21.3
 
-COPY ./build/ /usr/share/nginx/html/
+COPY ./dist/ /usr/share/nginx/html/
 RUN ls -la /usr/share/nginx/html/*
-COPY ./build/nginx_default.conf /etc/nginx/conf.d/default.conf
+COPY ./dist/nginx_default.conf /etc/nginx/conf.d/default.conf
 
 WORKDIR /home
 
