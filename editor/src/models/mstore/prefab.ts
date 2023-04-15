@@ -20,30 +20,32 @@ const initmap = (): Array<PrefabInfo> => {
             let lst = json.Body.Lst;
             var counter = 0;
 
-            lst.forEach(function (element: any) {
-                PostGetBlob(localStorage.remoteAddr, Api.PrefabGet, element.name).then(
-                    (file: any) => {
-                        let reader = new FileReader();
-                        reader.onload = function (ev) {
-                            let pi: PrefabInfo = {
-                                name: element.name,
-                                tags: element.tags,
-                                code: String(reader.result),
-                            }
-
-                            store.dispatch(addItem({ key: element.name, value: pi }))
-
-                            counter++;
-                            if (counter === lst.length) {
-                                PubSub.publish(Topic.PrefabUpdateAll, {})
-                            }
-                        };
-
-                        reader.readAsText(file.blob);
-                    }
-                );
-
-            });
+            if (lst) {
+                lst.forEach(function (element: any) {
+                    PostGetBlob(localStorage.remoteAddr, Api.PrefabGet, element.name).then(
+                        (file: any) => {
+                            let reader = new FileReader();
+                            reader.onload = function (ev) {
+                                let pi: PrefabInfo = {
+                                    name: element.name,
+                                    tags: element.tags,
+                                    code: String(reader.result),
+                                }
+    
+                                store.dispatch(addItem({ key: element.name, value: pi }))
+    
+                                counter++;
+                                if (counter === lst.length) {
+                                    PubSub.publish(Topic.PrefabUpdateAll, {})
+                                }
+                            };
+    
+                            reader.readAsText(file.blob);
+                        }
+                    );
+    
+                });
+            }
         }
     });
 
