@@ -13,7 +13,7 @@ function createWindow() {
     //mainWindow.loadURL('http://localhost:3000/');
 
     // 生产环境 
-    mainWindow.loadURL(isDev ? 'http://localhost:8000' : `file://${__dirname}../build/index.html`);
+    mainWindow.loadURL(isDev ? 'http://localhost:8000' : `file://${__dirname}/index.html`);
 
     // 打开开发者工具，默认不打开
     mainWindow.webContents.openDevTools();

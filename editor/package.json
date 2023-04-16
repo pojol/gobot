@@ -10,7 +10,7 @@
     "setup": "umi setup",
     "start": "npm run dev",
     "electron-dev": "electron .",
-    "package_win32_x64": "electron-packager ./ Gobot --platform=win32 --arch=x64 --out=./build --asar --overwrite"
+    "package_win32_x64": "electron-packager ./ Gobot --platform=win32 --arch=x64 --overwrite"
   },
   "dependencies": {
     "@ant-design/charts": "^1.4.2",
