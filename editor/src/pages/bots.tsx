@@ -32,7 +32,7 @@ import PubSub from "pubsub-js";
 import Topic from "../constant/topic";
 import Api from "../constant/api";
 import { HomeTag } from "./tags/tags";
-import { cleanTree } from "@/models/mstore/tree";
+import { cleanTree } from "@/models/tree";
 
 const { Post } = require("../utils/request");
 const { LoadBehaviorWithBlob, LoadBehaviorWithFile } = require('../utils/parse');

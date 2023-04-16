@@ -14,7 +14,7 @@ import Topic from "@/constant/topic";
 import {
   getDefaultNodeNotifyInfo,
   nodeUpdate,
-} from "@/models/mstore/tree";
+} from "@/models/tree";
 
 /// <reference path="node.d.ts" />
 

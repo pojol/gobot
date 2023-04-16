@@ -19,8 +19,8 @@ import {
     setCurrentDebugBot,
     nodeUpdate,
     nodeClick,
-} from "@/models/mstore/tree";
-import { setDebugInfo } from "@/models/mstore/debuginfo";
+} from "@/models/tree";
+import { setDebugInfo } from "@/models/debuginfo";
 
 import { history } from "umi";
 

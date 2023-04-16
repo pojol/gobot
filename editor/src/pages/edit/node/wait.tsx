@@ -15,7 +15,7 @@ import { RootState } from "@/models/store";
 import PubSub from "pubsub-js";
 import Topic from "@/constant/topic";
 
-import { getDefaultNodeNotifyInfo,nodeUpdate } from "@/models/mstore/tree";
+import { getDefaultNodeNotifyInfo,nodeUpdate } from "@/models/tree";
 
 const Min = 1;
 const Max = 60 * 60 * 1000; // 1 hour

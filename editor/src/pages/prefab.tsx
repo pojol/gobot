@@ -24,7 +24,7 @@ import { HomeTag } from "./tags/tags";
 import type { ColumnsType, ColumnType } from 'antd/es/table';
 
 import { connect, ConnectedProps } from 'react-redux';
-import { addItem, removeItem, cleanItems } from '../models/mstore/prefab';
+import { addItem, removeItem, cleanItems } from '../models/prefab';
 import { RootState } from '@/models/store';
 
 const { Post, PostGetBlob, PostBlob } = require("../utils/request");

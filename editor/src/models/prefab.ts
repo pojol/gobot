@@ -1,10 +1,10 @@
 import { enableMapSet } from 'immer';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-const { Post, PostGetBlob } = require("../../utils/request");
+const { Post, PostGetBlob } = require("../utils/request");
 import Api from '@/constant/api';
 import PubSub from "pubsub-js";
-import Topic from "../../constant/topic";
-import store from '../store';
+import Topic from "../constant/topic";
+import store from './store';
 
 enableMapSet(); // 启用 Map 对象的支持
 

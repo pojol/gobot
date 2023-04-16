@@ -16,9 +16,6 @@ export default defineConfig({
   ],
   plugins: [
     '@umijs/plugins/dist/react-query',
-    '@umijs/plugins/dist/model',
   ],
-  model: {
-  },
   npmClient: 'pnpm',
 });

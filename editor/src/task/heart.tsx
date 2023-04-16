@@ -1,10 +1,9 @@
 import * as React from "react";
 
-import { useModel } from 'umi';
-
 import { TaskTimer } from 'tasktimer';
 import axios from "axios";
-
+import { useDispatch, useSelector } from 'react-redux';
+import { setHeartColor } from "@/models/config";
 
 // offline
 // heartColor = #DCDCDC
@@ -27,14 +26,14 @@ const heart = async (): Promise<boolean> => {
 }
 
 export default function HeartTask() {
-    const { heartColor, setHeatColor } = useModel('heartColor')
+    const dispatch = useDispatch()
 
     let callback = async () => {
         let res = await heart()
         if (res) {
-            setHeatColor("#389e0d")
+            dispatch(setHeartColor("#389e0d"))
         } else {
-            setHeatColor("#BDCDD6")
+            dispatch(setHeartColor("#BDCDD6"))
         }
     }
 

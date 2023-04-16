@@ -12,7 +12,7 @@ import {
 
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from "@/models/store";
-import { getDefaultNodeNotifyInfo, nodeUpdate } from "@/models/mstore/tree";
+import { getDefaultNodeNotifyInfo, nodeUpdate } from "@/models/tree";
 
 import PubSub from "pubsub-js";
 import Topic from "@/constant/topic";

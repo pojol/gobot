@@ -1,6 +1,6 @@
 import { NodeTy } from "@/constant/node_type";
 import { createAction, createSlice, PayloadAction } from "@reduxjs/toolkit";
-const { Post, PostBlob, PostGetBlob } = require("../../utils/request");
+const { Post, PostBlob, PostGetBlob } = require("../utils/request");
 import Cmd from "@/constant/cmd";
 import { message } from "antd";
 import OBJ2XML from "object-to-xml";

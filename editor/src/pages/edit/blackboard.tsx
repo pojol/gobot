@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import ReactJson, {ThemeKeys} from "react-json-view";
+import ReactJson, { ThemeKeys } from "react-json-view";
 import { message, Tabs } from "antd";
 import { CodeOutlined, FileSearchOutlined } from "@ant-design/icons";
 import { useSelector } from 'react-redux'
-import { useModel } from 'umi';
-
 import Editor from "react-medium-editor";
 import { RootState } from '@/models/store';
 import "./blackboard.css";
@@ -23,7 +21,7 @@ export default function Blackboard() {
     const [change, setChange] = useState("")
     const [active, setActive] = useState("2")
     const [jsontheme, setJsontheme] = useState<ThemeKeys>('google')
-    const { themeValue } = useModel('theme')
+    const { themeValue } = useSelector((state: RootState) => state.configSlice)
 
     const metainfo = useSelector((state: RootState) => state.debugInfoSlice.metaInfo)
 
@@ -31,7 +29,7 @@ export default function Blackboard() {
         let msg = ""
         let haveerr = false
 
-        if (themeValue === ThemeType.Dark){
+        if (themeValue === ThemeType.Dark) {
             setJsontheme("google")
         } else {
             setJsontheme("rjv-default")
