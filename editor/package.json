@@ -1,6 +1,6 @@
 {
   "private": true,
-  "main": "dist/main.js",
+  "main": "public/main.js",
   "homepage": "./",
   "author": "pojol <pojol@outlook.com>",
   "scripts": {

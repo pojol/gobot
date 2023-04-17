@@ -64,7 +64,8 @@ function Layout() {
   };
 
   const modalHandleOk = () => {
-    setModalOpen(false)
+    console.info("set modal false")
+    dispatch(setModalOpen(false))
 
     // 这里需要做一次检测
     if (address !== "" && address !== undefined) {
@@ -74,7 +75,7 @@ function Layout() {
   }
 
   const modalHandleCancel = () => {
-    setModalOpen(false)
+    dispatch(setModalOpen(false))
   }
 
   const modalConfigChange = (e: any) => {
