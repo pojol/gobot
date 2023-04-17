@@ -15,3 +15,4 @@ editor/dockerbuild.sh
 editor/yarn-error.log
 editor/dist/
 editor/out/
+editor/Gobot-win32-x64/
