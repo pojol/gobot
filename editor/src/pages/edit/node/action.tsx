@@ -15,6 +15,7 @@ import {
   getDefaultNodeNotifyInfo,
   nodeUpdate,
 } from "@/models/tree";
+import { Root } from 'react-dom/client';
 
 /// <reference path="node.d.ts" />
 
@@ -32,6 +33,7 @@ export default function ActionTab() {
   });
 
   const { currentClickNode } = useSelector((state: RootState) => state.treeSlice);
+  const { graphFlex, editFlex } = useSelector((state:RootState)=> state.resizeSlice)
   const dispatch = useDispatch()
 
   useEffect(() => {
@@ -56,20 +58,25 @@ export default function ActionTab() {
     }
   },[currentClickNode])
 
-  /*
-PubSub.subscribe(Topic.EditPanelCodeMetaResize, (topic, flex) => {
-  this.setState({ hflex: flex }, () => {
-    this.redraw();
-  });
-});
-*/
-  /*
-        PubSub.subscribe(Topic.EditPanelEditCodeResize, (topic, flex) => {
-          this.setState({ wflex: 1 - flex }, () => {
-            this.redraw();
-          });
-        });
-        */
+  useEffect(()=>{
+    setState({
+      ...state,
+      wflex: 1 - graphFlex,
+    });
+    
+    // redraw
+
+  }, [graphFlex])
+
+  useEffect(()=>{
+    setState({
+      ...state,
+      hflex: editFlex,
+    });
+
+    // redraw
+
+  }, [editFlex])
 
   /*
     PubSub.subscribe(Topic.WindowResize, () => {

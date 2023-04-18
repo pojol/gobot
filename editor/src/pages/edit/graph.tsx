@@ -38,7 +38,7 @@ import { Button, Input, Modal, Tooltip } from "antd";
 import { IsActionNode, IsScriptNode, NodeTy } from "../../constant/node_type";
 
 import { message } from "antd";
-import { ConnectedProps, connect } from "react-redux";
+import { ConnectedProps, connect, useSelector } from "react-redux";
 import { useLocation } from 'react-router-dom';
 import "./graph.css";
 
@@ -172,6 +172,8 @@ const GraphView = (props: GraphViewProps) => {
     const [wflex, setWflex] = useState<number>(0.6);
     const location = useLocation();
 
+    const { graphFlex } = useSelector((state: RootState) => state.resizeSlice)
+
     useEffect(() => {
 
         const graph = new Graph({
@@ -287,7 +289,7 @@ const GraphView = (props: GraphViewProps) => {
             }
 
             findNode(edge.getTargetCellId(), (child) => {
-                // PubSub.publish(Topic.LinkDisconnect, [child.id, false]);
+                props.dispatch(nodeUnlink({targetid : child.id, silent: false}))
                 child.getParent()?.removeChild(edge);
             });
         });
@@ -321,12 +323,7 @@ const GraphView = (props: GraphViewProps) => {
 
                     edge.setZIndex(0);
                     source.addChild(target);
-                    /*
-                                        PubSub.publish(Topic.LinkConnect, [
-                                            { parent: source.id, child: target.id },
-                                            false,
-                                        ]);
-                                        */
+                    props.dispatch(nodeLink({parentid: source.id, childid: target.id, silent: false}))
                 }
             }
         });

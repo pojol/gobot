@@ -6,12 +6,14 @@ import prefabSlice from "@/models/prefab"
 import treeSlice from "@/models/tree"
 import debugInfoSlice from "@/models/debuginfo"
 import configSlice from './config';
+import resizeSlice from './resize';
 
 const rootReducer = combineReducers({
     prefabSlice: prefabSlice.reducer,
     treeSlice: treeSlice.reducer,
     debugInfoSlice: debugInfoSlice.reducer,
     configSlice:configSlice.reducer,
+    resizeSlice : resizeSlice.reducer,
   });
   
 
