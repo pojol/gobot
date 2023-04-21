@@ -17,6 +17,7 @@ const Topic = {
 
     ReportSelect : "topic_report_select",
 
+    WindowResize: "window_resize"
 }
 
 export default Topic;

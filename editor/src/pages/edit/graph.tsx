@@ -484,33 +484,9 @@ const GraphView = (props: GraphViewProps) => {
             }
         );
 
-        /*
-                PubSub.subscribe(
-                    Topic.EditPanelEditCodeResize,
-                    (topic: string, flex: number) => {
-                        this.setState({ wflex: flex }, () => {
-                            this.resizeViewpoint();
-                        });
-                    }
-                );
-                */
-
-        /*
-                PubSub.subscribe(
-                    Topic.EditPanelEditChangeResize,
-                    (topic: string, flex: number) => {
-                        this.setState({ hflex: 1 - flex }, () => {
-                            this.resizeViewpoint();
-                        });
-                    }
-                );
-                */
-
-        /*
-                PubSub.subscribe(Topic.WindowResize, () => {
-                    this.resizeViewpoint();
-                });
-                */
+        PubSub.subscribe(Topic.WindowResize, () => {
+            resizeViewpoint(wflex);
+        });
 
         PubSub.subscribe(Topic.ThemeChange, (topic: string, theme: string) => {
             var nods = graph.getRootNodes();
@@ -576,6 +552,13 @@ const GraphView = (props: GraphViewProps) => {
         };
     }, []);
 
+    useEffect(()=>{
+        resizeViewpoint(graphFlex)
+        
+        // redraw
+    
+      }, [graphFlex])
+
 
     const getLoopLabel = (val: Number) => {
         var tlab = "";
@@ -590,14 +573,14 @@ const GraphView = (props: GraphViewProps) => {
 
 
     // 重绘视口
-    const resizeViewpoint = () => {
-        var width = document.body.clientWidth * wflex;
+    const resizeViewpoint = (graphFlex: number) => {
+        var width = document.documentElement.clientWidth * graphFlex;
 
-        console.info("resize panel", wflex, document.body.clientHeight);
+        console.info("resize panel", graphFlex, document.documentElement.clientWidth);
 
         // 设置视口大小
         if (graphRef.current) {
-            graphRef.current.resize(width, document.body.clientHeight - 62);
+            graphRef.current.resize(width, document.documentElement.clientHeight - 62);
         }
     }
 

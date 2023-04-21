@@ -54,7 +54,6 @@ const Prefab = (props: PrefabProps) => {
   const [selectedKey, setSelectedKey] = useState<string>("");
   const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
   const [newPrefabName, setNewPrefabName] = useState<string>("");
-  const [searchText, setSearchText] = useState<string>("");
   const [searchedColumn, setSearchedColumn] = useState<DataIndex>();
 
   useEffect(() => {
@@ -120,23 +119,23 @@ const Prefab = (props: PrefabProps) => {
               (file: any) => {
                 let reader = new FileReader();
                 reader.onload = function (ev) {
-  
+
                   dat.push({ key: element.name, name: element.name, tags: element.tags, code: String(reader.result), })
-  
+
                   let pi: PrefabInfo = {
                     name: element.name,
                     tags: element.tags,
                     code: String(reader.result),
                   }
                   props.dispatch(addItem({ key: element.name, value: pi }))
-  
+
                   counter++;
                   if (counter === lst.length) {
                     callback()
                     PubSub.publish(Topic.PrefabUpdateAll, {})
                   }
                 };
-  
+
                 reader.readAsText(file.blob);
               }
             );
@@ -273,7 +272,6 @@ const Prefab = (props: PrefabProps) => {
   const onDidMount = (editor: any) => {
     editor.setSize(undefined, document.documentElement.clientHeight - 120)
   };
-
 
   const options = {
     mode: "text/x-lua",

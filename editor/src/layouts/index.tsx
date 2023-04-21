@@ -35,6 +35,16 @@ function getState(): any {
   }
 }
 
+function resizeHandler() {
+  let resizeTimer;
+  if (!resizeTimer) {
+    resizeTimer = setTimeout(() => {
+      resizeTimer = null;
+      PubSub.publish(Topic.WindowResize, {});
+    }, 100);
+  }
+};
+
 function Layout() {
   const { clientRoutes } = useAppData();
   const location = useLocation();
@@ -47,6 +57,8 @@ function Layout() {
     layout: 'top',
     splitMenus: true,
   };
+
+  window.addEventListener("resize", resizeHandler, false);
 
   const themeChange = (e: RadioChangeEvent) => {
     dispatch(setThemeValue(e.target.value))

@@ -22,7 +22,6 @@
     "@umijs/hooks": "^1.9.3",
     "antd": "^5.1.7",
     "axios": "^1.2.6",
-    "codemirror": "^5.62.3",
     "dva": "^2.4.1",
     "electron": "^24.1.2",
     "electron-is-dev": "^2.0.0",
