@@ -16,7 +16,9 @@ import "codemirror/theme/ayu-dark.css";
 import "codemirror/theme/yonce.css";
 import "codemirror/theme/neo.css";
 import "codemirror/theme/zenburn.css";
+
 import "codemirror/mode/lua/lua";
+
 
 import Topic from "../constant/topic";
 import Api from "../constant/api";
@@ -55,6 +57,9 @@ const Prefab = (props: PrefabProps) => {
   const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
   const [newPrefabName, setNewPrefabName] = useState<string>("");
   const [searchedColumn, setSearchedColumn] = useState<DataIndex>();
+  const [editor, setEditor] = useState<any>({});
+
+  let obj: any = null
 
   useEffect(() => {
     syncConfig();
@@ -271,12 +276,14 @@ const Prefab = (props: PrefabProps) => {
 
   const onDidMount = (editor: any) => {
     editor.setSize(undefined, document.documentElement.clientHeight - 120)
+    setEditor(editor)
   };
 
   const options = {
     mode: "text/x-lua",
     theme: localStorage.codeboxTheme,
     lineNumbers: true,
+    indentUnit: 4,
   };
 
   // rowSelection object indicates the need for row selection

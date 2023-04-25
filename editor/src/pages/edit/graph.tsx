@@ -33,6 +33,7 @@ import {
     UndoOutlined,
     ZoomInOutlined,
     ZoomOutOutlined,
+    ClearOutlined
 } from "@ant-design/icons";
 import { Button, Input, Modal, Tooltip } from "antd";
 import { IsActionNode, IsScriptNode, NodeTy } from "../../constant/node_type";
@@ -802,6 +803,10 @@ const GraphView = (props: GraphViewProps) => {
 
     };
 
+    const CleanTree = () => {
+
+    }
+
     const ClickUpload = () => {
         setModalVisible(true);
     };
@@ -962,8 +967,11 @@ const GraphView = (props: GraphViewProps) => {
                 <Tooltip placement="topLeft" title="Undo [ ctrl+z ]">
                     <Button icon={<UndoOutlined />} onClick={ClickUndo} />
                 </Tooltip>
-                <Tooltip placement="topLeft" title="Delete [ del ]">
+                <Tooltip placement="topLeft" title="Delete Node [ del ]">
                     <Button icon={<DeleteOutlined />} onClick={ClickDel} />
+                </Tooltip>
+                <Tooltip placement="topLeft" title="Clean">
+                    <Button icon={<ClearOutlined />} onClick={CleanTree} />
                 </Tooltip>
             </div>
 

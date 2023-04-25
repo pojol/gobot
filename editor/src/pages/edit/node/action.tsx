@@ -29,8 +29,8 @@ export default function ActionTab() {
     defaultAlias: "",
     hflex: 0,
     wflex: 0,
-    editor: undefined,
   });
+  const [editor, setEditor] = useState<any>({});
 
   const { currentClickNode } = useSelector((state: RootState) => state.treeSlice);
   const { graphFlex, editFlex } = useSelector((state:RootState)=> state.resizeSlice)
@@ -131,8 +131,8 @@ export default function ActionTab() {
             ...state,
             wflex: 0.4,
             hflex: 0.5,
-            editor: editor,
           });
+          setEditor(editor)
 
           var width = document.documentElement.clientWidth * 0.4 - 18;
           var height = document.documentElement.clientHeight * 0.5 - 38;
