@@ -7,7 +7,7 @@ interface ResizeState {
 
 const initialState: ResizeState = {
     graphFlex: 0.6,  // graph 在屏幕中的占比
-    editFlex: 0.4   // edit（编辑窗）在屏幕中的占比
+    editFlex: 0.5   // edit（编辑窗）在屏幕中的占比
 }
 
 const resizeSlice = createSlice({

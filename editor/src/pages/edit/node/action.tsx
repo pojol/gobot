@@ -15,7 +15,6 @@ import {
   getDefaultNodeNotifyInfo,
   nodeUpdate,
 } from "@/models/tree";
-import { Root } from 'react-dom/client';
 
 /// <reference path="node.d.ts" />
 
@@ -27,13 +26,14 @@ export default function ActionTab() {
     node_ty: "",
     code: "",
     defaultAlias: "",
-    hflex: 0,
-    wflex: 0,
+    hflex: 0.5,
+    wflex: 0.4,
   });
-  const [editor, setEditor] = useState<any>({});
+
+  const [editorState, setEditorState] = useState(null);
 
   const { currentClickNode } = useSelector((state: RootState) => state.treeSlice);
-  const { graphFlex, editFlex } = useSelector((state:RootState)=> state.resizeSlice)
+  const { graphFlex, editFlex } = useSelector((state: RootState) => state.resizeSlice)
   const dispatch = useDispatch()
 
   useEffect(() => {
@@ -56,33 +56,45 @@ export default function ActionTab() {
         nod: { id: "" },
       });
     }
-  },[currentClickNode])
 
-  useEffect(()=>{
+    PubSub.subscribe(Topic.WindowResize, () => {
+        redraw(state.wflex, state.hflex)
+    });
+
+    return () => {
+      // 取消订阅
+      PubSub.unsubscribe(Topic.WindowResize);
+  };
+  }, [currentClickNode])
+
+  useEffect(() => {
     setState({
       ...state,
       wflex: 1 - graphFlex,
     });
-    
-    // redraw
 
+    console.info("wflex", graphFlex)
+    redraw((1 - graphFlex), state.hflex)
   }, [graphFlex])
 
-  useEffect(()=>{
+  useEffect(() => {
     setState({
       ...state,
       hflex: editFlex,
     });
 
-    // redraw
-
+    console.info("hflex", editFlex)
+    redraw(state.wflex, editFlex)
   }, [editFlex])
 
-  /*
-    PubSub.subscribe(Topic.WindowResize, () => {
-      this.redraw();
-    });
-    */
+  const redraw = (wflex : number, hflwx : number) => {
+    if (editorState !== null) {
+      var width = document.documentElement.clientWidth * wflex - 18;
+      var height = document.documentElement.clientHeight * hflwx - 40;
+      console.info("redraw", wflex, hflwx)
+      editorState.setSize(width.toString() + "px", height.toString() + "px");
+    }
+  }
 
   const applyClick = () => {
     if (state.nod.id === "") {
@@ -127,15 +139,10 @@ export default function ActionTab() {
           lineNumbers: true,
         }}
         editorDidMount={(editor) => {
-          setState({
-            ...state,
-            wflex: 0.4,
-            hflex: 0.5,
-          });
-          setEditor(editor)
+          setEditorState(editor);
 
-          var width = document.documentElement.clientWidth * 0.4 - 18;
-          var height = document.documentElement.clientHeight * 0.5 - 38;
+          var width = document.documentElement.clientWidth * state.wflex - 18;
+          var height = document.documentElement.clientHeight * state.hflex - 40;
 
           editor.setSize(width.toString() + "px", height.toString() + "px");
         }}
