@@ -17,7 +17,8 @@ import {
   ThunderboltTwoTone,
 } from '@ant-design/icons';
 
-import logo from '../assets/gobot.ico';
+import logo from '../assets/gobot.png';
+import darklog from '../assets/gobot-dark.png'
 import Topic from '@/constant/topic';
 
 import { setThemeValue, setModalOpen } from '@/models/config';
@@ -32,6 +33,14 @@ function getState(): any {
     return theme.defaultAlgorithm
   } else if (localStorage.theme === ThemeType.Dark) {
     return theme.darkAlgorithm
+  }
+}
+
+function getLog() : any {
+  if (localStorage.theme === undefined || localStorage.theme === ThemeType.Light) {
+    return logo
+  } else if (localStorage.theme === ThemeType.Dark) {
+    return darklog
   }
 }
 
@@ -107,7 +116,7 @@ function Layout() {
       <ProLayout
         route={clientRoutes[0]}
         location={location}
-        logo={logo}
+        logo={getLog()}
         title={'Gobot'}
         menuItemRender={(menuItemProps, defaultDom) => {
           if (menuItemProps.isUrl || menuItemProps.children) {
