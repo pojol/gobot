@@ -33,6 +33,21 @@ function IsScriptNode(ty: string) {
 
 }
 
+function IsPresetNode(ty : string) {
+  switch (ty) {
+    case NodeTy.Root:
+    case NodeTy.Loop:
+    case NodeTy.Wait:
+    case NodeTy.Selector:
+    case NodeTy.Sequence:
+    case NodeTy.Parallel:
+    case NodeTy.Condition:
+      return false
+    default:
+      return true
+  }
+}
+
 function IsActionNode(ty: string) {
   switch (ty) {
     case NodeTy.Root:
@@ -49,4 +64,4 @@ function IsActionNode(ty: string) {
 }
 
 
-export { NodeTy, IsScriptNode, IsActionNode };  
+export { NodeTy, IsScriptNode, IsActionNode, IsPresetNode };  

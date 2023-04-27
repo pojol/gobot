@@ -13,6 +13,7 @@ import {
 import { GetNode } from "./shape/shape";
 import Topic from '@/constant/topic';
 import { RootState } from '@/models/store';
+import { IsPresetNode } from '../../constant/node_type';
 
 const { Dnd } = Addon
 
@@ -143,7 +144,13 @@ class EditSidePlane extends React.Component<SideProps> {
     const target = e.currentTarget
     const name = target.getAttribute('data-type') as string
     let nod: Node
-    nod = GetNode(NodeTy.Action, {})
+
+    if (IsPresetNode(name)) {
+      nod = GetNode(NodeTy.Action, {})
+    } else {
+      nod = GetNode(name, {})
+    }
+    
     nod.setAttrs({ type: { name: name }, label: { text: name } })
 
     this.dnd.start(nod, e.nativeEvent as any)
