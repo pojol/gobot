@@ -36,6 +36,8 @@ export function GetNode(ty: string, parm: any): Node {
                 return new SequenceDarkNode(parm)
             case NodeTy.Wait:
                 return new WaitDarkNode(parm)
+            default:
+                return new ActionDarkNode(parm)
         }
 
     } else if (localStorage.theme === ThemeType.Light) {
@@ -57,6 +59,8 @@ export function GetNode(ty: string, parm: any): Node {
                 return new SequenceLightNode(parm)
             case NodeTy.Wait:
                 return new WaitLightNode(parm)
+            default:
+                return new ActionLightNode(parm)
         }
 
     }

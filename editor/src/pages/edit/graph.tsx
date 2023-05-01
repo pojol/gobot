@@ -8,19 +8,19 @@ import { RootState } from "@/models/store";
 import PubSub from "pubsub-js";
 import Topic from "../../constant/topic";
 
+import { setDebugInfo } from "@/models/debuginfo";
 import {
     cleanTree,
+    debug,
     getDefaultNodeNotifyInfo,
     nodeAdd,
+    nodeClick,
     nodeLink,
     nodeUnlink,
-    debug,
+    nodeUpdate,
     save,
     setCurrentDebugBot,
-    nodeUpdate,
-    nodeClick,
 } from "@/models/tree";
-import { setDebugInfo } from "@/models/debuginfo";
 
 import { history } from "umi";
 
@@ -28,12 +28,12 @@ import {
     AimOutlined,
     BugOutlined,
     CaretRightOutlined,
+    ClearOutlined,
     CloudUploadOutlined,
     DeleteOutlined,
     UndoOutlined,
     ZoomInOutlined,
-    ZoomOutOutlined,
-    ClearOutlined
+    ZoomOutOutlined
 } from "@ant-design/icons";
 import { Button, Input, Modal, Tooltip } from "antd";
 import { IsActionNode, IsScriptNode, NodeTy } from "../../constant/node_type";
