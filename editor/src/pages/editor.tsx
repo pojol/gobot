@@ -25,7 +25,7 @@ export default function Editor() {
 
   useEffect(() => {
     if (localStorage.codeboxTheme === undefined || localStorage.codeboxTheme === "") {
-      localStorage.codeboxTheme = "default"
+      localStorage.codeboxTheme = "ayu-dark"
     }
   }, []);
 
