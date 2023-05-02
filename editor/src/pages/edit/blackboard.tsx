@@ -67,6 +67,10 @@ export default function Blackboard() {
             setActive("3")
             setRuntimeerr(msg)
         } else {
+            if (active === "3") {
+                setActive("2")
+            }
+
             setChange(msg)
         }
 
