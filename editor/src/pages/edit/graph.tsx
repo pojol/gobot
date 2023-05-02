@@ -8,7 +8,7 @@ import { RootState } from "@/models/store";
 import PubSub from "pubsub-js";
 import Topic from "../../constant/topic";
 
-import { setDebugInfo } from "@/models/debuginfo";
+import { setDebugInfo, setLock } from "@/models/debuginfo";
 import {
     cleanTree,
     debug,
@@ -174,6 +174,7 @@ const GraphView = (props: GraphViewProps) => {
     const location = useLocation();
 
     const { graphFlex } = useSelector((state: RootState) => state.resizeSlice)
+    const {lock} = useSelector((state: RootState) => state.debugInfoSlice)
 
     useEffect(() => {
 
@@ -866,7 +867,7 @@ const GraphView = (props: GraphViewProps) => {
         }
 
         var botid = props.tree.currentDebugBot
-
+        props.dispatch(setLock(true))
         Post(localStorage.remoteAddr, Api.DebugStep, { BotID: botid }).then(
             (json: any) => {
 
@@ -898,6 +899,7 @@ const GraphView = (props: GraphViewProps) => {
                 props.dispatch(setDebugInfo({
                     metaInfo: metaStr,
                     threadInfo: threadinfo,
+                    lock:false,
                 }))
             }
         );
@@ -981,6 +983,7 @@ const GraphView = (props: GraphViewProps) => {
                         type="primary"
                         style={{ width: 70 }}
                         icon={<CaretRightOutlined />}
+                        disabled={lock}
                         onClick={ClickStep}
                     >
                         { }
