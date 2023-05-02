@@ -15,8 +15,6 @@ import WaitLightNode, { WaitDarkNode } from "./wait";
 
 export function GetNode(ty: string, parm: any): Node {
 
-    console.info("get node", localStorage.theme, ty)
-
     if (localStorage.theme === ThemeType.Dark) {
 
         switch (ty) {

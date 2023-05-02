@@ -32,7 +32,7 @@ import PubSub from "pubsub-js";
 import Topic from "../constant/topic";
 import Api from "../constant/api";
 import { HomeTag } from "./tags/tags";
-import { cleanTree } from "@/models/tree";
+import { initTree } from "@/models/tree";
 
 const { Post } = require("../utils/request");
 const { LoadBehaviorWithBlob, LoadBehaviorWithFile } = require('../utils/parse');
@@ -200,7 +200,6 @@ const Bots = (props: BotsProps) => {
         });
       }
 
-      console.info("fill bot list", botlist)
       setBotLst(botlist);
     }
 
@@ -210,8 +209,6 @@ const Bots = (props: BotsProps) => {
 
     var bots = Bots
     var tagSet = new Set<string>()
-
-    console.info("update tags", name, tags)
 
     for (var i = 0; i < bots.length; i++) {
       if (bots[i].Name === name) {
@@ -244,7 +241,6 @@ const Bots = (props: BotsProps) => {
     }
 
     // refresh tags
-    console.info("refresh tags", children)
     setSelectedTags(children)
     setBots(bots)
     fillBotList(bots)
@@ -268,7 +264,6 @@ const Bots = (props: BotsProps) => {
       }
     }
 
-    console.info("selected tags", children)
     setSelectedTags(children)
   }
 
@@ -290,11 +285,8 @@ const Bots = (props: BotsProps) => {
   }
 
   const handleSelectChange = (tags: Array<string>) => {
-    console.info("refresh bot lst", tags)
-
     setCurrentSelectedTags(tags)
   }
-
 
   const handleBotLoad = (e: any) => {
     selectedRows
@@ -305,10 +297,9 @@ const Bots = (props: BotsProps) => {
         Api.FileGet,
         row.name
       ).then((file: any) => {
-
         LoadBehaviorWithFile(row.name, file.blob, (tree: any) => {
-          props.dispatch(cleanTree())
-          history.push('/editor', tree)
+          props.dispatch(initTree(tree))
+          history.push('/editor')
         });
 
       });

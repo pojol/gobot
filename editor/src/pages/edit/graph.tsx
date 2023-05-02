@@ -48,6 +48,8 @@ import Api from "@/constant/api";
 import ThemeType from "@/constant/constant";
 import { GetNode } from "./shape/shape";
 import EditSidePlane from "./side";
+import { CreateGraph } from "./canvas/canvas";
+import { attr } from "@antv/x6/lib/util/dom/attr";
 
 const {
     LoadBehaviorWithBlob,
@@ -55,18 +57,6 @@ const {
 } = require("../../utils/parse");
 const { PostBlob, Post } = require("../../utils/request");
 
-
-
-// 高亮
-const magnetAvailabilityHighlighter = {
-    name: "stroke",
-    args: {
-        attrs: {
-            fill: "#fff",
-            stroke: "#47C769",
-        },
-    },
-};
 
 function fillChildInfo(child: Node, info: any) {
     var childInfo = {
@@ -175,83 +165,12 @@ const GraphView = (props: GraphViewProps) => {
 
     const { graphFlex } = useSelector((state: RootState) => state.resizeSlice)
     const { lock } = useSelector((state: RootState) => state.debugInfoSlice)
+    const { nodes } = useSelector((state: RootState) => state.treeSlice)
 
     useEffect(() => {
 
-        const graph = new Graph({
-            width: document.documentElement.clientWidth * wflex,
-            height: document.documentElement.clientHeight,
-            container: containerRef.current,
-            highlighting: {
-                magnetAvailable: magnetAvailabilityHighlighter,
-                magnetAdsorbed: {
-                    name: "stroke",
-                    args: {
-                        attrs: {
-                            fill: "#fff",
-                            stroke: "#31d0c6",
-                        },
-                    },
-                },
-            },
-            snapline: {
-                enabled: true,
-                sharp: true,
-            },
-            connecting: {
-                snap: true,
-                allowBlank: false,
-                allowLoop: false,
-                allowPort: false,
-                highlight: true,
-                allowMulti: false,
-                connector: "rounded",
-                connectionPoint: "boundary",
-                router: {
-                    name: "er",
-                    args: {
-                        direction: "V",
-                    },
-                },
-                createEdge() {
-                    return new Shape.Edge({
-                        attrs: {
-                            line: {
-                                stroke: "#a0a0a0",
-                                strokeWidth: 1,
-                                targetMarker: {
-                                    name: "classic",
-                                    size: 3,
-                                },
-                            },
-                        },
-                    });
-                },
-            },
-            keyboard: {
-                enabled: true,
-            },
-            grid: {
-                size: 10, // 网格大小 10px
-                visible: true, // 绘制网格，默认绘制 dot 类型网格
-            },
-            history: true,
-            selecting: {
-                enabled: true,
-                showNodeSelectionBox: true,
-            },
-            scroller: {
-                enabled: true,
-                pageVisible: false,
-                pageBreak: false,
-                pannable: true,
-            },
-            mousewheel: {
-                enabled: true,
-                modifiers: ["alt", "meta"],
-            },
-        });
-
+        const graph = CreateGraph(containerRef.current, wflex, graphFlex)
+/*
         var root = GetNode(NodeTy.Root, {});
         root.setPosition(
             graph.getGraphArea().width / 2,
@@ -267,7 +186,7 @@ const GraphView = (props: GraphViewProps) => {
             })
         );
         props.dispatch(cleanTree())
-
+*/
         graph.bindKey("del", () => {
             ClickDel();
             return false;
@@ -433,9 +352,6 @@ const GraphView = (props: GraphViewProps) => {
             edge.removeTools();
         });
 
-        // 调整画布大小
-        graph.resizeGraph(1024, 1024);
-
         const updateNodeSub = PubSub.subscribe(Topic.UpdateNodeParm, (topic: string, info: NodeNotifyInfo) => {
             if (IsActionNode(info.ty)) {
                 findNode(info.id, (nod) => {
@@ -496,10 +412,12 @@ const GraphView = (props: GraphViewProps) => {
                 iterate(nods[0], (nod) => {
                     let bodyfill = "#f5f5f5";
                     let labelfill = "#20262E";
+                    let portfill = "#fff"
 
                     if (theme === ThemeType.Dark) {
                         bodyfill = "#20262E";
                         labelfill = "#fff";
+                        portfill = "#20262E"
                     }
 
                     nod.setAttrs({
@@ -510,9 +428,15 @@ const GraphView = (props: GraphViewProps) => {
                             fill: labelfill,
                         },
                     });
+
+                    if (nod.isNode()){
+                        nod.setPortProp(nod.getPortAt(0).id as string, "attrs/portBody/fill", portfill)
+                    }
                 });
             }
         });
+
+        graphRef.current = graph;
 
         if (history.location.pathname !== "/editor") {
             let botname = history.location.pathname.slice(8);
@@ -532,16 +456,14 @@ const GraphView = (props: GraphViewProps) => {
                     });
                 });
             }
-        }
-
-        graphRef.current = graph;
-
-        if (location.state !== null) {
-            props.dispatch(cleanTree());
+        } else {
             graph.clearCells();
-            console.info("redraw", location.state)
-            redraw(location.state, true);
-            history.replace('/editor')  // 清理页面的 location.state
+            console.info("reload", nodes)
+
+            if (nodes.length > 0){
+                redraw(nodes[0], true);
+            }
+
         }
 
         //containerRef.current = graph.container;
@@ -625,6 +547,8 @@ const GraphView = (props: GraphViewProps) => {
 
         let others = { build: build, silent: true, code: "", alias: "" }
 
+        console.info("children", child)
+
         switch (child.ty) {
             case NodeTy.Selector:
             case NodeTy.Sequence:
@@ -640,7 +564,6 @@ const GraphView = (props: GraphViewProps) => {
             default:
                 nod = GetNode(child.ty, { id: child.id });
                 others.code = child.code
-                console.info("alias", child.alias, child.ty)
                 if (child.alias === "") {
                     others.alias = child.ty
                 } else {
@@ -737,7 +660,9 @@ const GraphView = (props: GraphViewProps) => {
         }
     }
 
-    const redraw = (jsontree: any, build: boolean) => {
+    const redraw = (jsontree: NodeNotifyInfo, build: boolean) => {
+        console.info("redraw", jsontree)
+
         if (jsontree.ty === NodeTy.Root) {
             var root = GetNode(NodeTy.Root, { id: jsontree.id });
             root.setPosition({
@@ -749,6 +674,7 @@ const GraphView = (props: GraphViewProps) => {
                 graphRef.current.addNode(root, { others: { build: build, silent: true } });
             }
 
+            console.info("children length", jsontree.children.length)
             if (jsontree.children && jsontree.children.length) {
                 for (var i = 0; i < jsontree.children.length; i++) {
                     redrawChild(root, jsontree.children[i], build);

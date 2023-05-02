@@ -82,7 +82,6 @@ function _getRelationInfo(nod: NodeNotifyInfo) {
 
 function _syncMapInfo(nod: NodeNotifyInfo) {
     window.tree.set(nod.id, nod);
-    console.info("sync map info", nod.id, nod)
 
     if (nod.children && nod.children.length) {
         nod.children.forEach((children) => {
@@ -371,6 +370,26 @@ const treeSlice = createSlice({
         nodeClick(state, action: PayloadAction<NodeClickInfo>) {
             state.currentClickNode = action.payload
         },
+        initTree(state, action: PayloadAction<NodeNotifyInfo>) {
+            console.info("load tree", action.payload)
+            let tree = action.payload
+            if (tree === null || tree === undefined) {
+                return
+            }
+
+            if (tree.ty !== NodeTy.Root) {
+                console.warn("tree parent node is not root")
+                return
+            }
+
+            window.tree = new Map();
+
+            state.currentTreeName = ""
+            state.rootid = tree.id
+            state.history.splice(0, state.history.length)
+
+            state.nodes = [tree]
+        },
         cleanTree(state, action: PayloadAction<void>) {
             window.tree = new Map();
 
@@ -395,5 +414,5 @@ const treeSlice = createSlice({
     },
 });
 
-export const { nodeAdd, nodeLink, nodeUnlink, cleanTree, debug, save, setCurrentDebugBot, nodeUpdate, nodeClick } = treeSlice.actions;
+export const { nodeAdd, nodeLink, nodeUnlink, cleanTree, debug, save, setCurrentDebugBot, nodeUpdate, nodeClick, initTree } = treeSlice.actions;
 export default treeSlice;

@@ -2,7 +2,7 @@ FROM nginx:1.21.3
 
 COPY ./dist/ /usr/share/nginx/html/
 RUN ls -la /usr/share/nginx/html/*
-COPY ./dist/nginx_default.conf /etc/nginx/conf.d/default.conf
+COPY ./public/nginx_default.conf /etc/nginx/conf.d/default.conf
 
 WORKDIR /home
 

@@ -87,7 +87,7 @@ LoopDarkNode.config({
           portBody: {
             magnet: true,
             r: 5,
-            fill: "#fff",
+            fill: "#20262E",
             stroke: "#3199FF",
             strokeWidth: 1,
           },
