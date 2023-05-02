@@ -1,5 +1,5 @@
 # gobot
-Gobot是一个功能强大的有状态API测试机器人,它通过视觉化的方式,可以编辑测试场景、编写测试脚本、调试、并且支持性能测试等
+Gobot是一个功能强大的有状态API测试机器人。它提供图形界面进行测试场景的搭建,可以方便的进行测试脚本编写、单步调试和压力测试,并可以在测试过程的每个阶段之间共享和存储状态。
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/pojol/gobot)](https://goreportcard.com/report/github.com/pojol/gobot)
 [![](https://img.shields.io/badge/%E6%96%87%E6%A1%A3-Doc-2ca5e0?style=flat&logo=github)](https://pojol.gitee.io/gobot/#/)
