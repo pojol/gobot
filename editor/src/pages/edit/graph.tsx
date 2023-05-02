@@ -105,7 +105,7 @@ function GetNodInfo(prefab: Array<PrefabInfo>, nod: Node, code: string, alias: s
                     info.code = p.code;
                 }
 
-                if (alias === ""){
+                if (alias === "") {
                     info.alias = info.ty
                 }
             })
@@ -174,7 +174,7 @@ const GraphView = (props: GraphViewProps) => {
     const location = useLocation();
 
     const { graphFlex } = useSelector((state: RootState) => state.resizeSlice)
-    const {lock} = useSelector((state: RootState) => state.debugInfoSlice)
+    const { lock } = useSelector((state: RootState) => state.debugInfoSlice)
 
     useEffect(() => {
 
@@ -261,7 +261,7 @@ const GraphView = (props: GraphViewProps) => {
 
         props.dispatch(
             nodeAdd({
-                info: GetNodInfo(props.prefabMap, root, "",""),
+                info: GetNodInfo(props.prefabMap, root, "", ""),
                 build: true,
                 silent: false,
             })
@@ -291,7 +291,7 @@ const GraphView = (props: GraphViewProps) => {
             }
 
             findNode(edge.getTargetCellId(), (child) => {
-                props.dispatch(nodeUnlink({targetid : child.id, silent: false}))
+                props.dispatch(nodeUnlink({ targetid: child.id, silent: false }))
                 child.getParent()?.removeChild(edge);
             });
         });
@@ -325,7 +325,7 @@ const GraphView = (props: GraphViewProps) => {
 
                     edge.setZIndex(0);
                     source.addChild(target);
-                    props.dispatch(nodeLink({parentid: source.id, childid: target.id, silent: false}))
+                    props.dispatch(nodeLink({ parentid: source.id, childid: target.id, silent: false }))
                 }
             }
         });
@@ -554,12 +554,12 @@ const GraphView = (props: GraphViewProps) => {
         };
     }, []);
 
-    useEffect(()=>{
+    useEffect(() => {
         resizeViewpoint(graphFlex)
-        
+
         // redraw
-    
-      }, [graphFlex])
+
+    }, [graphFlex])
 
 
     const getLoopLabel = (val: Number) => {
@@ -816,7 +816,7 @@ const GraphView = (props: GraphViewProps) => {
     const ClickCreateDebug = (e: any) => {
         cleanStepInfo();
 
-        props.dispatch(setDebugInfo({ metaInfo: "{}", threadInfo: [] }))
+        props.dispatch(setDebugInfo({ metaInfo: "{}", threadInfo: [], lock: false }))
         props.dispatch(debug((tree: NodeNotifyInfo) => {
             var xmltree = {
                 behavior: tree,
@@ -899,7 +899,7 @@ const GraphView = (props: GraphViewProps) => {
                 props.dispatch(setDebugInfo({
                     metaInfo: metaStr,
                     threadInfo: threadinfo,
-                    lock:false,
+                    lock: false,
                 }))
             }
         );

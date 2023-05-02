@@ -59,11 +59,17 @@ const Bots = (props: BotsProps) => {
 
   const [runs, setRuns] = useState(new Map<string, number>());
   const [batchLst, setBatchLst] = useState([]);
+
+  // 表引用的数据
   const [botLst, setBotLst] = useState<{ name: string; key: string; update: string; status: string[]; tags: string[]; desc: string; }[]>([]);
-  const [selectedTags, setSelectedTags] = useState([]);// 可选的 tags
-  const [currentSelectedTags, setCurrentSelectedTags] = useState<Array<string>>([]);// 当前选中的 tags
-  const [selectedRows, setSelectedRows] = useState<Record[]>([]); // 选中的行
+  // 服务器存储的数据
   const [Bots, setBots] = useState<BotInfo[]>([]);
+  // 可选的 tags
+  const [selectedTags, setSelectedTags] = useState([]);
+  // 当前选中的 tags
+  const [currentSelectedTags, setCurrentSelectedTags] = useState<Array<string>>([]);
+  // 选中的行
+  const [selectedRows, setSelectedRows] = useState<Record[]>([]);
 
   const columns = [
     {
@@ -141,9 +147,15 @@ const Bots = (props: BotsProps) => {
     };
   }, []);
 
+  useEffect(() => {
+    fillBotList(Bots)
+  }, [currentSelectedTags]);
+
 
   function fillBotList(bots: Array<BotInfo>) {
     var selectedTag = currentSelectedTags
+
+    console.info("selectedTag", selectedTag)
 
     var intags = (tags: Array<string>) => {
       for (var i = 0; i < selectedTag.length; i++) {
@@ -188,6 +200,7 @@ const Bots = (props: BotsProps) => {
         });
       }
 
+      console.info("fill bot list", botlist)
       setBotLst(botlist);
     }
 
@@ -295,7 +308,6 @@ const Bots = (props: BotsProps) => {
 
         LoadBehaviorWithFile(row.name, file.blob, (tree: any) => {
           props.dispatch(cleanTree())
-          console.info("load tree", tree)
           history.push('/editor', tree)
         });
 
