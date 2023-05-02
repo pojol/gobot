@@ -1,5 +1,5 @@
 # gobot
-Gobot is a stateful api testing tool that supports graph editing, api calling, and binding script execution.
+Gobot is a powerful stateful API testing robot. It enables you to edit test scenarios, write test scripts, debug and performance test in a visual manner.
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/pojol/gobot)](https://goreportcard.com/report/github.com/pojol/gobot)
 [![](https://img.shields.io/badge/%E6%96%87%E6%A1%A3-Doc-2ca5e0?style=flat&logo=github)](https://pojol.gitee.io/gobot/#/)

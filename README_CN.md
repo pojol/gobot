@@ -1,5 +1,5 @@
 # gobot
-Gobot是一个有状态的api/协议测试工具，支持图形化的行为编辑/调试、脚本节点、压力测试、测试报告等。
+Gobot是一个功能强大的有状态API测试机器人,它通过视觉化的方式,可以编辑测试场景、编写测试脚本、调试、并且支持性能测试等
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/pojol/gobot)](https://goreportcard.com/report/github.com/pojol/gobot)
 [![](https://img.shields.io/badge/%E6%96%87%E6%A1%A3-Doc-2ca5e0?style=flat&logo=github)](https://pojol.gitee.io/gobot/#/)
