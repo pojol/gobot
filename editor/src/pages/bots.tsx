@@ -155,8 +155,6 @@ const Bots = (props: BotsProps) => {
   function fillBotList(bots: Array<BotInfo>) {
     var selectedTag = currentSelectedTags
 
-    console.info("selectedTag", selectedTag)
-
     var intags = (tags: Array<string>) => {
       for (var i = 0; i < selectedTag.length; i++) {
         for (var j = 0; j < tags.length; j++) {

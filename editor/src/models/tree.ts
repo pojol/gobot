@@ -350,6 +350,7 @@ const treeSlice = createSlice({
     initialState,
     reducers: {
         nodeAdd(state, action: PayloadAction<NodeAddInfo>) {
+            console.info("node add", action.payload.info.id)
             let info = action.payload
             if (info.build) {
                 Add(state, info.info, info.silent)
@@ -371,7 +372,7 @@ const treeSlice = createSlice({
             state.currentClickNode = action.payload
         },
         initTree(state, action: PayloadAction<NodeNotifyInfo>) {
-            console.info("load tree", action.payload)
+            console.info("load tree")
             let tree = action.payload
             if (tree === null || tree === undefined) {
                 return
@@ -391,6 +392,7 @@ const treeSlice = createSlice({
             state.nodes = [tree]
         },
         cleanTree(state, action: PayloadAction<void>) {
+            console.info("clean tree")
             window.tree = new Map();
 
             state.currentTreeName = ""

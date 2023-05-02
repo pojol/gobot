@@ -168,7 +168,7 @@ const GraphView = (props: GraphViewProps) => {
     const { nodes } = useSelector((state: RootState) => state.treeSlice)
 
     useEffect(() => {
-
+        console.info("create graph")
         const graph = CreateGraph(containerRef.current, wflex, graphFlex)
 /*
         var root = GetNode(NodeTy.Root, {});
@@ -270,6 +270,7 @@ const GraphView = (props: GraphViewProps) => {
                 node.setSize(40, 20);
             }
 
+            /*
             props.dispatch(
                 nodeAdd({
                     info: GetNodInfo(props.prefabMap, node, code, alias),
@@ -277,6 +278,7 @@ const GraphView = (props: GraphViewProps) => {
                     silent: silent,
                 })
             );
+            */
         });
 
         graph.on("node:mouseenter", ({ node }) => {
@@ -388,6 +390,7 @@ const GraphView = (props: GraphViewProps) => {
             );
             */
 
+            /*
         PubSub.subscribe(
             Topic.FileLoadDraw,
             (topic: string, treearr: Array<any>) => {
@@ -401,6 +404,7 @@ const GraphView = (props: GraphViewProps) => {
                 props.dispatch(cleanTree())
             }
         );
+        */
 
         PubSub.subscribe(Topic.WindowResize, () => {
             resizeViewpoint(wflex);
@@ -438,7 +442,8 @@ const GraphView = (props: GraphViewProps) => {
 
         graphRef.current = graph;
 
-        if (history.location.pathname !== "/editor") {
+        console.info("load path", history.location.pathname)
+        if (history.location.pathname.length > 8) { // "/editor"
             let botname = history.location.pathname.slice(8);
 
             if (botname != null && botname != "") {
@@ -449,7 +454,7 @@ const GraphView = (props: GraphViewProps) => {
                     Api.FileGet,
                     chineseChar
                 ).then((file: any) => {
-                    props.dispatch(cleanTree());
+                    //props.dispatch(cleanTree());
                     LoadBehaviorWithFile(chineseChar, file.blob, (tree: any) => {
                         graph.clearCells();
                         redraw(tree, true);
