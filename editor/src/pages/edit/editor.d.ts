@@ -33,7 +33,6 @@ interface NodeClickInfo {
 
 interface NodeAddInfo {
     info: NodeNotifyInfo,
-    build: boolean,
     silent: boolean,
 }
 

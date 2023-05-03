@@ -33,6 +33,7 @@ import Topic from "../constant/topic";
 import Api from "../constant/api";
 import { HomeTag } from "./tags/tags";
 import { initTree } from "@/models/tree";
+import { NodeTy } from "@/constant/node_type";
 
 const { Post } = require("../utils/request");
 const { LoadBehaviorWithBlob, LoadBehaviorWithFile } = require('../utils/parse');
@@ -299,7 +300,6 @@ const Bots = (props: BotsProps) => {
           props.dispatch(initTree(tree))
           history.push('/editor')
         });
-
       });
     }
   }

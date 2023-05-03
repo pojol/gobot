@@ -12,10 +12,11 @@ import {
 
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from "@/models/store";
-import { getDefaultNodeNotifyInfo, nodeUpdate } from "@/models/tree";
+import { nodeUpdate } from "@/models/tree";
 
 import PubSub from "pubsub-js";
 import Topic from "@/constant/topic";
+import { getDefaultNodeNotifyInfo } from "@/models/node";
 
 const Min = 0;
 const Max = 10000;

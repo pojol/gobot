@@ -12,9 +12,9 @@ import PubSub from "pubsub-js";
 import Topic from "@/constant/topic";
 
 import {
-  getDefaultNodeNotifyInfo,
   nodeUpdate,
 } from "@/models/tree";
+import { getDefaultNodeNotifyInfo } from '@/models/node';
 
 /// <reference path="node.d.ts" />
 

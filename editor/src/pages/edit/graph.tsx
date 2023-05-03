@@ -12,7 +12,7 @@ import { setDebugInfo, setLock } from "@/models/debuginfo";
 import {
     cleanTree,
     debug,
-    getDefaultNodeNotifyInfo,
+    initTree,
     nodeAdd,
     nodeClick,
     nodeLink,
@@ -50,6 +50,8 @@ import { GetNode } from "./shape/shape";
 import EditSidePlane from "./side";
 import { CreateGraph } from "./canvas/canvas";
 import { attr } from "@antv/x6/lib/util/dom/attr";
+import { GetNodInfo } from "@/models/node";
+import { getDefaultNodeNotifyInfo } from "@/models/node";
 
 const {
     LoadBehaviorWithBlob,
@@ -57,80 +59,6 @@ const {
 } = require("../../utils/parse");
 const { PostBlob, Post } = require("../../utils/request");
 
-
-function fillChildInfo(child: Node, info: any) {
-    var childInfo = {
-        id: child.id,
-        ty: child.getAttrs().type.toString(),
-        pos: {
-            x: child.position().x,
-            y: child.position().y,
-        },
-        children: [],
-    };
-    info.children.push(childInfo);
-
-    child.eachChild((cchild, idx) => {
-        if (cchild instanceof Node) {
-            fillChildInfo(cchild as Node, childInfo);
-        }
-    });
-}
-
-function GetNodInfo(prefab: Array<PrefabInfo>, nod: Node, code: string, alias: string): NodeNotifyInfo {
-    var info = getDefaultNodeNotifyInfo();
-    info.id = nod.id;
-    info.ty = nod.getAttrs().type.name as string;
-    info.pos = {
-        x: nod.position().x,
-        y: nod.position().y,
-    };
-
-    if (info.ty === NodeTy.Action || IsActionNode(info.ty)) {
-        if (code !== "") {
-            info.code = code
-        } else {
-            prefab.forEach((p) => {
-                if (p.name === info.ty) {
-                    info.code = p.code;
-                }
-
-                if (alias === "") {
-                    info.alias = info.ty
-                }
-            })
-
-            if (info.code === "") {
-
-            }
-        }
-
-        if (alias !== "") {
-            info.alias = alias
-        }
-    }
-
-    if (info.ty === NodeTy.Condition) {
-        if (code !== "") {
-            info.code = code
-        } else {
-            info.code = `
--- Write expression to return true or false
-function execute()
-
-end
-        `;
-        }
-    }
-
-    nod.eachChild((child, idx) => {
-        if (child instanceof Node) {
-            fillChildInfo(child as Node, info);
-        }
-    });
-
-    return info;
-}
 
 function iterate(nod: Node, callback: (nod: Node) => void) {
     if (nod !== null && nod !== undefined) {
@@ -170,23 +98,7 @@ const GraphView = (props: GraphViewProps) => {
     useEffect(() => {
         console.info("create graph")
         const graph = CreateGraph(containerRef.current, wflex, graphFlex)
-/*
-        var root = GetNode(NodeTy.Root, {});
-        root.setPosition(
-            graph.getGraphArea().width / 2,
-            graph.getGraphArea().height / 2 - 200
-        );
-        graph.addNode(root);
 
-        props.dispatch(
-            nodeAdd({
-                info: GetNodInfo(props.prefabMap, root, "", ""),
-                build: true,
-                silent: false,
-            })
-        );
-        props.dispatch(cleanTree())
-*/
         graph.bindKey("del", () => {
             ClickDel();
             return false;
@@ -254,31 +166,7 @@ const GraphView = (props: GraphViewProps) => {
         });
 
         graph.on("node:added", ({ node, index, options }) => {
-            let silent = false;
-            let build = true;
-            let code = "";
-            let alias = "";
 
-            if (options.others !== undefined) {
-                silent = options.others.silent;
-                build = options.others.build;
-                code = options.others.code;
-                alias = options.others.alias
-            }
-
-            if (node.getAttrs().type.toString() === "ActionNode") {
-                node.setSize(40, 20);
-            }
-
-            /*
-            props.dispatch(
-                nodeAdd({
-                    info: GetNodInfo(props.prefabMap, node, code, alias),
-                    build: build,
-                    silent: silent,
-                })
-            );
-            */
         });
 
         graph.on("node:mouseenter", ({ node }) => {
@@ -336,7 +224,7 @@ const GraphView = (props: GraphViewProps) => {
                             var targetnod = cell.getTargetNode();
                             //
                             this.graph.removeEdge(cell.id, { disconnectEdges: true });
-                            this.props.dispatch(
+                            props.dispatch(
                                 nodeUnlink({
                                     targetid: targetnod.id,
                                     silent: false,
@@ -390,21 +278,21 @@ const GraphView = (props: GraphViewProps) => {
             );
             */
 
-            /*
-        PubSub.subscribe(
-            Topic.FileLoadDraw,
-            (topic: string, treearr: Array<any>) => {
-                graph.clearCells();
-                console.info("redraw by file", treearr);
+        /*
+    PubSub.subscribe(
+        Topic.FileLoadDraw,
+        (topic: string, treearr: Array<any>) => {
+            graph.clearCells();
+            console.info("redraw by file", treearr);
 
-                treearr.forEach((element) => {
-                    redraw(element, true);
-                });
+            treearr.forEach((element) => {
+                redraw(element, true);
+            });
 
-                props.dispatch(cleanTree())
-            }
-        );
-        */
+            props.dispatch(cleanTree())
+        }
+    );
+    */
 
         PubSub.subscribe(Topic.WindowResize, () => {
             resizeViewpoint(wflex);
@@ -433,7 +321,7 @@ const GraphView = (props: GraphViewProps) => {
                         },
                     });
 
-                    if (nod.isNode()){
+                    if (nod.isNode()) {
                         nod.setPortProp(nod.getPortAt(0).id as string, "attrs/portBody/fill", portfill)
                     }
                 });
@@ -465,8 +353,18 @@ const GraphView = (props: GraphViewProps) => {
             graph.clearCells();
             console.info("reload", nodes)
 
-            if (nodes.length > 0){
+            if (nodes.length > 0) {
                 redraw(nodes[0], true);
+            } else {
+                var root = GetNode(NodeTy.Root, {});
+                root.setPosition(
+                    graph.getGraphArea().width / 2,
+                    graph.getGraphArea().height / 2 - 200
+                );
+                graph.addNode(root);
+                props.dispatch(initTree(
+                    GetNodInfo(props.prefabMap, root, "", "")
+                ))
             }
 
         }
@@ -551,8 +449,6 @@ const GraphView = (props: GraphViewProps) => {
         }
 
         let others = { build: build, silent: true, code: "", alias: "" }
-
-        console.info("children", child)
 
         switch (child.ty) {
             case NodeTy.Selector:

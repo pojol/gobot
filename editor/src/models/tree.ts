@@ -5,6 +5,7 @@ import Cmd from "@/constant/cmd";
 import { message } from "antd";
 import OBJ2XML from "object-to-xml";
 import Api from "@/constant/api";
+import { getDefaultNodeNotifyInfo } from "./node";
 
 interface TreeState {
     nodes: Array<NodeNotifyInfo>;
@@ -15,23 +16,6 @@ interface TreeState {
     currentDebugTree: NodeNotifyInfo;
     currentDebugBot: string;
     currentClickNode: NodeClickInfo;
-}
-
-export function getDefaultNodeNotifyInfo(): NodeNotifyInfo {
-    return {
-        id: "",
-        ty: "",
-        code: "",
-        loop: 1,
-        wait: 1,
-        pos: {
-            x: 0,
-            y: 0,
-        },
-        children: [],
-        notify: false,
-        alias: "",
-    };
 }
 
 function treeStateInit(): boolean {
@@ -112,6 +96,7 @@ function Add(state: TreeState, nod: NodeNotifyInfo, silent: boolean) {
     let rinfo = _getRelationInfo(nod)
     _syncMapInfo(nod)
 
+    console.info("add tar", JSON.stringify(rinfo))
     let olst = state.nodes
     olst.push(rinfo)
 
@@ -352,9 +337,10 @@ const treeSlice = createSlice({
         nodeAdd(state, action: PayloadAction<NodeAddInfo>) {
             console.info("node add", action.payload.info.id)
             let info = action.payload
-            if (info.build) {
-                Add(state, info.info, info.silent)
-            }
+            Add(state, info.info, info.silent)
+        },
+        nodeRmv(state, action: PayloadAction<string>) {
+
         },
         nodeLink(state, action: PayloadAction<NodeLinkInfo>) {
             let info = action.payload
@@ -372,12 +358,10 @@ const treeSlice = createSlice({
             state.currentClickNode = action.payload
         },
         initTree(state, action: PayloadAction<NodeNotifyInfo>) {
-            console.info("load tree")
             let tree = action.payload
             if (tree === null || tree === undefined) {
                 return
             }
-
             if (tree.ty !== NodeTy.Root) {
                 console.warn("tree parent node is not root")
                 return
@@ -387,9 +371,11 @@ const treeSlice = createSlice({
 
             state.currentTreeName = ""
             state.rootid = tree.id
+
+            state.nodes.splice(0, state.nodes.length)
             state.history.splice(0, state.history.length)
 
-            state.nodes = [tree]
+            Add(state, tree, true)
         },
         cleanTree(state, action: PayloadAction<void>) {
             console.info("clean tree")

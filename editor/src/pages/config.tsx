@@ -102,7 +102,12 @@ export default function Config() {
 
   const onApplyDriveAddr = () => {
     if (isUrl(state.driveAddr)) {
+
       let driveAddr = state.driveAddr;
+
+      if (driveAddr.endsWith('/')) {
+        driveAddr = driveAddr.slice(0, -1);
+      }
 
       CheckHealth(driveAddr).then((res: any) => {
         console.info("check health", driveAddr, res);

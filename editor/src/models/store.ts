@@ -3,7 +3,7 @@ import { combineReducers } from 'redux';
 
 
 import prefabSlice from "@/models/prefab"
-import treeSlice from "@/models/tree"
+import treeSlice from "@/models/newtree"
 import debugInfoSlice from "@/models/debuginfo"
 import configSlice from './config';
 import resizeSlice from './resize';
