@@ -48,6 +48,11 @@ interface NodeUnlinkInfo{
     silent: boolean,
 }
 
+interface NodeFindCallback {
+    id : string,
+    callback : (NodeNotifyInfo)=>void
+}
+
 interface PrefabTagInfo {
     value: string
 }

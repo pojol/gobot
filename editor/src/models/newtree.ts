@@ -11,24 +11,18 @@ interface TreeState {
     nodes: Array<NodeNotifyInfo>;
     history: Array<any>;
     rootid: string;
-    treeState: boolean;
     currentTreeName: string;
     currentDebugTree: NodeNotifyInfo;
     currentDebugBot: string;
     currentClickNode: NodeClickInfo;
 }
 
-function treeStateInit(): boolean {
-    window.tree = new Map(); // 主要维护的是 editor 节点编辑后的数据
-    return true
-}
 
 const initialState: TreeState = {
     nodes: new Array<NodeNotifyInfo>(),
     history: new Array<NodeNotifyInfo>(),
     rootid: "",
     currentTreeName: "",
-    treeState: treeStateInit(),
     currentDebugBot: "",
     currentDebugTree: getDefaultNodeNotifyInfo(),
     currentClickNode: { id: "", type: "" },
@@ -55,6 +49,37 @@ function update(state: TreeState, info: NodeNotifyInfo) {
 
 }
 
+function _find(id: string, parent: NodeNotifyInfo, callback: (parent: NodeNotifyInfo, target: NodeNotifyInfo, idx: number) => void) {
+
+    if (parent.children && parent.children.length) {
+        for (var i = 0; i < parent.children.length; i++) {
+            if (parent.children[i].id === id) {
+                callback(parent, parent.children[i], i)
+                break
+            }
+
+            _find(id ,parent.children[i], callback)
+        }
+    }
+
+}
+
+export function find(nodes: NodeNotifyInfo[], id: string): NodeNotifyInfo {
+    let nod = getDefaultNodeNotifyInfo()
+
+    for (var i = 0; i < nodes.length; i++) {
+        if (nodes[i].id === id) {
+            return nodes[i]
+        }
+
+        _find(id, nodes[i], (parent:NodeNotifyInfo, target:NodeNotifyInfo)=>{
+            nod = target
+        })
+    }
+
+    return nod
+}
+
 const treeSlice = createSlice({
     name: "tree",
     initialState,
@@ -79,9 +104,6 @@ const treeSlice = createSlice({
             let info = action.payload
             update(state, info)
         },
-        nodeFind(state, action: PayloadAction<(id: string, node: NodeNotifyInfo) => void>) {
-
-        },
         nodeClick(state, action: PayloadAction<NodeClickInfo>) {
             state.currentClickNode = action.payload
         },
@@ -95,17 +117,16 @@ const treeSlice = createSlice({
                 return
             }
 
-            window.tree = new Map();
-
             state.currentTreeName = ""
             state.rootid = tree.id
 
             state.history.splice(0, state.history.length)
             state.nodes = [tree]
+
+            console.info("init tree", state.nodes)
         },
         cleanTree(state, action: PayloadAction<void>) {
             console.info("clean tree")
-            window.tree = new Map();
 
             state.currentTreeName = ""
             state.rootid = ""

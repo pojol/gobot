@@ -17,6 +17,8 @@ import { nodeUpdate } from "@/models/tree";
 import PubSub from "pubsub-js";
 import Topic from "@/constant/topic";
 import { getDefaultNodeNotifyInfo } from "@/models/node";
+import { delay } from "@/utils/timer";
+import { find } from "@/models/newtree";
 
 const Min = 0;
 const Max = 10000;
@@ -26,33 +28,28 @@ const { Search } = Input;
 export default function LoopTab() {
   const [state, setState] = useState({
     inputValue: 0,
-    nod: { id: "", loop: 0 },
+    nod: getDefaultNodeNotifyInfo(),
     node_ty: "LoopNode",
     defaultAlias: "",
   });
 
   const { currentClickNode } = useSelector((state: RootState) => state.treeSlice);
+  const { nodes } = useSelector((state: RootState) => state.treeSlice)
   const dispatch = useDispatch()
 
   useEffect(() => {
-    var obj = window.tree.get(currentClickNode.id);
-    if (obj !== undefined && obj.ty === state.node_ty) {
-      let target = { ...obj };
-      delete target.pos;
-      delete target.children;
 
+    delay(100).then(()=>{
+
+      let nod = find(nodes, currentClickNode.id)
       setState({
         ...state,
-        nod: target,
-        inputValue: target.loop,
+        nod: nod,
+        inputValue: nod.loop,
       });
-    } else {
-      setState({
-        ...state,
-        nod: { id: "", loop: 0 },
-        inputValue: 0,
-      });
-    }
+
+    })
+
   }, [currentClickNode])
 
   const onChange = (value: any) => {

@@ -17,6 +17,8 @@ import Topic from "@/constant/topic";
 
 import { nodeUpdate } from "@/models/tree";
 import { getDefaultNodeNotifyInfo } from "@/models/node";
+import { delay } from "@/utils/timer";
+import { find } from "@/models/newtree";
 
 const Min = 1;
 const Max = 60 * 60 * 1000; // 1 hour
@@ -26,33 +28,28 @@ const { Search } = Input;
 export default function WaitTab() {
 
     const [state, setState] = useState({
-        nod: { id: "", wait: 0 },
+        nod: getDefaultNodeNotifyInfo(),
         node_ty: "WaitNode",
         inputValue: 1,
         defaultAlias: ""
     });
     const { currentClickNode } = useSelector((state: RootState) => state.treeSlice);
+    const { nodes } = useSelector((state: RootState) => state.treeSlice)
+
     const dispatch = useDispatch()
 
     useEffect(() => {
-        var obj = window.tree.get(currentClickNode.id);
 
-        if (obj !== undefined && obj.ty === state.node_ty) {
-            let target = { ...obj };
-            delete target.pos;
-            delete target.children;
+        delay(100).then(()=>{
 
+            let nod = find(nodes, currentClickNode.id)
             setState({
                 ...state,
-                nod: target,
+                nod: nod,
+                inputValue: nod.wait
             })
-        } else {
-            setState({
-                ...state,
-                nod: { id: "", wait: 0 },
-                inputValue: 1,
-            })
-        }
+        })
+
     }, [currentClickNode])
 
 

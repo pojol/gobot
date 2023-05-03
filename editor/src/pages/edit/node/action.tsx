@@ -15,6 +15,8 @@ import {
   nodeUpdate,
 } from "@/models/tree";
 import { getDefaultNodeNotifyInfo } from '@/models/node';
+import { find } from '@/models/newtree';
+import { delay } from '@/utils/timer';
 
 /// <reference path="node.d.ts" />
 
@@ -22,7 +24,7 @@ const { Search } = Input;
 
 export default function ActionTab() {
   const [state, setState] = useState({
-    nod: { id: "" },
+    nod: getDefaultNodeNotifyInfo(),
     node_ty: "",
     code: "",
     defaultAlias: "",
@@ -34,37 +36,32 @@ export default function ActionTab() {
 
   const { currentClickNode } = useSelector((state: RootState) => state.treeSlice);
   const { graphFlex, editFlex } = useSelector((state: RootState) => state.resizeSlice)
+  const { nodes } = useSelector((state: RootState) => state.treeSlice)
   const dispatch = useDispatch()
 
   useEffect(() => {
-    var obj = window.tree.get(currentClickNode.id);
-    if (obj !== undefined) {
-      let target = { ...obj };
-      delete target.pos;
-      delete target.children;
 
+    delay(100).then(()=>{
+      let nod = find(nodes, currentClickNode.id)
+      console.info("find", currentClickNode.id, nod)
+  
       setState({
         ...state,
-        nod: target,
-        code: target.code,
-        defaultAlias: target.alias,
-        node_ty: target.ty,
+        nod: nod,
+        code: nod.code,
+        defaultAlias: nod.alias,
+        node_ty: nod.ty,
       });
-    } else {
-      setState({
-        ...state,
-        nod: { id: "" },
-      });
-    }
+    })
 
     PubSub.subscribe(Topic.WindowResize, () => {
-        redraw(state.wflex, state.hflex)
+      redraw(state.wflex, state.hflex)
     });
 
     return () => {
       // 取消订阅
       PubSub.unsubscribe(Topic.WindowResize);
-  };
+    };
   }, [currentClickNode])
 
   useEffect(() => {
@@ -87,7 +84,7 @@ export default function ActionTab() {
     redraw(state.wflex, editFlex)
   }, [editFlex])
 
-  const redraw = (wflex : number, hflwx : number) => {
+  const redraw = (wflex: number, hflwx: number) => {
     if (editorState !== null) {
       var width = document.documentElement.clientWidth * wflex - 18;
       var height = document.documentElement.clientHeight * hflwx - 40;
