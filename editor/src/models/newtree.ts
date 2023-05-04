@@ -47,6 +47,25 @@ function unlink(state: TreeState, targetid: string) {
 
 function update(state: TreeState, info: NodeNotifyInfo) {
 
+    // 这里只会更新节点的属性
+    let _update = (cur: NodeNotifyInfo, up: NodeNotifyInfo): void => {
+        cur.code = up.code
+        cur.alias = up.alias
+        cur.pos = up.pos
+        cur.loop = up.loop
+        cur.wait = up.wait
+    }
+
+    for (var i = 0; i < state.nodes.length; i++) {
+        if (state.nodes[i].id === info.id) {
+            _update(state.nodes[i], info)
+        }
+
+        _find(info.id, state.nodes[i], (parent: NodeNotifyInfo, target: NodeNotifyInfo) => {
+            _update(target, info)
+        })
+    }
+
 }
 
 function _find(id: string, parent: NodeNotifyInfo, callback: (parent: NodeNotifyInfo, target: NodeNotifyInfo, idx: number) => void) {
@@ -58,7 +77,7 @@ function _find(id: string, parent: NodeNotifyInfo, callback: (parent: NodeNotify
                 break
             }
 
-            _find(id ,parent.children[i], callback)
+            _find(id, parent.children[i], callback)
         }
     }
 
@@ -72,7 +91,7 @@ export function find(nodes: NodeNotifyInfo[], id: string): NodeNotifyInfo {
             return nodes[i]
         }
 
-        _find(id, nodes[i], (parent:NodeNotifyInfo, target:NodeNotifyInfo)=>{
+        _find(id, nodes[i], (parent: NodeNotifyInfo, target: NodeNotifyInfo) => {
             nod = target
         })
     }
