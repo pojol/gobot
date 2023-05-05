@@ -106,7 +106,6 @@ export default function ActionTab() {
     info.alias = state.defaultAlias
     info.notify = true
     dispatch(nodeUpdate(info))
-    PubSub.publish(Topic.UpdateNodeParm, info)
   };
 
   const handleChange = (editor: any, data: any, value: any) => {

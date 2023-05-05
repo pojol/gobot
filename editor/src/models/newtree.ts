@@ -15,6 +15,7 @@ interface TreeState {
     currentDebugTree: NodeNotifyInfo;
     currentDebugBot: string;
     currentClickNode: NodeClickInfo;
+    updatetick: number;
 }
 
 
@@ -26,14 +27,27 @@ const initialState: TreeState = {
     currentDebugBot: "",
     currentDebugTree: getDefaultNodeNotifyInfo(),
     currentClickNode: { id: "", type: "" },
+    updatetick: 0,
 };
 
 function add(state: TreeState, info: NodeAddInfo) {
-
+    state.nodes.push(info.info)
+    state.updatetick++
 }
 
 function rmv(state: TreeState, id: string) {
+    for (var i = 0; i < state.nodes.length; i++) {
+        if (state.nodes[i].id === id) {
+            state.nodes.splice(i, 1)
+            break
+        }
 
+        _find(id, state.nodes[i], (parent: NodeNotifyInfo, target: NodeNotifyInfo, idx: number) => {
+            console.info("remove node parent", parent.id, "target", target.id)
+            parent.children.splice(idx, 1)
+        })
+    }
+    state.updatetick++
 }
 
 function link(state: TreeState, parentid: string, childrenid: string) {
@@ -104,7 +118,6 @@ const treeSlice = createSlice({
     initialState,
     reducers: {
         nodeAdd(state, action: PayloadAction<NodeAddInfo>) {
-            console.info("node add", action.payload.info.id)
             let info = action.payload
             add(state, info)
         },

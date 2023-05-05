@@ -77,7 +77,6 @@ export default function WaitTab() {
         info.notify = true
 
         dispatch(nodeUpdate(info))
-        PubSub.publish(Topic.UpdateNodeParm, info)
     };
 
     return (

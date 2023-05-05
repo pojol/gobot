@@ -79,7 +79,6 @@ export default function LoopTab() {
     info.loop = state.inputValue
     info.notify = true
     dispatch(nodeUpdate(info))
-    PubSub.publish(Topic.UpdateNodeParm, info)
 
     var nod = state.nod;
     nod.loop = state.inputValue;

@@ -93,7 +93,7 @@ const GraphView = (props: GraphViewProps) => {
 
     const { graphFlex } = useSelector((state: RootState) => state.resizeSlice)
     const { lock } = useSelector((state: RootState) => state.debugInfoSlice)
-    const { nodes } = useSelector((state: RootState) => state.treeSlice)
+    const { nodes, updatetick } = useSelector((state: RootState) => state.treeSlice)
 
     useEffect(() => {
         console.info("create graph")
@@ -242,6 +242,7 @@ const GraphView = (props: GraphViewProps) => {
             edge.removeTools();
         });
 
+        /*
         const updateNodeSub = PubSub.subscribe(Topic.UpdateNodeParm, (topic: string, info: NodeNotifyInfo) => {
             if (IsActionNode(info.ty)) {
                 findNode(info.id, (nod) => {
@@ -263,6 +264,7 @@ const GraphView = (props: GraphViewProps) => {
                 });
             }
         });
+        */
 
         /*
             PubSub.subscribe(
@@ -372,12 +374,17 @@ const GraphView = (props: GraphViewProps) => {
         //containerRef.current = graph.container;
         //containerRef.current.appendChild(graph.container);
         //stencilContainerRef.current.appendChild(graph.container);
-
-        return () => {
-            // 取消订阅
-            PubSub.unsubscribe(updateNodeSub);
-        };
     }, []);
+
+    useEffect(()=>{
+        if (graphRef.current){
+            graphRef.current.clearCells();
+
+            for(var i = 0; i < nodes.length; i++){
+                redraw(nodes[i], true)
+            }
+        }
+    },[updatetick])
 
     useEffect(() => {
         resizeViewpoint(graphFlex)
