@@ -15,10 +15,9 @@ import { RootState } from "@/models/store";
 import PubSub from "pubsub-js";
 import Topic from "@/constant/topic";
 
-import { nodeUpdate } from "@/models/tree";
 import { getDefaultNodeNotifyInfo } from "@/models/node";
 import { delay } from "@/utils/timer";
-import { find } from "@/models/newtree";
+import { UpdateType, find, nodeUpdate } from "@/models/newtree";
 
 const Min = 1;
 const Max = 60 * 60 * 1000; // 1 hour
@@ -40,7 +39,7 @@ export default function WaitTab() {
 
     useEffect(() => {
 
-        delay(100).then(()=>{
+        delay(100).then(() => {
 
             let nod = find(nodes, currentClickNode.id)
             setState({
@@ -72,11 +71,11 @@ export default function WaitTab() {
 
         let info = getDefaultNodeNotifyInfo()
         info.id = state.nod.id
-        info.ty = state.node_ty
         info.wait = state.inputValue
-        info.notify = true
-
-        dispatch(nodeUpdate(info))
+        dispatch(nodeUpdate({
+            info: info,
+            type: [UpdateType.UpdateWait]
+        }))
     };
 
     return (

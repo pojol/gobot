@@ -12,13 +12,12 @@ import {
 
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from "@/models/store";
-import { nodeUpdate } from "@/models/tree";
 
 import PubSub from "pubsub-js";
 import Topic from "@/constant/topic";
 import { getDefaultNodeNotifyInfo } from "@/models/node";
 import { delay } from "@/utils/timer";
-import { find } from "@/models/newtree";
+import { UpdateType, find, nodeUpdate } from "@/models/newtree";
 
 const Min = 0;
 const Max = 10000;
@@ -39,7 +38,7 @@ export default function LoopTab() {
 
   useEffect(() => {
 
-    delay(100).then(()=>{
+    delay(100).then(() => {
 
       let nod = find(nodes, currentClickNode.id)
       setState({
@@ -75,10 +74,11 @@ export default function LoopTab() {
 
     let info = getDefaultNodeNotifyInfo()
     info.id = state.nod.id
-    info.ty = state.node_ty
     info.loop = state.inputValue
-    info.notify = true
-    dispatch(nodeUpdate(info))
+    dispatch(nodeUpdate({
+      info: info,
+      type: [UpdateType.UpdateLoop]
+    }))
 
     var nod = state.nod;
     nod.loop = state.inputValue;

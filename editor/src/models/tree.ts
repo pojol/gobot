@@ -334,14 +334,7 @@ const treeSlice = createSlice({
     name: "tree",
     initialState,
     reducers: {
-        nodeAdd(state, action: PayloadAction<NodeAddInfo>) {
-            console.info("node add", action.payload.info.id)
-            let info = action.payload
-            Add(state, info.info, info.silent)
-        },
-        nodeRmv(state, action: PayloadAction<string>) {
 
-        },
         nodeLink(state, action: PayloadAction<NodeLinkInfo>) {
             let info = action.payload
             Link(state, info.parentid, info.childid, info.silent)
@@ -350,46 +343,7 @@ const treeSlice = createSlice({
             let info = action.payload
             Unlink(state, info.targetid, info.silent)
         },
-        nodeUpdate(state, action: PayloadAction<NodeNotifyInfo>) {
-            let info = action.payload
-            UpdateEditInfo(state, info);
-        },
-        nodeClick(state, action: PayloadAction<NodeClickInfo>) {
-            state.currentClickNode = action.payload
-        },
-        initTree(state, action: PayloadAction<NodeNotifyInfo>) {
-            let tree = action.payload
-            if (tree === null || tree === undefined) {
-                return
-            }
-            if (tree.ty !== NodeTy.Root) {
-                console.warn("tree parent node is not root")
-                return
-            }
 
-            window.tree = new Map();
-
-            state.currentTreeName = ""
-            state.rootid = tree.id
-
-            state.nodes.splice(0, state.nodes.length)
-            state.history.splice(0, state.history.length)
-
-            Add(state, tree, true)
-        },
-        cleanTree(state, action: PayloadAction<void>) {
-            console.info("clean tree")
-            window.tree = new Map();
-
-            state.currentTreeName = ""
-            state.rootid = ""
-            state.history.splice(0, state.history.length)
-            state.nodes.splice(0, state.nodes.length)
-        },
-        setCurrentDebugBot(state, action: PayloadAction<string>) {
-            let botid = action.payload
-            state.currentDebugBot = botid
-        },
         save(state, action: PayloadAction<string>) {
             let behavirName = action.payload
             SaveBehavior(state, behavirName)
@@ -402,5 +356,5 @@ const treeSlice = createSlice({
     },
 });
 
-export const { nodeAdd, nodeLink, nodeUnlink, cleanTree, debug, save, setCurrentDebugBot, nodeUpdate, nodeClick, initTree } = treeSlice.actions;
+export const { nodeLink, nodeUnlink, debug, save } = treeSlice.actions;
 export default treeSlice;

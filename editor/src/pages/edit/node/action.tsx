@@ -11,11 +11,8 @@ import { RootState } from "@/models/store";
 import PubSub from "pubsub-js";
 import Topic from "@/constant/topic";
 
-import {
-  nodeUpdate,
-} from "@/models/tree";
 import { getDefaultNodeNotifyInfo } from '@/models/node';
-import { find } from '@/models/newtree';
+import { UpdateType,nodeUpdate, find } from '@/models/newtree';
 import { delay } from '@/utils/timer';
 
 /// <reference path="node.d.ts" />
@@ -101,11 +98,12 @@ export default function ActionTab() {
 
     let info = getDefaultNodeNotifyInfo()
     info.id = state.nod.id
-    info.ty = state.node_ty
     info.code = state.code
     info.alias = state.defaultAlias
-    info.notify = true
-    dispatch(nodeUpdate(info))
+    dispatch(nodeUpdate({
+      info: info,
+      type: [UpdateType.UpdateCode, UpdateType.UpdateAlias]
+    }))
   };
 
   const handleChange = (editor: any, data: any, value: any) => {

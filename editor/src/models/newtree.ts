@@ -30,9 +30,12 @@ const initialState: TreeState = {
     updatetick: 0,
 };
 
+function deepCopy<T>(obj: T): T{
+    return JSON.parse(JSON.stringify(obj));
+  }
+
 function add(state: TreeState, info: NodeAddInfo) {
     state.nodes.push(info.info)
-    state.updatetick++
 }
 
 function rmv(state: TreeState, id: string) {
@@ -47,36 +50,105 @@ function rmv(state: TreeState, id: string) {
             parent.children.splice(idx, 1)
         })
     }
-    state.updatetick++
+}
+
+function _cut(state: TreeState, id: string): [NodeNotifyInfo, boolean] {
+    let nod = getDefaultNodeNotifyInfo()
+    let ok = false
+
+    for (var i = 0; i < state.nodes.length; i++) {
+        if (state.nodes[i].id === id) {
+            nod = deepCopy(state.nodes[i])
+            state.nodes.splice(i, 1)
+            ok = true
+            break
+        }
+
+        _find(id, state.nodes[i], (parent:NodeNotifyInfo, target :NodeNotifyInfo, idx:number) =>{
+            nod = deepCopy(target)
+            parent.children.splice(idx, 1)
+            ok = true
+        })
+    }
+    return [nod, ok]
+}
+
+function _copy(state:TreeState, parentid : string, children: NodeNotifyInfo) : void{
+    for (var i = 0; i < state.nodes.length; i++) {
+        if (state.nodes[i].id === parentid) {
+            state.nodes[i].children.push(children)
+            break
+        }
+
+        _find(parentid, state.nodes[i], (parent:NodeNotifyInfo, target :NodeNotifyInfo, idx:number) =>{
+            target.children.push(children)
+        })
+    }
 }
 
 function link(state: TreeState, parentid: string, childrenid: string) {
-
+    let res = _cut(state, childrenid)
+    if (res[1]) {
+        _copy(state, parentid, res[0])
+    } else {
+        message.warning("link node err unknow children " + childrenid)
+    }
 }
 
 // targetid 被断开连接的节点
 function unlink(state: TreeState, targetid: string) {
-
+    let res = _cut(state, targetid)
+    if (res[1]) {
+        state.nodes.push(res[0])
+    }
 }
 
-function update(state: TreeState, info: NodeNotifyInfo) {
+export const UpdateType = {
+    UpdateAll: "_update_all",
+    UpdateAlias: "_update_alias",
+    UpdateCode: "_update_code",
+    UpdatePosition: "_update_position",
+    UpdateLoop: "_update_loop",
+    UpdateWait: "_update_wait",
+}
 
-    // 这里只会更新节点的属性
-    let _update = (cur: NodeNotifyInfo, up: NodeNotifyInfo): void => {
-        cur.code = up.code
-        cur.alias = up.alias
-        cur.pos = up.pos
-        cur.loop = up.loop
-        cur.wait = up.wait
+function _update_all(cur: NodeNotifyInfo, up: NodeNotifyInfo): void {
+    cur.code = up.code
+    cur.alias = up.alias
+    cur.pos = up.pos
+    cur.loop = up.loop
+    cur.wait = up.wait
+}
+
+function update(state: TreeState, info: NodeUpdateInfo): void {
+
+    const _update = (action: string[], cur: NodeNotifyInfo, up: NodeNotifyInfo): void => {
+
+        for (var ty of action) {
+            switch (ty) {
+                case UpdateType.UpdateAll:
+                    _update_all(cur, up)
+                case UpdateType.UpdateAlias:
+                    cur.alias = up.alias
+                case UpdateType.UpdateCode:
+                    cur.code = up.code
+                case UpdateType.UpdatePosition:
+                    cur.pos = up.pos
+                case UpdateType.UpdateLoop:
+                    cur.loop = up.loop
+                case UpdateType.UpdateWait:
+                    cur.wait = up.wait
+            }
+        }
     }
 
-    for (var i = 0; i < state.nodes.length; i++) {
-        if (state.nodes[i].id === info.id) {
-            _update(state.nodes[i], info)
+    for (var node of state.nodes) {
+        if (node.id === info.info.id) {
+            _update(info.type, node, info.info)
         }
 
-        _find(info.id, state.nodes[i], (parent: NodeNotifyInfo, target: NodeNotifyInfo) => {
-            _update(target, info)
+        _find(info.info.id, node, (parent: NodeNotifyInfo, target: NodeNotifyInfo) => {
+            _update(info.type, target, info.info)
         })
     }
 
@@ -132,12 +204,19 @@ const treeSlice = createSlice({
             let info = action.payload
             unlink(state, info.targetid)
         },
-        nodeUpdate(state, action: PayloadAction<NodeNotifyInfo>) {
+        nodeUpdate(state, action: PayloadAction<NodeUpdateInfo>) {
             let info = action.payload
             update(state, info)
         },
         nodeClick(state, action: PayloadAction<NodeClickInfo>) {
             state.currentClickNode = action.payload
+        },
+        nodeRedraw(state, action: PayloadAction<void>) {
+            state.updatetick++
+        },
+        setCurrentDebugBot(state, action: PayloadAction<string>) {
+            let botid = action.payload
+            state.currentDebugBot = botid
         },
         initTree(state, action: PayloadAction<NodeNotifyInfo>) {
             let tree = action.payload
@@ -164,9 +243,11 @@ const treeSlice = createSlice({
             state.rootid = ""
             state.history.splice(0, state.history.length)
             state.nodes.splice(0, state.nodes.length)
+
+            state.updatetick++
         },
     },
 });
 
-export const { nodeAdd, nodeLink, nodeUnlink, cleanTree, nodeUpdate, nodeClick, initTree } = treeSlice.actions;
+export const { nodeAdd, nodeRmv, nodeLink, nodeUnlink, cleanTree, nodeUpdate, nodeClick, nodeRedraw, initTree, setCurrentDebugBot } = treeSlice.actions;
 export default treeSlice;

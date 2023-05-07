@@ -15,7 +15,6 @@ import { GetNode } from "./shape/shape";
 import Topic from '@/constant/topic';
 import { RootState } from '@/models/store';
 import { IsPresetNode } from '../../constant/node_type';
-import {  nodeAdd } from '@/models/tree';
 import { GetNodInfo } from '@/models/node';
 
 const { Dnd } = Addon
@@ -158,10 +157,6 @@ class EditSidePlane extends React.Component<SideProps> {
 
     nod.setAttrs({ type: { name: name }, label: { text: name } })
 
-    this.props.dispatch(nodeAdd({
-      info: GetNodInfo(this.props.prefabMap, nod, "", ""),
-      silent: false,
-    }))
     this.dnd.start(nod, e.nativeEvent as any)
   }
 

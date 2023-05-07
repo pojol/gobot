@@ -32,8 +32,7 @@ import PubSub from "pubsub-js";
 import Topic from "../constant/topic";
 import Api from "../constant/api";
 import { HomeTag } from "./tags/tags";
-import { initTree } from "@/models/tree";
-import { NodeTy } from "@/constant/node_type";
+import { initTree } from "@/models/newtree";
 
 const { Post } = require("../utils/request");
 const { LoadBehaviorWithBlob, LoadBehaviorWithFile } = require('../utils/parse');
@@ -352,8 +351,8 @@ const Bots = (props: BotsProps) => {
 
   const handleBotDownload = (e: any) => {
 
-    for (var i = 0; i < selectedRows.length; i++) {
-      var row = selectedRows[i]
+    for (let i = 0; i < selectedRows.length; i++) {
+      let row = selectedRows[i]
 
       LoadBehaviorWithBlob(
         localStorage.remoteAddr,
@@ -368,7 +367,7 @@ const Bots = (props: BotsProps) => {
 
           // 上面这个是创建一个blob的对象连链接，
           // 创建一个链接元素，是属于 a 标签的链接元素，所以括号里才是a，
-          var link = document.createElement("a");
+          let link = document.createElement("a");
           let body = document.querySelector("body")
 
           link.href = window.URL.createObjectURL(file.blob);
@@ -380,9 +379,9 @@ const Bots = (props: BotsProps) => {
 
           // 使用js点击这个链接
           link.click();
-          body.removeChild(link)
 
           window.URL.revokeObjectURL(link.href)
+          body.removeChild(link)
         }
       });
     }
