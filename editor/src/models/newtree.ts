@@ -30,9 +30,9 @@ const initialState: TreeState = {
     updatetick: 0,
 };
 
-function deepCopy<T>(obj: T): T{
+function deepCopy<T>(obj: T): T {
     return JSON.parse(JSON.stringify(obj));
-  }
+}
 
 function add(state: TreeState, info: NodeAddInfo) {
     state.nodes.push(info.info)
@@ -64,7 +64,7 @@ function _cut(state: TreeState, id: string): [NodeNotifyInfo, boolean] {
             break
         }
 
-        _find(id, state.nodes[i], (parent:NodeNotifyInfo, target :NodeNotifyInfo, idx:number) =>{
+        _find(id, state.nodes[i], (parent: NodeNotifyInfo, target: NodeNotifyInfo, idx: number) => {
             nod = deepCopy(target)
             parent.children.splice(idx, 1)
             ok = true
@@ -73,14 +73,14 @@ function _cut(state: TreeState, id: string): [NodeNotifyInfo, boolean] {
     return [nod, ok]
 }
 
-function _copy(state:TreeState, parentid : string, children: NodeNotifyInfo) : void{
+function _copy(state: TreeState, parentid: string, children: NodeNotifyInfo): void {
     for (var i = 0; i < state.nodes.length; i++) {
         if (state.nodes[i].id === parentid) {
             state.nodes[i].children.push(children)
             break
         }
 
-        _find(parentid, state.nodes[i], (parent:NodeNotifyInfo, target :NodeNotifyInfo, idx:number) =>{
+        _find(parentid, state.nodes[i], (parent: NodeNotifyInfo, target: NodeNotifyInfo, idx: number) => {
             target.children.push(children)
         })
     }
@@ -185,6 +185,39 @@ export function find(nodes: NodeNotifyInfo[], id: string): NodeNotifyInfo {
     return nod
 }
 
+function save(state: TreeState, name: string) {
+
+    for (var nod of state.nodes) {
+        if (nod.ty !== NodeTy.Root) {
+            continue
+        }
+
+        var xmltree = {
+            behavior: nod,
+        };
+    
+        var blob = new Blob([OBJ2XML(xmltree)], {
+            type: "application/json",
+        });
+    
+        PostBlob(
+            localStorage.remoteAddr,
+            Api.FileBlobUpload,
+            name,
+            blob
+        ).then((json: any) => {
+            if (json.Code !== 200) {
+                message.error(
+                    "upload fail:" + String(json.Code) + " msg: " + json.Msg
+                );
+            } else {
+                console.info(json.Body)
+                message.success("upload succ ");
+            }
+        });
+    }
+}
+
 const treeSlice = createSlice({
     name: "tree",
     initialState,
@@ -246,8 +279,12 @@ const treeSlice = createSlice({
 
             state.updatetick++
         },
+        nodeSave(state, action: PayloadAction<string>) {
+            let behavirName = action.payload
+            save(state, behavirName)
+        },
     },
 });
 
-export const { nodeAdd, nodeRmv, nodeLink, nodeUnlink, cleanTree, nodeUpdate, nodeClick, nodeRedraw, initTree, setCurrentDebugBot } = treeSlice.actions;
+export const { nodeAdd, nodeRmv, nodeLink, nodeUnlink, cleanTree, nodeUpdate, nodeClick, nodeRedraw, initTree, setCurrentDebugBot, nodeSave } = treeSlice.actions;
 export default treeSlice;

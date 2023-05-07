@@ -9,11 +9,6 @@ import PubSub from "pubsub-js";
 import Topic from "../../constant/topic";
 
 import { setDebugInfo, setLock } from "@/models/debuginfo";
-import {
-    debug,
-    save,
-} from "@/models/tree";
-
 import { history } from "umi";
 
 import {
@@ -48,6 +43,7 @@ import {
     setCurrentDebugBot,
     nodeUpdate,
     UpdateType,
+    nodeSave,
 } from "@/models/newtree";
 
 const {
@@ -130,12 +126,13 @@ const GraphView = (props: GraphViewProps) => {
             if (isNew) {
                 if (source !== null && target !== null) {
                     const typename = source.getAttrs().type.name?.toString()
+                    console.info("connect to", typename)
                     if (typename === undefined){
                         message.warning("Cannot get node name");
                         return
                     }
 
-                    if (typename === NodeTy.Root) {
+                    if (target.getAttrs().type.name === NodeTy.Root) {
                         message.warning("Cannot connect to root node");
                         graph.removeEdge(edge.id, { disconnectEdges: true });
                         return;
@@ -574,9 +571,13 @@ const GraphView = (props: GraphViewProps) => {
         cleanStepInfo();
 
         props.dispatch(setDebugInfo({ metaInfo: "{}", threadInfo: [], lock: false }))
-        props.dispatch(debug((tree: NodeNotifyInfo) => {
+        for(var nod of nodes) {
+            if (nod.ty !== NodeTy.Root) {
+                continue
+            }
+
             var xmltree = {
-                behavior: tree,
+                behavior: nod,
             };
 
             var blob = new Blob([OBJ2XML(xmltree)], {
@@ -595,8 +596,7 @@ const GraphView = (props: GraphViewProps) => {
                     }
                 }
             );
-        }))
-
+        }
     };
 
     const ClickZoomIn = () => {
@@ -670,7 +670,7 @@ const GraphView = (props: GraphViewProps) => {
     const modalHandleOk = () => {
         setModalVisible(false);
         if (behaviorName !== "") {
-            props.dispatch(save(behaviorName))
+            props.dispatch(nodeSave(behaviorName))
         } else {
             message.warning("please enter the file name of the behavior tree");
         }
