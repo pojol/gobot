@@ -17,7 +17,7 @@ import PubSub from "pubsub-js";
 import Topic from "@/constant/topic";
 import { getDefaultNodeNotifyInfo } from "@/models/node";
 import { delay } from "@/utils/timer";
-import { UpdateType, find, nodeUpdate } from "@/models/newtree";
+import { UpdateType, find, nodeRedraw, nodeUpdate } from "@/models/newtree";
 
 const Min = 0;
 const Max = 10000;
@@ -79,13 +79,7 @@ export default function LoopTab() {
       info: info,
       type: [UpdateType.UpdateLoop]
     }))
-
-    var nod = state.nod;
-    nod.loop = state.inputValue;
-    setState({
-      ...state,
-      nod: nod,
-    });
+    dispatch(nodeRedraw())
   };
 
   return (

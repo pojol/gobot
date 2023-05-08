@@ -17,7 +17,7 @@ import Topic from "@/constant/topic";
 
 import { getDefaultNodeNotifyInfo } from "@/models/node";
 import { delay } from "@/utils/timer";
-import { UpdateType, find, nodeUpdate } from "@/models/newtree";
+import { UpdateType, find, nodeRedraw, nodeUpdate } from "@/models/newtree";
 
 const Min = 1;
 const Max = 60 * 60 * 1000; // 1 hour
@@ -76,6 +76,7 @@ export default function WaitTab() {
             info: info,
             type: [UpdateType.UpdateWait]
         }))
+        dispatch(nodeRedraw())
     };
 
     return (

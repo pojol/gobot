@@ -19,8 +19,6 @@ import { GetNodInfo } from '@/models/node';
 
 const { Dnd } = Addon
 
-
-
 interface SideProps extends PropsFromRedux {
   graph: Graph
 }
@@ -38,7 +36,7 @@ class EditSidePlane extends React.Component<SideProps> {
 
   componentDidUpdate(prevProps: SideProps) {
     this.graph = this.props.graph
-
+    console.info("update side", this.props.graph)
     this.dnd = new Dnd({
       target: this.graph,
       scaled: false,
@@ -62,8 +60,8 @@ class EditSidePlane extends React.Component<SideProps> {
   }
 
   componentDidMount() {
-    const { graph } = this.props;
-
+    //const { graph } = this.props;
+    
     PubSub.subscribe(Topic.PrefabUpdateAll, (topic: string, info: any) => {
       this.reloadPrefab()
     });

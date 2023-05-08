@@ -40,7 +40,6 @@ export default function ActionTab() {
 
     delay(100).then(()=>{
       let nod = find(nodes, currentClickNode.id)
-      console.info("find", currentClickNode.id, nod)
   
       setState({
         ...state,
@@ -67,7 +66,6 @@ export default function ActionTab() {
       wflex: 1 - graphFlex,
     });
 
-    console.info("wflex", graphFlex)
     redraw((1 - graphFlex), state.hflex)
   }, [graphFlex])
 
@@ -77,7 +75,6 @@ export default function ActionTab() {
       hflex: editFlex,
     });
 
-    console.info("hflex", editFlex)
     redraw(state.wflex, editFlex)
   }, [editFlex])
 
@@ -85,7 +82,6 @@ export default function ActionTab() {
     if (editorState !== null) {
       var width = document.documentElement.clientWidth * wflex - 18;
       var height = document.documentElement.clientHeight * hflwx - 40;
-      console.info("redraw", wflex, hflwx)
       editorState.setSize(width.toString() + "px", height.toString() + "px");
     }
   }

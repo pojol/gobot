@@ -281,6 +281,7 @@ const GraphView = (props: GraphViewProps) => {
         });
 
         graphRef.current = graph;
+        console.info("graph init done", graphRef.current)
 
         console.info("load path", history.location.pathname)
         if (history.location.pathname.length > 8) { // "/editor"
@@ -297,6 +298,7 @@ const GraphView = (props: GraphViewProps) => {
                     //props.dispatch(cleanTree());
                     LoadBehaviorWithFile(chineseChar, file.blob, (tree: any) => {
                         graph.clearCells();
+                        props.dispatch(initTree(tree))
                         redraw(tree, true);
                     });
                 });
@@ -325,7 +327,6 @@ const GraphView = (props: GraphViewProps) => {
 
         if (graphRef.current) {
             graphRef.current.clearCells();
-            console.info("redrawTree", nodes)
 
             if (nodes.length > 0) {
                 for (var i = 0; i < nodes.length; i++) {
@@ -407,14 +408,28 @@ const GraphView = (props: GraphViewProps) => {
         }
 
         let others = { build: build, silent: true, code: "", alias: "" }
+        console.info(child)
 
         switch (child.ty) {
             case NodeTy.Selector:
+                nod = GetNode(child.ty, { id: child.id });
+                nod.setAttrs({label:{text: "sel"}})
+                break;
             case NodeTy.Sequence:
-            case NodeTy.Loop:
-            case NodeTy.Wait:
+                nod = GetNode(child.ty, { id: child.id });
+                nod.setAttrs({label:{text: "seq"}})
+                break;
             case NodeTy.Parallel:
                 nod = GetNode(child.ty, { id: child.id });
+                nod.setAttrs({label:{text: "par"}})
+                break;
+            case NodeTy.Loop:
+                nod = GetNode(child.ty, { id: child.id });
+                nod.setAttrs({label:{text: child.loop.toString()+" times"}})
+                break;
+            case NodeTy.Wait:
+                nod = GetNode(child.ty, { id: child.id });
+                nod.setAttrs({label:{text: child.wait.toString()+ " ms"}})
                 break;
             case NodeTy.Condition:
                 nod = GetNode(child.ty, { id: child.id });
@@ -494,7 +509,6 @@ const GraphView = (props: GraphViewProps) => {
                 graphRef.current.addNode(root, { others: { build: build, silent: true } });
             }
 
-            console.info("children length", jsontree.children.length)
             if (jsontree.children && jsontree.children.length) {
                 for (var i = 0; i < jsontree.children.length; i++) {
                     redrawChild(root, jsontree.children[i], build);
