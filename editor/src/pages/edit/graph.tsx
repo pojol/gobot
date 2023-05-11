@@ -34,7 +34,7 @@ import "./graph.css";
 import Api from "@/constant/api";
 import ThemeType from "@/constant/constant";
 import { GetNode } from "./shape/shape";
-import EditSidePlane from "./side";
+import { EditSidePlane } from "./side";
 import { CreateGraph } from "./canvas/canvas";
 import { GetNodInfo, getDefaultNodeNotifyInfo } from "@/models/node";
 import {
@@ -85,6 +85,7 @@ const GraphView = (props: GraphViewProps) => {
     const { graphFlex } = useSelector((state: RootState) => state.resizeSlice)
     const { lock } = useSelector((state: RootState) => state.debugInfoSlice)
     const { nodes, updatetick } = useSelector((state: RootState) => state.treeSlice)
+    const [isGraphCreated, setIsGraphCreated] = useState(false);
 
     useEffect(() => {
         console.info("create graph")
@@ -127,7 +128,7 @@ const GraphView = (props: GraphViewProps) => {
                 if (source !== null && target !== null) {
                     const typename = source.getAttrs().type.name?.toString()
                     console.info("connect to", typename)
-                    if (typename === undefined){
+                    if (typename === undefined) {
                         message.warning("Cannot get node name");
                         return
                     }
@@ -305,6 +306,7 @@ const GraphView = (props: GraphViewProps) => {
             }
         }
 
+        setIsGraphCreated(true);
         //containerRef.current = graph.container;
         //containerRef.current.appendChild(graph.container);
         //stencilContainerRef.current.appendChild(graph.container);
@@ -413,23 +415,23 @@ const GraphView = (props: GraphViewProps) => {
         switch (child.ty) {
             case NodeTy.Selector:
                 nod = GetNode(child.ty, { id: child.id });
-                nod.setAttrs({label:{text: "sel"}})
+                nod.setAttrs({ label: { text: "sel" } })
                 break;
             case NodeTy.Sequence:
                 nod = GetNode(child.ty, { id: child.id });
-                nod.setAttrs({label:{text: "seq"}})
+                nod.setAttrs({ label: { text: "seq" } })
                 break;
             case NodeTy.Parallel:
                 nod = GetNode(child.ty, { id: child.id });
-                nod.setAttrs({label:{text: "par"}})
+                nod.setAttrs({ label: { text: "par" } })
                 break;
             case NodeTy.Loop:
                 nod = GetNode(child.ty, { id: child.id });
-                nod.setAttrs({label:{text: child.loop.toString()+" times"}})
+                nod.setAttrs({ label: { text: child.loop.toString() + " times" } })
                 break;
             case NodeTy.Wait:
                 nod = GetNode(child.ty, { id: child.id });
-                nod.setAttrs({label:{text: child.wait.toString()+ " ms"}})
+                nod.setAttrs({ label: { text: child.wait.toString() + " ms" } })
                 break;
             case NodeTy.Condition:
                 nod = GetNode(child.ty, { id: child.id });
@@ -585,7 +587,7 @@ const GraphView = (props: GraphViewProps) => {
         cleanStepInfo();
 
         props.dispatch(setDebugInfo({ metaInfo: "{}", threadInfo: [], lock: false }))
-        for(var nod of nodes) {
+        for (var nod of nodes) {
             if (nod.ty !== NodeTy.Root) {
                 continue
             }
@@ -720,8 +722,9 @@ const GraphView = (props: GraphViewProps) => {
         <div className='app'>
             <EditSidePlane
                 graph={graphRef.current}
+                isGraphCreated={isGraphCreated} 
             />
-
+            
             <div className="app-content" ref={containerRef} />
 
             <div

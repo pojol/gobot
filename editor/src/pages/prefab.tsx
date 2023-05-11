@@ -192,6 +192,7 @@ const Prefab = (props: PrefabProps) => {
 
   const onHandleRemove = () => {
     let targetKey = selectedKey
+    console.info("remove prefab " + targetKey)
     if (targetKey === "") {
       return
     }
@@ -291,6 +292,7 @@ const Prefab = (props: PrefabProps) => {
     onChange: (selectedRowKeys: any, selectedRows: any) => {
       console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
       setCode(selectedRows[0].code)
+      setSelectedKey(selectedRowKeys[0])
     },
     getCheckboxProps: (record: any) => ({
       // Column configuration not to be checked
