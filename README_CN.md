@@ -1,11 +1,17 @@
 # gobot
-Gobot是一个有状态的api/协议测试工具，支持图形化的行为编辑/调试、脚本节点、压力测试、测试报告等。
+Gobot是一个功能强大的有状态API测试机器人。它提供图形界面进行测试场景的搭建,可以方便的进行测试脚本编写、单步调试和压力测试,并可以在测试过程的每个阶段之间共享和存储状态。
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/pojol/gobot)](https://goreportcard.com/report/github.com/pojol/gobot)
 [![](https://img.shields.io/badge/%E6%96%87%E6%A1%A3-Doc-2ca5e0?style=flat&logo=github)](https://pojol.gitee.io/gobot/#/)
 [![](https://img.shields.io/badge/Trello-Todo-2ca5e0?style=flat&logo=trello)](https://trello.com/b/8eDZ6h7n/)
 [![CI](https://github.com/pojol/gobot/actions/workflows/dockerimage.yml/badge.svg?branch=develop)](https://github.com/pojol/gobot/actions/workflows/dockerimage.yml)
 
+## 快速安装
+> 注：开启本地运行模式，所有的改动被记录在内存（并不会真正保存）如果需要保存请将文件下载到本地；或采用正式的部署方式
+1. 在 release 页面下载指定版本的 编辑端(editor 以及 驱动端(driver
+2. 在命令行以内存模式执行驱动端 `./gobot-driver-win32-v0.3.x.exe --no_database --mock`
+3. 启动 gobot_editor_win_x64_v0.3.x ,并将 driver 地址填入 http://127.0.0.1:8888
+4. 如果是初次使用，可以在 /demos 目录中找到示例机器人，在bots页面中载入使用
 
 ## 特性
 * 使用`行为树`控制机器人的运行逻辑，使用`脚本`控制节点的具体行为（比如发起一次http请求

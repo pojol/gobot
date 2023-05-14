@@ -11,10 +11,9 @@ import { RootState } from "@/models/store";
 import PubSub from "pubsub-js";
 import Topic from "@/constant/topic";
 
-import {
-  getDefaultNodeNotifyInfo,
-  nodeUpdate,
-} from "@/models/tree";
+import { getDefaultNodeNotifyInfo } from '@/models/node';
+import { UpdateType,nodeUpdate, find } from '@/models/newtree';
+import { delay } from '@/utils/timer';
 
 /// <reference path="node.d.ts" />
 
@@ -22,60 +21,70 @@ const { Search } = Input;
 
 export default function ActionTab() {
   const [state, setState] = useState({
-    nod: { id: "" },
+    nod: getDefaultNodeNotifyInfo(),
     node_ty: "",
     code: "",
     defaultAlias: "",
-    hflex: 0,
-    wflex: 0,
-    editor: undefined,
+    hflex: 0.5,
+    wflex: 0.4,
   });
 
+  const [editorState, setEditorState] = useState(null);
+
   const { currentClickNode } = useSelector((state: RootState) => state.treeSlice);
+  const { graphFlex, editFlex } = useSelector((state: RootState) => state.resizeSlice)
+  const { nodes } = useSelector((state: RootState) => state.treeSlice)
   const dispatch = useDispatch()
 
   useEffect(() => {
-    var obj = window.tree.get(currentClickNode.id);
-    if (obj !== undefined) {
-      let target = { ...obj };
-      delete target.pos;
-      delete target.children;
 
+    delay(100).then(()=>{
+      let nod = find(nodes, currentClickNode.id)
+  
       setState({
         ...state,
-        nod: target,
-        code: target.code,
-        defaultAlias: target.alias,
-        node_ty: target.ty,
+        nod: nod,
+        code: nod.code,
+        defaultAlias: nod.alias,
+        node_ty: nod.ty,
       });
-    } else {
-      setState({
-        ...state,
-        nod: { id: "" },
-      });
-    }
-  },[currentClickNode])
+    })
 
-  /*
-PubSub.subscribe(Topic.EditPanelCodeMetaResize, (topic, flex) => {
-  this.setState({ hflex: flex }, () => {
-    this.redraw();
-  });
-});
-*/
-  /*
-        PubSub.subscribe(Topic.EditPanelEditCodeResize, (topic, flex) => {
-          this.setState({ wflex: 1 - flex }, () => {
-            this.redraw();
-          });
-        });
-        */
-
-  /*
     PubSub.subscribe(Topic.WindowResize, () => {
-      this.redraw();
+      redraw(state.wflex, state.hflex)
     });
-    */
+
+    return () => {
+      // 取消订阅
+      PubSub.unsubscribe(Topic.WindowResize);
+    };
+  }, [currentClickNode])
+
+  useEffect(() => {
+    setState({
+      ...state,
+      wflex: 1 - graphFlex,
+    });
+
+    redraw((1 - graphFlex), state.hflex)
+  }, [graphFlex])
+
+  useEffect(() => {
+    setState({
+      ...state,
+      hflex: editFlex,
+    });
+
+    redraw(state.wflex, editFlex)
+  }, [editFlex])
+
+  const redraw = (wflex: number, hflwx: number) => {
+    if (editorState !== null) {
+      var width = document.documentElement.clientWidth * wflex - 18;
+      var height = document.documentElement.clientHeight * hflwx - 40;
+      editorState.setSize(width.toString() + "px", height.toString() + "px");
+    }
+  }
 
   const applyClick = () => {
     if (state.nod.id === "") {
@@ -85,12 +94,12 @@ PubSub.subscribe(Topic.EditPanelCodeMetaResize, (topic, flex) => {
 
     let info = getDefaultNodeNotifyInfo()
     info.id = state.nod.id
-    info.ty = state.node_ty
     info.code = state.code
     info.alias = state.defaultAlias
-    info.notify = true
-    dispatch(nodeUpdate(info))
-    PubSub.publish(Topic.UpdateNodeParm, info)
+    dispatch(nodeUpdate({
+      info: info,
+      type: [UpdateType.UpdateCode, UpdateType.UpdateAlias]
+    }))
   };
 
   const handleChange = (editor: any, data: any, value: any) => {
@@ -120,15 +129,10 @@ PubSub.subscribe(Topic.EditPanelCodeMetaResize, (topic, flex) => {
           lineNumbers: true,
         }}
         editorDidMount={(editor) => {
-          setState({
-            ...state,
-            wflex: 0.4,
-            hflex: 0.5,
-            editor: editor,
-          });
+          setEditorState(editor);
 
-          var width = document.documentElement.clientWidth * 0.4 - 18;
-          var height = document.documentElement.clientHeight * 0.5 - 38;
+          var width = document.documentElement.clientWidth * state.wflex - 18;
+          var height = document.documentElement.clientHeight * state.hflex - 40;
 
           editor.setSize(width.toString() + "px", height.toString() + "px");
         }}

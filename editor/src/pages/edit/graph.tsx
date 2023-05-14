@@ -8,37 +8,25 @@ import { RootState } from "@/models/store";
 import PubSub from "pubsub-js";
 import Topic from "../../constant/topic";
 
-import {
-    cleanTree,
-    getDefaultNodeNotifyInfo,
-    nodeAdd,
-    nodeLink,
-    nodeUnlink,
-    debug,
-    save,
-    setCurrentDebugBot,
-    nodeUpdate,
-    nodeClick,
-} from "@/models/tree";
-import { setDebugInfo } from "@/models/debuginfo";
-
+import { setDebugInfo, setLock } from "@/models/debuginfo";
 import { history } from "umi";
 
 import {
     AimOutlined,
     BugOutlined,
     CaretRightOutlined,
+    ClearOutlined,
     CloudUploadOutlined,
     DeleteOutlined,
     UndoOutlined,
     ZoomInOutlined,
-    ZoomOutOutlined,
+    ZoomOutOutlined
 } from "@ant-design/icons";
 import { Button, Input, Modal, Tooltip } from "antd";
 import { IsActionNode, IsScriptNode, NodeTy } from "../../constant/node_type";
 
 import { message } from "antd";
-import { ConnectedProps, connect } from "react-redux";
+import { ConnectedProps, connect, useSelector } from "react-redux";
 import { useLocation } from 'react-router-dom';
 import "./graph.css";
 
@@ -46,7 +34,17 @@ import "./graph.css";
 import Api from "@/constant/api";
 import ThemeType from "@/constant/constant";
 import { GetNode } from "./shape/shape";
-import EditSidePlane from "./side";
+import { EditSidePlane } from "./side";
+import { CreateGraph } from "./canvas/canvas";
+import { GetNodInfo, getDefaultNodeNotifyInfo } from "@/models/node";
+import {
+    nodeRedraw, nodeRmv, cleanTree, nodeAdd, initTree, nodeClick, nodeLink,
+    nodeUnlink,
+    setCurrentDebugBot,
+    nodeUpdate,
+    UpdateType,
+    nodeSave,
+} from "@/models/newtree";
 
 const {
     LoadBehaviorWithBlob,
@@ -54,92 +52,6 @@ const {
 } = require("../../utils/parse");
 const { PostBlob, Post } = require("../../utils/request");
 
-
-
-// 高亮
-const magnetAvailabilityHighlighter = {
-    name: "stroke",
-    args: {
-        attrs: {
-            fill: "#fff",
-            stroke: "#47C769",
-        },
-    },
-};
-
-function fillChildInfo(child: Node, info: any) {
-    var childInfo = {
-        id: child.id,
-        ty: child.getAttrs().type.toString(),
-        pos: {
-            x: child.position().x,
-            y: child.position().y,
-        },
-        children: [],
-    };
-    info.children.push(childInfo);
-
-    child.eachChild((cchild, idx) => {
-        if (cchild instanceof Node) {
-            fillChildInfo(cchild as Node, childInfo);
-        }
-    });
-}
-
-function GetNodInfo(prefab: Array<PrefabInfo>, nod: Node, code: string, alias: string): NodeNotifyInfo {
-    var info = getDefaultNodeNotifyInfo();
-    info.id = nod.id;
-    info.ty = nod.getAttrs().type.name as string;
-    info.pos = {
-        x: nod.position().x,
-        y: nod.position().y,
-    };
-
-    if (info.ty === NodeTy.Action || IsActionNode(info.ty)) {
-        if (code !== "") {
-            info.code = code
-        } else {
-            prefab.forEach((p) => {
-                if (p.name === info.ty) {
-                    info.code = p.code;
-                }
-
-                if (alias === ""){
-                    info.alias = info.ty
-                }
-            })
-
-            if (info.code === "") {
-
-            }
-        }
-
-        if (alias !== "") {
-            info.alias = alias
-        }
-    }
-
-    if (info.ty === NodeTy.Condition) {
-        if (code !== "") {
-            info.code = code
-        } else {
-            info.code = `
--- Write expression to return true or false
-function execute()
-
-end
-        `;
-        }
-    }
-
-    nod.eachChild((child, idx) => {
-        if (child instanceof Node) {
-            fillChildInfo(child as Node, info);
-        }
-    });
-
-    return info;
-}
 
 function iterate(nod: Node, callback: (nod: Node) => void) {
     if (nod !== null && nod !== undefined) {
@@ -165,104 +77,19 @@ const GraphView = (props: GraphViewProps) => {
 
     const graphRef = React.useRef<Graph>();
     const containerRef = React.useRef<HTMLDivElement>(null);
-    const stencilContainerRef = React.useRef<HTMLDivElement>(null);
 
     const [modalVisible, setModalVisible] = useState<boolean>(false);
     const [behaviorName, setBehaviorName] = useState<string>("");
     const [wflex, setWflex] = useState<number>(0.6);
-    const location = useLocation();
+
+    const { graphFlex } = useSelector((state: RootState) => state.resizeSlice)
+    const { lock } = useSelector((state: RootState) => state.debugInfoSlice)
+    const { nodes, updatetick } = useSelector((state: RootState) => state.treeSlice)
+    const [isGraphCreated, setIsGraphCreated] = useState(false);
 
     useEffect(() => {
-
-        const graph = new Graph({
-            width: document.documentElement.clientWidth * wflex,
-            height: document.documentElement.clientHeight,
-            container: containerRef.current,
-            highlighting: {
-                magnetAvailable: magnetAvailabilityHighlighter,
-                magnetAdsorbed: {
-                    name: "stroke",
-                    args: {
-                        attrs: {
-                            fill: "#fff",
-                            stroke: "#31d0c6",
-                        },
-                    },
-                },
-            },
-            snapline: {
-                enabled: true,
-                sharp: true,
-            },
-            connecting: {
-                snap: true,
-                allowBlank: false,
-                allowLoop: false,
-                allowPort: false,
-                highlight: true,
-                allowMulti: false,
-                connector: "rounded",
-                connectionPoint: "boundary",
-                router: {
-                    name: "er",
-                    args: {
-                        direction: "V",
-                    },
-                },
-                createEdge() {
-                    return new Shape.Edge({
-                        attrs: {
-                            line: {
-                                stroke: "#a0a0a0",
-                                strokeWidth: 1,
-                                targetMarker: {
-                                    name: "classic",
-                                    size: 3,
-                                },
-                            },
-                        },
-                    });
-                },
-            },
-            keyboard: {
-                enabled: true,
-            },
-            grid: {
-                size: 10, // 网格大小 10px
-                visible: true, // 绘制网格，默认绘制 dot 类型网格
-            },
-            history: true,
-            selecting: {
-                enabled: true,
-                showNodeSelectionBox: true,
-            },
-            scroller: {
-                enabled: true,
-                pageVisible: false,
-                pageBreak: false,
-                pannable: true,
-            },
-            mousewheel: {
-                enabled: true,
-                modifiers: ["alt", "meta"],
-            },
-        });
-
-        var root = GetNode(NodeTy.Root, {});
-        root.setPosition(
-            graph.getGraphArea().width / 2,
-            graph.getGraphArea().height / 2 - 200
-        );
-        graph.addNode(root);
-
-        props.dispatch(
-            nodeAdd({
-                info: GetNodInfo(props.prefabMap, root, "",""),
-                build: true,
-                silent: false,
-            })
-        );
-        props.dispatch(cleanTree())
+        console.info("create graph")
+        const graph = CreateGraph(containerRef.current, wflex, graphFlex)
 
         graph.bindKey("del", () => {
             ClickDel();
@@ -287,8 +114,9 @@ const GraphView = (props: GraphViewProps) => {
             }
 
             findNode(edge.getTargetCellId(), (child) => {
-                // PubSub.publish(Topic.LinkDisconnect, [child.id, false]);
-                child.getParent()?.removeChild(edge);
+                props.dispatch(nodeUnlink({ targetid: child.id, silent: false }))
+                props.dispatch(nodeRedraw())
+                //child.getParent()?.removeChild(edge);
             });
         });
 
@@ -298,16 +126,20 @@ const GraphView = (props: GraphViewProps) => {
 
             if (isNew) {
                 if (source !== null && target !== null) {
-                    if (target.getAttrs().type.toString() === NodeTy.Root) {
+                    const typename = source.getAttrs().type.name?.toString()
+                    console.info("connect to", typename)
+                    if (typename === undefined) {
+                        message.warning("Cannot get node name");
+                        return
+                    }
+
+                    if (target.getAttrs().type.name === NodeTy.Root) {
                         message.warning("Cannot connect to root node");
                         graph.removeEdge(edge.id, { disconnectEdges: true });
                         return;
                     }
 
-                    if (
-                        IsScriptNode(source.getAttrs().type.toString()) &&
-                        source.getChildCount() > 0
-                    ) {
+                    if (IsScriptNode(typename) && source.getChildCount() > 0) {
                         message.warning("Action node can only mount a single node");
                         graph.removeEdge(edge.id, { disconnectEdges: true });
                         return;
@@ -321,12 +153,7 @@ const GraphView = (props: GraphViewProps) => {
 
                     edge.setZIndex(0);
                     source.addChild(target);
-                    /*
-                                        PubSub.publish(Topic.LinkConnect, [
-                                            { parent: source.id, child: target.id },
-                                            false,
-                                        ]);
-                                        */
+                    props.dispatch(nodeLink({ parentid: source.id, childid: target.id, silent: false }))
                 }
             }
         });
@@ -336,29 +163,17 @@ const GraphView = (props: GraphViewProps) => {
         });
 
         graph.on("node:added", ({ node, index, options }) => {
-            let silent = false;
-            let build = true;
-            let code = "";
-            let alias = "";
-
+            let build = false
             if (options.others !== undefined) {
-                silent = options.others.silent;
                 build = options.others.build;
-                code = options.others.code;
-                alias = options.others.alias
             }
 
-            if (node.getAttrs().type.toString() === "ActionNode") {
-                node.setSize(40, 20);
+            if (!build) {
+                props.dispatch(nodeAdd({
+                    info: GetNodInfo(props.prefabMap, node, "", ""),
+                    silent: false,
+                }))
             }
-
-            props.dispatch(
-                nodeAdd({
-                    info: GetNodInfo(props.prefabMap, node, code, alias),
-                    build: build,
-                    silent: silent,
-                })
-            );
         });
 
         graph.on("node:mouseenter", ({ node }) => {
@@ -385,22 +200,20 @@ const GraphView = (props: GraphViewProps) => {
 
         graph.on("node:moved", ({ e, x, y, node, view: NodeView }) => {
             iterate(node, (nod) => {
-                if (nod.getAttrs().type !== undefined) {
-                    var info = {
-                        id: nod.id,
-                        ty: nod.getAttrs().type.toString(),
-                        pos: {
-                            x: nod.position().x,
-                            y: nod.position().y,
-                        },
-                        children: [],
-                    };
+                if (nod.isNode()) {
+                    var newinfo = getDefaultNodeNotifyInfo()
+                    newinfo.id = nod.id
+                    newinfo.pos = {
+                        x: nod.position().x,
+                        y: nod.position().y,
+                    }
 
-                    //PubSub.publish(Topic.UpdateGraphParm, info);
+                    props.dispatch(nodeUpdate({
+                        info: newinfo,
+                        type: [UpdateType.UpdatePosition]
+                    }))
                 }
             });
-
-            findNode(node.id, (nod) => { });
         });
 
         graph.on("edge:mouseenter", ({ edge }) => {
@@ -412,18 +225,18 @@ const GraphView = (props: GraphViewProps) => {
                     args: {
                         distance: -30,
                         onClick({ e, cell, view }: any) {
-                            var sourcenod = cell.getSourceNode();
+                            //var sourcenod = cell.getSourceNode();
                             var targetnod = cell.getTargetNode();
                             //
-                            this.graph.removeEdge(cell.id, { disconnectEdges: true });
-                            this.props.dispatch(
+                            //this.graph.removeEdge(cell.id, { disconnectEdges: true });
+                            props.dispatch(
                                 nodeUnlink({
                                     targetid: targetnod.id,
                                     silent: false,
                                 })
                             );
-
-                            sourcenod.unembed(targetnod);
+                            props.dispatch(nodeRedraw())
+                            //sourcenod.unembed(targetnod);
                         },
                     },
                 },
@@ -434,86 +247,9 @@ const GraphView = (props: GraphViewProps) => {
             edge.removeTools();
         });
 
-        // 调整画布大小
-        graph.resizeGraph(1024, 1024);
-
-        const updateNodeSub = PubSub.subscribe(Topic.UpdateNodeParm, (topic: string, info: NodeNotifyInfo) => {
-            if (IsActionNode(info.ty)) {
-                findNode(info.id, (nod) => {
-                    nod.setAttrs({
-                        label: { text: info.alias },
-                    });
-                });
-            } else if (info.ty === NodeTy.Loop) {
-                findNode(info.id, (nod) => {
-                    nod.setAttrs({
-                        label: { text: getLoopLabel(info.loop) },
-                    });
-                });
-            } else if (info.ty === NodeTy.Wait) {
-                findNode(info.id, (nod) => {
-                    nod.setAttrs({
-                        label: { text: info.wait.toString() + " ms" },
-                    });
-                });
-            }
+        PubSub.subscribe(Topic.WindowResize, () => {
+            resizeViewpoint(wflex);
         });
-
-        /*
-            PubSub.subscribe(
-                Topic.FileLoadRedraw,
-                (topic: string, treearr: Array<any>) => {
-                    this.graph.clearCells();
-                    console.info("redraw by undo");
-    
-                    treearr.forEach((element) => {
-                        this.redraw(element, false);
-                    });
-                }
-            );
-            */
-
-        PubSub.subscribe(
-            Topic.FileLoadDraw,
-            (topic: string, treearr: Array<any>) => {
-                graph.clearCells();
-                console.info("redraw by file", treearr);
-
-                treearr.forEach((element) => {
-                    redraw(element, true);
-                });
-
-                props.dispatch(cleanTree())
-            }
-        );
-
-        /*
-                PubSub.subscribe(
-                    Topic.EditPanelEditCodeResize,
-                    (topic: string, flex: number) => {
-                        this.setState({ wflex: flex }, () => {
-                            this.resizeViewpoint();
-                        });
-                    }
-                );
-                */
-
-        /*
-                PubSub.subscribe(
-                    Topic.EditPanelEditChangeResize,
-                    (topic: string, flex: number) => {
-                        this.setState({ hflex: 1 - flex }, () => {
-                            this.resizeViewpoint();
-                        });
-                    }
-                );
-                */
-
-        /*
-                PubSub.subscribe(Topic.WindowResize, () => {
-                    this.resizeViewpoint();
-                });
-                */
 
         PubSub.subscribe(Topic.ThemeChange, (topic: string, theme: string) => {
             var nods = graph.getRootNodes();
@@ -521,10 +257,12 @@ const GraphView = (props: GraphViewProps) => {
                 iterate(nods[0], (nod) => {
                     let bodyfill = "#f5f5f5";
                     let labelfill = "#20262E";
+                    let portfill = "#fff"
 
                     if (theme === ThemeType.Dark) {
                         bodyfill = "#20262E";
                         labelfill = "#fff";
+                        portfill = "#20262E"
                     }
 
                     nod.setAttrs({
@@ -535,11 +273,19 @@ const GraphView = (props: GraphViewProps) => {
                             fill: labelfill,
                         },
                     });
+
+                    if (nod.isNode()) {
+                        nod.setPortProp(nod.getPortAt(0).id as string, "attrs/portBody/fill", portfill)
+                    }
                 });
             }
         });
 
-        if (history.location.pathname !== "/editor") {
+        graphRef.current = graph;
+        console.info("graph init done", graphRef.current)
+
+        console.info("load path", history.location.pathname)
+        if (history.location.pathname.length > 8) { // "/editor"
             let botname = history.location.pathname.slice(8);
 
             if (botname != null && botname != "") {
@@ -550,35 +296,58 @@ const GraphView = (props: GraphViewProps) => {
                     Api.FileGet,
                     chineseChar
                 ).then((file: any) => {
-                    props.dispatch(cleanTree());
+                    //props.dispatch(cleanTree());
                     LoadBehaviorWithFile(chineseChar, file.blob, (tree: any) => {
                         graph.clearCells();
+                        props.dispatch(initTree(tree))
                         redraw(tree, true);
                     });
                 });
             }
         }
 
-        graphRef.current = graph;
-
-        if (location.state !== null) {
-            props.dispatch(cleanTree());
-            graph.clearCells();
-            console.info("redraw", location.state)
-            redraw(location.state, true);
-            history.replace('/editor')  // 清理页面的 location.state
-        }
-
+        setIsGraphCreated(true);
         //containerRef.current = graph.container;
         //containerRef.current.appendChild(graph.container);
         //stencilContainerRef.current.appendChild(graph.container);
-
-        return () => {
-            // 取消订阅
-            PubSub.unsubscribe(updateNodeSub);
-        };
     }, []);
 
+    useEffect(() => {
+
+        redrawTree()
+
+    }, [updatetick])
+
+    useEffect(() => {
+        resizeViewpoint(graphFlex)
+
+        // redraw
+
+    }, [graphFlex])
+
+    const redrawTree = () => {
+
+        if (graphRef.current) {
+            graphRef.current.clearCells();
+
+            if (nodes.length > 0) {
+                for (var i = 0; i < nodes.length; i++) {
+                    redraw(nodes[i], true)
+                }
+            } else {
+                var root = GetNode(NodeTy.Root, {});
+                root.setPosition(
+                    graphRef.current.getGraphArea().width / 2,
+                    graphRef.current.getGraphArea().height / 2 - 200
+                );
+                graphRef.current.addNode(root);
+                props.dispatch(initTree(
+                    GetNodInfo(props.prefabMap, root, "", "")
+                ))
+            }
+
+        }
+    }
 
     const getLoopLabel = (val: Number) => {
         var tlab = "";
@@ -591,16 +360,15 @@ const GraphView = (props: GraphViewProps) => {
         return tlab;
     }
 
-
     // 重绘视口
-    const resizeViewpoint = () => {
-        var width = document.body.clientWidth * wflex;
+    const resizeViewpoint = (graphFlex: number) => {
+        var width = document.documentElement.clientWidth * graphFlex;
 
-        console.info("resize panel", wflex, document.body.clientHeight);
+        console.info("resize panel", graphFlex, document.documentElement.clientWidth);
 
         // 设置视口大小
         if (graphRef.current) {
-            graphRef.current.resize(width, document.body.clientHeight - 62);
+            graphRef.current.resize(width, document.documentElement.clientHeight - 62);
         }
     }
 
@@ -642,14 +410,28 @@ const GraphView = (props: GraphViewProps) => {
         }
 
         let others = { build: build, silent: true, code: "", alias: "" }
+        console.info(child)
 
         switch (child.ty) {
             case NodeTy.Selector:
+                nod = GetNode(child.ty, { id: child.id });
+                nod.setAttrs({ label: { text: "sel" } })
+                break;
             case NodeTy.Sequence:
-            case NodeTy.Loop:
-            case NodeTy.Wait:
+                nod = GetNode(child.ty, { id: child.id });
+                nod.setAttrs({ label: { text: "seq" } })
+                break;
             case NodeTy.Parallel:
                 nod = GetNode(child.ty, { id: child.id });
+                nod.setAttrs({ label: { text: "par" } })
+                break;
+            case NodeTy.Loop:
+                nod = GetNode(child.ty, { id: child.id });
+                nod.setAttrs({ label: { text: child.loop.toString() + " times" } })
+                break;
+            case NodeTy.Wait:
+                nod = GetNode(child.ty, { id: child.id });
+                nod.setAttrs({ label: { text: child.wait.toString() + " ms" } })
                 break;
             case NodeTy.Condition:
                 nod = GetNode(child.ty, { id: child.id });
@@ -658,7 +440,6 @@ const GraphView = (props: GraphViewProps) => {
             default:
                 nod = GetNode(child.ty, { id: child.id });
                 others.code = child.code
-                console.info("alias", child.alias, child.ty)
                 if (child.alias === "") {
                     others.alias = child.ty
                 } else {
@@ -694,52 +475,14 @@ const GraphView = (props: GraphViewProps) => {
             );
 
             parent.addChild(nod);
-            props.dispatch(
-                nodeLink({
-                    parentid: parent.id,
-                    childid: nod.id,
-                    silent: true,
-                })
-            );
         }
 
         if (IsScriptNode(child.ty)) {
             nod.setAttrs({ label: { text: child.alias } });
-            let info = getDefaultNodeNotifyInfo()
-            info.id = nod.id
-            info.ty = child.ty
-            info.code = child.code
-            info.alias = child.alias
-            info.notify = false
-            info.pos = {
-                x: nod.position().x,
-                y: nod.position().y,
-            }
-            props.dispatch(nodeUpdate(info))
         } else if (child.ty === NodeTy.Loop) {
             nod.setAttrs({ label: { text: getLoopLabel(child.loop) } });
-            let info = getDefaultNodeNotifyInfo()
-            info.id = nod.id
-            info.ty = child.ty
-            info.loop = child.loop
-            info.notify = false
-            info.pos = {
-                x: nod.position().x,
-                y: nod.position().y,
-            }
-            props.dispatch(nodeUpdate(info))
         } else if (child.ty === NodeTy.Wait) {
             nod.setAttrs({ label: { text: child.wait.toString() + " ms" } });
-            let info = getDefaultNodeNotifyInfo()
-            info.id = nod.id
-            info.ty = child.ty
-            info.wait = child.wait
-            info.notify = false
-            info.pos = {
-                x: nod.position().x,
-                y: nod.position().y,
-            }
-            props.dispatch(nodeUpdate(info))
         } else if (child.ty === NodeTy.Sequence) {
             nod.setAttrs({ label: { text: "seq" } });
         } else if (child.ty === NodeTy.Selector) {
@@ -755,7 +498,8 @@ const GraphView = (props: GraphViewProps) => {
         }
     }
 
-    const redraw = (jsontree: any, build: boolean) => {
+    const redraw = (jsontree: NodeNotifyInfo, build: boolean) => {
+
         if (jsontree.ty === NodeTy.Root) {
             var root = GetNode(NodeTy.Root, { id: jsontree.id });
             root.setPosition({
@@ -810,17 +554,29 @@ const GraphView = (props: GraphViewProps) => {
         let cells: Cell<Cell.Properties>[]
 
         if (graphRef.current) {
-            cells = graphRef.current.getSelectedCells();
+            cells = graphRef.current.getSelectedCells()
             if (cells.length) {
+
                 for (var i = 0; i < cells.length; i++) {
-                    if (cells[i].getAttrs().type.toString() !== NodeTy.Root) {
-                        removeCell(cells[i]);
+                    if (cells[i].isNode()) {
+                        props.dispatch(nodeRmv(cells[i].id))
                     }
+                    /*
+                                        if (cells[i].getAttrs().type.toString() !== NodeTy.Root) {
+                                            removeCell(cells[i]);
+                                        }
+                                        */
                 }
+
+                props.dispatch(nodeRedraw())
             }
         }
 
     };
+
+    const CleanTree = () => {
+        props.dispatch(cleanTree())
+    }
 
     const ClickUpload = () => {
         setModalVisible(true);
@@ -830,10 +586,14 @@ const GraphView = (props: GraphViewProps) => {
     const ClickCreateDebug = (e: any) => {
         cleanStepInfo();
 
-        props.dispatch(setDebugInfo({ metaInfo: "{}", threadInfo: [] }))
-        props.dispatch(debug((tree: NodeNotifyInfo) => {
+        props.dispatch(setDebugInfo({ metaInfo: "{}", threadInfo: [], lock: false }))
+        for (var nod of nodes) {
+            if (nod.ty !== NodeTy.Root) {
+                continue
+            }
+
             var xmltree = {
-                behavior: tree,
+                behavior: nod,
             };
 
             var blob = new Blob([OBJ2XML(xmltree)], {
@@ -852,8 +612,7 @@ const GraphView = (props: GraphViewProps) => {
                     }
                 }
             );
-        }))
-
+        }
     };
 
     const ClickZoomIn = () => {
@@ -881,7 +640,7 @@ const GraphView = (props: GraphViewProps) => {
         }
 
         var botid = props.tree.currentDebugBot
-
+        props.dispatch(setLock(true))
         Post(localStorage.remoteAddr, Api.DebugStep, { BotID: botid }).then(
             (json: any) => {
 
@@ -913,6 +672,7 @@ const GraphView = (props: GraphViewProps) => {
                 props.dispatch(setDebugInfo({
                     metaInfo: metaStr,
                     threadInfo: threadinfo,
+                    lock: false,
                 }))
             }
         );
@@ -926,7 +686,7 @@ const GraphView = (props: GraphViewProps) => {
     const modalHandleOk = () => {
         setModalVisible(false);
         if (behaviorName !== "") {
-            props.dispatch(save(behaviorName))
+            props.dispatch(nodeSave(behaviorName))
         } else {
             message.warning("please enter the file name of the behavior tree");
         }
@@ -962,8 +722,9 @@ const GraphView = (props: GraphViewProps) => {
         <div className='app'>
             <EditSidePlane
                 graph={graphRef.current}
-            ></EditSidePlane>
-
+                isGraphCreated={isGraphCreated} 
+            />
+            
             <div className="app-content" ref={containerRef} />
 
             <div
@@ -982,8 +743,11 @@ const GraphView = (props: GraphViewProps) => {
                 <Tooltip placement="topLeft" title="Undo [ ctrl+z ]">
                     <Button icon={<UndoOutlined />} onClick={ClickUndo} />
                 </Tooltip>
-                <Tooltip placement="topLeft" title="Delete [ del ]">
+                <Tooltip placement="topLeft" title="Delete Node [ del ]">
                     <Button icon={<DeleteOutlined />} onClick={ClickDel} />
+                </Tooltip>
+                <Tooltip placement="topLeft" title="Clean">
+                    <Button icon={<ClearOutlined />} onClick={CleanTree} />
                 </Tooltip>
             </div>
 
@@ -993,6 +757,7 @@ const GraphView = (props: GraphViewProps) => {
                         type="primary"
                         style={{ width: 70 }}
                         icon={<CaretRightOutlined />}
+                        disabled={lock}
                         onClick={ClickStep}
                     >
                         { }

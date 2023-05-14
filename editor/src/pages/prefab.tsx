@@ -16,7 +16,9 @@ import "codemirror/theme/ayu-dark.css";
 import "codemirror/theme/yonce.css";
 import "codemirror/theme/neo.css";
 import "codemirror/theme/zenburn.css";
+
 import "codemirror/mode/lua/lua";
+
 
 import Topic from "../constant/topic";
 import Api from "../constant/api";
@@ -54,8 +56,10 @@ const Prefab = (props: PrefabProps) => {
   const [selectedKey, setSelectedKey] = useState<string>("");
   const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
   const [newPrefabName, setNewPrefabName] = useState<string>("");
-  const [searchText, setSearchText] = useState<string>("");
   const [searchedColumn, setSearchedColumn] = useState<DataIndex>();
+  const [editor, setEditor] = useState<any>({});
+
+  let obj: any = null
 
   useEffect(() => {
     syncConfig();
@@ -120,23 +124,23 @@ const Prefab = (props: PrefabProps) => {
               (file: any) => {
                 let reader = new FileReader();
                 reader.onload = function (ev) {
-  
+
                   dat.push({ key: element.name, name: element.name, tags: element.tags, code: String(reader.result), })
-  
+
                   let pi: PrefabInfo = {
                     name: element.name,
                     tags: element.tags,
                     code: String(reader.result),
                   }
                   props.dispatch(addItem({ key: element.name, value: pi }))
-  
+
                   counter++;
                   if (counter === lst.length) {
                     callback()
                     PubSub.publish(Topic.PrefabUpdateAll, {})
                   }
                 };
-  
+
                 reader.readAsText(file.blob);
               }
             );
@@ -188,6 +192,7 @@ const Prefab = (props: PrefabProps) => {
 
   const onHandleRemove = () => {
     let targetKey = selectedKey
+    console.info("remove prefab " + targetKey)
     if (targetKey === "") {
       return
     }
@@ -272,13 +277,14 @@ const Prefab = (props: PrefabProps) => {
 
   const onDidMount = (editor: any) => {
     editor.setSize(undefined, document.documentElement.clientHeight - 120)
+    setEditor(editor)
   };
-
 
   const options = {
     mode: "text/x-lua",
     theme: localStorage.codeboxTheme,
     lineNumbers: true,
+    indentUnit: 4,
   };
 
   // rowSelection object indicates the need for row selection
@@ -286,6 +292,7 @@ const Prefab = (props: PrefabProps) => {
     onChange: (selectedRowKeys: any, selectedRows: any) => {
       console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
       setCode(selectedRows[0].code)
+      setSelectedKey(selectedRowKeys[0])
     },
     getCheckboxProps: (record: any) => ({
       // Column configuration not to be checked

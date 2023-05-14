@@ -17,7 +17,8 @@ import {
   ThunderboltTwoTone,
 } from '@ant-design/icons';
 
-import logo from '../assets/gobot.ico';
+import logo from '../assets/gobot.png';
+import darklog from '../assets/gobot-dark.png'
 import Topic from '@/constant/topic';
 
 import { setThemeValue, setModalOpen } from '@/models/config';
@@ -35,6 +36,24 @@ function getState(): any {
   }
 }
 
+function getLog() : any {
+  if (localStorage.theme === undefined || localStorage.theme === ThemeType.Light) {
+    return logo
+  } else if (localStorage.theme === ThemeType.Dark) {
+    return darklog
+  }
+}
+
+function resizeHandler() {
+  let resizeTimer;
+  if (!resizeTimer) {
+    resizeTimer = setTimeout(() => {
+      resizeTimer = null;
+      PubSub.publish(Topic.WindowResize, {});
+    }, 100);
+  }
+};
+
 function Layout() {
   const { clientRoutes } = useAppData();
   const location = useLocation();
@@ -47,6 +66,8 @@ function Layout() {
     layout: 'top',
     splitMenus: true,
   };
+
+  window.addEventListener("resize", resizeHandler, false);
 
   const themeChange = (e: RadioChangeEvent) => {
     dispatch(setThemeValue(e.target.value))
@@ -95,7 +116,7 @@ function Layout() {
       <ProLayout
         route={clientRoutes[0]}
         location={location}
-        logo={logo}
+        logo={getLog()}
         title={'Gobot'}
         menuItemRender={(menuItemProps, defaultDom) => {
           if (menuItemProps.isUrl || menuItemProps.children) {
@@ -114,6 +135,7 @@ function Layout() {
 
           if (props.isMobile) return [];
           return [
+            <Tag>v0.3.1</Tag>,
             <Radio.Group onChange={themeChange} value={themeValue} buttonStyle="solid" defaultValue={localStorage.theme} size={"small"}>
               <Radio.Button value={ThemeType.Dark}>Dark</Radio.Button>
               <Radio.Button value={ThemeType.Light}>Light</Radio.Button>

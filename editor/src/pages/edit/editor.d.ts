@@ -11,42 +11,51 @@ interface Window {
     tree: Map<string, any>,
 }
 
+interface NodeUpdateInfo {
+    type: string[],
+    info: NodeNotifyInfo
+}
+
 interface NodeNotifyInfo {
     id: string,
     ty: string,
     code: string,
     loop: number,
     wait: number,
-    alias:string,
+    alias: string,
     pos: {
         x: number,
         y: number,
     },
     children: Array<NodeNotifyInfo>,
-    notify:boolean,
+    notify: boolean,
 }
 
 interface NodeClickInfo {
-    id : string,
-    type : string,
+    id: string,
+    type: string,
 }
 
 interface NodeAddInfo {
     info: NodeNotifyInfo,
-    build: boolean,
     silent: boolean,
 }
 
 
 interface NodeLinkInfo {
-    parentid : string,
-    childid : string,
+    parentid: string,
+    childid: string,
     silent: boolean,
 }
 
-interface NodeUnlinkInfo{
-    targetid : string, 
+interface NodeUnlinkInfo {
+    targetid: string,
     silent: boolean,
+}
+
+interface NodeFindCallback {
+    id: string,
+    callback: (NodeNotifyInfo) => void
 }
 
 interface PrefabTagInfo {
@@ -55,8 +64,8 @@ interface PrefabTagInfo {
 
 
 interface ThreadInfo {
-    number :number
-    errmsg :string 
-    curnod :string
-    change :string
+    number: number
+    errmsg: string
+    curnod: string
+    change: string
 }

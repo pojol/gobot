@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "umi dev",
     "build": "umi build",
+    "preview": "umi preview",
     "postinstall": "umi setup",
     "setup": "umi setup",
     "start": "npm run dev",

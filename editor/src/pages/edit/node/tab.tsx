@@ -19,6 +19,7 @@ function GetPane(clickinfo: NodeClickInfo) {
   switch (clickinfo.type) {
     case NodeTy.Sequence:
     case NodeTy.Selector:
+    case NodeTy.Parallel:
     case NodeTy.Root:
       return <SequenceTab />;
     case NodeTy.Wait:

@@ -32,7 +32,7 @@ import PubSub from "pubsub-js";
 import Topic from "../constant/topic";
 import Api from "../constant/api";
 import { HomeTag } from "./tags/tags";
-import { cleanTree } from "@/models/tree";
+import { initTree } from "@/models/newtree";
 
 const { Post } = require("../utils/request");
 const { LoadBehaviorWithBlob, LoadBehaviorWithFile } = require('../utils/parse');
@@ -59,11 +59,17 @@ const Bots = (props: BotsProps) => {
 
   const [runs, setRuns] = useState(new Map<string, number>());
   const [batchLst, setBatchLst] = useState([]);
+
+  // 表引用的数据
   const [botLst, setBotLst] = useState<{ name: string; key: string; update: string; status: string[]; tags: string[]; desc: string; }[]>([]);
-  const [selectedTags, setSelectedTags] = useState([]);// 可选的 tags
-  const [currentSelectedTags, setCurrentSelectedTags] = useState<Array<string>>([]);// 当前选中的 tags
-  const [selectedRows, setSelectedRows] = useState<Record[]>([]); // 选中的行
+  // 服务器存储的数据
   const [Bots, setBots] = useState<BotInfo[]>([]);
+  // 可选的 tags
+  const [selectedTags, setSelectedTags] = useState([]);
+  // 当前选中的 tags
+  const [currentSelectedTags, setCurrentSelectedTags] = useState<Array<string>>([]);
+  // 选中的行
+  const [selectedRows, setSelectedRows] = useState<Record[]>([]);
 
   const columns = [
     {
@@ -141,6 +147,10 @@ const Bots = (props: BotsProps) => {
     };
   }, []);
 
+  useEffect(() => {
+    fillBotList(Bots)
+  }, [currentSelectedTags]);
+
 
   function fillBotList(bots: Array<BotInfo>) {
     var selectedTag = currentSelectedTags
@@ -198,8 +208,6 @@ const Bots = (props: BotsProps) => {
     var bots = Bots
     var tagSet = new Set<string>()
 
-    console.info("update tags", name, tags)
-
     for (var i = 0; i < bots.length; i++) {
       if (bots[i].Name === name) {
         bots[i].Tags = tags   // update tags
@@ -231,7 +239,6 @@ const Bots = (props: BotsProps) => {
     }
 
     // refresh tags
-    console.info("refresh tags", children)
     setSelectedTags(children)
     setBots(bots)
     fillBotList(bots)
@@ -255,7 +262,6 @@ const Bots = (props: BotsProps) => {
       }
     }
 
-    console.info("selected tags", children)
     setSelectedTags(children)
   }
 
@@ -277,11 +283,8 @@ const Bots = (props: BotsProps) => {
   }
 
   const handleSelectChange = (tags: Array<string>) => {
-    console.info("refresh bot lst", tags)
-
     setCurrentSelectedTags(tags)
   }
-
 
   const handleBotLoad = (e: any) => {
     selectedRows
@@ -292,13 +295,10 @@ const Bots = (props: BotsProps) => {
         Api.FileGet,
         row.name
       ).then((file: any) => {
-
         LoadBehaviorWithFile(row.name, file.blob, (tree: any) => {
-          props.dispatch(cleanTree())
-          console.info("load tree", tree)
-          history.push('/editor', tree)
+          props.dispatch(initTree(tree))
+          history.push('/editor')
         });
-
       });
     }
   }
@@ -351,8 +351,8 @@ const Bots = (props: BotsProps) => {
 
   const handleBotDownload = (e: any) => {
 
-    for (var i = 0; i < selectedRows.length; i++) {
-      var row = selectedRows[i]
+    for (let i = 0; i < selectedRows.length; i++) {
+      let row = selectedRows[i]
 
       LoadBehaviorWithBlob(
         localStorage.remoteAddr,
@@ -367,7 +367,7 @@ const Bots = (props: BotsProps) => {
 
           // 上面这个是创建一个blob的对象连链接，
           // 创建一个链接元素，是属于 a 标签的链接元素，所以括号里才是a，
-          var link = document.createElement("a");
+          let link = document.createElement("a");
           let body = document.querySelector("body")
 
           link.href = window.URL.createObjectURL(file.blob);
@@ -379,9 +379,9 @@ const Bots = (props: BotsProps) => {
 
           // 使用js点击这个链接
           link.click();
-          body.removeChild(link)
 
           window.URL.revokeObjectURL(link.href)
+          body.removeChild(link)
         }
       });
     }
