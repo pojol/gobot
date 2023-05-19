@@ -128,16 +128,22 @@ function update(state: TreeState, info: NodeUpdateInfo): void {
             switch (ty) {
                 case UpdateType.UpdateAll:
                     _update_all(cur, up)
+                    break
                 case UpdateType.UpdateAlias:
                     cur.alias = up.alias
+                    break
                 case UpdateType.UpdateCode:
                     cur.code = up.code
+                    break
                 case UpdateType.UpdatePosition:
                     cur.pos = up.pos
+                    break
                 case UpdateType.UpdateLoop:
                     cur.loop = up.loop
+                    break
                 case UpdateType.UpdateWait:
                     cur.wait = up.wait
+                    break
             }
         }
     }
