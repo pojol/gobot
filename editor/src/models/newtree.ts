@@ -123,7 +123,7 @@ function _update_all(cur: NodeNotifyInfo, up: NodeNotifyInfo): void {
 function update(state: TreeState, info: NodeUpdateInfo): void {
 
     const _update = (action: string[], cur: NodeNotifyInfo, up: NodeNotifyInfo): void => {
-
+        let posapply = false
         for (var ty of action) {
             switch (ty) {
                 case UpdateType.UpdateAll:
@@ -137,6 +137,7 @@ function update(state: TreeState, info: NodeUpdateInfo): void {
                     break
                 case UpdateType.UpdatePosition:
                     cur.pos = up.pos
+                    posapply = true
                     break
                 case UpdateType.UpdateLoop:
                     cur.loop = up.loop
@@ -145,6 +146,10 @@ function update(state: TreeState, info: NodeUpdateInfo): void {
                     cur.wait = up.wait
                     break
             }
+        }
+
+        if (!posapply) {
+            message.success("update node " + cur.id + " success")
         }
     }
 
