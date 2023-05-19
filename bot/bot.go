@@ -101,7 +101,7 @@ func (b *Bot) GetThreadInfo() string {
 	return string(info)
 }
 
-func NewWithBehaviorTree(path string, bt *behavior.Tree, name string, idx int32, globalScript string) *Bot {
+func NewWithBehaviorTree(path string, bt *behavior.Tree, name, batch string, idx int32, globalScript string) *Bot {
 
 	bb := &behavior.Blackboard{
 		Nods:      []behavior.INod{bt.GetRoot()},
@@ -117,6 +117,10 @@ func NewWithBehaviorTree(path string, bt *behavior.Tree, name string, idx int32,
 	} else {
 		state = pool.NewState()
 		id = uuid.NewString()
+	}
+
+	if batch == "" {
+		batch = "-"
 	}
 
 	bot := &Bot{
@@ -148,6 +152,10 @@ func NewWithBehaviorTree(path string, bt *behavior.Tree, name string, idx int32,
 	err := bot.bs.L.DoString(`meta.BotID = "` + bot.id + `"`)
 	if err != nil {
 		fmt.Println("set bot id", err.Error())
+	}
+	err = bot.bs.L.DoString(`meta.BotBatch = "` + batch + `"`)
+	if err != nil {
+		fmt.Println("set bot batch", err.Error())
 	}
 	err = bot.bs.L.DoString(`meta.BotName = "` + bot.name + `"`)
 	if err != nil {

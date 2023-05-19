@@ -171,7 +171,7 @@ func (b *Batch) run() {
 				b.bwg.Add()
 
 				tree, _ := behavior.Load(b.treeData, behavior.Thread)
-				b.pipeline <- bot.NewWithBehaviorTree(b.path, tree, b.Name, atomic.LoadInt32(&b.cursorNum), b.globalScript)
+				b.pipeline <- bot.NewWithBehaviorTree(b.path, tree, b.Name, b.ID, atomic.LoadInt32(&b.cursorNum), b.globalScript)
 			}
 
 			b.bwg.Wait()

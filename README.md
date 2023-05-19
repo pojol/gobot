@@ -12,7 +12,7 @@ Gobot is a powerful stateful API testing robot. It provides a graphical interfac
 ## Quick Installation
 > Note: In local running mode, all changes are recorded in memory (not actually saved). To save, please download the files locally; or use the official deployment method.
 
-1. Download the specified version of the editing end (editor) and the driving end (driver) on the release page. 
+1. Download the specified version of the editor and driver on the release page. 
 2. Execute the driver end in memory mode on the command line `./gobot-driver-win32-v0.3.x.exe --no_database --mock`
 3. Start gobot_editor_win_x64_v0.3.x and fill in the driver address http://127.0.0.1:8888
 4.  If using for the first time, you can find sample robots in the /demos directory and load them on the bots page.
