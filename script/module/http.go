@@ -95,6 +95,11 @@ func (h *HttpModule) doRequest(L *lua.LState, method string, url string, options
 			})
 		}
 
+		switch reqQuery := options.RawGet(lua.LString("query")).(type) {
+		case lua.LString:
+			req.URL.RawQuery = reqQuery.String()
+		}
+
 		body := options.RawGet(lua.LString("body"))
 
 		switch reqBody := body.(type) {
