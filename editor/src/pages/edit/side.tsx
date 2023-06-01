@@ -190,6 +190,10 @@ export const EditSidePlane: React.FC<SideProps> = ({ graph, isGraphCreated }) =>
             className="dnd-condition"
             onMouseDown={startDrag}
           >
+          </div>
+          <div
+            className="dnd-condition-name"
+          >
             Condition
           </div>
         </Col>
@@ -198,6 +202,10 @@ export const EditSidePlane: React.FC<SideProps> = ({ graph, isGraphCreated }) =>
             data-type="LoopNode"
             className="dnd-loop"
             onMouseDown={startDrag}
+          >
+          </div>
+          <div
+            className="dnd-loop-name"
           >
             Loop
           </div>

@@ -42,12 +42,33 @@
 }
 
 .dnd-loop {
-    text-align: center;
-    cursor: move;
-    background-image: url("data:image/svg+xml,%3C?xml version='1.0' encoding='UTF-8'?%3E %3Csvg width='51px' height='17px' viewBox='0 0 51 17' version='1.1' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'%3E %3Ctitle%3E5%3C/title%3E %3Cg id='页面-1' stroke='none' stroke-width='1' fill='none' fill-rule='evenodd'%3E %3Cg id='画板' transform='translate(-99.000000, -61.000000)' fill='%23EDBE8C'%3E %3Cellipse id='5' cx='124.5' cy='69.5' rx='25.5' ry='8.5'%3E%3C/ellipse%3E %3C/g%3E %3C/g%3E %3C/svg%3E");    cursor: move;
-    background-size: 100%;
-    height: 17px;
-    line-height: 17px;
+    /* Ellipse 1 */
+    position: absolute;
+    width: 50px;
+    height: 25px;
+    border-radius: 50%;
+    background: #D8A66C;
+}
+
+.dnd-loop-name {
+    pointer-events: none;
+
+    /* Loop */
+    position: absolute;
+    width: 30px;
+    height: 15px;
+
+    left: 20px;
+    top:6px;
+
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 15px;
+
+    /* identical to box height */
+    color: #000000;
 }
 
 .dnd-wait {
@@ -81,11 +102,35 @@
 }
 
 .dnd-condition {
-    width: 35px;
-    height: 35px;
-    text-align: center;
-    cursor: move;
-    line-height: 35px;
-    background-image: url("data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB3aWR0aD0iMzVweCIgaGVpZ2h0PSIzNXB4IiB2aWV3Qm94PSIwIDAgMzUgMzUiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayI+CiAgICA8dGl0bGU+NDwvdGl0bGU+CiAgICA8ZyBpZD0i6aG16Z2iLTEiIHN0cm9rZT0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIxIiBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPgogICAgICAgIDxnIGlkPSLnlLvmnb8iIHRyYW5zZm9ybT0idHJhbnNsYXRlKC0yNC4wMDAwMDAsIC01MS4wMDAwMDApIiBmaWxsPSIjRTlCNkI2Ij4KICAgICAgICAgICAgPHJlY3QgaWQ9IjQiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDQxLjUwMDAwMCwgNjguNTAwMDAwKSByb3RhdGUoNDUuMDAwMDAwKSB0cmFuc2xhdGUoLTQxLjUwMDAwMCwgLTY4LjUwMDAwMCkgIiB4PSIyOSIgeT0iNTYiIHdpZHRoPSIyNSIgaGVpZ2h0PSIyNSIgcng9IjEiPjwvcmVjdD4KICAgICAgICA8L2c+CiAgICA8L2c+Cjwvc3ZnPg==");
+    /* Rectangle 1 */
+    position: absolute;
+    width: 30px;
+    height: 30px;
 
+    background: #BE7878;
+    transform: rotate(45deg);
+
+    /* identical to box height */
+    color: #000000;
+}
+
+.dnd-condition-name {
+    /* Condition */
+    pointer-events: none;
+
+    position: absolute;
+    width: 55px;
+    height: 15px;
+
+    left: -1px;
+    top: 7px;
+
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 15px;
+
+    /* identical to box height */
+    color: #000000;
 }
