@@ -18,48 +18,28 @@
 }
 
 .dnd-selector {
-    background-size: 100%;
-    text-align: center;
-    cursor: move;
-    background-image: url("data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB3aWR0aD0iNTJweCIgaGVpZ2h0PSIyMnB4IiB2aWV3Qm94PSIwIDAgNTIgMjIiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayI+CiAgICA8dGl0bGU+55+p5b2i5aSH5Lu9PC90aXRsZT4KICAgIDxnIGlkPSLpobXpnaItMSIgc3Ryb2tlPSJub25lIiBzdHJva2Utd2lkdGg9IjEiIGZpbGw9Im5vbmUiIGZpbGwtcnVsZT0iZXZlbm9kZCI+CiAgICAgICAgPGcgaWQ9Iue8lue7hCIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoLTE2LjAwMDAwMCwgLTEyLjAwMDAwMCkiIGZpbGw9IiNBQUQyRDIiPgogICAgICAgICAgICA8cmVjdCBpZD0i55+p5b2i5aSH5Lu9IiB4PSIxNiIgeT0iMTIiIHdpZHRoPSI1MiIgaGVpZ2h0PSIyMiIgcng9IjIiPjwvcmVjdD4KICAgICAgICA8L2c+CiAgICA8L2c+Cjwvc3ZnPg==");
-}
-
-.dnd-sequence {
-    background-size: 100%;
-    text-align: center;
-    cursor: move;
-    background-image: url("data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB3aWR0aD0iNTJweCIgaGVpZ2h0PSIyMnB4IiB2aWV3Qm94PSIwIDAgNTIgMjIiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayI+CiAgICA8dGl0bGU+MjwvdGl0bGU+CiAgICA8ZyBpZD0i6aG16Z2iLTEiIHN0cm9rZT0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIxIiBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPgogICAgICAgIDxnIGlkPSLnlLvmnb8iIHRyYW5zZm9ybT0idHJhbnNsYXRlKC05OS4wMDAwMDAsIC0xMi4wMDAwMDApIiBmaWxsPSIjQTdDMUQ1Ij4KICAgICAgICAgICAgPHJlY3QgaWQ9IjIiIHg9Ijk5IiB5PSIxMiIgd2lkdGg9IjUyIiBoZWlnaHQ9IjIyIiByeD0iMiI+PC9yZWN0PgogICAgICAgIDwvZz4KICAgIDwvZz4KPC9zdmc+");
-}
-
-.dnd-parallel {
-    background-size: 100%;
-    text-align: center;
-    cursor: move;
-    width: 40px;
-    height: 40px;
-    line-height: 40px;
-    background-image: url("data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB3aWR0aD0iMjlweCIgaGVpZ2h0PSIyOXB4IiB2aWV3Qm94PSIwIDAgMjkgMjkiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayI+CiAgICA8dGl0bGU+MzwvdGl0bGU+CiAgICA8ZyBpZD0i6aG16Z2iLTEiIHN0cm9rZT0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIxIiBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPgogICAgICAgIDxnIGlkPSLnlLvmnb8iIHRyYW5zZm9ybT0idHJhbnNsYXRlKC0xOTQuMDAwMDAwLCAtOS4wMDAwMDApIiBmaWxsPSIjQjNDREFFIj4KICAgICAgICAgICAgPHJlY3QgaWQ9IjMiIHg9IjE5NCIgeT0iOSIgd2lkdGg9IjI5IiBoZWlnaHQ9IjI5IiByeD0iMiI+PC9yZWN0PgogICAgICAgIDwvZz4KICAgIDwvZz4KPC9zdmc+");
-}
-
-.dnd-loop {
-    /* Ellipse 1 */
     position: absolute;
     width: 50px;
     height: 25px;
-    border-radius: 50%;
-    background: #D8A66C;
+
+    top: 10px;
+    left: 2px;
+
+    background: #799E85;
+    opacity: 0.5;
+    box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+    border-radius: 5px;
 }
 
-.dnd-loop-name {
+.dnd-selector-name-light {
     pointer-events: none;
 
-    /* Loop */
     position: absolute;
-    width: 30px;
+    width: 48px;
     height: 15px;
 
-    left: 20px;
-    top:6px;
+    left: 5px;
+    top: 15px;
 
     font-family: 'Inter';
     font-style: normal;
@@ -71,13 +51,250 @@
     color: #000000;
 }
 
-.dnd-wait {
-    text-align: center;
-    cursor: move;
-    background-image: url("data:image/svg+xml,%3C?xml version='1.0' encoding='UTF-8'?%3E %3Csvg width='37px' height='23px' viewBox='0 0 37 23' version='1.1' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'%3E %3Ctitle%3E6%3C/title%3E %3Cg id='页面-1' stroke='none' stroke-width='1' fill='none' fill-rule='evenodd'%3E %3Cg id='画板' transform='translate(-190.000000, -57.000000)' fill='%23ADA9D2'%3E %3Crect id='6' x='190' y='57' width='37' height='23' rx='11.5'%3E%3C/rect%3E %3C/g%3E %3C/g%3E %3C/svg%3E");
-    background-size: 100%;
-    width: 40px;
+.dnd-selector-name-dark {
+    pointer-events: none;
+
+    position: absolute;
+    width: 48px;
+    height: 15px;
+
+    left: 5px;
+    top: 15px;
+
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 15px;
+    /* identical to box height */
+
+    color: #ffffff;
+}
+
+.dnd-sequence {
+    position: absolute;
+    width: 50px;
     height: 25px;
+
+    top: 10px;
+    left: 12px;
+
+    background: #709297;
+    opacity: 0.5;
+    box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+    border-radius: 5px;
+}
+
+.dnd-sequence-name-light {
+    /* Sequence */
+    pointer-events: none;
+
+    position: absolute;
+    width: 57px;
+    height: 15px;
+
+    left: 9px;
+    top: 15px;
+
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 15px;
+    /* identical to box height */
+
+
+    color: #000000;
+
+}
+
+.dnd-sequence-name-dark {
+    /* Sequence */
+    pointer-events: none;
+
+    position: absolute;
+    width: 57px;
+    height: 15px;
+
+    left: 9px;
+    top: 15px;
+
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 15px;
+
+    /* identical to box height */
+    color: #ffffff;
+}
+
+.dnd-parallel {
+    position: absolute;
+    width: 45px;
+    height: 45px;
+
+    left: 20px;
+
+    background: #3A8D98;
+    opacity: 0.5;
+    box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+    border-radius: 5px;
+}
+
+.dnd-parallel-name-light {
+    /* Parallel */
+    pointer-events: none;
+
+    position: absolute;
+    width: 42px;
+    height: 15px;
+
+    left: 21px;
+    top: 15px;
+
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 15px;
+    /* identical to box height */
+
+
+    color: #000000;
+}
+
+.dnd-parallel-name-dark {
+    /* Parallel */
+    pointer-events: none;
+
+    position: absolute;
+    width: 42px;
+    height: 15px;
+
+    left: 21px;
+    top: 15px;
+
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 15px;
+    /* identical to box height */
+
+
+    color: #ffffff;
+}
+
+.dnd-loop {
+    /* Ellipse 1 */
+    position: absolute;
+    width: 50px;
+    height: 25px;
+
+    left: 12px;
+    top:2px;
+
+    border-radius: 50%;
+    background: #D8A66C;
+
+    box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+}
+
+.dnd-loop-name-light {
+    pointer-events: none;
+
+    /* Loop */
+    position: absolute;
+    width: 30px;
+    height: 15px;
+
+    left: 22px;
+    top: 8px;
+
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 15px;
+
+    /* identical to box height */
+    color: #000000;
+}
+
+.dnd-loop-name-dark {
+    pointer-events: none;
+
+    /* Loop */
+    position: absolute;
+    width: 30px;
+    height: 15px;
+
+    left: 22px;
+    top: 8px;
+
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 15px;
+
+    /* identical to box height */
+    color: #ffffff;
+}
+
+.dnd-wait {
+    position: absolute;
+    width: 60px;
+    height: 25px;
+
+    left: 12px;
+    top: 3px;
+
+    background: #9661AF;
+    box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+    border-radius: 20px;
+}
+
+.dnd-wait-name-light {
+    pointer-events: none;
+
+    position: absolute;
+    width: 25px;
+    height: 15px;
+
+    top: 8px;
+    left: 30px;
+
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 15px;
+    /* identical to box height */
+
+    color: #000000;
+}
+
+.dnd-wait-name-dark {
+    pointer-events: none;
+
+    position: absolute;
+    width: 25px;
+    height: 15px;
+
+    top: 8px;
+    left: 30px;
+
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 15px;
+    /* identical to box height */
+
+
+    color: #ffffff;
 }
 
 .dnd-prefab-light {
@@ -107,14 +324,17 @@
     width: 30px;
     height: 30px;
 
+    left: 12px;
+
     background: #BE7878;
+    box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
     transform: rotate(45deg);
 
     /* identical to box height */
     color: #000000;
 }
 
-.dnd-condition-name {
+.dnd-condition-name-light {
     /* Condition */
     pointer-events: none;
 
@@ -134,3 +354,28 @@
     /* identical to box height */
     color: #000000;
 }
+
+.dnd-condition-name-dark {
+    /* Condition */
+    pointer-events: none;
+
+    position: absolute;
+    width: 55px;
+    height: 15px;
+
+    left: -1px;
+    top: 7px;
+
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 15px;
+
+    /* identical to box height */
+    color: #ffffff;
+}
+
+.divider-element {
+    padding-top: 30px; /* 顶部垫10px */
+  }

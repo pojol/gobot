@@ -155,12 +155,16 @@ export const EditSidePlane: React.FC<SideProps> = ({ graph, isGraphCreated }) =>
   return (
     <div className="dnd-wrap">
 
-      <Row justify="space-around" align="middle" gutter={[22, 12]}>
+      <Row justify="space-around" align="middle" gutter={[38, 50]}>
         <Col span={7}>
           <div
             data-type="SelectorNode"
             className="dnd-selector"
             onMouseDown={startDrag}
+          >
+          </div>
+          <div
+            className={"dnd-selector-name-" + themeValue}
           >
             Selector
           </div>
@@ -171,6 +175,10 @@ export const EditSidePlane: React.FC<SideProps> = ({ graph, isGraphCreated }) =>
             className="dnd-sequence"
             onMouseDown={startDrag}
           >
+          </div>
+          <div
+            className={"dnd-sequence-name-" + themeValue}
+          >
             Sequence
           </div>
         </Col>
@@ -180,6 +188,8 @@ export const EditSidePlane: React.FC<SideProps> = ({ graph, isGraphCreated }) =>
             className="dnd-parallel"
             onMouseDown={startDrag}
           >
+          </div>
+          <div className={"dnd-parallel-name-" + themeValue}>
             Parallel
           </div>
         </Col>
@@ -192,7 +202,7 @@ export const EditSidePlane: React.FC<SideProps> = ({ graph, isGraphCreated }) =>
           >
           </div>
           <div
-            className="dnd-condition-name"
+            className={"dnd-condition-name-" + themeValue}
           >
             Condition
           </div>
@@ -205,7 +215,7 @@ export const EditSidePlane: React.FC<SideProps> = ({ graph, isGraphCreated }) =>
           >
           </div>
           <div
-            className="dnd-loop-name"
+            className={"dnd-loop-name-" + themeValue}
           >
             Loop
           </div>
@@ -216,12 +226,16 @@ export const EditSidePlane: React.FC<SideProps> = ({ graph, isGraphCreated }) =>
             className="dnd-wait"
             onMouseDown={startDrag}
           >
+          </div>
+          <div
+            className={"dnd-wait-name-" + themeValue}
+          >
             Wait
           </div>
         </Col>
       </Row>
 
-      <Divider>Filter</Divider>
+      <Divider className='divider-element'>Filter</Divider>
 
       <Select
         mode="multiple"
