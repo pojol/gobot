@@ -100,7 +100,7 @@ const Bots = (props: BotsProps) => {
       render: (text: string, record: any) => (
         <InputNumber
           min={0}
-          max={100000}
+          max={1000000}
           defaultValue={0}
           onChange={(e: any) => {
             var old = runs
@@ -409,7 +409,7 @@ const Bots = (props: BotsProps) => {
           <InboxOutlined />
         </p>
         <p className="ant-upload-text">
-          {"drop"}
+          {"Click or drag file to this area to upload"}
         </p>
       </Dragger>
 
@@ -483,7 +483,7 @@ const Bots = (props: BotsProps) => {
           ...{
             onChange: (selectedRowKeys: any, selectedRows: any) => {
               setSelectedRows(selectedRows)
-              console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
+              //console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
             }
           },
         }}
@@ -491,9 +491,9 @@ const Bots = (props: BotsProps) => {
         dataSource={botLst}
         onRow={(record) => {
           return {
-            onClick: (e) => {
+            onMouseDown: (e) => {
               e.currentTarget.getElementsByClassName("ant-checkbox-wrapper")[0].click()
-            },       // 点击行
+            },// 点击行
           };
         }}
         pagination={{
