@@ -274,17 +274,17 @@ const Prefab = (props: PrefabProps) => {
     setData(newData)
   }
 
-
   const onDidMount = (editor: any) => {
     editor.setSize(undefined, document.documentElement.clientHeight - 120)
     setEditor(editor)
   };
 
   const options = {
-    mode: "text/x-lua",
+    mode: "lua",
     theme: localStorage.codeboxTheme,
     lineNumbers: true,
-    indentUnit: 4,
+    inputStyle:"contenteditable",
+    indentUnit:0, //不启用自动tab
   };
 
   // rowSelection object indicates the need for row selection
