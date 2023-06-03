@@ -34,7 +34,6 @@ type Factory struct {
 func Create(opts ...Option) (*Factory, error) {
 
 	p := Parm{
-		frameRate:   time.Second * 1,
 		lifeTime:    time.Minute,
 		Interrupt:   true,
 		ReportLimit: 100,
@@ -55,6 +54,8 @@ func Create(opts ...Option) (*Factory, error) {
 	}
 
 	go f.taskLoop()
+
+	fmt.Println("create bot driver", "mode", p.NoDBMode)
 
 	Global = f
 	return f, nil
@@ -93,12 +94,12 @@ func (f *Factory) CreateTask(name string, num int) *Batch {
 		return nil
 	}
 
-	return CreateBatch(f.parm.ScriptPath,
-		name,
-		num,
-		dat,
-		int32(cfg.ChannelSize),
-		string(cfg.GlobalCode))
+	return CreateBatch(name, num, dat, BatchConfig{
+		batchsize:     int32(cfg.ChannelSize),
+		globalScript:  string(cfg.GlobalCode),
+		scriptPath:    f.parm.ScriptPath,
+		enqeueneDelay: int32(cfg.EnqueneDelay),
+	})
 }
 
 func (f *Factory) CreateDebugBot(name string, fbyt []byte) *bot.Bot {

@@ -17,11 +17,6 @@ type Parm struct {
 	// 默认值 1分钟
 	lifeTime time.Duration
 
-	// frameRate 机器人工厂的运行频率，（每秒创建多少个机器人
-	//
-	// 默认值 1s
-	frameRate time.Duration
-
 	// Interrupt 当card遇到err的时候是否中断整个程序 （默认为否
 	Interrupt bool
 

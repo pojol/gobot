@@ -55,18 +55,21 @@ type ConfigGetSysInfoReq struct {
 }
 
 type ConfigGetSysInfoRes struct {
-	ReportSize  int
-	ChannelSize int
+	ReportSize   int
+	ChannelSize  int
+	EnqueneDelay int
 }
 
 type ConfigSetSysInfoReq struct {
-	ReportSize  int
-	ChannelSize int
+	ReportSize   int
+	ChannelSize  int
+	EnqueneDelay int
 }
 
 type ConfigSetSysInfoRes struct {
-	ReportSize  int
-	ChannelSize int
+	ReportSize   int
+	ChannelSize  int
+	EnqueneDelay int
 }
 
 type SetConfigReq struct {
@@ -78,7 +81,6 @@ type ReportRes struct {
 	Info []database.ReportTable
 }
 
-//
 type ConfigGetListInfoRes struct {
 	Lst []string
 }

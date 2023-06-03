@@ -120,13 +120,13 @@ export default function ActionTab() {
     <Space direction="vertical" style={{ width: "100%" }}>
       <CodeMirror
         value={state.code}
-        onBeforeChange={(editor, data, value) =>
-          handleChange(editor, data, value)
-        }
+        onBeforeChange={handleChange}
         options={{
           mode: "lua",
           theme: localStorage.codeboxTheme,
           lineNumbers: true,
+          inputStyle:"contenteditable",
+          indentUnit:0, //不启用自动tab
         }}
         editorDidMount={(editor) => {
           setEditorState(editor);

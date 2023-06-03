@@ -10,10 +10,11 @@ import (
 
 type ConfTable struct {
 	gorm.Model
-	Name        string `json:"name" gorm:"<-"`
-	ChannelSize int    `json:"channelsize" gorm:"<-"`
-	ReportSize  int    `json:"reportsize" gorm:"<-"`
-	GlobalCode  []byte `json:"globalcode" gorm:"<-"`
+	Name         string `json:"name" gorm:"<-"`
+	ChannelSize  int    `json:"channelsize" gorm:"<-"`
+	ReportSize   int    `json:"reportsize" gorm:"<-"`
+	GlobalCode   []byte `json:"globalcode" gorm:"<-"`
+	EnqueneDelay int    `json:"enquenedelay" gorm:"<-"`
 }
 
 type Conf struct {
@@ -34,9 +35,10 @@ func CreateConfig(mysqlptr *gorm.DB) *Conf {
 	_, err = c.Get()
 	if err == gorm.ErrRecordNotFound {
 		c.db.Create(&ConfTable{
-			Name:        "sysconfig",
-			ChannelSize: 512,
-			ReportSize:  100,
+			Name:         "sysconfig",
+			ChannelSize:  512,
+			ReportSize:   100,
+			EnqueneDelay: 1,
 			GlobalCode: []byte(`
 --[[
 	Global constant area, users can define some constants here; it is easy to call in other scripts
@@ -99,6 +101,23 @@ func (c *Conf) UpdateReportSize(rs int) {
 	}
 
 	c.update("report_size", rs)
+}
+
+func (c *Conf) UpdateEnqueneDelay(d int) {
+	c.Lock()
+	defer c.Unlock()
+
+	if d <= 0 {
+		fmt.Println("wrong input", d)
+		return
+	}
+
+	_, err := c.Get()
+	if err != nil {
+		return
+	}
+
+	c.update("enquene_delay", d)
 }
 
 func (c *Conf) UpdateGlobalDefine(code []byte) error {
