@@ -403,6 +403,7 @@ func ConfigGetSysInfo(ctx echo.Context) error {
 
 	body.ChannelSize = conf.ChannelSize
 	body.ReportSize = conf.ReportSize
+	body.EnqueneDelay = conf.EnqueneDelay
 
 ext:
 	res.Body = body
@@ -438,6 +439,9 @@ func ConfigSetSysInfo(ctx echo.Context) error {
 	if req.ReportSize != 0 {
 		conf.UpdateReportSize(req.ReportSize)
 	}
+	if req.EnqueneDelay != 0 {
+		conf.UpdateEnqueneDelay(req.EnqueneDelay)
+	}
 
 	newtab, err = conf.Get()
 	if err != nil {
@@ -448,6 +452,7 @@ func ConfigSetSysInfo(ctx echo.Context) error {
 
 	body.ReportSize = newtab.ReportSize
 	body.ChannelSize = newtab.ChannelSize
+	body.EnqueneDelay = newtab.EnqueneDelay
 
 EXT:
 	res.Body = body

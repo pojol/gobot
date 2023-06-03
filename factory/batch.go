@@ -25,13 +25,14 @@ type BatchInfo struct {
 }
 
 type Batch struct {
-	ID        string
-	Name      string
-	cursorNum int32
-	CurNum    int32
-	TotalNum  int32
-	BatchNum  int32
-	Errors    int32
+	ID           string
+	Name         string
+	cursorNum    int32
+	CurNum       int32
+	TotalNum     int32
+	BatchNum     int32
+	enqueneDelay int32
+	Errors       int32
 
 	treeData     []byte
 	path         string
@@ -52,17 +53,25 @@ type Batch struct {
 	botErrCh  chan bot.ErrInfo
 }
 
-func CreateBatch(scriptPath, name string, num int, tbyt []byte, batchsize int32, globalScript string) *Batch {
+type BatchConfig struct {
+	batchsize     int32
+	globalScript  string
+	scriptPath    string
+	enqeueneDelay int32
+}
+
+func CreateBatch(name string, num int, tbyt []byte, cfg BatchConfig) *Batch {
 
 	b := &Batch{
 		ID:           uuid.New().String(),
 		Name:         name,
-		path:         scriptPath,
-		globalScript: globalScript,
+		path:         cfg.scriptPath,
+		globalScript: cfg.globalScript,
+		enqueneDelay: cfg.enqeueneDelay,
 		CurNum:       0,
-		BatchNum:     batchsize,
+		BatchNum:     cfg.batchsize,
 		TotalNum:     int32(num),
-		bwg:          utils.NewSizeWaitGroup(int(batchsize)),
+		bwg:          utils.NewSizeWaitGroup(int(cfg.batchsize)),
 		exit:         utils.NewSwitch(),
 		treeData:     tbyt,
 		pipeline:     make(chan *bot.Bot, num),
@@ -75,7 +84,7 @@ func CreateBatch(scriptPath, name string, num int, tbyt []byte, batchsize int32,
 		bots:    make(map[string]*bot.Bot),
 	}
 
-	fmt.Println("create", num, "bot", "pipeline size", batchsize)
+	fmt.Println("create", num, "bot", "pipeline size", cfg.batchsize)
 	go b.loop()
 	b.run()
 
@@ -172,6 +181,7 @@ func (b *Batch) run() {
 
 				tree, _ := behavior.Load(b.treeData, behavior.Thread)
 				b.pipeline <- bot.NewWithBehaviorTree(b.path, tree, b.Name, b.ID, atomic.LoadInt32(&b.cursorNum), b.globalScript)
+				time.Sleep(time.Millisecond * time.Duration(b.enqueneDelay))
 			}
 
 			b.bwg.Wait()

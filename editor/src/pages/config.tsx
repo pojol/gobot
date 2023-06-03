@@ -31,6 +31,7 @@ export default function Config() {
     switchChecked: true,
     reportsize: 0,
     channelsize: 0,
+    enquenedelay: 1,
   });
 
   useEffect(() => {
@@ -80,6 +81,7 @@ export default function Config() {
             ...state,
             reportsize: json.Body.ReportSize,
             channelsize: json.Body.ChannelSize,
+            enquenedelay: json.Body.EnqueneDelay,
           }));
         }
       }
@@ -158,10 +160,15 @@ export default function Config() {
     setState((state) => ({ ...state, channelsize: val }));
   };
 
+  const changeEnqueneDelay = (val : any) =>{
+    setState((state) => ({ ...state, enquenedelay: val }));
+  }
+
   const onClickSubmit = () => {
     Post(localStorage.remoteAddr, Api.ConfigSystemSet, {
       ChannelSize: state.channelsize,
       ReportSize: state.reportsize,
+      EnqueneDelay: state.enquenedelay,
     }).then((json: any) => {
       if (json.Code !== 200) {
         message.error(
@@ -236,7 +243,22 @@ export default function Config() {
             </Button>
           </Input.Group>
         </Panel>
-        <Panel header={"Number of reports archived"} key="5">
+        <Panel header={"Enqueue delay #ms (rate can be controlled"} key="5">
+          <Input.Group compact>
+            <InputNumber
+              style={{
+                width: "calc(100% - 200px)",
+              }}
+              min={1}
+              value={state.enquenedelay}
+              onChange={changeEnqueneDelay}
+            />
+            <Button type="primary" onClick={onClickSubmit}>
+              Submit
+            </Button>
+          </Input.Group>
+        </Panel>
+        <Panel header={"Number of reports archived"} key="6">
           <Input.Group compact>
             <InputNumber
               style={{
