@@ -492,7 +492,9 @@ const Bots = (props: BotsProps) => {
         onRow={(record) => {
           return {
             onMouseDown: (e) => {
-              e.currentTarget.getElementsByClassName("ant-checkbox-wrapper")[0].click()
+              if (e.target.type !== "checkbox"){
+                e.currentTarget.getElementsByClassName("ant-checkbox-wrapper")[0].click()
+              }
             },// 点击行
           };
         }}
