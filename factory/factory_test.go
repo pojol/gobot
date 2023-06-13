@@ -233,7 +233,7 @@ func TestLoop(t *testing.T) {
 	database.GetBehavior().Upset("behavior", []byte(compose))
 
 	for i := 0; i < 10; i++ {
-		f.AddTask("behavior", 10)
+		f.AddBatch("behavior", 0, 10)
 	}
 
 	time.Sleep(time.Second * 2)

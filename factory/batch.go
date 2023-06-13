@@ -60,7 +60,7 @@ type BatchConfig struct {
 	enqeueneDelay int32
 }
 
-func CreateBatch(name string, num int, tbyt []byte, cfg BatchConfig) *Batch {
+func CreateBatch(name string, cur, total int32, tbyt []byte, cfg BatchConfig) *Batch {
 
 	b := &Batch{
 		ID:           uuid.New().String(),
@@ -68,13 +68,13 @@ func CreateBatch(name string, num int, tbyt []byte, cfg BatchConfig) *Batch {
 		path:         cfg.scriptPath,
 		globalScript: cfg.globalScript,
 		enqueneDelay: cfg.enqeueneDelay,
-		CurNum:       0,
+		CurNum:       cur,
 		BatchNum:     cfg.batchsize,
-		TotalNum:     int32(num),
+		TotalNum:     total,
 		bwg:          utils.NewSizeWaitGroup(int(cfg.batchsize)),
 		exit:         utils.NewSwitch(),
 		treeData:     tbyt,
-		pipeline:     make(chan *bot.Bot, num),
+		pipeline:     make(chan *bot.Bot, cfg.batchsize),
 		done:         make(chan interface{}, 1),
 		BatchDone:    make(chan interface{}, 1),
 		botDoneCh:    make(chan string),
@@ -84,7 +84,14 @@ func CreateBatch(name string, num int, tbyt []byte, cfg BatchConfig) *Batch {
 		bots:    make(map[string]*bot.Bot),
 	}
 
-	fmt.Println("create", num, "bot", "pipeline size", cfg.batchsize)
+	fmt.Println("create", total, "bot", "pipeline size", cfg.batchsize)
+	database.GetTask().New(database.TaskTable{
+		ID:          b.ID,
+		Name:        name,
+		TotalNumber: b.TotalNum,
+		CurNumber:   0,
+	})
+
 	go b.loop()
 	b.run()
 
@@ -185,6 +192,7 @@ func (b *Batch) run() {
 			}
 
 			b.bwg.Wait()
+			database.GetTask().Update(b.ID, atomic.LoadInt32(&b.CurNum))
 			fmt.Println("batch", b.ID, "end", atomic.LoadInt32(&b.CurNum), "=>", b.TotalNum)
 			if atomic.LoadInt32(&b.CurNum) >= b.TotalNum {
 				b.done <- 1

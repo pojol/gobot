@@ -24,6 +24,7 @@ type Cache struct {
 	behavior *Behavior
 	prefab   *Prefab
 	report   *Report
+	task     *Task
 
 	mysqlptr *gorm.DB
 }
@@ -45,6 +46,10 @@ func GetReport() *Report {
 
 func GetBehavior() *Behavior {
 	return db.behavior
+}
+
+func GetTask() *Task {
+	return db.task
 }
 
 func Init(NoDBMode bool) *Cache {
@@ -99,6 +104,7 @@ func Init(NoDBMode bool) *Cache {
 			prefab:   CreatePrefab(sqlptr),
 			behavior: CreateBehavior(sqlptr),
 			report:   CreateReport(sqlptr),
+			task:     CreateTask(sqlptr),
 		}
 	})
 

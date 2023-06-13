@@ -628,7 +628,7 @@ func BotCreateBatch(ctx echo.Context) error {
 		goto EXT
 	}
 
-	err = factory.Global.AddTask(req.Name, int32(req.Num))
+	err = factory.Global.AddBatch(req.Name, 0, int32(req.Num))
 	if err != nil {
 		res.Msg = err.Error()
 	}
