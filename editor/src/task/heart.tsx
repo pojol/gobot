@@ -27,7 +27,7 @@ const heart = async (): Promise<boolean> => {
 
 export default function HeartTask() {
     const dispatch = useDispatch()
-
+    
     let callback = async () => {
         let res = await heart()
         if (res) {

@@ -5,6 +5,7 @@ import {
 import React, { useState, useEffect } from 'react';
 const { Post } = require("../utils/request");
 import Api from "../constant/api";
+import { TaskTimer } from "tasktimer/lib/TaskTimer";
 
 export default function Running() {
 
@@ -41,6 +42,20 @@ export default function Running() {
 
   useEffect(() => {
     refreshBotList();
+
+    let callback = async () => {
+      refreshBotList();
+    }
+
+    const timer = new TaskTimer(2000);
+    timer.on('tick', () => {
+      callback()
+  });
+  timer.start();
+
+  return () => {
+    timer.stop();
+  }
   }, []);
 
   const fillBotList = (lst: any) => {
