@@ -20,7 +20,8 @@ import {
   PlayCircleOutlined,
   CheckCircleTwoTone,
   CloseCircleTwoTone,
-  ExclamationCircleTwoTone
+  ExclamationCircleTwoTone,
+  CopyOutlined
 } from "@ant-design/icons";
 
 import { useLocation, history } from 'umi';
@@ -127,11 +128,6 @@ const Bots = (props: BotsProps) => {
           })}
         </>
       ),
-    },
-    {
-      title: "Desc",
-      dataIndex: "desc",
-      key: "desc",
     }
   ]
 
@@ -388,6 +384,12 @@ const Bots = (props: BotsProps) => {
 
   }
 
+  const handleBotShare = (e:any) => {
+    let url = new URL(window.location.href);
+    navigator.clipboard.writeText(url.origin+"/#/"+"editor/"+selectedRows[0].name)
+    message.success("share link copied to clipboard!")
+  }
+
   var filepProps = {
     name: "file",
     multiple: true,
@@ -470,6 +472,17 @@ const Bots = (props: BotsProps) => {
                   onClick={handleBotDownload}
                 >
                   {"download"}
+                </Button>
+              </Tooltip>
+              <Tooltip
+                placement="bottomLeft"
+                title={"Share the bot with others"}
+              >
+                <Button
+                  icon={<CopyOutlined />}
+                  onClick={handleBotShare}
+                >
+                  {"share"}
                 </Button>
               </Tooltip>
             </Space>

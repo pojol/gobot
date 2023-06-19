@@ -5,6 +5,7 @@ interface ConfigState {
     heartColor: string
     themeValue: string
     modalOpen: boolean
+    runningTick: number
 }
 
 function initTheme(): string {
@@ -27,6 +28,7 @@ const initialState: ConfigState = {
     heartColor: "#BDCDD6",
     themeValue: initTheme(),
     modalOpen: initModalOpen(),
+    runningTick: 2000,
 }
 
 const configSlice = createSlice({

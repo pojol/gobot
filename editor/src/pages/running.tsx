@@ -6,11 +6,15 @@ import React, { useState, useEffect } from 'react';
 const { Post } = require("../utils/request");
 import Api from "../constant/api";
 import { TaskTimer } from "tasktimer/lib/TaskTimer";
+import { useSelector } from 'react-redux';
+import { RootState } from "@/models/store";
+
 
 export default function Running() {
 
   const [runs, setRuns] = React.useState({});
   const [botLst, setBotLst] = React.useState([]);
+  const { runningTick } = useSelector((state:RootState) => state.configSlice)
 
   const cloumns = [
     {
@@ -47,7 +51,7 @@ export default function Running() {
       refreshBotList();
     }
 
-    const timer = new TaskTimer(2000);
+    const timer = new TaskTimer(runningTick);
     timer.on('tick', () => {
       callback()
   });
