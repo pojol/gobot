@@ -15,7 +15,7 @@ Gobot is a powerful stateful API testing robot. It provides a graphical interfac
 1. Download the specified version of the editor and driver on the release page. 
 2. Execute the driver end in memory mode on the command line `./gobot-driver-win32-v0.3.x.exe --no_database --mock`
 3. Start gobot_editor_win_x64_v0.3.x and fill in the driver address http://127.0.0.1:8888
-4.  If using for the first time, you can find sample robots in the /demos directory and load them on the bots page.
+4.  If using for the first time, you can find sample robots in the /sample directory and load them on the bots page.
 
 
 ## Feature
@@ -51,6 +51,11 @@ function execute()
     -- Here, users can define the execution logic of nodes themselves (for example, sending an HTTP request)
     res, err = http.post("url", req)
 
+    -- todo
+
+    --  state - State code
+    --  res - Information displayed in the Response panel
+    return state.Succ, res
 end
 ```
 
