@@ -384,9 +384,22 @@ const Bots = (props: BotsProps) => {
 
   }
 
-  const handleBotShare = (e:any) => {
-    let url = new URL(window.location.href);
-    navigator.clipboard.writeText(url.origin+"/#/"+"editor/"+selectedRows[0].name)
+  function copyTextToClipboard(text: string) {
+    let textArea = document.createElement("textarea");
+    textArea.value = text;
+
+    document.body.appendChild(textArea);
+    textArea.select();
+    document.execCommand("copy");
+    document.body.removeChild(textArea);
+  }
+
+  const handleBotShare = (e: any) => {
+    const shareLink = new URL(window.location.href);
+    const encodedLink = shareLink.origin + "/#/editor/" + selectedRows[0].name;
+
+    copyTextToClipboard(encodedLink)
+
     message.success("share link copied to clipboard!")
   }
 
@@ -505,7 +518,7 @@ const Bots = (props: BotsProps) => {
         onRow={(record) => {
           return {
             onMouseDown: (e) => {
-              if (e.target.type !== "checkbox"){
+              if (e.target.type !== "checkbox") {
                 e.currentTarget.getElementsByClassName("ant-checkbox-wrapper")[0].click()
               }
             },// 点击行
