@@ -1,17 +1,16 @@
 import { Input, Button, message, Select, Collapse, InputNumber } from "antd";
 import React, { useState, useEffect } from "react";
 
-import { Controlled as CodeMirror } from "react-codemirror2";
-import "codemirror/lib/codemirror.css";
-import "codemirror/theme/solarized.css";
-import "codemirror/theme/abcdef.css";
-import "codemirror/theme/ayu-dark.css";
-import "codemirror/theme/yonce.css";
-import "codemirror/theme/neo.css";
-import "codemirror/theme/zenburn.css";
-import "codemirror/mode/lua/lua";
+import CodeMirror from '@uiw/react-codemirror';
+import { StreamLanguage } from '@codemirror/language';
+import { lua } from '@codemirror/legacy-modes/mode/lua'
+import { xcodeLight, xcodeDark } from '@uiw/codemirror-theme-xcode';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/models/store';
+
 
 import Api from "../constant/api";
+import ThemeType from "@/constant/constant";
 const {
   PostBlob,
   PostGetBlob,
@@ -33,6 +32,8 @@ export default function Config() {
     channelsize: 0,
     enquenedelay: 1,
   });
+
+  const { themeValue } = useSelector((state: RootState) => state.configSlice)
 
   useEffect(() => {
     // 在组件初始化时调用一次
@@ -66,6 +67,14 @@ export default function Config() {
   const onChangeDriveAddr = (e: any) => {
     setState((state) => ({ ...state, driveAddr: e.target.value }));
   };
+
+  const getTheme = () => {
+    if (themeValue === ThemeType.Dark) {
+      return xcodeDark
+    } else {
+      return xcodeLight
+    }
+  }
 
   const syncConfig = () => {
     console.info("syncConfig ======>");
@@ -147,9 +156,9 @@ export default function Config() {
     );
   };
 
-  const onBeforeChange = (editor: any, data: any, value: any) => {
+  const onChange = React.useCallback((value:any, viewUpdate:any) => {
     setState((state) => ({ ...state, globalPrefab: value }));
-  };
+  }, []);
 
   const clickTheme = (e: any) => {
     setState((state) => ({ ...state, theme: e }));
@@ -202,33 +211,7 @@ export default function Config() {
             onSearch={onApplyDriveAddr}
           />
         </Panel>
-        <Panel header={"Select a codebox theme"} key="2">
-          <Select style={{ width: 200 }} onChange={clickTheme}>
-            <Option value="default">default</Option>
-            <Option value="abcdef">abcdef</Option>
-            <Option value="ayu-dark">ayu-dark</Option>
-            <Option value="yonce">yonce</Option>
-            <Option value="neo">neo</Option>
-            <Option value="solarized dark">solarized dark</Option>
-            <Option value="solarized light">solarized light</Option>
-            <Option value="zenburn">zenburn</Option>
-          </Select>
-        </Panel>
-        <Panel header={"Global script node"} key="3">
-          <CodeMirror
-            value={state.globalPrefab}
-            options={{
-              mode: "lua",
-              theme: localStorage.codeboxTheme,
-              lineNumbers: true,
-            }}
-            onBeforeChange={onBeforeChange}
-          />
-          <Button type="primary" onClick={onApplyCode}>
-            {"Apply"}
-          </Button>
-        </Panel>
-        <Panel header={"The number of concurrent robots"} key="4">
+        <Panel header={"The number of concurrent robots"} key="2">
           <Input.Group compact>
             <InputNumber
               style={{
@@ -243,7 +226,7 @@ export default function Config() {
             </Button>
           </Input.Group>
         </Panel>
-        <Panel header={"Enqueue delay #ms (rate can be controlled"} key="5">
+        <Panel header={"Enqueue delay #ms (rate can be controlled"} key="3">
           <Input.Group compact>
             <InputNumber
               style={{
@@ -258,7 +241,7 @@ export default function Config() {
             </Button>
           </Input.Group>
         </Panel>
-        <Panel header={"Number of reports archived"} key="6">
+        <Panel header={"Number of reports archived"} key="4">
           <Input.Group compact>
             <InputNumber
               style={{
@@ -273,6 +256,18 @@ export default function Config() {
               Submit
             </Button>
           </Input.Group>
+        </Panel>
+        <Panel header={"Global script node"} key="5">
+          <CodeMirror
+            value={state.globalPrefab}
+            readOnly={false}
+            theme={getTheme()}
+            extensions={[StreamLanguage.define(lua)]}
+            onChange={onChange}
+          />
+          <Button type="primary" onClick={onApplyCode}>
+            {"Apply"}
+          </Button>
         </Panel>
       </Collapse>
     </div>

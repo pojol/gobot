@@ -4,14 +4,6 @@
     position: fixed;
 }
 
-.CodeMirror {
-    height: 100%;
-}
-
-.react-codemirror2 {
-    width: 100%;
-}
-
 .paneMeta {
     flex: 1 1 0%;
     position: relative;
