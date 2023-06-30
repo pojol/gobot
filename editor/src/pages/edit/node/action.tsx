@@ -8,7 +8,7 @@ import PubSub from "pubsub-js";
 import Topic from "@/constant/topic";
 
 import { getDefaultNodeNotifyInfo } from '@/models/node';
-import { UpdateType, nodeUpdate, find } from '@/models/newtree';
+import { UpdateType, nodeUpdate, find, nodeRedraw } from '@/models/newtree';
 import { delay } from '@/utils/timer';
 
 import CodeMirror from '@uiw/react-codemirror';
@@ -113,6 +113,7 @@ export default function ActionTab() {
       info: info,
       type: [UpdateType.UpdateCode, UpdateType.UpdateAlias]
     }))
+    dispatch(nodeRedraw())
   };
 
   const onChange = React.useCallback((value:any, viewUpdate:any) => {
