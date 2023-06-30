@@ -60,9 +60,10 @@ end
 |`base64`|`http`|`protobuf`|`mongoDB`|`json`|
 |`md5`|`uuid`|`random`|...|
 
-## [在线试用](http://123.60.17.61:7777) <--
-## [文档](https://pojol.gitee.io/gobot/#/) <--
+## [在线试用](http://123.60.17.61:7777)
+## [文档](https://pojol.gitee.io/gobot/#/)
 
+## [视频演示](https://www.bilibili.com/video/BV1sS4y1z7Dg/?vd_source=7c2dfd750914fd5f8a9811b19f0bf447)
 
 ## 编辑器预览
 [![image.png](https://i.postimg.cc/t4jMVjp1/image.png)](https://postimg.cc/PPS4B0Lh)
