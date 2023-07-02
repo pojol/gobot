@@ -20,7 +20,6 @@ export default defineConfig({
     { path: "/docs", component: "docs", name: "docs", key: "docs" },
   ],
   plugins: [
-    '@umijs/plugins/dist/react-query',
   ],
   npmClient: 'pnpm',
 });

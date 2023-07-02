@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"sync"
 
 	"github.com/glebarez/sqlite"
 	"gorm.io/driver/mysql"
@@ -24,12 +23,12 @@ type Cache struct {
 	behavior *Behavior
 	prefab   *Prefab
 	report   *Report
+	task     *Task
 
 	mysqlptr *gorm.DB
 }
 
 var db *Cache
-var once sync.Once
 
 func GetConfig() *Conf {
 	return db.conf
@@ -47,62 +46,65 @@ func GetBehavior() *Behavior {
 	return db.behavior
 }
 
-func Init(NoDBMode bool) *Cache {
-	once.Do(func() {
+func GetTask() *Task {
+	return db.task
+}
 
-		var sqlptr *gorm.DB
-		var err error
+func Init(NoDBMode bool) (*Cache, error) {
 
-		if NoDBMode {
-			sqlptr, err = gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
-		} else {
-			pwd := os.Getenv("MYSQL_PASSWORD")
-			if pwd == "" {
-				panic(errors.New("mysql password is not defined"))
-			}
+	var sqlptr *gorm.DB
+	var err error
 
-			name := os.Getenv("MYSQL_DATABASE")
-			if name == "" {
-				panic(errors.New("mysql database is not defined"))
-			}
-
-			host := os.Getenv("MYSQL_HOST")
-			if host == "" {
-				panic(errors.New("mysql host is not defined"))
-			}
-
-			user := os.Getenv("MYSQL_USER")
-			if user == "" {
-				panic(errors.New("mysql user is not defined"))
-			}
-
-			dsn := user + ":" + pwd + "@tcp(" + host + ")/" + name + "?charset=utf8&parseTime=True&loc=Local"
-
-			sqlptr, err = gorm.Open(mysql.New(mysql.Config{
-				DSN:                       dsn,   // data source name
-				DefaultStringSize:         256,   // default size for string fields
-				DisableDatetimePrecision:  true,  // disable datetime precision, which not supported before MySQL 5.6
-				DontSupportRenameIndex:    true,  // drop & create when rename index, rename index not supported before MySQL 5.7, MariaDB
-				DontSupportRenameColumn:   true,  // `change` when rename column, rename column not supported before MySQL 8, MariaDB
-				SkipInitializeWithVersion: false, // auto configure based on currently MySQL version
-			}), &gorm.Config{})
+	if NoDBMode {
+		sqlptr, err = gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
+	} else {
+		pwd := os.Getenv("MYSQL_PASSWORD")
+		if pwd == "" {
+			panic(errors.New("mysql password is not defined"))
 		}
 
-		if err != nil {
-			fmt.Println("open mysql err", err.Error())
-			return
+		name := os.Getenv("MYSQL_DATABASE")
+		if name == "" {
+			panic(errors.New("mysql database is not defined"))
 		}
 
-		db = &Cache{
-			mysqlptr: sqlptr,
-			conf:     CreateConfig(sqlptr),
-			prefab:   CreatePrefab(sqlptr),
-			behavior: CreateBehavior(sqlptr),
-			report:   CreateReport(sqlptr),
+		host := os.Getenv("MYSQL_HOST")
+		if host == "" {
+			panic(errors.New("mysql host is not defined"))
 		}
-	})
 
-	return db
+		user := os.Getenv("MYSQL_USER")
+		if user == "" {
+			panic(errors.New("mysql user is not defined"))
+		}
+
+		dsn := user + ":" + pwd + "@tcp(" + host + ")/" + name + "?charset=utf8&parseTime=True&loc=Local"
+
+		sqlptr, err = gorm.Open(mysql.New(mysql.Config{
+			DSN:                       dsn,   // data source name
+			DefaultStringSize:         256,   // default size for string fields
+			DisableDatetimePrecision:  true,  // disable datetime precision, which not supported before MySQL 5.6
+			DontSupportRenameIndex:    true,  // drop & create when rename index, rename index not supported before MySQL 5.7, MariaDB
+			DontSupportRenameColumn:   true,  // `change` when rename column, rename column not supported before MySQL 8, MariaDB
+			SkipInitializeWithVersion: false, // auto configure based on currently MySQL version
+		}), &gorm.Config{})
+	}
+
+	if err != nil {
+		fmt.Println("gorm open err", err.Error())
+		return nil, err
+	}
+
+	db = &Cache{
+		mysqlptr: sqlptr,
+		conf:     CreateConfig(sqlptr),
+		prefab:   CreatePrefab(sqlptr),
+		behavior: CreateBehavior(sqlptr),
+		report:   CreateReport(sqlptr),
+		task:     CreateTask(sqlptr),
+	}
+
+	return db, nil
 }
 
 func init() {

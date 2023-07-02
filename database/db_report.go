@@ -121,7 +121,7 @@ func (r *Report) Append(info ReportDetail) error {
 func (r *Report) List() ([]ReportTable, error) {
 	var lst []ReportTable
 
-	res := r.db.Find(&lst).Limit(100)
+	res := r.db.Order("begin_time desc").Limit(100).Find(&lst)
 
 	return lst, res.Error
 }

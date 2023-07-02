@@ -1,8 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Controlled as CodeMirror } from "react-codemirror2";
-import "codemirror/lib/codemirror.css";
-import "codemirror/theme/solarized.css";
-import "codemirror/mode/lua/lua";
 import { Input, Button, message, Space } from "antd";
 
 import { useDispatch, useSelector } from 'react-redux';
@@ -12,8 +8,14 @@ import PubSub from "pubsub-js";
 import Topic from "@/constant/topic";
 
 import { getDefaultNodeNotifyInfo } from '@/models/node';
-import { UpdateType,nodeUpdate, find } from '@/models/newtree';
+import { UpdateType, nodeUpdate, find, nodeRedraw } from '@/models/newtree';
 import { delay } from '@/utils/timer';
+
+import CodeMirror from '@uiw/react-codemirror';
+import { StreamLanguage } from '@codemirror/language';
+import { lua } from '@codemirror/legacy-modes/mode/lua'
+import { xcodeLight, xcodeDark } from '@uiw/codemirror-theme-xcode';
+import ThemeType from '@/constant/constant';
 
 /// <reference path="node.d.ts" />
 
@@ -29,18 +31,20 @@ export default function ActionTab() {
     wflex: 0.4,
   });
 
-  const [editorState, setEditorState] = useState(null);
+  const [codeHeight, setCodeHeight] = useState("400px");
 
   const { currentClickNode } = useSelector((state: RootState) => state.treeSlice);
   const { graphFlex, editFlex } = useSelector((state: RootState) => state.resizeSlice)
   const { nodes } = useSelector((state: RootState) => state.treeSlice)
   const dispatch = useDispatch()
 
+  const { themeValue } = useSelector((state: RootState) => state.configSlice)
+
   useEffect(() => {
 
-    delay(100).then(()=>{
+    delay(100).then(() => {
       let nod = find(nodes, currentClickNode.id)
-  
+
       setState({
         ...state,
         nod: nod,
@@ -78,12 +82,21 @@ export default function ActionTab() {
     redraw(state.wflex, editFlex)
   }, [editFlex])
 
-  const redraw = (wflex: number, hflwx: number) => {
-    if (editorState !== null) {
-      var width = document.documentElement.clientWidth * wflex - 18;
-      var height = document.documentElement.clientHeight * hflwx - 40;
-      editorState.setSize(width.toString() + "px", height.toString() + "px");
+  const getTheme = () => {
+    if (themeValue === ThemeType.Dark) {
+      return xcodeDark
+    } else {
+      return xcodeLight
     }
+  }
+
+  const redraw = (wflex: number, hflwx: number) => {
+      // auto
+      // var width = document.documentElement.clientWidth * wflex - 18;
+
+      var height = document.documentElement.clientHeight * hflwx - 40;
+
+      setCodeHeight(height.toString() + "px")
   }
 
   const applyClick = () => {
@@ -100,14 +113,15 @@ export default function ActionTab() {
       info: info,
       type: [UpdateType.UpdateCode, UpdateType.UpdateAlias]
     }))
+    dispatch(nodeRedraw())
   };
 
-  const handleChange = (editor: any, data: any, value: any) => {
+  const onChange = React.useCallback((value:any, viewUpdate:any) => {
     setState({
       ...state,
       code: value,
     });
-  };
+  }, []);
 
   const handleAliasChange = (event: any) => {
     setState({
@@ -120,22 +134,11 @@ export default function ActionTab() {
     <Space direction="vertical" style={{ width: "100%" }}>
       <CodeMirror
         value={state.code}
-        onBeforeChange={handleChange}
-        options={{
-          mode: "lua",
-          theme: localStorage.codeboxTheme,
-          lineNumbers: true,
-          inputStyle:"contenteditable",
-          indentUnit:0, //不启用自动tab
-        }}
-        editorDidMount={(editor) => {
-          setEditorState(editor);
-
-          var width = document.documentElement.clientWidth * state.wflex - 18;
-          var height = document.documentElement.clientHeight * state.hflex - 40;
-
-          editor.setSize(width.toString() + "px", height.toString() + "px");
-        }}
+        readOnly={false}
+        height={codeHeight}
+        theme={getTheme()}
+        extensions={[StreamLanguage.define(lua)]}
+        onChange={onChange}
       />
       <Space>
         <Search

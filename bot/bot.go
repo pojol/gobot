@@ -174,7 +174,7 @@ func (b *Bot) loopThread(doneCh chan<- string, errch chan<- ErrInfo) {
 			goto ext
 		}
 
-		if state == behavior.Break || state == behavior.Exit {
+		if state == behavior.Break || state == behavior.Error {
 			errch <- ErrInfo{
 				ID:  b.id,
 				Err: nil,

@@ -20,7 +20,8 @@ import {
   PlayCircleOutlined,
   CheckCircleTwoTone,
   CloseCircleTwoTone,
-  ExclamationCircleTwoTone
+  ExclamationCircleTwoTone,
+  CopyOutlined
 } from "@ant-design/icons";
 
 import { useLocation, history } from 'umi';
@@ -127,11 +128,6 @@ const Bots = (props: BotsProps) => {
           })}
         </>
       ),
-    },
-    {
-      title: "Desc",
-      dataIndex: "desc",
-      key: "desc",
     }
   ]
 
@@ -388,6 +384,25 @@ const Bots = (props: BotsProps) => {
 
   }
 
+  function copyTextToClipboard(text: string) {
+    let textArea = document.createElement("textarea");
+    textArea.value = text;
+
+    document.body.appendChild(textArea);
+    textArea.select();
+    document.execCommand("copy");
+    document.body.removeChild(textArea);
+  }
+
+  const handleBotShare = (e: any) => {
+    const shareLink = new URL(window.location.href);
+    const encodedLink = shareLink.origin + "/#/editor/" + selectedRows[0].name;
+
+    copyTextToClipboard(encodedLink)
+
+    message.success("share link copied to clipboard!")
+  }
+
   var filepProps = {
     name: "file",
     multiple: true,
@@ -472,6 +487,17 @@ const Bots = (props: BotsProps) => {
                   {"download"}
                 </Button>
               </Tooltip>
+              <Tooltip
+                placement="bottomLeft"
+                title={"Share the bot with others"}
+              >
+                <Button
+                  icon={<CopyOutlined />}
+                  onClick={handleBotShare}
+                >
+                  {"share"}
+                </Button>
+              </Tooltip>
             </Space>
           </Col>
         </Row>
@@ -492,7 +518,9 @@ const Bots = (props: BotsProps) => {
         onRow={(record) => {
           return {
             onMouseDown: (e) => {
-              e.currentTarget.getElementsByClassName("ant-checkbox-wrapper")[0].click()
+              if (e.target.type !== "checkbox") {
+                e.currentTarget.getElementsByClassName("ant-checkbox-wrapper")[0].click()
+              }
             },// 点击行
           };
         }}

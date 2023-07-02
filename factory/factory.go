@@ -13,6 +13,7 @@ import (
 
 type TaskInfo struct {
 	Name string
+	Cur  int32
 	Num  int32
 }
 
@@ -45,7 +46,10 @@ func Create(opts ...Option) (*Factory, error) {
 		opt(&p)
 	}
 
-	db := database.Init(p.NoDBMode)
+	db, err := database.Init(p.NoDBMode)
+	if err != nil {
+		panic(err)
+	}
 	f := &Factory{
 		parm:      p,
 		db:        db,
@@ -68,18 +72,29 @@ func (f *Factory) Close() {
 	f.exit.Open()
 }
 
-func (f *Factory) AddTask(name string, cnt int32) error {
+func (f *Factory) CheckTaskHistory() {
+	tasklst, _ := database.GetTask().List()
+	for _, task := range tasklst {
+		fmt.Println("recover task", task.Name, task.CurNumber, task.TotalNumber)
+		f.AddBatch(task.Name, task.CurNumber, task.TotalNumber)
+
+		// 删除旧表
+		database.GetTask().Rmv(task.ID)
+	}
+}
+
+func (f *Factory) AddBatch(name string, cur, total int32) error {
 
 	_, err := database.GetBehavior().Find(name)
 	if err != nil {
 		return err
 	}
 
-	f.pipelineCache = append(f.pipelineCache, TaskInfo{Name: name, Num: cnt})
+	f.pipelineCache = append(f.pipelineCache, TaskInfo{Name: name, Cur: cur, Num: total})
 	return nil
 }
 
-func (f *Factory) CreateTask(name string, num int) *Batch {
+func (f *Factory) createBatch(name string, cur, num int32) *Batch {
 
 	var dat []byte
 
@@ -94,7 +109,7 @@ func (f *Factory) CreateTask(name string, num int) *Batch {
 		return nil
 	}
 
-	return CreateBatch(name, num, dat, BatchConfig{
+	return CreateBatch(name, cur, num, dat, BatchConfig{
 		batchsize:     int32(cfg.ChannelSize),
 		globalScript:  string(cfg.GlobalCode),
 		scriptPath:    f.parm.ScriptPath,
@@ -141,7 +156,7 @@ func (f *Factory) taskLoop() {
 			info := f.pipelineCache[0]
 			f.pipelineCache = f.pipelineCache[1:]
 
-			b := f.CreateTask(info.Name, int(info.Num))
+			b := f.createBatch(info.Name, info.Cur, info.Num)
 
 			f.pushBatch(b)
 			<-b.BatchDone

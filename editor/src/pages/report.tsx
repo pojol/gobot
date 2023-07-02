@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-import { Table, Tag, Tabs, message } from "antd";
+import { Table, Tag, Tabs, message, Row } from "antd";
 import ApiChart from "./chart/chart_tree"
 import Api from "@/constant/api";
 const { Post } = require("../utils/request");
@@ -9,6 +9,26 @@ import PubSub from "pubsub-js";
 import Topic from "../constant/topic";
 
 const { TabPane } = Tabs;
+
+interface ReportApiInfo {
+  Api: string,
+  ConsumeNum: number,
+  ErrNum: number,
+  ReqNum: number,
+  ReqSize: number,
+  ResSize: number,
+}
+
+interface ReportViewInfo {
+  apilst: Array<ReportApiInfo>,
+  botnum: number,
+  duration: number,
+  errors: number,
+  key: string,
+  reqnum: number,
+  time: string,
+  tps: number,
+}
 
 export default function TestReport() {
 
@@ -43,38 +63,20 @@ export default function TestReport() {
       title: "Errors",
       key: "errors",
       dataIndex: "errors",
-    },
-    {
-      title: 'Charts',
-      key: 'charts',
-      dataIndex: 'charts',
-      render: (tags: any, record: any) => (
-        <>
-          {tags.map((tag: string) => {
-            let color = 'green';
-            if (tag === 'avg_request_time_ms') {
-              color = 'volcano';
-            } else if (tag === 'request_times') {
-              color = 'geekblue';
-            }
-            return (
-              <Tag color={color} key={tag} onClick={() => clickTag(tag, record)}>
-                {tag}
-              </Tag>
-
-            );
-          })}
-        </>
-      ),
     }
   ]
 
   const [reports, setReports] = useState([]);
+  const [row, setRow] = useState<ReportViewInfo>();
 
   useEffect(() => {
     console.info("refresh reports")
     refresh()
-  },[])
+  }, [])
+
+  useEffect(()=>{
+    clickRow("avg_request_time_ms")
+  }, [row])
 
   const fillData = (info: any) => {
 
@@ -113,37 +115,91 @@ export default function TestReport() {
     });
   }
 
+  const clickRow = (ty: string) => {
 
-
-  const clickTag = (e: any, record: any) => {
-
-    if (record.apilst) {
-      let lst = []
-
-      if (e === "avg_request_time_ms") {
-        for (var i = 0; i < record.apilst.length; i++) {
-          lst.push({ "Api": record.apilst[i].Api, "Value": record.apilst[i].ConsumeNum })
-        }
-      } else if (e === "request_times") {
-        for (i = 0; i < record.apilst.length; i++) {
-          lst.push({ "Api": record.apilst[i].Api, "Value": record.apilst[i].ReqNum })
-        }
-      }
-
-
-      PubSub.publish(Topic.ReportSelect, {
-        Chart: e,
-        ApiList: lst
-      })
-
+    let lst = []
+    let rows = row
+    if (!rows) {
+      return
     }
-  };
+
+    if (ty === "avg_request_time_ms") {
+      for (var i = 0; i < rows.apilst.length; i++) {
+        lst.push({ "Api": rows.apilst[i].Api, "Value": rows.apilst[i].ConsumeNum })
+      }
+    } else if (ty === "request_times") {
+      for (i = 0; i < rows.apilst.length; i++) {
+        lst.push({ "Api": rows.apilst[i].Api, "Value": rows.apilst[i].ReqNum })
+      }
+    }
+
+    PubSub.publish(Topic.ReportSelect, {
+      Chart: ty,
+      ApiList: lst
+    })
+
+  }
+
+  const tableClick = (activeKey: string) => {
+    console.info(activeKey)
+
+    if (activeKey === "Latency") {
+      clickRow("avg_request_time_ms")
+    } else {
+      clickRow("request_times")
+    }
+  }
 
   return (
     <div>
-      <Table columns={columns} dataSource={reports} />
-      <Tabs defaultActiveKey="Tree">
-        <TabPane tab="Tree" key="Tree">
+      <Table columns={columns} dataSource={reports}
+        rowSelection={{
+          type: "radio",
+          ...{
+            onChange: (selectedRowKeys: any, selectedRows: any) => {
+              //console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
+              let apis = new Array<ReportApiInfo>() 
+              if (selectedRows[0].apilst !== null) {
+                console.info("api length", selectedRows[0].apilst.length)
+                for (var i = 0; i < selectedRows[0].apilst.length; i++) {
+                  apis.push({
+                    Api: selectedRows[0].apilst[i].Api,
+                    ConsumeNum: selectedRows[0].apilst[i].ConsumeNum,
+                    ErrNum: selectedRows[0].apilst[i].ErrNum,
+                    ReqNum: selectedRows[0].apilst[i].ReqNum,
+                    ReqSize: selectedRows[0].apilst[i].ReqSize,
+                    ResSize: selectedRows[0].apilst[i].ResSize,
+                  })
+                }
+              }
+
+              setRow({
+                apilst: apis,
+                botnum: selectedRows[0].botnum,
+                duration: selectedRows[0].duration,
+                errors: selectedRows[0].errors,
+                key: selectedRows[0].key,
+                reqnum: selectedRows[0].reqnum,
+                time: selectedRows[0].time,
+                tps: selectedRows[0].tps,
+              })
+            }
+          },
+        }}
+        onRow={(record) => {
+          return {
+            onMouseDown: (e) => {
+              if (e.target.type !== "radio") {
+                e.currentTarget.getElementsByClassName("ant-radio-wrapper")[0].click()
+              }
+            },// 点击行
+          };
+        }} />
+      <Tabs defaultActiveKey="Latency" onTabClick={tableClick}>
+        <TabPane tab="Latency" key="Latency">
+          <ApiChart />
+        </TabPane>
+        <TabPane tab="Frequency" key="Frequency">
           <ApiChart />
         </TabPane>
       </Tabs>

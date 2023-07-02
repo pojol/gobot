@@ -8,16 +8,10 @@ import {
   FilterTwoTone
 } from "@ant-design/icons";
 
-import { Controlled as CodeMirror } from "react-codemirror2";
-import "codemirror/lib/codemirror.css";
-import "codemirror/theme/solarized.css";
-import "codemirror/theme/abcdef.css";
-import "codemirror/theme/ayu-dark.css";
-import "codemirror/theme/yonce.css";
-import "codemirror/theme/neo.css";
-import "codemirror/theme/zenburn.css";
-
-import "codemirror/mode/lua/lua";
+import CodeMirror from '@uiw/react-codemirror';
+import { StreamLanguage } from '@codemirror/language';
+import { lua } from '@codemirror/legacy-modes/mode/lua'
+import { xcodeLight, xcodeDark } from '@uiw/codemirror-theme-xcode';
 
 
 import Topic from "../constant/topic";
@@ -29,6 +23,8 @@ import { connect, ConnectedProps } from 'react-redux';
 import { addItem, removeItem, cleanItems } from '../models/prefab';
 import { RootState } from '@/models/store';
 
+import { useSelector } from 'react-redux';
+
 const { Post, PostGetBlob, PostBlob } = require("../utils/request");
 
 // You will need to import the styles separately
@@ -37,6 +33,7 @@ import "react-reflex/styles.css";
 
 // then you can import the components
 import { ReflexContainer, ReflexSplitter, ReflexElement } from "react-reflex";
+import ThemeType from '@/constant/constant';
 
 interface DataType {
   key: string;
@@ -57,7 +54,8 @@ const Prefab = (props: PrefabProps) => {
   const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
   const [newPrefabName, setNewPrefabName] = useState<string>("");
   const [searchedColumn, setSearchedColumn] = useState<DataIndex>();
-  const [editor, setEditor] = useState<any>({});
+
+  const { themeValue } = useSelector((state: RootState) => state.configSlice)
 
   let obj: any = null
 
@@ -65,6 +63,13 @@ const Prefab = (props: PrefabProps) => {
     syncConfig();
   }, []);
 
+  const getTheme = () => {
+    if (themeValue === ThemeType.Dark) {
+      return xcodeDark
+    } else {
+      return xcodeLight
+    }
+  }
 
   const getColumnSearchProps = (dataIndex: DataIndex): ColumnType<DataType> => ({
     filterDropdown: ({ setSelectedKeys, selectedKeys, confirm }) => (
@@ -150,9 +155,10 @@ const Prefab = (props: PrefabProps) => {
     });
   }
 
-  const onBeforeChange = (editor: any, data: any, value: string) => {
+  const onChange = React.useCallback((value:any, viewUpdate:any) => {
     setCode(value)
-  };
+  }, []);
+
 
   const uploadPrefab = (name: string, code: string) => {
     var blob = new Blob([code], {
@@ -274,19 +280,6 @@ const Prefab = (props: PrefabProps) => {
     setData(newData)
   }
 
-  const onDidMount = (editor: any) => {
-    editor.setSize(undefined, document.documentElement.clientHeight - 120)
-    setEditor(editor)
-  };
-
-  const options = {
-    mode: "lua",
-    theme: localStorage.codeboxTheme,
-    lineNumbers: true,
-    inputStyle:"contenteditable",
-    indentUnit:0, //不启用自动tab
-  };
-
   // rowSelection object indicates the need for row selection
   const rowSelection = {
     onChange: (selectedRowKeys: any, selectedRows: any) => {
@@ -399,9 +392,10 @@ const Prefab = (props: PrefabProps) => {
         <ReflexElement className="right-pane" flex={0.7} minSize={100}>
           <CodeMirror
             value={code}
-            options={options}
-            onBeforeChange={onBeforeChange}
-            editorDidMount={onDidMount}
+            readOnly={false}
+            theme={getTheme()}
+            extensions={[StreamLanguage.define(lua)]}
+            onChange={onChange}
           />
         </ReflexElement>
 

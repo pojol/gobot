@@ -103,9 +103,11 @@ func (t *Tick) Do() (state string, end bool) {
 
 		if err != nil {
 			threadInfo.ErrMsg = fmt.Sprintf("tick err %v", err.Error())
+			fmt.Println("tick err", threadInfo.ErrMsg)
 		}
 		if parseerr != nil {
 			threadInfo.ErrMsg = fmt.Sprintf("%v parse err %v", threadInfo.ErrMsg, parseerr.Error())
+			fmt.Println("tick parse err", threadInfo.ErrMsg)
 		}
 
 		if state != Succ {
@@ -114,9 +116,11 @@ func (t *Tick) Do() (state string, end bool) {
 			} else if state == Break {
 				end = true
 				threadInfo.ErrMsg = fmt.Sprintf("script break err %v", msg)
+				fmt.Println("tick break err", threadInfo.ErrMsg)
 			} else if state == Error {
 				// 节点脚本出错，脚本逻辑自行抛出的错误
 				threadInfo.ErrMsg = fmt.Sprintf("script err %v", msg)
+				fmt.Println("tick script err", threadInfo.ErrMsg)
 			}
 		}
 
@@ -134,6 +138,7 @@ func (t *Tick) Do() (state string, end bool) {
 
 	if t.blackboard.end {
 		state = Exit
+		end = true
 		goto ext
 	}
 

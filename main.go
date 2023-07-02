@@ -86,6 +86,9 @@ func main() {
 
 	fmt.Printf(banner, Version)
 
+	// 查看有没有未完成的队列
+	factory.Global.CheckTaskHistory()
+
 	e := echo.New()
 	e.HideBanner = true
 	e.Use(middleware.CORS())
