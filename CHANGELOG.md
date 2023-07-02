@@ -1,3 +1,16 @@
+# v0.3.6 (pre
+* feature
+    - The way of previewing report has been changed from clicking tags to displaying directly at the bottom, with tab switching for charts (more intuitive) 
+    - Replaced the implementation library of codemirror to provide a better code writing experience
+    - Added share feature,  by selecting bot in bots panel and clicking share can copy the bot's address to clipboard for others to access directly the bot's editing view
+    - Added automatic refresh for running (default 10s)  
+    - Changed the storage implementation of batch, now it will be stored in the db so that it can continue executing after an abnormal interruption
+* fix   
+    - It will directly panic if the database cannot connect (encounter errors should terminate immediately)      
+    - Replaced the clipboard implementation of share button to an earlier api (can adapt to more browsers)   
+    - Fixed the problem that report was not sorted by time   
+    - Fixed the issue of wrong click event in bots
+
 # v0.3.5 (pre
 Major adjustments are nearing completion. Version 0.3 will only fix bugs next.
 * Feature
