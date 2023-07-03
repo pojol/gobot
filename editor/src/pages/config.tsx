@@ -156,9 +156,9 @@ export default function Config() {
     );
   };
 
-  const onChange = React.useCallback((value:any, viewUpdate:any) => {
+  const onChange = (value:any, viewUpdate:any) => {
     setState((state) => ({ ...state, globalPrefab: value }));
-  }, []);
+  }
 
   const clickTheme = (e: any) => {
     setState((state) => ({ ...state, theme: e }));

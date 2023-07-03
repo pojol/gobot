@@ -155,9 +155,9 @@ const Prefab = (props: PrefabProps) => {
     });
   }
 
-  const onChange = React.useCallback((value:any, viewUpdate:any) => {
+  const onChange = (value:any, viewUpdate:any) => {
     setCode(value)
-  }, []);
+  }
 
 
   const uploadPrefab = (name: string, code: string) => {

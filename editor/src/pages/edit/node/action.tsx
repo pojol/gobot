@@ -22,6 +22,7 @@ import ThemeType from '@/constant/constant';
 const { Search } = Input;
 
 export default function ActionTab() {
+
   const [state, setState] = useState({
     nod: getDefaultNodeNotifyInfo(),
     node_ty: "",
@@ -116,12 +117,12 @@ export default function ActionTab() {
     dispatch(nodeRedraw())
   };
 
-  const onChange = React.useCallback((value:any, viewUpdate:any) => {
+  const onChange = (value:any, viewUpdate:any) => {
     setState({
       ...state,
       code: value,
     });
-  }, []);
+  }
 
   const handleAliasChange = (event: any) => {
     setState({
