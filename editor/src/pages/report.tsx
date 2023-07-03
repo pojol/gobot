@@ -90,7 +90,7 @@ export default function TestReport() {
     for (var i = 0; i < info.length; i++) {
 
       var date = new Date(info[i].BeginTime * 1000);
-      var convdataTime = date.getFullYear() + '-' + date.getMonth() + '-' + date.getDate() + ' ' + date.getHours() + ':' + date.getMinutes() + ':' + date.getSeconds();
+      var convdataTime = date.getFullYear() + '-' + (date.getMonth()+1).toString() + '-' + date.getDate() + ' ' + date.getHours() + ':' + date.getMinutes() + ':' + date.getSeconds();
 
       newdata.push({
         key: info[i].ID,
