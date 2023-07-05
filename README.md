@@ -66,7 +66,7 @@ end
 |`md5`|`uuid`|`random`|...|
 
 ## Try it out
-Try the editor out [on website](http://123.60.17.61:7777)
+Try the editor out [on website](http://178.128.113.58:31293)
 
 ## Preview
 [![image.png](https://i.postimg.cc/t4jMVjp1/image.png)](https://postimg.cc/PPS4B0Lh)

@@ -60,7 +60,7 @@ end
 |`base64`|`http`|`protobuf`|`mongoDB`|`json`|
 |`md5`|`uuid`|`random`|...|
 
-## [在线试用](http://123.60.17.61:7777)
+## [在线试用](http://178.128.113.58:31293)
 ## [文档](https://pojol.gitee.io/gobot/#/)
 
 ## [视频演示](https://www.bilibili.com/video/BV1sS4y1z7Dg/?vd_source=7c2dfd750914fd5f8a9811b19f0bf447)
