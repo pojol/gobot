@@ -60,46 +60,37 @@ export const EditSidePlane: React.FC<SideProps> = ({ graph, isGraphCreated }) =>
       }))
 
       resizeSidePane()
-      reloadPrefab()
+      reloadPrefab([])
     }
 
   }, [isGraphCreated])
 
-  /*
-    PubSub.subscribe(Topic.PrefabUpdateAll, (topic: string, info: any) => {
-      this.reloadPrefab()
-    });
-  
-  */
-  const matchTags = (tags: string[]): boolean => {
+  const matchTags = (matchtags:string[], tags: string[]): boolean => {
 
-    let selecttags = selectTags
-    for (var i = 0; i < selecttags.length; i++) {
-      for (var j = 0; j < tags.length; j++) {
-        if (tags[j] === selecttags[i]) {
-          console.info(tags[j], "match", selecttags[i])
-          return true
-        }
+    for (let i = 0; i < matchtags.length; i++) {
+      if (!tags.includes(matchtags[i])) {
+        return false;
       }
     }
-
-    return false
+    return true;
+    
   }
 
-  const reloadPrefab = () => {
+  const reloadPrefab = (newtags :string[]) => {
     const prefabMap = pmap
 
-    setSelectTags([])
     setTags([])
 
     let tmplst = new Array<string>()
     let taglst = new Array<PrefabTagInfo>()
     var tagSet = new Set<string>()
 
+    console.info("new tags", newtags)
+
     prefabMap.forEach((value: PrefabInfo) => {
 
-      if (selectTags.length !== 0) {
-        if (matchTags(value.tags)) {
+      if (newtags !== undefined && newtags.length !== 0) {
+        if (matchTags(newtags, value.tags)) {
           tmplst.push(value.name)
         }
       } else {
@@ -123,7 +114,7 @@ export const EditSidePlane: React.FC<SideProps> = ({ graph, isGraphCreated }) =>
   const resizeSidePane = () => {
     var div = document.getElementById("prefab-pane")
     if (div !== null) {
-      var clienth = document.documentElement.clientHeight - 260
+      var clienth = document.documentElement.clientHeight - 270
       div.style.height = clienth.toString() + "px"
       div.style.overflow = "auto"
       console.info("set", document.documentElement.clientHeight.toString())
@@ -148,9 +139,8 @@ export const EditSidePlane: React.FC<SideProps> = ({ graph, isGraphCreated }) =>
 
   const onSelectChange = (value: string[]) => {
     setSelectTags(value)
-    reloadPrefab()
+    reloadPrefab(value)
   };
-
 
   return (
     <div className="dnd-wrap">

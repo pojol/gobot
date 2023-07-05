@@ -153,13 +153,11 @@ const Bots = (props: BotsProps) => {
 
     var intags = (tags: Array<string>) => {
       for (var i = 0; i < selectedTag.length; i++) {
-        for (var j = 0; j < tags.length; j++) {
-          if (selectedTag[i] === tags[j]) {
-            return true
-          }
+        if (!tags.includes(selectedTag[i])) {
+          return false
         }
       }
-      return false
+      return true
     }
 
     if (bots.length > 0) {

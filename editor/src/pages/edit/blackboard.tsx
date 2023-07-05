@@ -71,6 +71,7 @@ export default function Blackboard() {
                 setActive("2")
             }
 
+            setRuntimeerr("")
             setChange(msg)
         }
 
