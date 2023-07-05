@@ -13,7 +13,7 @@
     "start": "npm run dev",
     "electron-dev": "electron .",
     "package_win32_x64": "electron-packager ./ Gobot --platform=win32 --arch=x64 --asar=true --prune=true --overwrite",
-    "package_darwin_arm64": "electron-packager ./ Gobot --platform=darwin --arch=arm64 --overwrite"
+    "package_darwin_arm64": "electron-packager ./ Gobot --platform=darwin --arch=arm64 --asar=true --overwrite"
   },
   "dependencies": {
     "@ant-design/charts": "^1.4.2",

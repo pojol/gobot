@@ -15,6 +15,7 @@ interface TreeState {
     currentDebugTree: NodeNotifyInfo;
     currentDebugBot: string;
     currentClickNode: NodeClickInfo;
+    currentLockedNode: NodeClickInfo;
     updatetick: number;
 }
 
@@ -27,6 +28,7 @@ const initialState: TreeState = {
     currentDebugBot: "",
     currentDebugTree: getDefaultNodeNotifyInfo(),
     currentClickNode: { id: "", type: "" },
+    currentLockedNode: { id: "", type: "" },
     updatetick: 0,
 };
 
@@ -206,11 +208,11 @@ function save(state: TreeState, name: string) {
         var xmltree = {
             behavior: nod,
         };
-    
+
         var blob = new Blob([OBJ2XML(xmltree)], {
             type: "application/json",
         });
-    
+
         PostBlob(
             localStorage.remoteAddr,
             Api.FileBlobUpload,
@@ -294,8 +296,12 @@ const treeSlice = createSlice({
             let behavirName = action.payload
             save(state, behavirName)
         },
+        unlockFocus(state, action: PayloadAction<NodeClickInfo>) {
+            let info = action.payload
+            state.currentLockedNode = info
+        }
     },
 });
 
-export const { nodeAdd, nodeRmv, nodeLink, nodeUnlink, cleanTree, nodeUpdate, nodeClick, nodeRedraw, initTree, setCurrentDebugBot, nodeSave } = treeSlice.actions;
+export const { nodeAdd, nodeRmv, nodeLink, nodeUnlink, cleanTree, nodeUpdate, nodeClick, nodeRedraw, initTree, setCurrentDebugBot, nodeSave,unlockFocus } = treeSlice.actions;
 export default treeSlice;

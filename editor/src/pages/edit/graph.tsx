@@ -7,6 +7,8 @@ import OBJ2XML from "object-to-xml";
 import { RootState } from "@/models/store";
 import PubSub from "pubsub-js";
 import Topic from "../../constant/topic";
+import { TaskTimer } from "tasktimer/lib/TaskTimer";
+
 
 import { setDebugInfo, setLock } from "@/models/debuginfo";
 import { history } from "umi";
@@ -20,7 +22,9 @@ import {
     DeleteOutlined,
     UndoOutlined,
     ZoomInOutlined,
-    ZoomOutOutlined
+    ZoomOutOutlined,
+    LockOutlined,
+    UnlockOutlined 
 } from "@ant-design/icons";
 import { Button, Input, Modal, Tooltip } from "antd";
 import { IsActionNode, IsScriptNode, NodeTy } from "../../constant/node_type";
@@ -44,7 +48,8 @@ import {
     nodeUpdate,
     UpdateType,
     nodeSave,
-} from "@/models/newtree";
+    unlockFocus,
+} from "@/models/tree";
 
 const {
     LoadBehaviorWithBlob,
@@ -84,7 +89,7 @@ const GraphView = (props: GraphViewProps) => {
 
     const { graphFlex } = useSelector((state: RootState) => state.resizeSlice)
     const { lock } = useSelector((state: RootState) => state.debugInfoSlice)
-    const { nodes, updatetick } = useSelector((state: RootState) => state.treeSlice)
+    const { nodes, updatetick, currentClickNode,currentLockedNode } = useSelector((state: RootState) => state.treeSlice)
     const [isGraphCreated, setIsGraphCreated] = useState(false);
 
     useEffect(() => {
@@ -578,6 +583,32 @@ const GraphView = (props: GraphViewProps) => {
         props.dispatch(cleanTree())
     }
 
+    const UnlockFocus = () => {
+        if (currentClickNode.id == "")  {
+            message.warning("please select a node")
+            return
+        }
+
+        if (currentClickNode.type == NodeTy.Root)  {
+            message.warning("root node can't be locked")
+            return
+        }
+
+        if (currentLockedNode.id == "")  {  // locked
+
+            props.dispatch(unlockFocus({
+                id: currentClickNode.id,
+                type: currentClickNode.type,
+            }))
+        } else {
+            props.dispatch(unlockFocus({
+                id: "",
+                type: "",
+            }))
+        }
+
+    }
+
     const ClickUpload = () => {
         setModalVisible(true);
     };
@@ -633,23 +664,19 @@ const GraphView = (props: GraphViewProps) => {
         }
     };
 
-    const ClickStep = (e: any) => {
-        if (props.tree.currentDebugBot === "") {
-            message.warning("have not created bot");
-            return;
-        }
-
-        var botid = props.tree.currentDebugBot
-        props.dispatch(setLock(true))
+    const _step_loop = (botid :  string, done : any) => {
         Post(localStorage.remoteAddr, Api.DebugStep, { BotID: botid }).then(
             (json: any) => {
 
                 if (json.Code !== 200) {
                     if (json.Code === 1009) {
                         message.warning(json.Code.toString() + " " + json.Msg)
+                        done()
                         return;
                     } else if (json.Code === 1007) {
                         message.success("the end");
+                        done()
+                        return;
                     } else {
                         message.warning(json.Code.toString() + " " + json.Msg)
                     }
@@ -662,9 +689,19 @@ const GraphView = (props: GraphViewProps) => {
 
                 // 推送当前节点信息
                 let focusLst = new Array<string>
-                threadinfo.forEach(element => {
-                    focusLst.push(element.curnod)
-                });
+                try {
+                    threadinfo.forEach(element => {
+                        focusLst.push(element.curnod)
+    
+                        if (element.curnod === currentLockedNode.id) {
+                            throw new Error("find")                            
+                        }
+                    });
+                } catch (error) {
+                    done()
+                    return
+                }
+                
                 debugFocus(focusLst)
 
                 // 推送 meta 面板信息
@@ -672,11 +709,75 @@ const GraphView = (props: GraphViewProps) => {
                 props.dispatch(setDebugInfo({
                     metaInfo: metaStr,
                     threadInfo: threadinfo,
-                    lock: false,
+                    lock: true,
                 }))
             }
         );
+    
+    }
 
+    const ClickStep = (e: any) => {
+        if (props.tree.currentDebugBot === "") {
+            message.warning("have not created bot");
+            return;
+        }
+
+        var botid = props.tree.currentDebugBot
+
+        if (currentLockedNode.id !== "") {
+            const timer = new TaskTimer(100);
+
+            timer.on('tick', () => {
+
+                const donecallback = () =>{
+                    console.info("step loop done")
+                    timer.stop();
+                    props.dispatch(setLock(false))
+                }
+
+                _step_loop(botid, donecallback)
+
+            });
+            timer.start();
+
+        } else {
+            props.dispatch(setLock(true))
+            Post(localStorage.remoteAddr, Api.DebugStep, { BotID: botid }).then(
+                (json: any) => {
+    
+                    if (json.Code !== 200) {
+                        if (json.Code === 1009) {
+                            message.warning(json.Code.toString() + " " + json.Msg)
+                            return;
+                        } else if (json.Code === 1007) {
+                            message.success("the end");
+                        } else {
+                            message.warning(json.Code.toString() + " " + json.Msg)
+                        }
+                    }
+    
+                    debugFocus([]); // clean
+    
+                    // 推送 reponse 面板信息
+                    let threadinfo = JSON.parse(json.Body.ThreadInfo) as Array<ThreadInfo>
+    
+                    // 推送当前节点信息
+                    let focusLst = new Array<string>
+                    threadinfo.forEach(element => {
+                        focusLst.push(element.curnod)
+                    });
+                    debugFocus(focusLst)
+    
+                    // 推送 meta 面板信息
+                    let metaStr = JSON.stringify(JSON.parse(json.Body.Blackboard))
+                    props.dispatch(setDebugInfo({
+                        metaInfo: metaStr,
+                        threadInfo: threadinfo,
+                        lock: false,
+                    }))
+                }
+            );
+        }
     };
 
     const behaviorNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -718,6 +819,14 @@ const GraphView = (props: GraphViewProps) => {
         //PubSub.publish(Topic.Undo, {});
     };
 
+    const getLockedState = () => {
+        if (currentLockedNode.id == "") {
+            return <UnlockOutlined />
+        } else {
+            return <LockOutlined />
+        }
+    }
+
     return (
         <div className='app'>
             <EditSidePlane
@@ -748,6 +857,9 @@ const GraphView = (props: GraphViewProps) => {
                 </Tooltip>
                 <Tooltip placement="topLeft" title="Clean">
                     <Button icon={<ClearOutlined />} onClick={CleanTree} />
+                </Tooltip>
+                <Tooltip placement="topLeft" title="lock / unlock focus">
+                    <Button icon={getLockedState()} onClick={UnlockFocus} />
                 </Tooltip>
             </div>
 

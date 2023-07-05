@@ -23,9 +23,11 @@ const debugInfoSlice = createSlice({
             state.threadInfo = action.payload.threadInfo
 
             // 每次创建新的机器人时重制锁
-            state.lock = false
+            state.lock = action.payload.lock
+            console.info("setDebugInfo", state.lock)
         },
         setLock(state, action: PayloadAction<boolean>) {
+            console.info("setLock", action.payload)
             state.lock = action.payload
         }
     }
