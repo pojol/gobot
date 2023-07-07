@@ -19,6 +19,7 @@ import {
     CaretRightOutlined,
     ClearOutlined,
     CloudUploadOutlined,
+    CloudSyncOutlined,
     DeleteOutlined,
     UndoOutlined,
     ZoomInOutlined,
@@ -89,7 +90,7 @@ const GraphView = (props: GraphViewProps) => {
 
     const { graphFlex } = useSelector((state: RootState) => state.resizeSlice)
     const { lock } = useSelector((state: RootState) => state.debugInfoSlice)
-    const { nodes, updatetick, currentClickNode,currentLockedNode } = useSelector((state: RootState) => state.treeSlice)
+    const { currentTreeName,nodes, updatetick, currentClickNode,currentLockedNode } = useSelector((state: RootState) => state.treeSlice)
     const [isGraphCreated, setIsGraphCreated] = useState(false);
 
     useEffect(() => {
@@ -584,6 +585,7 @@ const GraphView = (props: GraphViewProps) => {
     }
 
     const UnlockFocus = () => {
+        console.info("lock/unlock")
         if (currentClickNode.id == "")  {
             message.warning("please select a node")
             return
@@ -595,7 +597,6 @@ const GraphView = (props: GraphViewProps) => {
         }
 
         if (currentLockedNode.id == "")  {  // locked
-
             props.dispatch(unlockFocus({
                 id: currentClickNode.id,
                 type: currentClickNode.type,
@@ -610,7 +611,13 @@ const GraphView = (props: GraphViewProps) => {
     }
 
     const ClickUpload = () => {
-        setModalVisible(true);
+
+        if (currentTreeName === "") {
+            setModalVisible(true);
+        } else {
+            props.dispatch(nodeSave(""))
+        }
+
     };
 
     // 基于某个模版，创建一个可运行的 Bot
@@ -694,6 +701,7 @@ const GraphView = (props: GraphViewProps) => {
                         focusLst.push(element.curnod)
     
                         if (element.curnod === currentLockedNode.id) {
+                            console.info("focus", element.curnod)
                             throw new Error("find")                            
                         }
                     });
@@ -788,6 +796,7 @@ const GraphView = (props: GraphViewProps) => {
         setModalVisible(false);
         if (behaviorName !== "") {
             props.dispatch(nodeSave(behaviorName))
+            setBehaviorName("");
         } else {
             message.warning("please enter the file name of the behavior tree");
         }
@@ -893,7 +902,7 @@ const GraphView = (props: GraphViewProps) => {
             <div className={"app-upload-win"}>
                 <Tooltip placement="topRight" title={"Upload the bot to the server"}>
                     <Button
-                        icon={<CloudUploadOutlined />}
+                        icon={<CloudSyncOutlined />}
                         style={{ width: 50 }}
                         onClick={ClickUpload}
                     ></Button>

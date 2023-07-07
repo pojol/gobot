@@ -224,8 +224,7 @@ function save(state: TreeState, name: string) {
                     "upload fail:" + String(json.Code) + " msg: " + json.Msg
                 );
             } else {
-                console.info(json.Body)
-                message.success("upload succ ");
+                message.success(name + " upload succ");
             }
         });
     }
@@ -294,11 +293,21 @@ const treeSlice = createSlice({
         },
         nodeSave(state, action: PayloadAction<string>) {
             let behavirName = action.payload
-            save(state, behavirName)
+
+            if (behavirName == "") {
+                if (state.currentTreeName !== "") {
+                    save(state, state.currentTreeName)
+                }
+            } else {
+                save(state, behavirName)
+                state.currentTreeName = behavirName
+            }
+
         },
         unlockFocus(state, action: PayloadAction<NodeClickInfo>) {
             let info = action.payload
             state.currentLockedNode = info
+            console.info("lock/unlock info", info)
         }
     },
 });
