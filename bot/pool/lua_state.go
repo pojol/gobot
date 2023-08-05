@@ -15,6 +15,7 @@ type lStatePool struct {
 type BotState struct {
 	L         *lua.LState
 	HttpMod   *script.HttpModule
+	TCPMod    *script.TCPModule
 	protoMod  *script.ProtoModule
 	utilsMod  *script.UtilsModule
 	base64Mod *script.Base64Module
@@ -41,6 +42,7 @@ func _new_state() *BotState {
 	b := &BotState{
 		L:         lua.NewState(),
 		HttpMod:   script.NewHttpModule(),
+		TCPMod:    script.NewTCPModule(),
 		protoMod:  &script.ProtoModule{},
 		utilsMod:  &script.UtilsModule{},
 		base64Mod: &script.Base64Module{},

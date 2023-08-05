@@ -11,7 +11,7 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	ms := mock.NewServer()
+	ms := mock.NewHttpServer()
 	go ms.Start(":6666")
 
 	defer ms.Close()

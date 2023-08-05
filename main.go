@@ -19,9 +19,10 @@ import (
 var (
 	help bool
 
-	dbmode     bool
-	scriptPath string
-	openmock   bool
+	dbmode       bool
+	scriptPath   string
+	openHttpMock bool
+	openTcpMock  bool
 )
 
 const (
@@ -46,7 +47,8 @@ func initFlag() {
 	flag.BoolVar(&help, "h", false, "this help")
 
 	flag.BoolVar(&dbmode, "no_database", false, "Run in local mode")
-	flag.BoolVar(&openmock, "mock", false, "open mock server")
+	flag.BoolVar(&openHttpMock, "httpmock", false, "open http mock server")
+	flag.BoolVar(&openTcpMock, "httpmock", false, "open tcp mock server")
 	flag.StringVar(&scriptPath, "script_path", "script/", "Path to bot script")
 }
 
@@ -74,8 +76,8 @@ func main() {
 		panic(err)
 	}
 
-	if openmock {
-		ms := mock.NewServer()
+	if openHttpMock {
+		ms := mock.NewHttpServer()
 		go ms.Start(":6666")
 		defer ms.Close()
 	}

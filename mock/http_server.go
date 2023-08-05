@@ -235,7 +235,7 @@ ext:
 	return nil
 }
 
-func NewServer() *echo.Echo {
+func NewHttpServer() *echo.Echo {
 
 	rand.Seed(time.Now().UnixNano())
 
