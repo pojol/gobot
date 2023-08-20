@@ -1,6 +1,9 @@
 package script
 
 import (
+	"bytes"
+	"encoding/binary"
+	"errors"
 	"fmt"
 	"net"
 	"syscall"
@@ -11,11 +14,41 @@ import (
 type TCPModule struct {
 	conn *net.TCPConn
 	fd   int
+	buf  byteQueue
+}
+
+type byteQueue []byte
+
+// 入队
+func (q *byteQueue) push(b []byte) {
+	*q = append(*q, b...)
+}
+
+// 出队
+func (q *byteQueue) pop(maxLen int) ([]byte, bool) {
+	if len(*q) == 0 {
+		return nil, false
+	}
+
+	if maxLen > len(*q) {
+		maxLen = len(*q)
+	}
+
+	data := (*q)[:maxLen]
+	*q = (*q)[maxLen:]
+	return data, true
+}
+
+// 队列当前长度
+func (q *byteQueue) Len() int {
+	return len(*q)
 }
 
 func NewTCPModule() *TCPModule {
 
-	tcpm := &TCPModule{}
+	tcpm := &TCPModule{
+		buf: make([]byte, 1024),
+	}
 
 	return tcpm
 }
@@ -27,6 +60,9 @@ func (t *TCPModule) Loader(L *lua.LState) int {
 
 		"write": t.write,
 		"read":  t.read,
+
+		"read_msg":  t.read_msg,
+		"write_msg": t.write_msg,
 	})
 	L.Push(mod)
 	return 1
@@ -80,6 +116,107 @@ func (t *TCPModule) write(L *lua.LState) int {
 
 	msg := L.ToString(1)
 	_, err := t.conn.Write([]byte(msg))
+	if err != nil {
+		L.Push(lua.LString(err.Error()))
+		return 1
+	}
+
+	L.Push(lua.LString("succ"))
+	return 1
+}
+
+func (t *TCPModule) _read() error {
+
+	if t.conn == nil {
+		return errors.New("not connected")
+	}
+
+	buf := make([]byte, 1024)
+	// 非阻塞读取
+	n, err := syscall.Read(t.fd, buf)
+	if err != nil {
+		return fmt.Errorf("syscall.read %v err %v", t.fd, err.Error())
+	}
+
+	if n != 0 {
+		t.buf.push(buf[:n])
+	}
+
+	return nil
+}
+
+func readret(L *lua.LState, ty, custom, id int, body []byte, err string) int {
+
+	L.Push(lua.LNumber(ty))
+	L.Push(lua.LNumber(custom))
+	L.Push(lua.LNumber(id))
+	L.Push(lua.LString(body))
+	L.Push(lua.LString(err))
+
+	return 5
+}
+
+func (t *TCPModule) read_msg(L *lua.LState) int {
+
+	msglen := L.ToInt(1)
+	msgty := L.ToInt(2)
+	msgcustom := L.ToInt(3)
+	msgid := L.ToInt(4)
+
+	msgleni := int16(0)
+	msgtyi := int8(0)
+	msgcustomi := int16(0)
+	msgidi := int16(0)
+
+	err := t._read()
+	if err != nil {
+		fmt.Println("t.read err", err.Error())
+		return readret(L, 0, 0, 0, []byte{}, err.Error())
+	}
+
+	if t.buf.Len() < msglen+msgty+msgcustom+msgid {
+		return readret(L, 0, 0, 0, []byte{}, "nodata")
+	}
+
+	msglenb, _ := t.buf.pop(msglen)
+	binary.Read(bytes.NewBuffer(msglenb), binary.BigEndian, &msgleni)
+
+	msgtyb, _ := t.buf.pop(msgty)
+	binary.Read(bytes.NewBuffer(msgtyb), binary.BigEndian, &msgtyi)
+
+	msgcustomb, _ := t.buf.pop(msgcustom)
+	binary.Read(bytes.NewBuffer(msgcustomb), binary.BigEndian, &msgcustomi)
+
+	msgidb, _ := t.buf.pop(msgid)
+	binary.Read(bytes.NewBuffer(msgidb), binary.BigEndian, &msgidi)
+
+	msgbody, _ := t.buf.pop(int(msgleni) - (msgty + msgcustom + msgid))
+
+	return readret(L, int(msgtyi), int(msgcustomi), int(msgidi), msgbody, "")
+}
+
+func (t *TCPModule) write_msg(L *lua.LState) int {
+
+	msglen := L.ToInt(1)
+	msgty := L.ToInt(2)
+	msgcustom := L.ToInt(3)
+	msgid := L.ToInt(4)
+	msgbody := L.ToString(5)
+
+	if t.conn == nil {
+		L.Push(lua.LString("not connected"))
+		return 1
+	}
+
+	buf := bytes.NewBuffer(make([]byte, 0, msglen))
+
+	binary.Write(buf, binary.BigEndian, uint16(msglen))
+	binary.Write(buf, binary.BigEndian, uint8(msgty))
+	binary.Write(buf, binary.BigEndian, uint16(msgcustom))
+	binary.Write(buf, binary.BigEndian, uint16(msgid))
+	buf.WriteString(msgbody)
+
+	_, err := t.conn.Write(buf.Bytes())
 	if err != nil {
 		L.Push(lua.LString(err.Error()))
 		return 1
