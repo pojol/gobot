@@ -43,27 +43,6 @@ export default function Config() {
     }
   }, []);
 
-  const isUrl = (url: string): boolean => {
-    var strRegex =
-      "^((https|http|ftp|rtsp|mms)?://)" +
-      "?(([0-9a-z_!~*'().&=+$%-]+: )?[0-9a-z_!~*'().&=+$%-]+@)?" + //ftp的user@
-      "(([0-9]{1,3}.){3}[0-9]{1,3}" + // IP形式的URL- 199.194.52.184
-      "|" + // 允许IP和DOMAIN（域名）
-      "([0-9a-z_!~*'()-]+.)*" + // 域名- www.
-      "([0-9a-z][0-9a-z-]{0,61})?[0-9a-z]." + // 二级域名
-      "[a-z]{2,6})" + // first level domain- .com or .museum
-      "(:[0-9]{1,4})?" + // 端口- :80
-      "((/?)|" + // a slash isn't required if there is no file name
-      "(/[0-9a-z_!~*'().;?:@&=+$,%#-]+)+/?)$";
-    var re = new RegExp(strRegex);
-    //re.test()
-    if (re.test(url)) {
-      return true;
-    } else {
-      return false;
-    }
-  };
-
   const onChangeDriveAddr = (e: any) => {
     setState((state) => ({ ...state, driveAddr: e.target.value }));
   };
@@ -112,30 +91,25 @@ export default function Config() {
   };
 
   const onApplyDriveAddr = () => {
-    if (isUrl(state.driveAddr)) {
+    let driveAddr = state.driveAddr;
 
-      let driveAddr = state.driveAddr;
-
-      if (driveAddr.endsWith('/')) {
-        driveAddr = driveAddr.slice(0, -1);
-      }
-
-      CheckHealth(driveAddr).then((res: any) => {
-        console.info("check health", driveAddr, res);
-        if (res.code !== 200) {
-          message.error("server connection error " + res.code.toString());
-        } else {
-          // reset
-          //const dispatch = useDispatch();
-          //dispatch(cleanItems());
-
-          localStorage.remoteAddr = driveAddr;
-          syncConfig();
-        }
-      });
-    } else {
-      message.warning("Please enter a valid address");
+    if (driveAddr.endsWith('/')) {
+      driveAddr = driveAddr.slice(0, -1);
     }
+
+    CheckHealth(driveAddr).then((res: any) => {
+      console.info("check health", driveAddr, res);
+      if (res.code !== 200) {
+        message.error("server connection error " + res.code.toString());
+      } else {
+        // reset
+        //const dispatch = useDispatch();
+        //dispatch(cleanItems());
+
+        localStorage.remoteAddr = driveAddr;
+        syncConfig();
+      }
+    });
   };
 
   const onApplyCode = () => {
@@ -156,7 +130,7 @@ export default function Config() {
     );
   };
 
-  const onChange = React.useCallback((value:any, viewUpdate:any) => {
+  const onChange = React.useCallback((value: any, viewUpdate: any) => {
     setState((state) => ({ ...state, globalPrefab: value }));
   }, []);
 
@@ -169,7 +143,7 @@ export default function Config() {
     setState((state) => ({ ...state, channelsize: val }));
   };
 
-  const changeEnqueneDelay = (val : any) =>{
+  const changeEnqueneDelay = (val: any) => {
     setState((state) => ({ ...state, enquenedelay: val }));
   }
 
