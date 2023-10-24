@@ -1,6 +1,8 @@
 # 安装
 
-### 1. 本地运行
+
+### 本地无数据库模式安装
+> 可以用于体验，无依赖下载即可使用
 * windows
     1. 在 [release](https://github.com/pojol/gobot/releases) 页下载对应版本的客户端 `gobot-editor-win32-x64.zip`
     2. 在 [release](https://github.com/pojol/gobot/releases) 页下载对应版本的服务器 `gobot-driver-win32.exe`
@@ -12,9 +14,11 @@
         启动 editor 将服务器地址配置为 http://127.0.0.1:8888 即可开始使用
     ```
 
-### 2. 
+* mac
+    - arm
+    - x86
 
-### 3. 使用 docker-compose
+### Docker安装
 1. 安装 docker-compose
     ```shell
     # for CentOS
@@ -78,3 +82,7 @@
         driver: bridge
     ```
 3. 运行命令 `docker-compose up -d` 运行成功后，访问 http://localhost:7777/ 即可进行 gobot 的编辑
+
+
+### K8s安装
+> 开启分布式模式，可以开启任意个节点进行大规模的压力测试
