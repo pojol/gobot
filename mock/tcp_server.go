@@ -5,9 +5,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"log"
-	"math/rand"
 	"net"
-	"time"
 )
 
 // 消息头定义
@@ -36,7 +34,7 @@ type UnfinishedMessage struct {
 var unfinishedMsg *UnfinishedMessage
 
 // 处理函数,在一个新的goroutine中处理每个连接的请求
-func tcpHeaderHandle(conn net.Conn) {
+func tcpHeaderHandle(conn *net.TCPConn) {
 	//go keepalive(conn)
 	defer func() {
 		if err := recover(); err != nil {
@@ -49,9 +47,6 @@ func tcpHeaderHandle(conn net.Conn) {
 	for {
 		n, err := conn.Read(buf)
 		if n == 0 || err != nil {
-			if err != nil {
-				fmt.Println("read ", n, err)
-			}
 			continue
 		}
 
@@ -62,10 +57,10 @@ func tcpHeaderHandle(conn net.Conn) {
 		var msgId uint16
 
 		br := bytes.NewReader(buf[:n])
-		binary.Read(br, binary.BigEndian, &packetLen)
-		binary.Read(br, binary.BigEndian, &packetType)
-		binary.Read(br, binary.BigEndian, &customBytes)
-		binary.Read(br, binary.BigEndian, &msgId)
+		binary.Read(br, binary.LittleEndian, &packetLen)
+		binary.Read(br, binary.LittleEndian, &packetType)
+		binary.Read(br, binary.LittleEndian, &customBytes)
+		binary.Read(br, binary.LittleEndian, &msgId)
 
 		if n < int(packetLen) {
 			// 消息不完整,缓存
@@ -96,19 +91,19 @@ func tcpHeaderHandle(conn net.Conn) {
 		err = HandleMsg(conn, msgId, msgBody)
 
 		buf = make([]byte, 1024) // 重置 buf
-
 		if err != nil {
 			break
 		}
 	}
 
 	// 请求循环结束,关闭连接
-	fmt.Println("server conn closed")
+	f, _ := conn.File()
+	fmt.Println("server conn closed", f.Fd())
 	conn.Close()
 }
 
 // 封装写消息函数
-func writeMsg(conn net.Conn, msgId uint16, custom []byte, msgBody []byte) error {
+func writeMsg(conn *net.TCPConn, msgId uint16, custom []byte, msgBody []byte) error {
 
 	if len(custom) == 0 {
 		custom = []byte{0, 0}
@@ -120,11 +115,11 @@ func writeMsg(conn net.Conn, msgId uint16, custom []byte, msgBody []byte) error 
 
 	// 构造消息头
 	headerBuf := new(bytes.Buffer)
-	binary.Write(headerBuf, binary.BigEndian, uint16(7+len(msgBody)))
-	binary.Write(headerBuf, binary.BigEndian, uint8(1))
-	binary.Write(headerBuf, binary.BigEndian, custom)
-	binary.Write(headerBuf, binary.BigEndian, msgId)
-	binary.Write(headerBuf, binary.BigEndian, msgBody)
+	binary.Write(headerBuf, binary.LittleEndian, uint16(7+len(msgBody)))
+	binary.Write(headerBuf, binary.LittleEndian, uint8(1))
+	binary.Write(headerBuf, binary.LittleEndian, custom)
+	binary.Write(headerBuf, binary.LittleEndian, msgId)
+	binary.Write(headerBuf, binary.LittleEndian, msgBody)
 
 	// 发送消息头+消息体
 	_, err := conn.Write(headerBuf.Bytes())
@@ -135,21 +130,19 @@ func writeMsg(conn net.Conn, msgId uint16, custom []byte, msgBody []byte) error 
 	return nil
 }
 
-func HandleMsg(conn net.Conn, msgId uint16, msgBody []byte) error {
+func HandleMsg(conn *net.TCPConn, msgId uint16, msgBody []byte) error {
 	var err error
-	rand.Seed(time.Now().UnixMicro())
 
 	fmt.Println("recv tcp header", msgId, string(msgBody))
 
-	if msgId == 1000 || msgId == 1001 || msgId == 1002 {
-
-		i := rand.Intn(2)
-		if i == 0 {
-			err = writeMsg(conn, 1001, []byte{}, []byte("joy"))
-		} else {
-			err = writeMsg(conn, 1002, []byte{}, []byte("ppp"))
-		}
-
+	if msgId == LoginGuest {
+		err = tcpRouteGuestHandle(conn, msgBody)
+	} else if msgId == Hello {
+		err = tcpHelloHandle(conn, msgBody)
+	} else if msgId == HeroInfo {
+		err = tcpHeroInfoHandle(conn, msgBody)
+	} else if msgId == HeroLvup {
+		err = tcpHeroLvupHandle(conn, msgBody)
 	}
 
 	if err != nil {
@@ -161,12 +154,12 @@ func HandleMsg(conn net.Conn, msgId uint16, msgBody []byte) error {
 }
 
 func StarTCPServer(port string) net.Listener {
-	ln, err := net.Listen("tcp", ":"+port)
+	ln, err := net.Listen("tcp", port)
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Println("Server listening on port 20008")
+	fmt.Println("Server listening on port " + port)
 	go func() {
 		for {
 			// 接收新连接
@@ -176,10 +169,13 @@ func StarTCPServer(port string) net.Listener {
 				continue
 			}
 
-			fmt.Println("new client conn =>", conn.RemoteAddr())
-
 			// 为每个连接启动一个goroutine进行处理
-			go tcpHeaderHandle(conn)
+			tcpconn := conn.(*net.TCPConn)
+
+			f, _ := tcpconn.File()
+			fmt.Println("new client conn =>", conn.RemoteAddr(), f.Fd())
+
+			go tcpHeaderHandle(tcpconn)
 		}
 	}()
 

@@ -1,18 +1,23 @@
 package behavior
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type LoopAction struct {
 	INod
 	base Node
 
-	loop    int
-	curLoop int
+	loop    int64
+	curLoop int64
 }
 
 func (a *LoopAction) Init(t *Tree, parent INod, mode Mode) {
 	a.base.Init(t, parent, mode)
-	a.loop = int(t.Loop)
+	a.loop = int64(t.Loop)
+	if a.loop == 0 {
+		a.loop = 100000000000 // 无限循环 一千亿
+	}
 }
 
 func (a *LoopAction) AddChild(nod INod) {

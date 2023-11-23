@@ -72,10 +72,11 @@ func TestTcpMsgPack(t *testing.T) {
 	L := lua.NewState()
 	defer L.Close()
 
-	ln := mock.StarTCPServer("20008")
+	ln := mock.StarTCPServer(":20008")
 	defer ln.Close()
 
 	tcpMod := TCPModule{}
+	protomod := ProtoModule{}
 	path := "../../script"
 	rand.Seed(time.Now().UnixMicro())
 
@@ -84,16 +85,25 @@ func TestTcpMsgPack(t *testing.T) {
 	for _, v := range preScripts {
 		L.DoFile(path + "/" + v)
 	}
+	L.PreloadModule("proto", protomod.Loader)
 	L.PreloadModule("tcpconn", tcpMod.Loader)
 
 	go func() {
 		err := L.DoString(`
 		local conn = require("tcpconn")
+		local proto = require("proto")
 
 		local ret = conn.dail("127.0.0.1", "20008")
 		print("conn dail " .. ret)
 
-		conn.write_msg(7+5, 1, 0, 1000, "hello")
+		os.execute("sleep " .. 0.5)
+
+		body, errmsg = proto.marshal("LoginGuestReq", json.encode({}))
+		if errmsg ~= nil then
+			meta.Err = "proto.marshal" .. errmsg
+		end
+		ret = conn.write_msg(7+0, 1, 0, 1001, body)
+		print("write msg 1001 " .. ret)
 
 		for i = 0, 5, 1 do
 			--[[
@@ -103,14 +113,20 @@ func TestTcpMsgPack(t *testing.T) {
 			]]--
 
 			ty, _, msgid, msgbody, err = conn.read_msg(2,1,2,2)
-			print("read==>", ty, msgid, msgbody, err)
 
 			if msgid == 1001 then
-				conn.write_msg(7+3, 1, 0, 1001, "joy")
+				body = proto.unmarshal("LoginGuestRes", msgbody)
 			elseif msgid == 1002 then
-				conn.write_msg(7+3, 1, 0, 1002, "ppp")
+				body = proto.unmarshal("HelloRes", msgbody)
 			end
 
+			local reqbody, errmsg = proto.marshal("HelloReq", json.encode({
+				Message = "hello",
+			}))
+			ret = conn.write_msg(7+#reqbody, 1, 0, 1002, reqbody)
+			print("write msg 1002 " .. ret)
+
+			print("read==>", ty, msgid, body, err)
 			os.execute("sleep " .. 0.5)
 		end
 

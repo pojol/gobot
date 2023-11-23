@@ -281,7 +281,7 @@ const Bots = (props: BotsProps) => {
   }
 
   const handleBotLoad = (e: any) => {
-    selectedRows
+
     if (selectedRows.length > 0) {
       var row = selectedRows[0]
       LoadBehaviorWithBlob(

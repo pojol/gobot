@@ -19,7 +19,6 @@ interface TreeState {
     updatetick: number;
 }
 
-
 const initialState: TreeState = {
     nodes: new Array<NodeNotifyInfo>(),
     history: new Array<NodeNotifyInfo>(),

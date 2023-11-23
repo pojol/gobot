@@ -46,9 +46,7 @@ func (q *byteQueue) Len() int {
 
 func NewTCPModule() *TCPModule {
 
-	tcpm := &TCPModule{
-		buf: make([]byte, 1024),
-	}
+	tcpm := &TCPModule{}
 
 	return tcpm
 }
@@ -132,14 +130,22 @@ func (t *TCPModule) _read() error {
 	}
 
 	buf := make([]byte, 1024)
+
+	//n, err := t.conn.Read(buf)
 	// 非阻塞读取
 	n, err := syscall.Read(t.fd, buf)
 	if err != nil {
-		return fmt.Errorf("syscall.read %v err %v", t.fd, err.Error())
+		return fmt.Errorf("syscall.read fd %v size %v err %v", t.fd, n, err.Error())
 	}
 
 	if n != 0 {
+		//dest := make([]byte, n)
+		//copy(dest, buf)
+		//fmt.Println(t.fd, "buf push", n, dest)
+
 		t.buf.push(buf[:n])
+	} else {
+		fmt.Println("continue")
 	}
 
 	return nil
@@ -168,9 +174,10 @@ func (t *TCPModule) read_msg(L *lua.LState) int {
 	msgcustomi := int16(0)
 	msgidi := int16(0)
 
+	var msgbody []byte
+
 	err := t._read()
 	if err != nil {
-		fmt.Println("t.read err", err.Error())
 		return readret(L, 0, 0, 0, []byte{}, err.Error())
 	}
 
@@ -179,18 +186,18 @@ func (t *TCPModule) read_msg(L *lua.LState) int {
 	}
 
 	msglenb, _ := t.buf.pop(msglen)
-	binary.Read(bytes.NewBuffer(msglenb), binary.BigEndian, &msgleni)
+	binary.Read(bytes.NewBuffer(msglenb), binary.LittleEndian, &msgleni)
 
 	msgtyb, _ := t.buf.pop(msgty)
-	binary.Read(bytes.NewBuffer(msgtyb), binary.BigEndian, &msgtyi)
+	binary.Read(bytes.NewBuffer(msgtyb), binary.LittleEndian, &msgtyi)
 
 	msgcustomb, _ := t.buf.pop(msgcustom)
-	binary.Read(bytes.NewBuffer(msgcustomb), binary.BigEndian, &msgcustomi)
+	binary.Read(bytes.NewBuffer(msgcustomb), binary.LittleEndian, &msgcustomi)
 
 	msgidb, _ := t.buf.pop(msgid)
-	binary.Read(bytes.NewBuffer(msgidb), binary.BigEndian, &msgidi)
+	binary.Read(bytes.NewBuffer(msgidb), binary.LittleEndian, &msgidi)
 
-	msgbody, _ := t.buf.pop(int(msgleni) - (msgty + msgcustom + msgid))
+	msgbody, _ = t.buf.pop(int(msgleni) - (msgty + msgcustom + msgid))
 
 	return readret(L, int(msgtyi), int(msgcustomi), int(msgidi), msgbody, "")
 }
@@ -210,10 +217,10 @@ func (t *TCPModule) write_msg(L *lua.LState) int {
 
 	buf := bytes.NewBuffer(make([]byte, 0, msglen))
 
-	binary.Write(buf, binary.BigEndian, uint16(msglen))
-	binary.Write(buf, binary.BigEndian, uint8(msgty))
-	binary.Write(buf, binary.BigEndian, uint16(msgcustom))
-	binary.Write(buf, binary.BigEndian, uint16(msgid))
+	binary.Write(buf, binary.LittleEndian, uint16(msglen))
+	binary.Write(buf, binary.LittleEndian, uint8(msgty))
+	binary.Write(buf, binary.LittleEndian, uint16(msgcustom))
+	binary.Write(buf, binary.LittleEndian, uint16(msgid))
 	buf.WriteString(msgbody)
 
 	_, err := t.conn.Write(buf.Bytes())

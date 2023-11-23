@@ -48,7 +48,7 @@ func initFlag() {
 
 	flag.BoolVar(&dbmode, "no_database", false, "Run in local mode")
 	flag.BoolVar(&openHttpMock, "httpmock", false, "open http mock server")
-	flag.BoolVar(&openTcpMock, "httpmock", false, "open tcp mock server")
+	flag.BoolVar(&openTcpMock, "tcpmock", false, "open tcp mock server")
 	flag.StringVar(&scriptPath, "script_path", "script/", "Path to bot script")
 }
 
@@ -76,10 +76,17 @@ func main() {
 		panic(err)
 	}
 
+	fmt.Println("open http mock", openHttpMock)
 	if openHttpMock {
 		ms := mock.NewHttpServer()
 		go ms.Start(":6666")
 		defer ms.Close()
+	}
+
+	fmt.Println("open tcp mock", openTcpMock)
+	if openTcpMock {
+		tcpls := mock.StarTCPServer(":6667")
+		defer tcpls.Close()
 	}
 
 	go func() {
