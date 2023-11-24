@@ -24,6 +24,7 @@ Gobot is a powerful stateful API testing robot. It provides a graphical interfac
 * SuProvides graphical editing and debugging capabilities
 * You can `prefab` template nodes in the configuration page, and `reuse` the nodes in the editor
 * It can be driven by http `api` (`post /bot.run -d '{"Name":"a robot"}'` can be easily integrated into CI
+* Supports multiple protocol formats (HTTP, TCP...
 * Support a `stress test` (you can set the number of concurrency on the configuration page
 
 
@@ -62,7 +63,7 @@ end
 ## Script Module
 |||||||
 |-|-|-|-|-|-|
-|`base64`|`http`|`protobuf`|`mongoDB`|`json`|
+|`base64`|`http`|`tcp`|`protobuf`|`mongoDB`|`json`|
 |`md5`|`uuid`|`random`|...|
 
 ## Try it out
