@@ -16,12 +16,11 @@ const (
 	HeroLvup   = 1004 // 模拟修改角色等级
 )
 
-func tcpRouteGuestHandle(conn *net.TCPConn, msgBody []byte) error {
+func tcpRouteGuestHandle(conn *net.TCPConn, fd int, msgBody []byte) error {
 	var heros []*Hero
 	rand.Seed(time.Now().UnixNano())
 
-	f, _ := conn.File()
-	acc := createAcc(strconv.Itoa(int(f.Fd())))
+	acc := createAcc(strconv.Itoa(fd))
 	for _, v := range acc.Heros {
 		heros = append(heros, &Hero{
 			ID: v.ID,
@@ -31,11 +30,11 @@ func tcpRouteGuestHandle(conn *net.TCPConn, msgBody []byte) error {
 
 	res := LoginGuestRes{
 		AccInfo: &Acc{
-			Token:   acc.Token,
 			Heros:   heros,
 			Diamond: acc.Diamond,
 			Gold:    acc.Gold,
 		},
+		SessionID: acc.SessionID,
 	}
 
 	byt, _ := proto.Marshal(&res)
@@ -44,7 +43,7 @@ func tcpRouteGuestHandle(conn *net.TCPConn, msgBody []byte) error {
 	return nil
 }
 
-func tcpHelloHandle(conn *net.TCPConn, msgBody []byte) error {
+func tcpHelloHandle(conn *net.TCPConn, fd int, msgBody []byte) error {
 	var dict = []string{"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k"}
 	var msg string
 
@@ -62,21 +61,22 @@ func tcpHelloHandle(conn *net.TCPConn, msgBody []byte) error {
 	return nil
 }
 
-func tcpHeroInfoHandle(conn *net.TCPConn, msgBody []byte) error {
-
-	f, _ := conn.File()
-	acc, err := getAccInfo(strconv.Itoa(int(f.Fd())))
-	if err != nil {
-		return err
-	}
+func tcpHeroInfoHandle(conn *net.TCPConn, fd int, msgBody []byte) error {
 
 	req := &GetHeroInfoReq{}
-	err = proto.Unmarshal(msgBody, req)
+	err := proto.Unmarshal(msgBody, req)
 	if err != nil {
 		return err
 	}
 
-	res := &GetHeroInfoRes{}
+	res := &GetHeroInfoRes{
+		HeroInfo: &Hero{},
+	}
+
+	acc, err := getAccInfo(req.SessionID)
+	if err != nil {
+		return err
+	}
 
 	for _, v := range acc.Heros {
 		if v.ID == req.HeroID {
@@ -91,16 +91,15 @@ func tcpHeroInfoHandle(conn *net.TCPConn, msgBody []byte) error {
 	return nil
 }
 
-func tcpHeroLvupHandle(conn *net.TCPConn, msgBody []byte) error {
+func tcpHeroLvupHandle(conn *net.TCPConn, fd int, msgBody []byte) error {
 
-	f, _ := conn.File()
-	acc, err := getAccInfo(strconv.Itoa(int(f.Fd())))
+	req := &HeroLvupReq{}
+	err := proto.Unmarshal(msgBody, req)
 	if err != nil {
 		return err
 	}
 
-	req := &HeroLvupReq{}
-	err = proto.Unmarshal(msgBody, req)
+	acc, err := getAccInfo(req.SessionID)
 	if err != nil {
 		return err
 	}
@@ -123,7 +122,6 @@ func tcpHeroLvupHandle(conn *net.TCPConn, msgBody []byte) error {
 
 	res := HeroLvupRes{
 		AccInfo: &Acc{
-			Token:   acc.Token,
 			Heros:   heros,
 			Diamond: acc.Diamond,
 			Gold:    acc.Gold,

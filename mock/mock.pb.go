@@ -75,7 +75,6 @@ func (m *Hero) GetLv() int32 {
 }
 
 type Acc struct {
-	Token   string  `protobuf:"bytes,1,opt,name=Token,proto3" json:"Token,omitempty"`
 	Heros   []*Hero `protobuf:"bytes,2,rep,name=Heros,proto3" json:"Heros,omitempty"`
 	Diamond int32   `protobuf:"varint,3,opt,name=Diamond,proto3" json:"Diamond,omitempty"`
 	Gold    int32   `protobuf:"varint,4,opt,name=Gold,proto3" json:"Gold,omitempty"`
@@ -113,13 +112,6 @@ func (m *Acc) XXX_DiscardUnknown() {
 }
 
 var xxx_messageInfo_Acc proto.InternalMessageInfo
-
-func (m *Acc) GetToken() string {
-	if m != nil {
-		return m.Token
-	}
-	return ""
-}
 
 func (m *Acc) GetHeros() []*Hero {
 	if m != nil {
@@ -179,7 +171,8 @@ func (m *LoginGuestReq) XXX_DiscardUnknown() {
 var xxx_messageInfo_LoginGuestReq proto.InternalMessageInfo
 
 type LoginGuestRes struct {
-	AccInfo *Acc `protobuf:"bytes,1,opt,name=AccInfo,proto3" json:"AccInfo,omitempty"`
+	AccInfo   *Acc   `protobuf:"bytes,1,opt,name=AccInfo,proto3" json:"AccInfo,omitempty"`
+	SessionID string `protobuf:"bytes,2,opt,name=SessionID,proto3" json:"SessionID,omitempty"`
 }
 
 func (m *LoginGuestRes) Reset()         { *m = LoginGuestRes{} }
@@ -222,8 +215,16 @@ func (m *LoginGuestRes) GetAccInfo() *Acc {
 	return nil
 }
 
+func (m *LoginGuestRes) GetSessionID() string {
+	if m != nil {
+		return m.SessionID
+	}
+	return ""
+}
+
 type HelloReq struct {
-	Message string `protobuf:"bytes,1,opt,name=Message,proto3" json:"Message,omitempty"`
+	Message   string `protobuf:"bytes,1,opt,name=Message,proto3" json:"Message,omitempty"`
+	SessionID string `protobuf:"bytes,2,opt,name=SessionID,proto3" json:"SessionID,omitempty"`
 }
 
 func (m *HelloReq) Reset()         { *m = HelloReq{} }
@@ -262,6 +263,13 @@ var xxx_messageInfo_HelloReq proto.InternalMessageInfo
 func (m *HelloReq) GetMessage() string {
 	if m != nil {
 		return m.Message
+	}
+	return ""
+}
+
+func (m *HelloReq) GetSessionID() string {
+	if m != nil {
+		return m.SessionID
 	}
 	return ""
 }
@@ -311,7 +319,8 @@ func (m *HelloRes) GetMessage() string {
 }
 
 type GetHeroInfoReq struct {
-	HeroID string `protobuf:"bytes,2,opt,name=HeroID,proto3" json:"HeroID,omitempty"`
+	HeroID    string `protobuf:"bytes,2,opt,name=HeroID,proto3" json:"HeroID,omitempty"`
+	SessionID string `protobuf:"bytes,3,opt,name=SessionID,proto3" json:"SessionID,omitempty"`
 }
 
 func (m *GetHeroInfoReq) Reset()         { *m = GetHeroInfoReq{} }
@@ -350,6 +359,13 @@ var xxx_messageInfo_GetHeroInfoReq proto.InternalMessageInfo
 func (m *GetHeroInfoReq) GetHeroID() string {
 	if m != nil {
 		return m.HeroID
+	}
+	return ""
+}
+
+func (m *GetHeroInfoReq) GetSessionID() string {
+	if m != nil {
+		return m.SessionID
 	}
 	return ""
 }
@@ -399,7 +415,8 @@ func (m *GetHeroInfoRes) GetHeroInfo() *Hero {
 }
 
 type HeroLvupReq struct {
-	HeroID string `protobuf:"bytes,2,opt,name=HeroID,proto3" json:"HeroID,omitempty"`
+	HeroID    string `protobuf:"bytes,2,opt,name=HeroID,proto3" json:"HeroID,omitempty"`
+	SessionID string `protobuf:"bytes,3,opt,name=SessionID,proto3" json:"SessionID,omitempty"`
 }
 
 func (m *HeroLvupReq) Reset()         { *m = HeroLvupReq{} }
@@ -438,6 +455,13 @@ var xxx_messageInfo_HeroLvupReq proto.InternalMessageInfo
 func (m *HeroLvupReq) GetHeroID() string {
 	if m != nil {
 		return m.HeroID
+	}
+	return ""
+}
+
+func (m *HeroLvupReq) GetSessionID() string {
+	if m != nil {
+		return m.SessionID
 	}
 	return ""
 }
@@ -502,28 +526,29 @@ func init() {
 func init() { proto.RegisterFile("mock.proto", fileDescriptor_6fa4806c90f7156d) }
 
 var fileDescriptor_6fa4806c90f7156d = []byte{
-	// 329 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x84, 0x92, 0x41, 0x4b, 0x02, 0x41,
-	0x14, 0xc7, 0xdd, 0x75, 0x57, 0xeb, 0x49, 0x0a, 0x43, 0xc4, 0x42, 0x30, 0xd8, 0x50, 0xb1, 0x97,
-	0x36, 0xd0, 0x63, 0x27, 0x63, 0x61, 0x15, 0x36, 0x88, 0xa1, 0x53, 0x37, 0x1d, 0x47, 0x11, 0xd7,
-	0x7d, 0xea, 0xa8, 0x9f, 0xa3, 0xcf, 0xd1, 0x27, 0xe9, 0xe8, 0xb1, 0x63, 0xe8, 0x17, 0x89, 0x19,
-	0xc7, 0xb0, 0x0e, 0x76, 0x7b, 0xbf, 0x3f, 0x7f, 0xfe, 0xef, 0xcd, 0x9b, 0x07, 0x30, 0x41, 0x31,
-	0x8e, 0xa6, 0x73, 0x5c, 0x20, 0xbb, 0x05, 0xaf, 0x2d, 0xe7, 0x48, 0xaa, 0xe0, 0x76, 0xe2, 0xc0,
-	0xa9, 0x3b, 0xe1, 0x29, 0x77, 0x3b, 0xb1, 0xe6, 0x74, 0x15, 0x14, 0xeb, 0x4e, 0xe8, 0x73, 0x37,
-	0x5d, 0xb1, 0x01, 0x14, 0x5b, 0x42, 0x90, 0x73, 0xf0, 0x5f, 0x70, 0x2c, 0x73, 0xeb, 0xdc, 0x01,
-	0xb9, 0x04, 0x5f, 0x87, 0xa8, 0xc0, 0xad, 0x17, 0xc3, 0x4a, 0xc3, 0x8f, 0x34, 0xf1, 0x9d, 0x46,
-	0x02, 0x28, 0xc7, 0xa3, 0xee, 0x04, 0xf3, 0xbe, 0x8d, 0xdb, 0x23, 0x21, 0xe0, 0x25, 0x98, 0xf5,
-	0x03, 0xcf, 0xc8, 0xa6, 0x66, 0x35, 0x38, 0x4b, 0x71, 0x38, 0xca, 0x93, 0xa5, 0x54, 0x0b, 0x2e,
-	0x67, 0xec, 0xfe, 0xb7, 0xa0, 0x08, 0x85, 0x72, 0x4b, 0x88, 0x4e, 0x3e, 0x40, 0x33, 0x44, 0xa5,
-	0xe1, 0x45, 0x2d, 0x21, 0xf8, 0x5e, 0x64, 0xd7, 0x70, 0xd2, 0x96, 0x59, 0x86, 0x5c, 0xce, 0x74,
-	0xef, 0x27, 0xa9, 0x54, 0x77, 0x28, 0xed, 0xc0, 0x7b, 0x3c, 0x70, 0xa9, 0x23, 0xae, 0x10, 0xaa,
-	0x89, 0x5c, 0xe8, 0x77, 0xe8, 0x68, 0x9d, 0x78, 0x01, 0x25, 0x83, 0x71, 0xe0, 0x1a, 0xab, 0x25,
-	0xd6, 0xfc, 0xe3, 0x54, 0xe4, 0x4a, 0x77, 0xd8, 0xa1, 0x1d, 0xd4, 0xee, 0xe5, 0x47, 0x66, 0x37,
-	0x50, 0xd1, 0x75, 0xba, 0x5a, 0x4e, 0x8f, 0x65, 0xdf, 0x1d, 0xda, 0xfe, 0x5d, 0xc0, 0x63, 0xe3,
-	0x63, 0x43, 0x9d, 0xf5, 0x86, 0x3a, 0x5f, 0x1b, 0xea, 0xbc, 0x6d, 0x69, 0x61, 0xbd, 0xa5, 0x85,
-	0xcf, 0x2d, 0x2d, 0xbc, 0x96, 0xa2, 0x07, 0xfd, 0xf5, 0xef, 0x6e, 0x2d, 0x41, 0x1c, 0x66, 0x32,
-	0x7a, 0xd6, 0x37, 0xd0, 0x5b, 0x0e, 0x7a, 0x25, 0x73, 0x0d, 0xcd, 0xef, 0x00, 0x00, 0x00, 0xff,
-	0xff, 0x72, 0x2a, 0xd0, 0x56, 0x1b, 0x02, 0x00, 0x00,
+	// 343 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x92, 0xcf, 0x6a, 0xf2, 0x40,
+	0x14, 0xc5, 0xcd, 0x1f, 0xf5, 0xf3, 0xca, 0xa7, 0x30, 0x8b, 0x12, 0x68, 0x19, 0xec, 0x50, 0x8a,
+	0x9b, 0x66, 0xa1, 0xcb, 0xae, 0xb4, 0xa1, 0x31, 0x10, 0x41, 0xd2, 0x5d, 0x77, 0x3a, 0x8e, 0x22,
+	0x8d, 0xb9, 0xea, 0xa8, 0xcf, 0xd1, 0xe7, 0xe8, 0x93, 0x74, 0xe9, 0xb2, 0xcb, 0xa2, 0x2f, 0x52,
+	0x66, 0x4c, 0x6c, 0x15, 0x8a, 0xd0, 0xdd, 0xfd, 0x1d, 0x92, 0x73, 0xee, 0x1c, 0x2e, 0xc0, 0x14,
+	0xf9, 0x8b, 0x3b, 0x5b, 0xe0, 0x12, 0xd9, 0x2d, 0xd8, 0x1d, 0xb1, 0x40, 0x52, 0x01, 0x33, 0xf0,
+	0x1c, 0xa3, 0x66, 0xd4, 0x4b, 0x91, 0x19, 0x78, 0x8a, 0xc3, 0xb5, 0x63, 0xd5, 0x8c, 0x7a, 0x3e,
+	0x32, 0xc3, 0x35, 0xeb, 0x81, 0xd5, 0xe2, 0x9c, 0x5c, 0x42, 0x5e, 0x7d, 0x2e, 0x1d, 0xb3, 0x66,
+	0xd5, 0xcb, 0x8d, 0xbc, 0xab, 0x28, 0xda, 0x6b, 0xc4, 0x81, 0xa2, 0x37, 0xe9, 0x4f, 0x31, 0x19,
+	0xa6, 0x3f, 0x66, 0x48, 0x08, 0xd8, 0x3e, 0xc6, 0x43, 0xc7, 0xd6, 0xb2, 0x9e, 0x59, 0x15, 0xfe,
+	0x87, 0x38, 0x9e, 0x24, 0xfe, 0x4a, 0xc8, 0x65, 0x24, 0xe6, 0xac, 0x7b, 0x2c, 0x48, 0x42, 0xa1,
+	0xd8, 0xe2, 0x3c, 0x48, 0x46, 0xa8, 0x17, 0x2b, 0x37, 0x6c, 0xb7, 0xc5, 0x79, 0x94, 0x89, 0xe4,
+	0x0a, 0x4a, 0x4f, 0x42, 0xca, 0x09, 0x26, 0x81, 0xe7, 0x98, 0x7a, 0xf5, 0x6f, 0x81, 0xb5, 0xe1,
+	0x5f, 0x47, 0xc4, 0x31, 0x46, 0x62, 0xae, 0x36, 0xeb, 0x0a, 0x29, 0xfb, 0x63, 0x91, 0x3e, 0x31,
+	0xc3, 0x33, 0x1e, 0x37, 0x07, 0x0f, 0xf9, 0xbb, 0x07, 0x7b, 0x84, 0x8a, 0x2f, 0x96, 0xaa, 0x03,
+	0xb5, 0x96, 0xca, 0xbb, 0x80, 0x82, 0xc6, 0xcc, 0x32, 0xa5, 0xe3, 0x34, 0xeb, 0x34, 0xad, 0x79,
+	0xe2, 0x23, 0xc9, 0xb5, 0xca, 0xdf, 0x63, 0x5a, 0x41, 0xda, 0xf8, 0x41, 0x66, 0x0f, 0x50, 0x56,
+	0x73, 0xb8, 0x5e, 0xcd, 0xfe, 0x9e, 0x7c, 0xf7, 0xd3, 0xe4, 0x6c, 0xf1, 0xed, 0xc6, 0xfb, 0x96,
+	0x1a, 0x9b, 0x2d, 0x35, 0x3e, 0xb7, 0xd4, 0x78, 0xdd, 0xd1, 0xdc, 0x66, 0x47, 0x73, 0x1f, 0x3b,
+	0x9a, 0x7b, 0x2e, 0xb8, 0xf7, 0xea, 0xb8, 0xde, 0xcc, 0xaa, 0x8f, 0x38, 0x8e, 0x85, 0xdb, 0x53,
+	0x57, 0x36, 0x58, 0x8d, 0x06, 0x05, 0x7d, 0x6f, 0xcd, 0xaf, 0x00, 0x00, 0x00, 0xff, 0xff, 0x88,
+	0xf3, 0x18, 0x7a, 0x7d, 0x02, 0x00, 0x00,
 }
 
 func (m *Hero) Marshal() (dAtA []byte, err error) {
@@ -605,13 +630,6 @@ func (m *Acc) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			dAtA[i] = 0x12
 		}
 	}
-	if len(m.Token) > 0 {
-		i -= len(m.Token)
-		copy(dAtA[i:], m.Token)
-		i = encodeVarintMock(dAtA, i, uint64(len(m.Token)))
-		i--
-		dAtA[i] = 0xa
-	}
 	return len(dAtA) - i, nil
 }
 
@@ -658,6 +676,13 @@ func (m *LoginGuestRes) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if len(m.SessionID) > 0 {
+		i -= len(m.SessionID)
+		copy(dAtA[i:], m.SessionID)
+		i = encodeVarintMock(dAtA, i, uint64(len(m.SessionID)))
+		i--
+		dAtA[i] = 0x12
+	}
 	if m.AccInfo != nil {
 		{
 			size, err := m.AccInfo.MarshalToSizedBuffer(dAtA[:i])
@@ -693,6 +718,13 @@ func (m *HelloReq) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if len(m.SessionID) > 0 {
+		i -= len(m.SessionID)
+		copy(dAtA[i:], m.SessionID)
+		i = encodeVarintMock(dAtA, i, uint64(len(m.SessionID)))
+		i--
+		dAtA[i] = 0x12
+	}
 	if len(m.Message) > 0 {
 		i -= len(m.Message)
 		copy(dAtA[i:], m.Message)
@@ -753,6 +785,13 @@ func (m *GetHeroInfoReq) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if len(m.SessionID) > 0 {
+		i -= len(m.SessionID)
+		copy(dAtA[i:], m.SessionID)
+		i = encodeVarintMock(dAtA, i, uint64(len(m.SessionID)))
+		i--
+		dAtA[i] = 0x1a
+	}
 	if len(m.HeroID) > 0 {
 		i -= len(m.HeroID)
 		copy(dAtA[i:], m.HeroID)
@@ -818,6 +857,13 @@ func (m *HeroLvupReq) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if len(m.SessionID) > 0 {
+		i -= len(m.SessionID)
+		copy(dAtA[i:], m.SessionID)
+		i = encodeVarintMock(dAtA, i, uint64(len(m.SessionID)))
+		i--
+		dAtA[i] = 0x1a
+	}
 	if len(m.HeroID) > 0 {
 		i -= len(m.HeroID)
 		copy(dAtA[i:], m.HeroID)
@@ -896,10 +942,6 @@ func (m *Acc) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.Token)
-	if l > 0 {
-		n += 1 + l + sovMock(uint64(l))
-	}
 	if len(m.Heros) > 0 {
 		for _, e := range m.Heros {
 			l = e.Size()
@@ -934,6 +976,10 @@ func (m *LoginGuestRes) Size() (n int) {
 		l = m.AccInfo.Size()
 		n += 1 + l + sovMock(uint64(l))
 	}
+	l = len(m.SessionID)
+	if l > 0 {
+		n += 1 + l + sovMock(uint64(l))
+	}
 	return n
 }
 
@@ -944,6 +990,10 @@ func (m *HelloReq) Size() (n int) {
 	var l int
 	_ = l
 	l = len(m.Message)
+	if l > 0 {
+		n += 1 + l + sovMock(uint64(l))
+	}
+	l = len(m.SessionID)
 	if l > 0 {
 		n += 1 + l + sovMock(uint64(l))
 	}
@@ -973,6 +1023,10 @@ func (m *GetHeroInfoReq) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovMock(uint64(l))
 	}
+	l = len(m.SessionID)
+	if l > 0 {
+		n += 1 + l + sovMock(uint64(l))
+	}
 	return n
 }
 
@@ -996,6 +1050,10 @@ func (m *HeroLvupReq) Size() (n int) {
 	var l int
 	_ = l
 	l = len(m.HeroID)
+	if l > 0 {
+		n += 1 + l + sovMock(uint64(l))
+	}
+	l = len(m.SessionID)
 	if l > 0 {
 		n += 1 + l + sovMock(uint64(l))
 	}
@@ -1151,38 +1209,6 @@ func (m *Acc) Unmarshal(dAtA []byte) error {
 			return fmt.Errorf("proto: Acc: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Token", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowMock
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthMock
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthMock
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Token = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Heros", wireType)
@@ -1391,6 +1417,38 @@ func (m *LoginGuestRes) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SessionID", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMock
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthMock
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthMock
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.SessionID = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipMock(dAtA[iNdEx:])
@@ -1472,6 +1530,38 @@ func (m *HelloReq) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.Message = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SessionID", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMock
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthMock
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthMock
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.SessionID = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -1636,6 +1726,38 @@ func (m *GetHeroInfoReq) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.HeroID = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SessionID", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMock
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthMock
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthMock
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.SessionID = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -1804,6 +1926,38 @@ func (m *HeroLvupReq) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.HeroID = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SessionID", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMock
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthMock
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthMock
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.SessionID = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

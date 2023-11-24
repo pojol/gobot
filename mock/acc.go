@@ -11,44 +11,44 @@ type heroInfo struct {
 }
 
 type MockAcc struct {
-	Token   string
-	Heros   []heroInfo
-	Diamond int32
-	Gold    int32
+	SessionID string // 临时处理
+	Heros     []heroInfo
+	Diamond   int32
+	Gold      int32
 }
 
 var accmap = sync.Map{}
 
-func createAcc(token string) *MockAcc {
+func createAcc(id string) *MockAcc {
 
 	acc := &MockAcc{
-		Token:   token,
-		Diamond: 50,
-		Gold:    100,
+		SessionID: id,
+		Diamond:   50,
+		Gold:      100,
 		Heros: []heroInfo{
 			{ID: "joy", Lv: 1},
 			{ID: "pojoy", Lv: 2},
 		},
 	}
 
-	accmap.Store(acc.Token, acc)
+	accmap.Store(acc.SessionID, acc)
 	return acc
 }
 
-func getAccInfo(token string) (*MockAcc, error) {
-	mapval, ok := accmap.Load(token)
+func getAccInfo(id string) (*MockAcc, error) {
+	mapval, ok := accmap.Load(id)
 	if !ok {
-		return nil, fmt.Errorf("token not found %v", token)
+		return nil, fmt.Errorf("sessionid not found %v", id)
 	}
 
 	accPtr, _ := mapval.(*MockAcc)
 	return accPtr, nil
 }
 
-func setHeroLv(token string, heroID string) (*MockAcc, error) {
-	mapval, ok := accmap.Load(token)
+func setHeroLv(id string, heroID string) (*MockAcc, error) {
+	mapval, ok := accmap.Load(id)
 	if !ok {
-		return nil, fmt.Errorf("token not found %v", token)
+		return nil, fmt.Errorf("sessionid not found %v", id)
 	}
 
 	accPtr, _ := mapval.(*MockAcc)

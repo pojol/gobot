@@ -10,36 +10,36 @@ import (
 )
 
 type guestRes struct {
-	Token string
+	SessionID string
 }
 
 type accInfoReq struct {
-	Token string
+	SessionID string
 }
 
 type accInfoRes struct {
-	Token   string
-	Diamond int32
-	Gold    int32
+	SessionID string
+	Diamond   int32
+	Gold      int32
 }
 
 type heroInfoReq struct {
-	Token string
+	SessionID string
 }
 
 type heroInfoRes struct {
-	Token string
-	Heros []heroInfo
+	SessionID string
+	Heros     []heroInfo
 }
 
 type lvupReq struct {
-	Token  string
-	HeroID string
+	SessionID string
+	HeroID    string
 }
 
 type lvupRes struct {
-	Token string
-	Heros []heroInfo
+	SessionID string
+	Heros     []heroInfo
 }
 
 type MockResponse struct {
@@ -56,7 +56,7 @@ func routeGuest(ctx echo.Context) error {
 		Code: 200,
 		Msg:  "",
 		Body: guestRes{
-			Token: acc.Token,
+			SessionID: acc.SessionID,
 		},
 	}
 
@@ -84,7 +84,7 @@ func routeAccInfo(ctx echo.Context) error {
 		goto ext
 	}
 
-	accPtr, err = getAccInfo(accinfo.Token)
+	accPtr, err = getAccInfo(accinfo.SessionID)
 	if err != nil {
 		res.Msg = err.Error()
 		res.Code = 400
@@ -92,7 +92,6 @@ func routeAccInfo(ctx echo.Context) error {
 	}
 
 	body = accInfoRes{
-		Token:   accinfo.Token,
 		Diamond: accPtr.Diamond,
 		Gold:    accPtr.Gold,
 	}
@@ -123,7 +122,7 @@ func routeHeroInfo(ctx echo.Context) error {
 		goto ext
 	}
 
-	accPtr, err = getAccInfo(heroinfo.Token)
+	accPtr, err = getAccInfo(heroinfo.SessionID)
 	if err != nil {
 		res.Msg = err.Error()
 		res.Code = 400
@@ -131,7 +130,6 @@ func routeHeroInfo(ctx echo.Context) error {
 	}
 
 	res.Body = heroInfoRes{
-		Token: accPtr.Token,
 		Heros: accPtr.Heros,
 	}
 	res.Code = 200
@@ -160,16 +158,15 @@ func routeHeroLvup(ctx echo.Context) error {
 		goto ext
 	}
 
-	accPtr, err = setHeroLv(lvup.Token, lvup.HeroID)
+	accPtr, err = setHeroLv(lvup.SessionID, lvup.HeroID)
 	if err != nil {
 		res.Code = 400
-		res.Msg = "can't find hero token " + lvup.Token + " hero " + lvup.HeroID
+		res.Msg = "can't find hero sessionid " + lvup.SessionID + " hero " + lvup.HeroID
 		goto ext
 	}
 
 	res.Code = 200
 	res.Body = lvupRes{
-		Token: lvup.Token,
 		Heros: accPtr.Heros,
 	}
 

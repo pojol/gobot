@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"runtime"
 )
 
 // 消息头定义
@@ -38,6 +39,9 @@ func tcpHeaderHandle(conn *net.TCPConn) {
 	//go keepalive(conn)
 	defer func() {
 		if err := recover(); err != nil {
+			var buf [4096]byte
+			n := runtime.Stack(buf[:], false)
+			fmt.Println("stack:", string(buf[:n]))
 			log.Printf("recover from err: %v", err)
 		}
 	}()
@@ -75,24 +79,25 @@ func tcpHeaderHandle(conn *net.TCPConn) {
 			continue
 		}
 
+		f, _ := conn.File()
+		fmt.Printf("tcp server recv fd:%v msg:%v \n", f.Fd(), msgId)
+
 		if unfinishedMsg != nil {
 			// 先处理缓存的不完整消息
 			unfinishedMsg.msgBody = append(unfinishedMsg.msgBody, buf[HEAD_LEN:packetLen]...)
-			err = HandleMsg(conn, unfinishedMsg.msgId, unfinishedMsg.msgBody)
-			unfinishedMsg = nil
-
+			err = HandleMsg(conn, int(f.Fd()), unfinishedMsg.msgId, unfinishedMsg.msgBody)
 			if err != nil {
-				break
+				fmt.Println("handle msg err", unfinishedMsg.msgId, err.Error())
 			}
 		}
 
 		// 处理新消息
 		msgBody := buf[HEAD_LEN:packetLen]
-		err = HandleMsg(conn, msgId, msgBody)
+		err = HandleMsg(conn, int(f.Fd()), msgId, msgBody)
 
 		buf = make([]byte, 1024) // 重置 buf
 		if err != nil {
-			break
+			fmt.Println("handle msg err", msgId, err.Error())
 		}
 	}
 
@@ -130,19 +135,17 @@ func writeMsg(conn *net.TCPConn, msgId uint16, custom []byte, msgBody []byte) er
 	return nil
 }
 
-func HandleMsg(conn *net.TCPConn, msgId uint16, msgBody []byte) error {
+func HandleMsg(conn *net.TCPConn, fd int, msgId uint16, msgBody []byte) error {
 	var err error
 
-	fmt.Println("recv tcp header", msgId, string(msgBody))
-
 	if msgId == LoginGuest {
-		err = tcpRouteGuestHandle(conn, msgBody)
+		err = tcpRouteGuestHandle(conn, fd, msgBody)
 	} else if msgId == Hello {
-		err = tcpHelloHandle(conn, msgBody)
+		err = tcpHelloHandle(conn, fd, msgBody)
 	} else if msgId == HeroInfo {
-		err = tcpHeroInfoHandle(conn, msgBody)
+		err = tcpHeroInfoHandle(conn, fd, msgBody)
 	} else if msgId == HeroLvup {
-		err = tcpHeroLvupHandle(conn, msgBody)
+		err = tcpHeroLvupHandle(conn, fd, msgBody)
 	}
 
 	if err != nil {

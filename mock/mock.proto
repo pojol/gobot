@@ -8,7 +8,6 @@ message Hero {
 }
 
 message Acc {
-    string Token = 1;
     repeated Hero Heros = 2;
     int32 Diamond = 3;
     int32 Gold = 4;
@@ -20,10 +19,12 @@ message LoginGuestReq {
 
 message LoginGuestRes {
     Acc AccInfo = 1;
+    string SessionID = 2;
 }
 
 message HelloReq {
     string Message = 1;
+    string SessionID = 2;
 }
 
 message HelloRes {
@@ -32,6 +33,7 @@ message HelloRes {
 
 message GetHeroInfoReq {
     string HeroID = 2;
+    string SessionID = 3;
 }
 
 message GetHeroInfoRes {
@@ -40,6 +42,7 @@ message GetHeroInfoRes {
 
 message HeroLvupReq {
     string HeroID = 2;
+    string SessionID = 3;
 }
 
 message HeroLvupRes {
