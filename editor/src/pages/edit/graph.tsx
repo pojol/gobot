@@ -27,7 +27,7 @@ import {
     LockOutlined,
     UnlockOutlined
 } from "@ant-design/icons";
-import { Button, Input, Modal, Tooltip } from "antd";
+import { Button, Input, Modal, Tooltip, theme } from "antd";
 import { IsActionNode, IsScriptNode, NodeTy } from "../../constant/node_type";
 
 import { message } from "antd";
@@ -478,7 +478,13 @@ const GraphView = (props: GraphViewProps) => {
                 target: nod,
             })
 
-            console.info("add edge", parentty , "=>", child.ty)
+            let bodyfill = "#20262E"
+            let labelfill = "#fff"
+            if (localStorage.theme === ThemeType.Light) {
+                bodyfill = "#f5f5f5"
+                labelfill = "#20262E"
+            }
+
             if (parentty === NodeTy.Sequence) {
                 edge.appendLabel({
                     attrs: {
@@ -486,10 +492,10 @@ const GraphView = (props: GraphViewProps) => {
                             text: idx.toString(),
                         },
                         body: {
-                            fill: "#20262E",
+                            fill: bodyfill,
                         },
                         label: {
-                            fill: "#fff",
+                            fill: labelfill,
                         },
                     },
                 })
