@@ -20,19 +20,21 @@ Gobot is a powerful stateful API testing robot. It provides a graphical interfac
 
 ## Feature
 
-* Use the `behavior tree` to control the running order of the robot, and use the `script` to control the specific behavior of the node (such as making an http request
-* SuProvides graphical editing and debugging capabilities
-* You can `prefab` template nodes in the configuration page, and `reuse` the nodes in the editor
-* It can be driven by http `api` (`post /bot.run -d '{"Name":"a robot"}'` can be easily integrated into CI
-* Supports multiple protocol formats (HTTP, TCP...
-* Support a `stress test` (you can set the number of concurrency on the configuration page
+* Utilizes the 'behavior tree' to control the robot's execution order and uses 'scripts' for specific node behaviors, such as making HTTP requests.
+* Provides graphical editing and debugging capabilities.
+* Allows creating and reusing 'prefab' template nodes in the configuration page.
+* Supports driving via HTTP API (post /bot.run -d '{"Name":"a robot"}'), making it easy to integrate into CI.
+* Supports multiple protocol formats (HTTP, TCP, etc.).
+* Offers 'stress testing' with configurable concurrency settings on the configuration page.
 
 
 ## NodeScript
 > Through built-in modules and scripts, we can have rich logical expression capabilities. We can also use global (single bot) meta structures to maintain various state changes of the bot.
 ```lua
 --[[
-    Each node has its own independent .lua script. When the node is executed, dostring will be called to load and run this script.
+    Each node has its own independent .lua script for execution. When a node is executed, the script is loaded and run using dostring.
+    Users can load desired 'modules' into the script for additional functionalities. For more information, refer to the documentation.
+    The script allows defining node execution logic, like sending an HTTP request.
 ]]--
 
 -- Users can load "modules" they want to use in the script.
@@ -61,10 +63,17 @@ end
 ```
 
 ## Script Module
-|||||||
-|-|-|-|-|-|-|
-|`base64`|`http`|`tcp`|`protobuf`|`mongoDB`|`json`|
-|`md5`|`uuid`|`random`|...|
+| Module | interface |Description |
+|-------------|-------------|-------------|
+| base64 | `encode` `decode` |Provides base64 encoding/decoding functionality.|
+| http | `post` `get` `put` | Support HTTP connection. |
+| tcp | `dail` `close` `write` `read` | Support TCP connection. |
+| protobuf | `marshal` `unmarshal` | Provides Protobuf operations. |
+| mongoDB | `insert` `find` `update` `delete` ... | Provides MongoDB operations. |
+| json | `encode` `decode` | Offers JSON functionalities. |
+| md5 | `sum` | Calculates MD5 hashes. |
+| utils | `uuid` `random` | Generates random values, UUIDs. |
+| ... | More modules available. |
 
 ## Try it out
 Try the editor out [on website](http://178.128.113.58:31293)
