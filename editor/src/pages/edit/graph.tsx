@@ -889,9 +889,6 @@ const GraphView = (props: GraphViewProps) => {
                 <Tooltip placement="topLeft" title="Clean">
                     <Button icon={<ClearOutlined />} onClick={CleanTree} />
                 </Tooltip>
-                <Tooltip placement="topLeft" title="lock / unlock focus">
-                    <Button icon={getLockedState()} onClick={UnlockFocus} />
-                </Tooltip>
             </div>
 
             <div className={"app-step-win"}>
