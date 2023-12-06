@@ -314,6 +314,10 @@ const GraphView = (props: GraphViewProps) => {
         }
 
         setIsGraphCreated(true);
+
+        return ()=>{
+            graph.dispose()
+        }
         //containerRef.current = graph.container;
         //containerRef.current.appendChild(graph.container);
         //stencilContainerRef.current.appendChild(graph.container);

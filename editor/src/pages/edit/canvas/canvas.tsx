@@ -69,17 +69,12 @@ export function CreateGraph(container: HTMLElement, wflex: number, hflex: number
         grid: {
             size: 10, // 网格大小 10px
             visible: true, // 绘制网格，默认绘制 dot 类型网格
+          
         },
-        history: true,
+        panning	:true,
         selecting: {
             enabled: true,
             showNodeSelectionBox: true,
-        },
-        scroller: {
-            enabled: true,
-            pageVisible: false,
-            pageBreak: false,
-            pannable: true,
         },
         mousewheel: {
             enabled: true,
