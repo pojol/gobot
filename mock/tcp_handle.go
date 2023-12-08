@@ -38,9 +38,8 @@ func tcpRouteGuestHandle(conn *net.TCPConn, fd int, msgBody []byte) error {
 	}
 
 	byt, _ := proto.Marshal(&res)
-	writeMsg(conn, LoginGuest, []byte{}, byt)
 
-	return nil
+	return writeMsg(conn, LoginGuest, []byte{}, byt)
 }
 
 func tcpHelloHandle(conn *net.TCPConn, fd int, msgBody []byte) error {
@@ -56,9 +55,8 @@ func tcpHelloHandle(conn *net.TCPConn, fd int, msgBody []byte) error {
 	}
 
 	byt, _ := proto.Marshal(&res)
-	writeMsg(conn, Hello, []byte{}, byt)
 
-	return nil
+	return writeMsg(conn, Hello, []byte{}, byt)
 }
 
 func tcpHeroInfoHandle(conn *net.TCPConn, fd int, msgBody []byte) error {
@@ -86,9 +84,9 @@ func tcpHeroInfoHandle(conn *net.TCPConn, fd int, msgBody []byte) error {
 	}
 
 	byt, _ := proto.Marshal(res)
-	writeMsg(conn, HeroInfo, []byte{}, byt)
 
-	return nil
+	return writeMsg(conn, HeroInfo, []byte{}, byt)
+
 }
 
 func tcpHeroLvupHandle(conn *net.TCPConn, fd int, msgBody []byte) error {
@@ -129,7 +127,6 @@ func tcpHeroLvupHandle(conn *net.TCPConn, fd int, msgBody []byte) error {
 	}
 
 	byt, _ := proto.Marshal(&res)
-	writeMsg(conn, HeroLvup, []byte{}, byt)
 
-	return nil
+	return writeMsg(conn, HeroLvup, []byte{}, byt)
 }

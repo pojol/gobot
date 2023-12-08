@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"runtime"
@@ -26,13 +27,14 @@ const (
 	MSG_ID_SIZE   = 2
 )
 
-// 缓存不完整消息的结构
-type UnfinishedMessage struct {
-	msgId   uint16
-	msgBody []byte
-}
+func _readPackageLength(buf []byte) uint16 {
+	var packetLen uint16
 
-var unfinishedMsg *UnfinishedMessage
+	br := bytes.NewReader(buf)
+	binary.Read(br, binary.LittleEndian, &packetLen)
+
+	return packetLen
+}
 
 // 处理函数,在一个新的goroutine中处理每个连接的请求
 func tcpHeaderHandle(conn *net.TCPConn) {
@@ -46,64 +48,44 @@ func tcpHeaderHandle(conn *net.TCPConn) {
 		}
 	}()
 
-	buf := make([]byte, 1024)
-
 	for {
-		n, err := conn.Read(buf)
-		if n == 0 || err != nil {
-			continue
+		msglenbuf := make([]byte, 2) // 使用局部变量
+
+		_, err := io.ReadFull(conn, msglenbuf)
+		if err != nil {
+			break
 		}
 
-		// 解析消息头
-		var packetLen uint16
+		packageLen := _readPackageLength(msglenbuf)
+		msgbodyBuf := make([]byte, packageLen-2)
+		_, err = io.ReadFull(conn, msgbodyBuf)
+		if err != nil {
+			break
+		}
+
 		var packetType uint8    // 1字节包类型
 		var customBytes [2]byte // 2字节自定义字段
 		var msgId uint16
 
-		br := bytes.NewReader(buf[:n])
-		binary.Read(br, binary.LittleEndian, &packetLen)
+		br := bytes.NewReader(msgbodyBuf)
 		binary.Read(br, binary.LittleEndian, &packetType)
 		binary.Read(br, binary.LittleEndian, &customBytes)
 		binary.Read(br, binary.LittleEndian, &msgId)
 
-		if n < int(packetLen) {
-			// 消息不完整,缓存
-			if unfinishedMsg == nil {
-				unfinishedMsg = &UnfinishedMessage{
-					msgId:   msgId,
-					msgBody: buf[HEAD_LEN:n],
-				}
-			} else {
-				unfinishedMsg.msgBody = append(unfinishedMsg.msgBody, buf[HEAD_LEN:n]...)
-			}
-			continue
-		}
-
 		f, _ := conn.File()
 		fmt.Printf("tcp server recv fd:%v msg:%v \n", f.Fd(), msgId)
 
-		if unfinishedMsg != nil {
-			// 先处理缓存的不完整消息
-			unfinishedMsg.msgBody = append(unfinishedMsg.msgBody, buf[HEAD_LEN:packetLen]...)
-			err = HandleMsg(conn, int(f.Fd()), unfinishedMsg.msgId, unfinishedMsg.msgBody)
-			if err != nil {
-				fmt.Println("handle msg err", unfinishedMsg.msgId, err.Error())
-			}
-		}
-
 		// 处理新消息
-		msgBody := buf[HEAD_LEN:packetLen]
+		msgBody := msgbodyBuf[HEAD_LEN-PACKET_LEN_SIZE:]
 		err = HandleMsg(conn, int(f.Fd()), msgId, msgBody)
-
-		buf = make([]byte, 1024) // 重置 buf
 		if err != nil {
 			fmt.Println("handle msg err", msgId, err.Error())
 		}
 	}
 
-	// 请求循环结束,关闭连接
+	// 连接断开
 	f, _ := conn.File()
-	fmt.Println("server conn closed", f.Fd())
+	fmt.Println("client conn close =>", conn.RemoteAddr(), f.Fd())
 	conn.Close()
 }
 

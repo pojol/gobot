@@ -6,15 +6,19 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"strconv"
 	"syscall"
+	"time"
 
 	lua "github.com/yuin/gopher-lua"
 )
 
 type TCPModule struct {
-	conn *net.TCPConn
-	fd   int
-	buf  byteQueue
+	conn      *net.TCPConn
+	fd        int
+	buf       byteQueue
+	writeTime time.Time
+	repolst   []Report
 }
 
 type byteQueue []byte
@@ -40,8 +44,21 @@ func (q *byteQueue) pop(maxLen int) ([]byte, bool) {
 }
 
 // 队列当前长度
-func (q *byteQueue) Len() int {
-	return len(*q)
+func (q *byteQueue) haveFull() bool {
+	if len(*q) < 2 {
+		return false
+	}
+
+	var header [2]byte
+	copy(header[:], (*q)[:2])
+
+	var msgleni int16
+	binary.Read(bytes.NewBuffer(header[:]), binary.LittleEndian, &msgleni)
+	if len(*q) < int(msgleni) {
+		return false
+	}
+
+	return true
 }
 
 func NewTCPModule() *TCPModule {
@@ -54,7 +71,7 @@ func NewTCPModule() *TCPModule {
 func (t *TCPModule) Loader(L *lua.LState) int {
 	mod := L.SetFuncs(L.NewTable(), map[string]lua.LGFunction{
 		"dail":  t.dail,
-		"close": t.close,
+		"close": t.Close,
 
 		"write": t.write,
 		"read":  t.read,
@@ -95,7 +112,7 @@ func (t *TCPModule) _dail(host string, port string) error {
 	return nil
 }
 
-func (t *TCPModule) close(L *lua.LState) int {
+func (t *TCPModule) Close(L *lua.LState) int {
 
 	if t.conn != nil {
 		t.conn.Close()
@@ -144,8 +161,6 @@ func (t *TCPModule) _read() error {
 		//fmt.Println(t.fd, "buf push", n, dest)
 
 		t.buf.push(buf[:n])
-	} else {
-		fmt.Println("continue")
 	}
 
 	return nil
@@ -181,7 +196,7 @@ func (t *TCPModule) read_msg(L *lua.LState) int {
 		return readret(L, 0, 0, 0, []byte{}, err.Error())
 	}
 
-	if t.buf.Len() < msglen+msgty+msgcustom+msgid {
+	if !t.buf.haveFull() {
 		return readret(L, 0, 0, 0, []byte{}, "nodata")
 	}
 
@@ -198,6 +213,13 @@ func (t *TCPModule) read_msg(L *lua.LState) int {
 	binary.Read(bytes.NewBuffer(msgidb), binary.LittleEndian, &msgidi)
 
 	msgbody, _ = t.buf.pop(int(msgleni) - (msgty + msgcustom + msgid))
+
+	info := Report{
+		Api:     strconv.Itoa(int(msgidi)),
+		ResBody: int(msgleni),
+		Consume: int(time.Since(t.writeTime).Milliseconds()),
+	}
+	t.repolst = append(t.repolst, info)
 
 	return readret(L, int(msgtyi), int(msgcustomi), int(msgidi), msgbody, "")
 }
@@ -222,6 +244,8 @@ func (t *TCPModule) write_msg(L *lua.LState) int {
 	binary.Write(buf, binary.LittleEndian, uint16(msgcustom))
 	binary.Write(buf, binary.LittleEndian, uint16(msgid))
 	buf.WriteString(msgbody)
+
+	t.writeTime = time.Now()
 
 	_, err := t.conn.Write(buf.Bytes())
 	if err != nil {
@@ -263,4 +287,14 @@ func (t *TCPModule) read(L *lua.LState) int {
 
 	// 立即返回,不阻塞
 	return 2
+}
+
+func (t *TCPModule) GetReport() []Report {
+
+	rep := []Report{}
+	rep = append(rep, t.repolst...)
+
+	t.repolst = t.repolst[:0]
+
+	return rep
 }
