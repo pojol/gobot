@@ -135,7 +135,7 @@ function Layout() {
 
           if (props.isMobile) return [];
           return [
-            <Tag>v0.3.5</Tag>,
+            <Tag>v0.3.7</Tag>,
             <Radio.Group onChange={themeChange} value={themeValue} buttonStyle="solid" defaultValue={localStorage.theme} size={"small"}>
               <Radio.Button value={ThemeType.Dark}>Dark</Radio.Button>
               <Radio.Button value={ThemeType.Light}>Light</Radio.Button>
