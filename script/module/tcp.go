@@ -3,10 +3,10 @@ package script
 import (
 	"bytes"
 	"encoding/binary"
-	"errors"
 	"fmt"
 	"net"
 	"strconv"
+	"sync"
 	"syscall"
 	"time"
 
@@ -14,11 +14,16 @@ import (
 )
 
 type TCPModule struct {
-	conn      *net.TCPConn
-	fd        int
-	buf       byteQueue
+	conn *net.TCPConn
+	fd   int
+
+	buf   byteQueue
+	bufMu sync.Mutex
+
 	writeTime time.Time
 	repolst   []Report
+
+	done chan struct{} // 通知协程停止的通道
 }
 
 type byteQueue []byte
@@ -95,6 +100,7 @@ func (t *TCPModule) dail(L *lua.LState) int {
 }
 
 func (t *TCPModule) _dail(host string, port string) error {
+	fmt.Println("_dail")
 	tcpServer, err := net.ResolveTCPAddr("tcp", host+":"+port)
 	if err != nil {
 		return fmt.Errorf("resolve tcp addr err:%s", err.Error())
@@ -107,8 +113,8 @@ func (t *TCPModule) _dail(host string, port string) error {
 
 	f, _ := t.conn.File()
 	t.fd = int(f.Fd())
-	syscall.SetNonblock(t.fd, true)
 
+	go t._read()
 	return nil
 }
 
@@ -118,6 +124,8 @@ func (t *TCPModule) Close(L *lua.LState) int {
 		t.conn.Close()
 		t.conn = nil
 	}
+
+	close(t.done)
 
 	L.Push(lua.LString("succ"))
 	return 1
@@ -140,30 +148,32 @@ func (t *TCPModule) write(L *lua.LState) int {
 	return 1
 }
 
-func (t *TCPModule) _read() error {
+func (t *TCPModule) _read() {
 
 	if t.conn == nil {
-		return errors.New("not connected")
+		return
 	}
 
-	buf := make([]byte, 1024)
+	for {
+		select {
+		case <-t.done:
+			fmt.Println("chan exit")
+			return
+		default:
+			buf := make([]byte, 1024)
+			n, err := t.conn.Read(buf)
+			if err != nil {
+				fmt.Printf("syscall.read fd %v size %v err %v\n", t.fd, n, err.Error())
+			}
 
-	//n, err := t.conn.Read(buf)
-	// 非阻塞读取
-	n, err := syscall.Read(t.fd, buf)
-	if err != nil {
-		return fmt.Errorf("syscall.read fd %v size %v err %v", t.fd, n, err.Error())
+			if n != 0 {
+				t.bufMu.Lock()
+				t.buf.push(buf[:n])
+				t.bufMu.Unlock()
+			}
+		}
 	}
 
-	if n != 0 {
-		//dest := make([]byte, n)
-		//copy(dest, buf)
-		//fmt.Println(t.fd, "buf push", n, dest)
-
-		t.buf.push(buf[:n])
-	}
-
-	return nil
 }
 
 func readret(L *lua.LState, ty, custom, id int, body []byte, err string) int {
@@ -191,12 +201,9 @@ func (t *TCPModule) read_msg(L *lua.LState) int {
 
 	var msgbody []byte
 
-	err := t._read()
-	if err != nil {
-		return readret(L, 0, 0, 0, []byte{}, err.Error())
-	}
-
+	t.bufMu.Lock()
 	if !t.buf.haveFull() {
+		t.bufMu.Unlock()
 		return readret(L, 0, 0, 0, []byte{}, "nodata")
 	}
 
@@ -213,6 +220,8 @@ func (t *TCPModule) read_msg(L *lua.LState) int {
 	binary.Read(bytes.NewBuffer(msgidb), binary.LittleEndian, &msgidi)
 
 	msgbody, _ = t.buf.pop(int(msgleni) - (msgty + msgcustom + msgid))
+
+	t.bufMu.Unlock()
 
 	info := Report{
 		Api:     strconv.Itoa(int(msgidi)),
@@ -267,7 +276,7 @@ func (t *TCPModule) read(L *lua.LState) int {
 
 	buf := make([]byte, 128) //test
 	// 非阻塞读取
-	n, err := syscall.Read(t.fd, buf)
+	n, err := syscall.Read(syscall.Handle(t.fd), buf)
 	// 处理读取结果
 	if err == syscall.EWOULDBLOCK {
 		L.Push(lua.LString("fail"))
