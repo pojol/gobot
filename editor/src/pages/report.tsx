@@ -20,6 +20,7 @@ interface ReportApiInfo {
 }
 
 interface ReportViewInfo {
+  name : string,
   apilst: Array<ReportApiInfo>,
   botnum: number,
   duration: number,
@@ -33,6 +34,11 @@ interface ReportViewInfo {
 export default function TestReport() {
 
   const columns = [
+    {
+      title: "Name",
+      dataIndex: "name",
+      key: "name",
+    },
     {
       title: "Time",
       dataIndex: "time",
@@ -84,10 +90,11 @@ export default function TestReport() {
     for (var i = 0; i < info.length; i++) {
 
       var date = new Date(info[i].BeginTime * 1000);
-      var convdataTime = date.getFullYear() + '-' + date.getMonth() + '-' + date.getDate() + ' ' + date.getHours() + ':' + date.getMinutes() + ':' + date.getSeconds();
+      var convdataTime = date.getFullYear() + '-' + (date.getMonth()+1).toString() + '-' + date.getDate() + ' ' + date.getHours() + ':' + date.getMinutes() + ':' + date.getSeconds();
 
       newdata.push({
         key: info[i].ID,
+        name: info[i].Name,
         time: convdataTime,
         tps: info[i].Tps,
         duration: info[i].Dura,
@@ -175,6 +182,7 @@ export default function TestReport() {
 
               setRow({
                 apilst: apis,
+                name: selectedRows[0].name,
                 botnum: selectedRows[0].botnum,
                 duration: selectedRows[0].duration,
                 errors: selectedRows[0].errors,

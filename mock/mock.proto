@@ -1,0 +1,50 @@
+syntax = "proto3";
+option csharp_namespace = "Google.Protobuf";
+option go_package = ".;mock";
+
+message Hero {
+    string ID = 1;
+    int32 Lv = 3;
+}
+
+message Acc {
+    repeated Hero Heros = 2;
+    int32 Diamond = 3;
+    int32 Gold = 4;
+}
+
+message LoginGuestReq {
+
+}
+
+message LoginGuestRes {
+    Acc AccInfo = 1;
+    string SessionID = 2;
+}
+
+message HelloReq {
+    string Message = 1;
+    string SessionID = 2;
+}
+
+message HelloRes {
+    string Message = 1;
+}
+
+message GetHeroInfoReq {
+    string HeroID = 2;
+    string SessionID = 3;
+}
+
+message GetHeroInfoRes {
+    Hero HeroInfo = 1;
+}
+
+message HeroLvupReq {
+    string HeroID = 2;
+    string SessionID = 3;
+}
+
+message HeroLvupRes {
+    Acc AccInfo = 1;
+}

@@ -1,6 +1,6 @@
 
 function Post(url, methon, formData) {
-  console.info("post methon", methon, "body=>", JSON.stringify(formData))
+  //console.info("post methon", methon, "body=>", JSON.stringify(formData))
   return new Promise(function (resolve, reject) {
     fetch(url + "/" + methon, {
       method: "POST",

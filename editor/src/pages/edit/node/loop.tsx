@@ -17,7 +17,7 @@ import PubSub from "pubsub-js";
 import Topic from "@/constant/topic";
 import { getDefaultNodeNotifyInfo } from "@/models/node";
 import { delay } from "@/utils/timer";
-import { UpdateType, find, nodeRedraw, nodeUpdate } from "@/models/newtree";
+import { UpdateType, find, nodeRedraw, nodeUpdate } from "@/models/tree";
 
 const Min = 0;
 const Max = 10000;

@@ -19,14 +19,15 @@ import (
 var (
 	help bool
 
-	dbmode     bool
-	scriptPath string
-	openmock   bool
+	dbmode       bool
+	scriptPath   string
+	openHttpMock bool
+	openTcpMock  bool
 )
 
 const (
 	// Version of gobot driver
-	Version = "v0.2.1"
+	Version = "v0.3.7"
 
 	banner = `
               __              __      
@@ -46,7 +47,8 @@ func initFlag() {
 	flag.BoolVar(&help, "h", false, "this help")
 
 	flag.BoolVar(&dbmode, "no_database", false, "Run in local mode")
-	flag.BoolVar(&openmock, "mock", false, "open mock server")
+	flag.BoolVar(&openHttpMock, "httpmock", false, "open http mock server")
+	flag.BoolVar(&openTcpMock, "tcpmock", false, "open tcp mock server")
 	flag.StringVar(&scriptPath, "script_path", "script/", "Path to bot script")
 }
 
@@ -74,10 +76,17 @@ func main() {
 		panic(err)
 	}
 
-	if openmock {
-		ms := mock.NewServer()
+	fmt.Println("open http mock", openHttpMock)
+	if openHttpMock {
+		ms := mock.NewHttpServer()
 		go ms.Start(":6666")
 		defer ms.Close()
+	}
+
+	fmt.Println("open tcp mock", openTcpMock)
+	if openTcpMock {
+		tcpls := mock.StarTCPServer(":6667")
+		defer tcpls.Close()
 	}
 
 	go func() {

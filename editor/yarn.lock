@@ -982,10 +982,10 @@
   resolved "https://registry.npmmirror.com/@antv/x6-react-shape/-/x6-react-shape-1.6.4.tgz#e7e9368ce6e0b896cc9882cb08f516406a955fb6"
   integrity sha512-xjvEV0FuH/AC+MXfgliEroPzMzdPmx3hqiWbIaXq36BasghXUNutlyCKiDmT6DX0bL1IxJsKJGESV0QQBcMlow==
 
-"@antv/x6@1.27.2":
-  version "1.27.2"
-  resolved "https://registry.npmmirror.com/@antv/x6/-/x6-1.27.2.tgz#aa0b7d33ef95e7d8f0dbeaff09f994031eaa4b0b"
-  integrity sha512-ZZVsNyZT33tFnA9pn4HiRN456EreN6CvDS2wuoNGJHG71JCDyZnvXhz5VlfDi+pdAllaxj8bGoemu3/qQdJ87w==
+"@antv/x6@1.34.6":
+  version "1.34.6"
+  resolved "https://registry.npmmirror.com/@antv/x6/-/x6-1.34.6.tgz#b802b09b52c8620acf01734397714ea5e3f715b6"
+  integrity sha512-cl8ywN7CTNVT94/ZEbq2mnZQTQe6FUgIlGOAjNOPL8sljZTBrpE6OsuGw4BDA2/XllwELfUfvVpgBvbdwRKrxw==
   dependencies:
     csstype "^3.0.3"
     jquery "^3.5.1"

@@ -33,7 +33,7 @@ import PubSub from "pubsub-js";
 import Topic from "../constant/topic";
 import Api from "../constant/api";
 import { HomeTag } from "./tags/tags";
-import { initTree } from "@/models/newtree";
+import { initTree } from "@/models/tree";
 
 const { Post } = require("../utils/request");
 const { LoadBehaviorWithBlob, LoadBehaviorWithFile } = require('../utils/parse');
@@ -153,13 +153,11 @@ const Bots = (props: BotsProps) => {
 
     var intags = (tags: Array<string>) => {
       for (var i = 0; i < selectedTag.length; i++) {
-        for (var j = 0; j < tags.length; j++) {
-          if (selectedTag[i] === tags[j]) {
-            return true
-          }
+        if (!tags.includes(selectedTag[i])) {
+          return false
         }
       }
-      return false
+      return true
     }
 
     if (bots.length > 0) {
@@ -283,7 +281,7 @@ const Bots = (props: BotsProps) => {
   }
 
   const handleBotLoad = (e: any) => {
-    selectedRows
+
     if (selectedRows.length > 0) {
       var row = selectedRows[0]
       LoadBehaviorWithBlob(

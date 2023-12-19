@@ -13,12 +13,12 @@
     "start": "npm run dev",
     "electron-dev": "electron .",
     "package_win32_x64": "electron-packager ./ Gobot --platform=win32 --arch=x64 --asar=true --prune=true --overwrite",
-    "package_darwin_arm64": "electron-packager ./ Gobot --platform=darwin --arch=arm64 --overwrite"
+    "package_darwin_arm64": "electron-packager ./ Gobot --platform=darwin --arch=arm64 --asar=true --overwrite"
   },
   "dependencies": {
     "@ant-design/charts": "^1.4.2",
     "@ant-design/pro-layout": "^7.6.1",
-    "@antv/x6": "1.27.2",
+    "@antv/x6": "1.34.6",
     "@codemirror/legacy-modes": "^6.3.2",
     "@octokit/request": "^6.2.3",
     "@reduxjs/toolkit": "^1.9.3",

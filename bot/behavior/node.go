@@ -73,6 +73,7 @@ func (a *Node) GetFreeze() bool {
 	return a.freeze
 }
 
+// SetFreeze 使节点无效（已经执行过的节点）
 func (a *Node) SetFreeze(f bool) {
 	a.freeze = f
 }

@@ -8,7 +8,7 @@ import PubSub from "pubsub-js";
 import Topic from "@/constant/topic";
 
 import { getDefaultNodeNotifyInfo } from '@/models/node';
-import { UpdateType, nodeUpdate, find, nodeRedraw } from '@/models/newtree';
+import { UpdateType, nodeUpdate, find, nodeRedraw } from '@/models/tree';
 import { delay } from '@/utils/timer';
 
 import CodeMirror from '@uiw/react-codemirror';
@@ -22,6 +22,7 @@ import ThemeType from '@/constant/constant';
 const { Search } = Input;
 
 export default function ActionTab() {
+
   const [state, setState] = useState({
     nod: getDefaultNodeNotifyInfo(),
     node_ty: "",
@@ -116,12 +117,12 @@ export default function ActionTab() {
     dispatch(nodeRedraw())
   };
 
-  const onChange = React.useCallback((value:any, viewUpdate:any) => {
+  const onChange = (value:any, viewUpdate:any) => {
     setState({
       ...state,
       code: value,
     });
-  }, []);
+  }
 
   const handleAliasChange = (event: any) => {
     setState({

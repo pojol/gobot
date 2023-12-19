@@ -45,7 +45,8 @@ func (a *WaitAction) onNext(t *Tick) {
 	if currTime >= a.endtime {
 		a.endtime = 0
 
-		if a.base.ChildrenNum() > 0 {
+		if a.base.ChildrenNum() > 0 && !a.base.GetFreeze() {
+			a.base.SetFreeze(true)
 			t.blackboard.Append([]INod{a.base.Children()[0]})
 		} else {
 			a.base.parent.onNext(t)
@@ -59,6 +60,7 @@ func (a *WaitAction) onNext(t *Tick) {
 
 func (a *WaitAction) onReset() {
 	a.endtime = 0
+	a.base.SetFreeze(false)
 
 	for _, child := range a.base.Children() {
 		child.onReset()

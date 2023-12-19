@@ -219,7 +219,10 @@ func (b *Bot) RunByBlock() error {
 }
 
 func (b *Bot) GetReport() []script.Report {
-	return b.bs.HttpMod.GetReport()
+	httpreport := b.bs.HttpMod.GetReport()
+	tcpreport := b.bs.TCPMod.GetReport()
+
+	return append(httpreport, tcpreport...)
 }
 
 func (b *Bot) close() {

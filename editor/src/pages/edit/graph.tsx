@@ -7,6 +7,8 @@ import OBJ2XML from "object-to-xml";
 import { RootState } from "@/models/store";
 import PubSub from "pubsub-js";
 import Topic from "../../constant/topic";
+import { TaskTimer } from "tasktimer/lib/TaskTimer";
+
 
 import { setDebugInfo, setLock } from "@/models/debuginfo";
 import { history } from "umi";
@@ -17,12 +19,15 @@ import {
     CaretRightOutlined,
     ClearOutlined,
     CloudUploadOutlined,
+    CloudSyncOutlined,
     DeleteOutlined,
     UndoOutlined,
     ZoomInOutlined,
-    ZoomOutOutlined
+    ZoomOutOutlined,
+    LockOutlined,
+    UnlockOutlined
 } from "@ant-design/icons";
-import { Button, Input, Modal, Tooltip } from "antd";
+import { Button, Input, Modal, Tooltip, theme } from "antd";
 import { IsActionNode, IsScriptNode, NodeTy } from "../../constant/node_type";
 
 import { message } from "antd";
@@ -44,7 +49,8 @@ import {
     nodeUpdate,
     UpdateType,
     nodeSave,
-} from "@/models/newtree";
+    unlockFocus,
+} from "@/models/tree";
 
 const {
     LoadBehaviorWithBlob,
@@ -84,7 +90,7 @@ const GraphView = (props: GraphViewProps) => {
 
     const { graphFlex } = useSelector((state: RootState) => state.resizeSlice)
     const { lock } = useSelector((state: RootState) => state.debugInfoSlice)
-    const { nodes, updatetick } = useSelector((state: RootState) => state.treeSlice)
+    const { currentTreeName, nodes, updatetick, currentClickNode, currentLockedNode } = useSelector((state: RootState) => state.treeSlice)
     const [isGraphCreated, setIsGraphCreated] = useState(false);
 
     useEffect(() => {
@@ -127,11 +133,12 @@ const GraphView = (props: GraphViewProps) => {
             if (isNew) {
                 if (source !== null && target !== null) {
                     const typename = source.getAttrs().type.name?.toString()
-                    console.info("connect to", typename)
                     if (typename === undefined) {
                         message.warning("Cannot get node name");
                         return
                     }
+
+                    console.info("link parent", source.getAttrs().type.name)
 
                     if (target.getAttrs().type.name === NodeTy.Root) {
                         message.warning("Cannot connect to root node");
@@ -307,6 +314,10 @@ const GraphView = (props: GraphViewProps) => {
         }
 
         setIsGraphCreated(true);
+
+        return ()=>{
+            graph.dispose()
+        }
         //containerRef.current = graph.container;
         //containerRef.current.appendChild(graph.container);
         //stencilContainerRef.current.appendChild(graph.container);
@@ -402,7 +413,7 @@ const GraphView = (props: GraphViewProps) => {
     };
 
 
-    const redrawChild = (parent: any, child: any, build: boolean) => {
+    const redrawChild = (parent: any, parentty: string, child: any, build: boolean, idx: number) => {
         var nod: Node;
 
         if (graphRef.current == null) {
@@ -410,7 +421,6 @@ const GraphView = (props: GraphViewProps) => {
         }
 
         let others = { build: build, silent: true, code: "", alias: "" }
-        console.info(child)
 
         switch (child.ty) {
             case NodeTy.Selector:
@@ -456,24 +466,46 @@ const GraphView = (props: GraphViewProps) => {
         graphRef.current.addNode(nod, { others: others });
 
         if (parent) {
-            graphRef.current.addEdge(
-                new Shape.Edge({
-                    attrs: {
-                        line: {
-                            stroke: "#a0a0a0",
-                            strokeWidth: 1,
-                            targetMarker: {
-                                name: "classic",
-                                size: 3,
-                            },
+            var edge = new Shape.Edge({
+                attrs: {
+                    line: {
+                        stroke: "#a0a0a0",
+                        strokeWidth: 1,
+                        targetMarker: {
+                            name: "classic",
+                            size: 3,
                         },
                     },
-                    zIndex: 0,
-                    source: parent,
-                    target: nod,
-                })
-            );
+                },
+                zIndex: 0,
+                source: parent,
+                target: nod,
+            })
 
+            let bodyfill = "#20262E"
+            let labelfill = "#fff"
+            if (localStorage.theme === ThemeType.Light) {
+                bodyfill = "#f5f5f5"
+                labelfill = "#20262E"
+            }
+
+            if (parentty === NodeTy.Sequence) {
+                edge.appendLabel({
+                    attrs: {
+                        text: {
+                            text: idx.toString(),
+                        },
+                        body: {
+                            fill: bodyfill,
+                        },
+                        label: {
+                            fill: labelfill,
+                        },
+                    },
+                })
+            }
+
+            graphRef.current.addEdge(edge);
             parent.addChild(nod);
         }
 
@@ -493,7 +525,7 @@ const GraphView = (props: GraphViewProps) => {
 
         if (child.children && child.children.length) {
             for (var i = 0; i < child.children.length; i++) {
-                redrawChild(nod, child.children[i], build);
+                redrawChild(nod, child.ty, child.children[i], build, i);
             }
         }
     }
@@ -513,11 +545,11 @@ const GraphView = (props: GraphViewProps) => {
 
             if (jsontree.children && jsontree.children.length) {
                 for (var i = 0; i < jsontree.children.length; i++) {
-                    redrawChild(root, jsontree.children[i], build);
+                    redrawChild(root, "NodeTy.Root", jsontree.children[i], build, i);
                 }
             }
         } else {
-            redrawChild(null, jsontree, build);
+            redrawChild(null, "", jsontree, build, 0);
         }
     }
 
@@ -578,8 +610,40 @@ const GraphView = (props: GraphViewProps) => {
         props.dispatch(cleanTree())
     }
 
+    const UnlockFocus = () => {
+        console.info("lock/unlock")
+        if (currentClickNode.id == "") {
+            message.warning("please select a node")
+            return
+        }
+
+        if (currentClickNode.type == NodeTy.Root) {
+            message.warning("root node can't be locked")
+            return
+        }
+
+        if (currentLockedNode.id == "") {  // locked
+            props.dispatch(unlockFocus({
+                id: currentClickNode.id,
+                type: currentClickNode.type,
+            }))
+        } else {
+            props.dispatch(unlockFocus({
+                id: "",
+                type: "",
+            }))
+        }
+
+    }
+
     const ClickUpload = () => {
-        setModalVisible(true);
+
+        if (currentTreeName === "") {
+            setModalVisible(true);
+        } else {
+            props.dispatch(nodeSave(""))
+        }
+
     };
 
     // 基于某个模版，创建一个可运行的 Bot
@@ -633,23 +697,19 @@ const GraphView = (props: GraphViewProps) => {
         }
     };
 
-    const ClickStep = (e: any) => {
-        if (props.tree.currentDebugBot === "") {
-            message.warning("have not created bot");
-            return;
-        }
-
-        var botid = props.tree.currentDebugBot
-        props.dispatch(setLock(true))
+    const _step_loop = (botid: string, done: any) => {
         Post(localStorage.remoteAddr, Api.DebugStep, { BotID: botid }).then(
             (json: any) => {
 
                 if (json.Code !== 200) {
                     if (json.Code === 1009) {
                         message.warning(json.Code.toString() + " " + json.Msg)
+                        done()
                         return;
                     } else if (json.Code === 1007) {
                         message.success("the end");
+                        done()
+                        return;
                     } else {
                         message.warning(json.Code.toString() + " " + json.Msg)
                     }
@@ -662,9 +722,20 @@ const GraphView = (props: GraphViewProps) => {
 
                 // 推送当前节点信息
                 let focusLst = new Array<string>
-                threadinfo.forEach(element => {
-                    focusLst.push(element.curnod)
-                });
+                try {
+                    threadinfo.forEach(element => {
+                        focusLst.push(element.curnod)
+
+                        if (element.curnod === currentLockedNode.id) {
+                            console.info("focus", element.curnod)
+                            throw new Error("find")
+                        }
+                    });
+                } catch (error) {
+                    done()
+                    return
+                }
+
                 debugFocus(focusLst)
 
                 // 推送 meta 面板信息
@@ -672,11 +743,75 @@ const GraphView = (props: GraphViewProps) => {
                 props.dispatch(setDebugInfo({
                     metaInfo: metaStr,
                     threadInfo: threadinfo,
-                    lock: false,
+                    lock: true,
                 }))
             }
         );
 
+    }
+
+    const ClickStep = (e: any) => {
+        if (props.tree.currentDebugBot === "") {
+            message.warning("have not created bot");
+            return;
+        }
+
+        var botid = props.tree.currentDebugBot
+
+        if (currentLockedNode.id !== "") {
+            const timer = new TaskTimer(100);
+
+            timer.on('tick', () => {
+
+                const donecallback = () => {
+                    console.info("step loop done")
+                    timer.stop();
+                    props.dispatch(setLock(false))
+                }
+
+                _step_loop(botid, donecallback)
+
+            });
+            timer.start();
+
+        } else {
+            props.dispatch(setLock(true))
+            Post(localStorage.remoteAddr, Api.DebugStep, { BotID: botid }).then(
+                (json: any) => {
+
+                    if (json.Code !== 200) {
+                        if (json.Code === 1009) {
+                            message.warning(json.Code.toString() + " " + json.Msg)
+                            return;
+                        } else if (json.Code === 1007) {
+                            message.success("the end");
+                        } else {
+                            message.warning(json.Code.toString() + " " + json.Msg)
+                        }
+                    }
+
+                    debugFocus([]); // clean
+
+                    // 推送 reponse 面板信息
+                    let threadinfo = JSON.parse(json.Body.ThreadInfo) as Array<ThreadInfo>
+
+                    // 推送当前节点信息
+                    let focusLst = new Array<string>
+                    threadinfo.forEach(element => {
+                        focusLst.push(element.curnod)
+                    });
+                    debugFocus(focusLst)
+
+                    // 推送 meta 面板信息
+                    let metaStr = JSON.stringify(JSON.parse(json.Body.Blackboard))
+                    props.dispatch(setDebugInfo({
+                        metaInfo: metaStr,
+                        threadInfo: threadinfo,
+                        lock: false,
+                    }))
+                }
+            );
+        }
     };
 
     const behaviorNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -687,6 +822,7 @@ const GraphView = (props: GraphViewProps) => {
         setModalVisible(false);
         if (behaviorName !== "") {
             props.dispatch(nodeSave(behaviorName))
+            setBehaviorName("");
         } else {
             message.warning("please enter the file name of the behavior tree");
         }
@@ -718,13 +854,21 @@ const GraphView = (props: GraphViewProps) => {
         //PubSub.publish(Topic.Undo, {});
     };
 
+    const getLockedState = () => {
+        if (currentLockedNode.id == "") {
+            return <UnlockOutlined />
+        } else {
+            return <LockOutlined />
+        }
+    }
+
     return (
         <div className='app'>
             <EditSidePlane
                 graph={graphRef.current}
-                isGraphCreated={isGraphCreated} 
+                isGraphCreated={isGraphCreated}
             />
-            
+
             <div className="app-content" ref={containerRef} />
 
             <div
@@ -781,7 +925,7 @@ const GraphView = (props: GraphViewProps) => {
             <div className={"app-upload-win"}>
                 <Tooltip placement="topRight" title={"Upload the bot to the server"}>
                     <Button
-                        icon={<CloudUploadOutlined />}
+                        icon={<CloudSyncOutlined />}
                         style={{ width: 50 }}
                         onClick={ClickUpload}
                     ></Button>

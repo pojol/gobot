@@ -23,7 +23,7 @@ import { connect, ConnectedProps } from 'react-redux';
 import { addItem, removeItem, cleanItems } from '../models/prefab';
 import { RootState } from '@/models/store';
 
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 
 const { Post, PostGetBlob, PostBlob } = require("../utils/request");
 
@@ -44,9 +44,8 @@ interface DataType {
 
 type DataIndex = keyof DataType;
 
-interface PrefabProps extends PropsFromRedux { }
 
-const Prefab = (props: PrefabProps) => {
+export default function Prefab () {
 
   const [data, setData] = useState<DataType[]>([]);
   const [code, setCode] = useState<string>("");
@@ -54,6 +53,8 @@ const Prefab = (props: PrefabProps) => {
   const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
   const [newPrefabName, setNewPrefabName] = useState<string>("");
   const [searchedColumn, setSearchedColumn] = useState<DataIndex>();
+
+  const dispatch = useDispatch()
 
   const { themeValue } = useSelector((state: RootState) => state.configSlice)
 
@@ -100,7 +101,7 @@ const Prefab = (props: PrefabProps) => {
 
   const syncConfig = () => {
 
-    props.dispatch(cleanItems())
+    dispatch(cleanItems())
 
     Post(localStorage.remoteAddr, Api.PrefabList, {}).then((json: any) => {
       if (json.Code !== 200) {
@@ -137,7 +138,7 @@ const Prefab = (props: PrefabProps) => {
                     tags: element.tags,
                     code: String(reader.result),
                   }
-                  props.dispatch(addItem({ key: element.name, value: pi }))
+                  dispatch(addItem({ key: element.name, value: pi }))
 
                   counter++;
                   if (counter === lst.length) {
@@ -155,9 +156,9 @@ const Prefab = (props: PrefabProps) => {
     });
   }
 
-  const onChange = React.useCallback((value:any, viewUpdate:any) => {
+  const onChange = (value:any, viewUpdate:any) => {
     setCode(value)
-  }, []);
+  }
 
 
   const uploadPrefab = (name: string, code: string) => {
@@ -414,12 +415,3 @@ const Prefab = (props: PrefabProps) => {
     </div>
   );
 }
-
-const mapStateToProps = (state: RootState) => ({
-  prefabMap: state.prefabSlice.pmap
-});
-
-const connector = connect(mapStateToProps);
-type PropsFromRedux = ConnectedProps<typeof connector>;
-
-export default connector(Prefab);

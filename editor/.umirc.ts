@@ -17,7 +17,6 @@ export default defineConfig({
     { path: "/report", component: "report", name: "report", key: "report" },
     { path: "/prefab", component: "prefab", name: "prefab", key: "prefab" },
     { path: "/config", component: "config", name: "config", key: "config" },
-    { path: "/docs", component: "docs", name: "docs", key: "docs" },
   ],
   plugins: [
   ],

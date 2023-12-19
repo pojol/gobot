@@ -220,7 +220,7 @@ end
 
 func TestLoop(t *testing.T) {
 
-	ms := mock.NewServer()
+	ms := mock.NewHttpServer()
 	go ms.Start(":7777")
 
 	defer ms.Close()
