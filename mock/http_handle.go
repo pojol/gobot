@@ -2,6 +2,7 @@ package mock
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 
@@ -92,8 +93,9 @@ func routeAccInfo(ctx echo.Context) error {
 	}
 
 	body = accInfoRes{
-		Diamond: accPtr.Diamond,
-		Gold:    accPtr.Gold,
+		Diamond:   accPtr.Diamond,
+		Gold:      accPtr.Gold,
+		SessionID: accinfo.SessionID,
 	}
 	res.Body = body
 	res.Code = 200
@@ -130,11 +132,14 @@ func routeHeroInfo(ctx echo.Context) error {
 	}
 
 	res.Body = heroInfoRes{
-		Heros: accPtr.Heros,
+		Heros:     accPtr.Heros,
+		SessionID: heroinfo.SessionID,
 	}
 	res.Code = 200
 
 ext:
+	fmt.Println(err, res)
+
 	ctx.JSON(http.StatusOK, res)
 	return nil
 }
@@ -167,7 +172,8 @@ func routeHeroLvup(ctx echo.Context) error {
 
 	res.Code = 200
 	res.Body = lvupRes{
-		Heros: accPtr.Heros,
+		SessionID: lvup.SessionID,
+		Heros:     accPtr.Heros,
 	}
 
 ext:
