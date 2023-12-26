@@ -8,10 +8,18 @@ Gobot是一个功能强大的有状态API测试机器人。它提供图形界面
 
 ## 快速安装
 > 注：开启本地运行模式，所有的改动被记录在内存（并不会真正保存）如果需要保存请将文件下载到本地；或采用正式的部署方式
-1. 在 release 页面下载指定版本的 编辑端(editor 以及 驱动端(driver
-2. 在命令行以内存模式执行驱动端 `./gobot-driver-win32-v0.3.x.exe --no_database --mock`
-3. 启动 gobot_editor_win_x64_v0.3.x ,并将 driver 地址填入 http://127.0.0.1:8888
-4. 如果是初次使用，可以在 /sample 目录中找到示例机器人，在bots页面中载入使用
+1. 进入最新的 [release页面](https://github.com/pojol/gobot/releases/tag/v0.3.8) 下载可执行程序
+2. 执行 gobot_driver_win_x64_v0.3.8 目录中的 run.bat 文件， 运行服务器
+    * 执行 gobot_editor_win_x64_v0.3.8 目录中的 gobot.ext， 运行编辑器程序
+3. 在弹出的地址输入窗口 或 config 页的地址栏中填入 http://127.0.0.1:8888 本地服务器地址
+4. 切换到编辑器的 bots 面板，将 http_sample.txt 和 tcp_sample.txt 两个用例拖入
+5. 选择一个用例，点击 load 将机器人加载到编辑界面
+    * 点击下方的 debug （爬虫）按钮进行调试（创建一个新的调试机器人
+    * 点击旁边的 运行 按钮，单步执行（运行行为树节点
+    * 点击编辑器中的任意一个节点 可以查看这个节点的设置
+    * Meta 面板 可以查看机器人的所有数据
+    * Response 显示的是每个节点中的返回值
+    * RuntimeErr 显示的是执行节点可能遇到的错误信息（会自动切换过去
 
 ## 特性
 * 使用`行为树`控制机器人的运行逻辑，使用`脚本`控制节点的具体行为（比如发起一次http请求
@@ -56,12 +64,21 @@ end
 ```
 
 ## 脚本层模块
-|||||||
-|-|-|-|-|-|-|
-|`base64`|`http`|`tcp`|`protobuf`|`mongoDB`|`json`|
-|`md5`|`uuid`|`random`|...|
+| Module | interface |Description |
+|-------------|-------------|-------------|
+| base64 | `encode` `decode` |Provides base64 encoding/decoding functionality.|
+| http | `post` `get` `put` | Support HTTP connection. |
+| tcp | `dail` `close` `write` `read` | Support TCP connection. |
+| protobuf | `marshal` `unmarshal` | Provides Protobuf operations. |
+| mongoDB | `insert` `find` `update` `delete` ... | Provides MongoDB operations. |
+| json | `encode` `decode` | Offers JSON functionalities. |
+| md5 | `sum` | Calculates MD5 hashes. |
+| utils | `uuid` `random` | Generates random values, UUIDs. |
+| ... | More modules available. |
 
 ## [在线试用](http://178.128.113.58:31293)
+> 服务器部署在新加坡（ping有些高
+
 ## [文档](https://pojol.gitee.io/gobot/#/)
 
 ## [视频演示](https://www.bilibili.com/video/BV1sS4y1z7Dg/?vd_source=7c2dfd750914fd5f8a9811b19f0bf447)
