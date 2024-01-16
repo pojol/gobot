@@ -5,7 +5,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pojol/gobot/bot"
 	"gorm.io/gorm"
 )
 
@@ -64,7 +63,7 @@ func (b *Behavior) Upset(name string, file []byte) {
 				Name:       name,
 				File:       file,
 				UpdateTime: time.Now().Unix(),
-				Status:     bot.BotStatusUnknow,
+				Status:     "unknow",
 			})
 		} else {
 			fmt.Println("behavior upset err", err.Error())

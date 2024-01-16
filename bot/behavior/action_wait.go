@@ -12,8 +12,8 @@ type WaitAction struct {
 	endtime int64
 }
 
-func (a *WaitAction) Init(t *Tree, parent INod, mode Mode) {
-	a.base.Init(t, parent, mode)
+func (a *WaitAction) Init(t *Tree, parent INod) {
+	a.base.Init(t, parent)
 	a.wait = int64(t.Wait)
 }
 

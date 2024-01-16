@@ -1,18 +1,32 @@
 package factory
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 	"sync"
 	"time"
 
+	"github.com/pojol/braid-go"
+	"github.com/pojol/braid-go/module"
+	"github.com/pojol/braid-go/module/meta"
 	"github.com/pojol/gobot/bot"
 	"github.com/pojol/gobot/bot/behavior"
+	"github.com/pojol/gobot/constant"
 	"github.com/pojol/gobot/database"
 	"github.com/pojol/gobot/utils"
 )
 
+type BotBatchInfo struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+	Num  int    `json:"num"`
+	Cnt  int    `json:"cnt"`
+}
+
 type TaskInfo struct {
 	Name string
+	ID   string
 	Cur  int32
 	Num  int32
 }
@@ -23,10 +37,14 @@ type Factory struct {
 	debugBots map[string]*bot.Bot
 
 	pipelineCache []TaskInfo
-	batches       []*Batch
-	db            *database.Cache
+
+	batches []*Batch
+	db      *database.Cache
+	report  *FactoryReport
 
 	batchLock sync.Mutex
+
+	createchan module.IChannel
 
 	lock sync.Mutex
 	exit *utils.Switch
@@ -55,9 +73,14 @@ func Create(opts ...Option) (*Factory, error) {
 		db:        db,
 		debugBots: make(map[string]*bot.Bot),
 		exit:      utils.NewSwitch(),
+		report:    BuildReport(p.ServiceID),
 	}
 
 	go f.taskLoop()
+	if constant.GetClusterState() {
+		f.watch()
+		f.report.watch()
+	}
 
 	fmt.Println("create bot driver", "mode", p.NoDBMode)
 
@@ -69,32 +92,55 @@ var Global *Factory
 
 // Close 关闭机器人工厂
 func (f *Factory) Close() {
+	f.report.Close()
+
+	f.createchan.Close()
 	f.exit.Open()
+}
+
+func (f *Factory) watch() {
+	var err error
+	f.createchan, err = braid.Topic("bot.batch.create").Sub(context.TODO(), "factory")
+	if err != nil {
+		fmt.Println("factory.watch", err.Error())
+		return
+	}
+
+	f.createchan.Arrived(func(msg *meta.Message) error {
+		info := &BotBatchInfo{}
+		json.Unmarshal(msg.Body, info)
+
+		fmt.Println("pop & add batch", info.ID, info.Name, info.Num)
+		f.AddBatch(info.Name, info.ID, 0, int32(info.Num))
+
+		return nil
+	})
+
 }
 
 func (f *Factory) CheckTaskHistory() {
 	tasklst, _ := database.GetTask().List()
 	for _, task := range tasklst {
-		fmt.Println("recover task", task.Name, task.CurNumber, task.TotalNumber)
-		f.AddBatch(task.Name, task.CurNumber, task.TotalNumber)
+		fmt.Println("recover task", task.Name, task.ID, task.CurNumber, task.TotalNumber)
+		f.AddBatch(task.Name, task.ID, task.CurNumber, task.TotalNumber)
 
 		// 删除旧表
 		database.GetTask().Rmv(task.ID)
 	}
 }
 
-func (f *Factory) AddBatch(name string, cur, total int32) error {
+func (f *Factory) AddBatch(name, id string, cur, total int32) error {
 
 	_, err := database.GetBehavior().Find(name)
 	if err != nil {
 		return err
 	}
 
-	f.pipelineCache = append(f.pipelineCache, TaskInfo{Name: name, Cur: cur, Num: total})
+	f.pipelineCache = append(f.pipelineCache, TaskInfo{ID: id, Name: name, Cur: cur, Num: total})
 	return nil
 }
 
-func (f *Factory) createBatch(name string, cur, num int32) *Batch {
+func (f *Factory) createBatch(name, id string, cur, num int32) *Batch {
 
 	var dat []byte
 
@@ -109,7 +155,7 @@ func (f *Factory) createBatch(name string, cur, num int32) *Batch {
 		return nil
 	}
 
-	return CreateBatch(name, cur, num, dat, BatchConfig{
+	return CreateBatch(name, id, cur, num, dat, BatchConfig{
 		batchsize:     int32(cfg.ChannelSize),
 		globalScript:  string(cfg.GlobalCode),
 		scriptPath:    f.parm.ScriptPath,
@@ -120,7 +166,7 @@ func (f *Factory) createBatch(name string, cur, num int32) *Batch {
 func (f *Factory) CreateDebugBot(name string, fbyt []byte) *bot.Bot {
 	var b *bot.Bot
 
-	tree, err := behavior.Load(fbyt, behavior.Step)
+	tree, err := behavior.Load(fbyt)
 	if err != nil {
 		return nil
 	}
@@ -130,7 +176,7 @@ func (f *Factory) CreateDebugBot(name string, fbyt []byte) *bot.Bot {
 		return nil
 	}
 
-	b = bot.NewWithBehaviorTree(f.parm.ScriptPath, tree, name, "", 1, string(cfg.GlobalCode))
+	b = bot.NewWithBehaviorTree(f.parm.ScriptPath, tree, behavior.Step, name, "", 1, string(cfg.GlobalCode))
 	f.debugBots[b.ID()] = b
 
 	return b
@@ -156,7 +202,7 @@ func (f *Factory) taskLoop() {
 			info := f.pipelineCache[0]
 			f.pipelineCache = f.pipelineCache[1:]
 
-			b := f.createBatch(info.Name, info.Cur, info.Num)
+			b := f.createBatch(info.Name, info.ID, info.Cur, info.Num)
 
 			f.pushBatch(b)
 			<-b.BatchDone
@@ -180,18 +226,19 @@ func (f *Factory) popBatch() {
 
 	f.batchLock.Lock()
 	b := f.batches[0]
-	database.GetReport().Append(b.Report())
 	b.Close()
 
 	fmt.Println("pop batch", b.ID, b.Name)
 
-	s := bot.BotStatusUnknow
-	if b.Report().ErrNum > 0 {
-		s = bot.BotStatusFail
-	} else {
-		s = bot.BotStatusSucc
-	}
-	database.GetBehavior().UpdateStatus(b.Name, s)
+	/*
+		s := bot.BotStatusUnknow
+		if b.Report().ErrNum > 0 {
+			s = bot.BotStatusFail
+		} else {
+			s = bot.BotStatusSucc
+		}
+		database.GetBehavior().UpdateStatus(b.Name, s)
+	*/
 	f.batches = f.batches[1:]
 	f.batchLock.Unlock()
 }

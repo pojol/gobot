@@ -274,9 +274,8 @@ func (t *TCPModule) read(L *lua.LState) int {
 		return 2
 	}
 
-	buf := make([]byte, 128) //test
-	// 非阻塞读取
-	n, err := syscall.Read(syscall.Handle(t.fd), buf)
+	buf := make([]byte, 1024)
+	n, err := t.conn.Read(buf)
 	// 处理读取结果
 	if err == syscall.EWOULDBLOCK {
 		L.Push(lua.LString("fail"))

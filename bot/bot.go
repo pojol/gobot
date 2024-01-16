@@ -26,7 +26,9 @@ type Bot struct {
 	id   string
 	name string
 
+	batch      string
 	preloadErr string
+	mod        behavior.Mode
 
 	bb   *behavior.Blackboard
 	tick *behavior.Tick
@@ -101,7 +103,7 @@ func (b *Bot) GetThreadInfo() string {
 	return string(info)
 }
 
-func NewWithBehaviorTree(path string, bt *behavior.Tree, name, batch string, idx int32, globalScript string) *Bot {
+func NewWithBehaviorTree(path string, bt *behavior.Tree, mode behavior.Mode, name, batch string, idx int32, globalScript string) *Bot {
 
 	bb := &behavior.Blackboard{
 		Nods:      []behavior.INod{bt.GetRoot()},
@@ -111,7 +113,7 @@ func NewWithBehaviorTree(path string, bt *behavior.Tree, name, batch string, idx
 	var state *pool.BotState
 	var id string
 
-	if bt.GetMode() == behavior.Thread {
+	if mode == behavior.Thread {
 		state = pool.GetState()
 		id = strconv.Itoa(int(idx))
 	} else {
@@ -124,12 +126,14 @@ func NewWithBehaviorTree(path string, bt *behavior.Tree, name, batch string, idx
 	}
 
 	bot := &Bot{
-		id:   id,
-		bb:   bb,
-		tick: behavior.NewTick(bb, state, strconv.Itoa(int(idx))),
-		bt:   bt,
-		bs:   state,
-		name: name,
+		id:    id,
+		bb:    bb,
+		batch: batch,
+		mod:   mode,
+		tick:  behavior.NewTick(bb, state, strconv.Itoa(int(idx))),
+		bt:    bt,
+		bs:    state,
+		name:  name,
 	}
 
 	rand.Seed(time.Now().UnixNano())
@@ -168,7 +172,7 @@ func NewWithBehaviorTree(path string, bt *behavior.Tree, name, batch string, idx
 func (b *Bot) loopThread(doneCh chan<- string, errch chan<- ErrInfo) {
 
 	for {
-		state, end := b.tick.Do()
+		state, end := b.tick.Do(b.mod)
 		if end {
 			doneCh <- b.id
 			goto ext
@@ -204,7 +208,7 @@ func (b *Bot) RunByBlock() error {
 	}()
 
 	for {
-		state, end := b.tick.Do()
+		state, end := b.tick.Do(b.mod)
 		if end {
 			return nil
 		}
@@ -227,14 +231,25 @@ func (b *Bot) GetReport() []script.Report {
 
 func (b *Bot) close() {
 
-	if b.bt.GetMode() == behavior.Thread {
+	if b.bb.HaveErr() {
+		info := b.bb.ThreadInfo()
+		for _, v := range info {
+			fmt.Println("bot", b.Name(), v.CurNod, "err", v.ErrMsg)
+		}
+	}
+
+	if b.mod == behavior.Thread {
 		b.bs.L.DoString(`
 		meta = {}
 	`)
 		pool.PutState(b.bs)
+		b.bt.Reset()
+		behavior.Put(b.name, b.bt)
 	} else {
 		pool.FreeState(b.bs)
 	}
+
+	fmt.Println("bot", b.Name(), "batch", b.batch, "idx", b.id, "close")
 
 }
 
@@ -253,7 +268,7 @@ func (b *Bot) RunByStep() State {
 	stepmu.Lock()
 	defer stepmu.Unlock()
 
-	state, end := b.tick.Do()
+	state, end := b.tick.Do(b.mod)
 	if end {
 		return SEnd
 	}

@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useLayoutEffect } from 'react';
 import { Graph, Addon, Dom, Node } from "@antv/x6";
-import { Select, Divider, Row, Col } from "antd";
+import { Select, Divider, Row, Col,Tooltip } from "antd";
 
 import { useSelector, connect, ConnectedProps } from 'react-redux';
 
@@ -147,6 +147,10 @@ export const EditSidePlane: React.FC<SideProps> = ({ graph, isGraphCreated }) =>
 
       <Row justify="space-around" align="middle" gutter={[38, 50]}>
         <Col span={7}>
+        <Tooltip
+                    placement="topRight"
+                    title={"Usage: Click and drag with the mouse into the window to create\n Select node"}
+                >
           <div
             data-type="SelectorNode"
             className="dnd-selector"
@@ -158,6 +162,7 @@ export const EditSidePlane: React.FC<SideProps> = ({ graph, isGraphCreated }) =>
           >
             Selector
           </div>
+          </Tooltip>
         </Col>
         <Col span={7}>
           <div

@@ -26,6 +26,9 @@ type Parm struct {
 	// 报告的次数限制
 	ReportLimit int
 
+	// 服务id
+	ServiceID string
+
 	// 无数据库模式运行
 	NoDBMode bool
 }
@@ -36,6 +39,12 @@ type Option func(*Parm)
 func WithScriptPath(path string) Option {
 	return func(c *Parm) {
 		c.ScriptPath = path
+	}
+}
+
+func WithServiceID(id string) Option {
+	return func(c *Parm) {
+		c.ServiceID = id
 	}
 }
 

@@ -12,8 +12,8 @@ type LoopAction struct {
 	curLoop int64
 }
 
-func (a *LoopAction) Init(t *Tree, parent INod, mode Mode) {
-	a.base.Init(t, parent, mode)
+func (a *LoopAction) Init(t *Tree, parent INod) {
+	a.base.Init(t, parent)
 	a.loop = int64(t.Loop)
 	if a.loop == 0 {
 		a.loop = 100000000000 // 无限循环 一千亿

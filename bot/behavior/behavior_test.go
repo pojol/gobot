@@ -245,7 +245,7 @@ end
 
 func TestLoadTree(t *testing.T) {
 
-	_, err := Load([]byte(compose), Thread)
+	_, err := Load([]byte(compose))
 	assert.Equal(t, err, nil)
 
 }

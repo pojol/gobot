@@ -25,6 +25,7 @@
     top: 10px;
     left: 2px;
 
+    cursor: pointer;
     background: #799E85;
     opacity: 0.5;
     box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
@@ -41,6 +42,7 @@
     left: 5px;
     top: 15px;
 
+    cursor: pointer;
     font-family: 'Inter';
     font-style: normal;
     font-weight: 400;
@@ -61,6 +63,7 @@
     left: 5px;
     top: 15px;
 
+    cursor: pointer;
     font-family: 'Inter';
     font-style: normal;
     font-weight: 400;
@@ -79,6 +82,7 @@
     top: 10px;
     left: 12px;
 
+    cursor: pointer;
     background: #709297;
     opacity: 0.5;
     box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
@@ -96,6 +100,7 @@
     left: 9px;
     top: 15px;
 
+    cursor: pointer;
     font-family: 'Inter';
     font-style: normal;
     font-weight: 400;
@@ -119,6 +124,7 @@
     left: 9px;
     top: 15px;
 
+    cursor: pointer;
     font-family: 'Inter';
     font-style: normal;
     font-weight: 400;
@@ -136,6 +142,7 @@
 
     left: 20px;
 
+    cursor: pointer;
     background: #3A8D98;
     opacity: 0.5;
     box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
@@ -153,6 +160,7 @@
     left: 21px;
     top: 15px;
 
+    cursor: pointer;
     font-family: 'Inter';
     font-style: normal;
     font-weight: 400;
@@ -175,6 +183,7 @@
     left: 21px;
     top: 15px;
 
+    cursor: pointer;
     font-family: 'Inter';
     font-style: normal;
     font-weight: 400;
@@ -195,6 +204,7 @@
     left: 12px;
     top:2px;
 
+    cursor: pointer;
     border-radius: 50%;
     background: #D8A66C;
 
@@ -212,6 +222,7 @@
     left: 22px;
     top: 8px;
 
+    cursor: pointer;
     font-family: 'Inter';
     font-style: normal;
     font-weight: 400;
@@ -233,6 +244,7 @@
     left: 22px;
     top: 8px;
 
+    cursor: pointer;
     font-family: 'Inter';
     font-style: normal;
     font-weight: 400;
@@ -251,6 +263,7 @@
     left: 12px;
     top: 3px;
 
+    cursor: pointer;
     background: #C3ACD0;
     box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
     border-radius: 20px;
@@ -266,6 +279,7 @@
     top: 8px;
     left: 30px;
 
+    cursor: pointer;
     font-family: 'Inter';
     font-style: normal;
     font-weight: 400;
@@ -286,6 +300,7 @@
     top: 8px;
     left: 30px;
 
+    cursor: pointer;
     font-family: 'Inter';
     font-style: normal;
     font-weight: 400;
@@ -305,6 +320,7 @@
     line-height: 30px;
     margin: 1px;
     cursor: move;
+    cursor: pointer;
 }
 
 .dnd-prefab-dark {
@@ -316,6 +332,7 @@
     line-height: 30px;
     margin: 2px;
     cursor: move;
+    cursor: pointer;
 }
 
 .dnd-condition {
@@ -326,6 +343,7 @@
 
     left: 12px;
 
+    cursor: pointer;
     background: #BE7878;
     box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
     transform: rotate(45deg);
@@ -344,6 +362,7 @@
 
     left: -1px;
     top: 7px;
+    cursor: pointer;
 
     font-family: 'Inter';
     font-style: normal;
@@ -365,6 +384,8 @@
 
     left: -1px;
     top: 7px;
+    cursor: pointer;
+
 
     font-family: 'Inter';
     font-style: normal;

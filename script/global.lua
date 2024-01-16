@@ -34,7 +34,7 @@ end
 
 -- initialize the meta structure
 meta = {
-    Token = "",
+    SessionID = "",
     Err = "",       -- debug log [err]
 }
 

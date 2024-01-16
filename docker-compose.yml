@@ -14,8 +14,8 @@ services:
     volumes:
       - db:/var/lib/mysql
     environment:
-      - MYSQL_ROOT_PASSWORD=gobot
-      - MYSQL_PASSWORD=gobot
+      - MYSQL_ROOT_PASSWORD=
+      - MYSQL_PASSWORD=
       - MYSQL_DATABASE=gobot
       - MYSQL_USER=gobot
 
@@ -34,8 +34,8 @@ services:
         limits:
           cpus: "2"
     environment:
-      - MYSQL_PASSWORD=gobot
-      - MYSQL_DATABASE=gobot
+      - MYSQL_PASSWORD=
+      - MYSQL_DATABASE=
       - MYSQL_USER=gobot
       - MYSQL_HOST=db
 

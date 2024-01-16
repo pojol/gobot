@@ -82,7 +82,7 @@ ext:
 	return state, changestr, err
 }
 
-func (t *Tick) Do() (state string, end bool) {
+func (t *Tick) Do(mod Mode) (state string, end bool) {
 
 	nods := t.blackboard.GetOpenNods()
 	t.blackboard.ThreadInfoReset()
@@ -93,7 +93,7 @@ func (t *Tick) Do() (state string, end bool) {
 	for _, n := range nods {
 		err = n.onTick(t)
 
-		state, msg, parseerr = t.stateCheck(n.getBase().getMode(), n.getType())
+		state, msg, parseerr = t.stateCheck(mod, n.getType())
 
 		threadInfo := ThreadInfo{
 			Number: n.getBase().getThread(),

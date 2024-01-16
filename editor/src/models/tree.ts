@@ -235,27 +235,44 @@ const treeSlice = createSlice({
     reducers: {
         nodeAdd(state, action: PayloadAction<NodeAddInfo>) {
             let info = action.payload
+
+            state.history.push(JSON.stringify(state.nodes))
             add(state, info)
+
         },
         nodeRmv(state, action: PayloadAction<string>) {
+
+            state.history.push(JSON.stringify(state.nodes))
             rmv(state, action.payload)
         },
         nodeLink(state, action: PayloadAction<NodeLinkInfo>) {
             let info = action.payload
+            state.history.push(JSON.stringify(state.nodes))
             link(state, info.parentid, info.childid)
         },
         nodeUnlink(state, action: PayloadAction<NodeUnlinkInfo>) {
             let info = action.payload
+            state.history.push(JSON.stringify(state.nodes))
             unlink(state, info.targetid)
         },
         nodeUpdate(state, action: PayloadAction<NodeUpdateInfo>) {
             let info = action.payload
+            state.history.push(JSON.stringify(state.nodes))
             update(state, info)
         },
         nodeClick(state, action: PayloadAction<NodeClickInfo>) {
             state.currentClickNode = action.payload
         },
         nodeRedraw(state, action: PayloadAction<void>) {
+            state.updatetick++
+        },
+        nodeUndo(state, action: PayloadAction<void>) {
+            if (state.history.length === 0) {
+                return
+            }
+
+            let frontNodes = state.history.pop()
+            state.nodes = JSON.parse(frontNodes)
             state.updatetick++
         },
         setCurrentDebugBot(state, action: PayloadAction<string>) {
@@ -311,5 +328,17 @@ const treeSlice = createSlice({
     },
 });
 
-export const { nodeAdd, nodeRmv, nodeLink, nodeUnlink, cleanTree, nodeUpdate, nodeClick, nodeRedraw, initTree, setCurrentDebugBot, nodeSave,unlockFocus } = treeSlice.actions;
+export const { nodeAdd,
+    nodeRmv,
+    nodeLink,
+    nodeUnlink,
+    cleanTree,
+    nodeUpdate,
+    nodeClick,
+    nodeRedraw,
+    nodeUndo,
+    initTree,
+    setCurrentDebugBot,
+    nodeSave,
+    unlockFocus } = treeSlice.actions;
 export default treeSlice;

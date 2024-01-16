@@ -7,8 +7,8 @@ type SequenceAction struct {
 	step int
 }
 
-func (a *SequenceAction) Init(t *Tree, parent INod, mode Mode) {
-	a.base.Init(t, parent, mode)
+func (a *SequenceAction) Init(t *Tree, parent INod) {
+	a.base.Init(t, parent)
 }
 
 func (a *SequenceAction) AddChild(nod INod) {

@@ -133,16 +133,27 @@ function Layout() {
         }}{...settings}
         actionsRender={(props) => {
 
+          var color = ""
+          var desc = ""
+          if (heartColor !== "") {
+            color = "success"
+            desc = heartColor
+          } else {
+            color = "#B6BBC4"
+            desc = "Disconnected"
+          }
+ 
           if (props.isMobile) return [];
           return [
-            <Tag>v0.3.7</Tag>,
+            <Tag>v0.3.8</Tag>,
             <Radio.Group onChange={themeChange} value={themeValue} buttonStyle="solid" defaultValue={localStorage.theme} size={"small"}>
               <Radio.Button value={ThemeType.Dark}>Dark</Radio.Button>
               <Radio.Button value={ThemeType.Light}>Light</Radio.Button>
             </Radio.Group>,
-            <ThunderboltTwoTone key="ThunderboltTwoTone" twoToneColor={heartColor} />,
+            <Tag color={color}>{desc}</Tag>,
             <GithubFilled key="GithubFilled" twoToneColor='#eb2f96' onClick={function () { window.open("https://github.com/pojol/gobot"); }} />,
           ];
+
         }}
       >
         <Outlet />
