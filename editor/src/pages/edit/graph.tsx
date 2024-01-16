@@ -50,7 +50,10 @@ import {
     UpdateType,
     nodeSave,
     unlockFocus,
+    nodeUndo,
 } from "@/models/tree";
+import { SelectorDarkNode } from "./shape/selector";
+import SequenceLightNode, { SequenceDarkNode } from "./shape/sequence";
 
 const {
     LoadBehaviorWithBlob,
@@ -103,7 +106,7 @@ const GraphView = (props: GraphViewProps) => {
         });
 
         graph.bindKey("ctrl+z", () => {
-            //PubSub.publish(Topic.Undo, {});
+            ClickUndo();
         });
 
         graph.bindKey(["f10", "command+f10", "ctrl+f10"], () => {
@@ -280,6 +283,22 @@ const GraphView = (props: GraphViewProps) => {
                             fill: labelfill,
                         },
                     });
+
+                    if (nod.isEdge() && (nod.parent instanceof SequenceDarkNode || nod.parent instanceof SequenceLightNode)) {              
+                        nod.setLabelAt(0, {
+                            attrs: {
+                                text: {
+                                    text: nod.getLabelAt(0).attrs.text.text,
+                                },
+                                body: {
+                                    fill: bodyfill,
+                                },
+                                label: {
+                                    fill: labelfill,
+                                },
+                            },
+                        })
+                    }
 
                     if (nod.isNode()) {
                         nod.setPortProp(nod.getPortAt(0).id as string, "attrs/portBody/fill", portfill)
@@ -493,7 +512,7 @@ const GraphView = (props: GraphViewProps) => {
                 edge.appendLabel({
                     attrs: {
                         text: {
-                            text: idx.toString(),
+                            text: (idx+1).toString(),
                         },
                         body: {
                             fill: bodyfill,
@@ -851,7 +870,7 @@ const GraphView = (props: GraphViewProps) => {
     };
 
     const ClickUndo = () => {
-        //PubSub.publish(Topic.Undo, {});
+        props.dispatch(nodeUndo())
     };
 
     const getLockedState = () => {

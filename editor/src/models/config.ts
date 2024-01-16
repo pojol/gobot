@@ -25,7 +25,7 @@ function initModalOpen(): boolean {
 }
 
 const initialState: ConfigState = {
-    heartColor: "#BDCDD6",
+    heartColor: "",
     themeValue: initTheme(),
     modalOpen: initModalOpen(),
     runningTick: 2000,

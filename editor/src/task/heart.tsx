@@ -5,47 +5,44 @@ import axios from "axios";
 import { useDispatch, useSelector } from 'react-redux';
 import { setHeartColor } from "@/models/config";
 
-// offline
-// heartColor = #DCDCDC
-// online
-// heartColor = #389e0d
 
-const heart = async (): Promise<boolean> => {
+const heart = async (): Promise<number> => {
 
-    let heartStatus = false
-    let ping: number | null = null;
+    let ping: number = 0;
     const startTime = Date.now(); // 记录发送请求的时间戳
 
     try {
         const res = await axios.get(localStorage.remoteAddr + "/health", {});
         if (res.status === 200) {
-            heartStatus = true
+            
             const endTime = Date.now(); // 记录收到响应的时间戳
             ping = endTime - startTime; // 计算时间差，即ping值
-            console.info("health", ping, "ms")
+
         }
     } catch (err) {
         console.info("health", err)
     }
+    
+    return ping
 
-    return heartStatus
 }
 
 export default function HeartTask() {
     const dispatch = useDispatch()
     
+
     let callback = async () => {
-        let res = await heart()
-        if (res) {
-            dispatch(setHeartColor("#389e0d"))
+        let ping = await heart()
+        if (ping != 0) {
+            dispatch(setHeartColor(ping + " ms"))
         } else {
-            dispatch(setHeartColor("#BDCDD6"))
+            dispatch(setHeartColor(""))
         }
     }
 
     callback()
 
-    const timer = new TaskTimer(5000);
+    const timer = new TaskTimer(2000);
     timer.on('tick', () => {
         callback()
     });

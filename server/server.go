@@ -6,9 +6,13 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
+	"github.com/pojol/braid-go"
+	"github.com/pojol/braid-go/module/meta"
 	"github.com/pojol/gobot/bot"
 	"github.com/pojol/gobot/bot/behavior"
+	"github.com/pojol/gobot/constant"
 	"github.com/pojol/gobot/database"
 	"github.com/pojol/gobot/factory"
 	"github.com/pojol/gobot/utils"
@@ -67,7 +71,7 @@ func FileBlobUpload(ctx echo.Context) error {
 		goto EXT
 	}
 
-	_, err = behavior.Load(bts, behavior.Step)
+	_, err = behavior.Load(bts)
 	if err != nil {
 		fmt.Println(err.Error())
 		code = ErrJsonInvalid
@@ -107,7 +111,7 @@ func FileTextUpload(ctx echo.Context) error {
 	}
 
 	name = upload.FileName()
-	_, err = behavior.Load(fbyte, behavior.Step)
+	_, err = behavior.Load(fbyte)
 	if err != nil {
 		fmt.Println(err.Error())
 		code = ErrJsonInvalid
@@ -580,12 +584,12 @@ func BotRun(ctx echo.Context) error {
 		goto EXT
 	}
 
-	tree, err = behavior.Load(info.File, behavior.Block)
+	tree, err = behavior.Load(info.File)
 	if err != nil {
 		code = Fail
 		goto EXT
 	}
-	b = bot.NewWithBehaviorTree("script/", tree, req.Name, "", 1, string(info.File))
+	b = bot.NewWithBehaviorTree("script/", tree, behavior.Block, req.Name, "", 1, string(info.File))
 	err = b.RunByBlock()
 	if err != nil {
 		code = ErrRunningErr
@@ -597,6 +601,26 @@ EXT:
 	res.Msg = errmap[code]
 	ctx.JSON(http.StatusOK, res)
 	return nil
+}
+
+// splitEqually 将num等分成n份,返回各份的值
+func splitEqually(num int, n int) []int {
+
+	// 计算等分后的基础份额
+	base := num / n
+
+	// 储存结果
+	var parts []int
+
+	// 分配等份部分
+	for i := 0; i < n-1; i++ {
+		parts = append(parts, base)
+	}
+
+	// 分配最后一份
+	parts = append(parts, num-base*(n-1))
+
+	return parts
 }
 
 func BotCreateBatch(ctx echo.Context) error {
@@ -628,7 +652,29 @@ func BotCreateBatch(ctx echo.Context) error {
 		goto EXT
 	}
 
-	err = factory.Global.AddBatch(req.Name, 0, int32(req.Num))
+	if req.Num > 3 && constant.GetClusterState() {
+
+		batchid := uuid.NewString()
+		batch := splitEqually(req.Num, constant.GetNods())
+		fmt.Println("nodes", constant.GetNods(), batchid, "split", req.Num, "=>", batch)
+		for _, b := range batch {
+
+			batchinfo, _ := json.Marshal(&factory.BotBatchInfo{
+				ID:   batchid,
+				Name: req.Name,
+				Num:  b,
+				Cnt:  len(batch),
+			})
+
+			braid.Topic("bot.batch.create").Pub(ctx.Request().Context(), &meta.Message{
+				Body: batchinfo,
+			})
+		}
+
+	} else {
+		err = factory.Global.AddBatch(req.Name, uuid.NewString(), 0, int32(req.Num))
+	}
+
 	if err != nil {
 		res.Msg = err.Error()
 	}

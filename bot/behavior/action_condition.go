@@ -15,8 +15,8 @@ type ConditionAction struct {
 	succ bool
 }
 
-func (a *ConditionAction) Init(t *Tree, parent INod, mode Mode) {
-	a.base.Init(t, parent, mode)
+func (a *ConditionAction) Init(t *Tree, parent INod) {
+	a.base.Init(t, parent)
 
 	a.code = t.Code
 }

@@ -22,7 +22,6 @@ type Tree struct {
 	Code string `xml:"code"`
 
 	root INod
-	mode Mode
 
 	Children []*Tree `xml:"children"`
 }
@@ -31,27 +30,21 @@ func (t *Tree) GetRoot() INod {
 	return t.root
 }
 
-func (t *Tree) GetMode() Mode {
-	return t.mode
-}
+func (t *Tree) link(self INod, parent INod) {
 
-func (t *Tree) link(self INod, parent INod, mode Mode) {
-
-	self.Init(t, parent, mode)
+	self.Init(t, parent)
 
 	for k := range t.Children {
 		child := NewNode(t.Children[k].Ty).(INod)
 		self.AddChild(child)
-		t.Children[k].link(child, self, mode)
+		t.Children[k].link(child, self)
 	}
 
 }
 
-func Load(f []byte, mode Mode) (*Tree, error) {
+func Load(f []byte) (*Tree, error) {
 
-	tree := &Tree{
-		mode: mode,
-	}
+	tree := &Tree{}
 
 	err := xml.Unmarshal([]byte(f), &tree)
 	if err != nil {
@@ -59,16 +52,20 @@ func Load(f []byte, mode Mode) (*Tree, error) {
 	}
 
 	tree.root = NewNode(tree.Ty).(INod)
-	tree.root.Init(tree, nil, mode)
+	tree.root.Init(tree, nil)
 
 	for k := range tree.Children {
 
 		cn := NewNode(tree.Children[k].Ty).(INod)
-		cn.Init(tree.Children[k], tree.root, mode)
+		cn.Init(tree.Children[k], tree.root)
 		tree.root.AddChild(cn)
 
-		tree.Children[k].link(cn, tree.root, mode)
+		tree.Children[k].link(cn, tree.root)
 	}
 
 	return tree, nil
+}
+
+func (t *Tree) Reset() {
+	t.root.onReset()
 }

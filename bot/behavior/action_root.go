@@ -5,8 +5,8 @@ type RootAction struct {
 	base Node
 }
 
-func (a *RootAction) Init(t *Tree, parent INod, mode Mode) {
-	a.base.Init(t, parent, mode)
+func (a *RootAction) Init(t *Tree, parent INod) {
+	a.base.Init(t, parent)
 	a.base.threadNumber = 1
 }
 
@@ -38,5 +38,8 @@ func (a *RootAction) onNext(t *Tick) {
 }
 
 func (a *RootAction) onReset() {
-
+	a.base.SetFreeze(false)
+	for _, child := range a.base.Children() {
+		child.onReset()
+	}
 }

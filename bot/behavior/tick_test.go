@@ -10,7 +10,7 @@ import (
 
 func TestTick(t *testing.T) {
 
-	tree, err := Load([]byte(compose), Step)
+	tree, err := Load([]byte(compose))
 	assert.Equal(t, err, nil)
 
 	bb := &Blackboard{
@@ -24,7 +24,7 @@ func TestTick(t *testing.T) {
 	}
 
 	for i := 0; i < 150; i++ {
-		tick.Do()
+		tick.Do(Step)
 		time.Sleep(time.Millisecond * 50)
 	}
 }

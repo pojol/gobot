@@ -1,18 +1,18 @@
 package factory
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
-	"net/url"
-	"sort"
-	"strconv"
 	"sync/atomic"
 	"time"
 
-	"github.com/fatih/color"
-	"github.com/google/uuid"
+	"github.com/pojol/braid-go"
+	"github.com/pojol/braid-go/module/meta"
 	"github.com/pojol/gobot/bot"
 	"github.com/pojol/gobot/bot/behavior"
 	"github.com/pojol/gobot/database"
+	script "github.com/pojol/gobot/script/module"
 	"github.com/pojol/gobot/utils"
 )
 
@@ -31,6 +31,7 @@ type Batch struct {
 	CurNum       int32
 	TotalNum     int32
 	BatchNum     int32
+	reportTick   int32
 	enqueneDelay int32
 	Errors       int32
 
@@ -38,9 +39,7 @@ type Batch struct {
 	path         string
 	globalScript string
 
-	bots    map[string]*bot.Bot
-	colorer *color.Color
-	rep     *database.ReportDetail
+	bots map[string]*bot.Bot
 
 	bwg  utils.SizeWaitGroup
 	exit *utils.Switch
@@ -60,10 +59,15 @@ type BatchConfig struct {
 	enqeueneDelay int32
 }
 
-func CreateBatch(name string, cur, total int32, tbyt []byte, cfg BatchConfig) *Batch {
+type BatchReport struct {
+	ID      string
+	Reports []script.Report
+}
+
+func CreateBatch(name, id string, cur, total int32, tbyt []byte, cfg BatchConfig) *Batch {
 
 	b := &Batch{
-		ID:           uuid.New().String(),
+		ID:           id,
 		Name:         name,
 		path:         cfg.scriptPath,
 		globalScript: cfg.globalScript,
@@ -80,11 +84,10 @@ func CreateBatch(name string, cur, total int32, tbyt []byte, cfg BatchConfig) *B
 		botDoneCh:    make(chan string),
 		botErrCh:     make(chan bot.ErrInfo),
 
-		colorer: color.New(),
-		bots:    make(map[string]*bot.Bot),
+		bots: make(map[string]*bot.Bot),
 	}
 
-	fmt.Println("create", total, "bot", "pipeline size", cfg.batchsize)
+	fmt.Println("create batch", id, "size", total)
 	database.GetTask().New(database.TaskTable{
 		ID:          b.ID,
 		Name:        name,
@@ -110,31 +113,16 @@ func (b *Batch) Info() BatchInfo {
 	}
 }
 
-func (b *Batch) Report() database.ReportDetail {
-	return *b.rep
-}
-
 func (b *Batch) push(bot *bot.Bot) {
-	fmt.Println("bot", bot.ID(), "push", atomic.LoadInt32(&b.cursorNum), "=>", b.TotalNum)
-
 	b.bots[bot.ID()] = bot
 }
 
 func (b *Batch) pop(id string) {
 	b.bwg.Done()
 	atomic.AddInt32(&b.CurNum, 1)
-
-	fmt.Println("bot", id, "pop", atomic.LoadInt32(&b.CurNum), "=>", b.TotalNum)
 }
 
 func (b *Batch) loop() {
-
-	b.rep = &database.ReportDetail{
-		ID:        b.ID,
-		Name:      b.Name,
-		BeginTime: time.Now(),
-		UrlMap:    make(map[string]*database.ApiDetail),
-	}
 
 	for {
 		select {
@@ -143,12 +131,12 @@ func (b *Batch) loop() {
 			botptr.RunByThread(b.botDoneCh, b.botErrCh)
 		case id := <-b.botDoneCh:
 			if _, ok := b.bots[id]; ok {
-				b.pushReport(b.rep, b.bots[id])
+				b.pushReport(b.bots[id])
 			}
 			b.pop(id)
 		case err := <-b.botErrCh:
 			if _, ok := b.bots[err.ID]; ok {
-				b.pushReport(b.rep, b.bots[err.ID])
+				b.pushReport(b.bots[err.ID])
 			}
 			atomic.AddInt32(&b.Errors, 1)
 			b.pop(err.ID)
@@ -157,7 +145,6 @@ func (b *Batch) loop() {
 		}
 	}
 ext:
-	b.record()
 	b.exit.Done()
 	b.BatchDone <- 1
 }
@@ -181,13 +168,11 @@ func (b *Batch) run() {
 				curbatchnum = last
 			}
 
-			fmt.Println("batch", b.ID, "begin size =", curbatchnum)
 			for i := 0; i < int(curbatchnum); i++ {
 				atomic.AddInt32(&b.cursorNum, 1)
 				b.bwg.Add()
 
-				tree, _ := behavior.Load(b.treeData, behavior.Thread)
-				b.pipeline <- bot.NewWithBehaviorTree(b.path, tree, b.Name, b.ID, atomic.LoadInt32(&b.cursorNum), b.globalScript)
+				b.pipeline <- bot.NewWithBehaviorTree(b.path, behavior.Get(b.Name), behavior.Thread, b.Name, b.ID, atomic.LoadInt32(&b.cursorNum), b.globalScript)
 				time.Sleep(time.Millisecond * time.Duration(b.enqueneDelay))
 			}
 
@@ -209,81 +194,20 @@ func (b *Batch) Close() {
 
 }
 
-func (b *Batch) pushReport(rep *database.ReportDetail, bot *bot.Bot) {
-	rep.BotNum++
-	robotReport := bot.GetReport()
+func (b *Batch) pushReport(bot *bot.Bot) {
 
-	rep.ReqNum += len(robotReport)
-	for _, v := range robotReport {
-		if _, ok := rep.UrlMap[v.Api]; !ok {
-			rep.UrlMap[v.Api] = &database.ApiDetail{}
-		}
-
-		rep.UrlMap[v.Api].ReqNum++
-		rep.UrlMap[v.Api].AvgNum += int64(v.Consume)
-		rep.UrlMap[v.Api].ReqSize += int64(v.ReqBody)
-		rep.UrlMap[v.Api].ResSize += int64(v.ResBody)
-		if v.Err != "" {
-			rep.ErrNum++
-			rep.UrlMap[v.Api].ErrNum++
-		}
+	dat, err := json.Marshal(BatchReport{
+		ID:      b.ID,
+		Reports: bot.GetReport(),
+	})
+	if err != nil {
+		fmt.Println("batch.pushReport", err.Error())
+		return
 	}
 
-}
+	atomic.AddInt32(&b.reportTick, 1)
 
-func (b *Batch) record() {
-
-	fmt.Println("+--------------------------------------------------------------------------------------------------------+")
-	fmt.Printf("Req url%-33s Req count %-5s Average time %-5s Body req/res %-5s Succ rate %-10s\n", "", "", "", "", "")
-
-	arr := []string{}
-	for k := range b.rep.UrlMap {
-		arr = append(arr, k)
-	}
-	sort.Strings(arr)
-
-	var reqtotal int64
-
-	for _, sk := range arr {
-		v := b.rep.UrlMap[sk]
-		var avg string
-		if v.AvgNum == 0 {
-			avg = "0 ms"
-		} else {
-			avg = strconv.Itoa(int(v.AvgNum/int64(v.ReqNum))) + "ms"
-		}
-
-		succ := strconv.Itoa(v.ReqNum-v.ErrNum) + "/" + strconv.Itoa(v.ReqNum)
-
-		reqsize := strconv.Itoa(int(v.ReqSize/1024)) + "kb"
-		ressize := strconv.Itoa(int(v.ResSize/1024)) + "kb"
-
-		reqtotal += int64(v.ReqNum)
-
-		u, _ := url.Parse(sk)
-		if v.ErrNum != 0 {
-			b.colorer.Printf("%-40s %-15d %-18s %-18s %-10s\n", u.Path, v.ReqNum, avg, reqsize+" / "+ressize, utils.Red(succ))
-		} else {
-			fmt.Printf("%-40s %-15d %-18s %-18s %-10s\n", u.Path, v.ReqNum, avg, reqsize+" / "+ressize, succ)
-		}
-	}
-	fmt.Println("+--------------------------------------------------------------------------------------------------------+")
-
-	durations := int(time.Since(b.rep.BeginTime).Seconds())
-	if durations <= 0 {
-		durations = 1
-	}
-
-	qps := int(reqtotal / int64(durations))
-	duration := strconv.Itoa(durations) + "s"
-
-	b.rep.Tps = qps
-	b.rep.Dura = duration
-
-	if b.rep.ErrNum != 0 {
-		b.colorer.Printf("robot : %d match to %d APIs req count : %d duration : %s qps : %d errors : %v\n", b.rep.BotNum, len(b.rep.UrlMap), b.rep.ReqNum, duration, qps, utils.Red(b.rep.ErrNum))
-	} else {
-		fmt.Printf("robot : %d match to %d APIs req count : %d duration : %s qps : %d errors : %d\n", b.rep.BotNum, len(b.rep.UrlMap), b.rep.ReqNum, duration, qps, b.rep.ErrNum)
-	}
-
+	braid.Topic("batch.report").Pub(context.TODO(), &meta.Message{
+		Body: dat,
+	})
 }

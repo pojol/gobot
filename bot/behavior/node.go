@@ -20,7 +20,6 @@ const (
 	SCRIPT    = "ScriptNode"
 )
 
-//
 const (
 	Error = "Error"
 	Succ  = "Succ"
@@ -29,7 +28,7 @@ const (
 )
 
 type INod interface {
-	Init(*Tree, INod, Mode)
+	Init(*Tree, INod)
 	AddChild(INod)
 
 	getBase() *Node
@@ -53,10 +52,9 @@ type Node struct {
 	threadNumber int
 }
 
-func (n *Node) Init(t *Tree, parent INod, mode Mode) {
+func (n *Node) Init(t *Tree, parent INod) {
 	n.id = t.ID
 	n.ty = t.Ty
-	n.mode = mode
 
 	n.parent = parent
 }
@@ -87,10 +85,6 @@ func (a *Node) Children() []INod {
 }
 
 func (a *Node) onTick(t *Tick) {
-}
-
-func (a *Node) getMode() Mode {
-	return a.mode
 }
 
 func (a *Node) setThread(number int) {
