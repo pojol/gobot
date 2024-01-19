@@ -3,22 +3,23 @@
 
 ### 本地无数据库模式安装
 > 可以用于体验，无依赖下载即可使用
-* windows
-    1. 在 [release](https://github.com/pojol/gobot/releases) 页下载对应版本的客户端 `gobot-editor-win32-x64.zip`
-    2. 在 [release](https://github.com/pojol/gobot/releases) 页下载对应版本的服务器 `gobot-driver-win32.exe`
-    3. 启动服务器
-    ```
-        # 以非数据库模式启动本地服务器（数据将不会保存
-        gobot-driver-win32.exe --no_database true
 
-        启动 editor 将服务器地址配置为 http://127.0.0.1:8888 即可开始使用
-    ```
+1. 进入 [release地址](https://github.com/pojol/gobot/releases/tag/v0.3.8) 下载相应资源
+2. 执行 gobot_driver_win_x64_v0.3.8 目录中的 run.bat 文件， 运行服务器
+3. 执行 gobot_editor_win_x64_v0.3.8 目录中的 gobot.exe， 运行编辑器程序
+    * 在弹出的地址输入窗口 或 config 页的地址栏中填入 http://127.0.0.1:8888 本地服务器地址
+4. 切换到编辑器的 bots 面板，将 `http_sample.txt` 和 `tcp_sample.txt` 两个用例拖入
+5. 选择一个用例，点击 load 将机器人加载到编辑界面
+    * 点击下方的 debug （爬虫）按钮进行调试（创建一个新的调试机器人
+    * 点击旁边的 运行 按钮，单步执行（运行行为树节点
+    * 点击编辑器中的任意一个节点 可以查看这个节点的设置
+    * Meta 面板 可以查看机器人的所有数据
+    * Response 显示的是每个节点中的返回值
+    * RuntimeErr 显示的是执行节点可能遇到的错误信息（会自动切换过去
 
-* mac
-    - arm
-    - x86
 
-### Docker安装
+### Docker-compose 安装
+> 可以通过网页访问，数据持久化在 mysql
 1. 安装 docker-compose
     ```shell
     # for CentOS
@@ -85,4 +86,4 @@
 
 
 ### K8s安装
-> 开启分布式模式，可以开启任意个节点进行大规模的压力测试
+> 可以通过网页访问，数据持久化在 mysql，可以开启分布式模式，添加任意个 drive 节点支撑巨量机器人测试需求
