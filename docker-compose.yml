@@ -20,13 +20,13 @@ services:
       - MYSQL_USER=gobot
 
   gobot_driver:
-    image: braidgo/gobot-driver:latest
+    image: braidgo/gobot-driver:v0.4.1
     restart: always
     networks:
       - gnet
     depends_on:
       - db
-    command: "-no_database=false -mock=true -script_path scipt/"
+    command: "-no_database=false -httpmock=true -tcpmock=true -script_path scipt/"
     ports:
       - 8888:8888
     deploy:
@@ -35,9 +35,18 @@ services:
           cpus: "2"
     environment:
       - MYSQL_PASSWORD=
-      - MYSQL_DATABASE=
+      - MYSQL_DATABASE=gobot
       - MYSQL_USER=gobot
       - MYSQL_HOST=db
+
+
+  gobot_editor:
+      image: braidgo/gobot-editor:v0.4.1
+      restart: always
+      depends_on:
+        - gobot_driver
+      ports:
+        - 7777:7777
 
 networks:
   gnet:
