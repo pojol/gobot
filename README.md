@@ -10,16 +10,23 @@ Gobot is a powerful stateful API testing robot. It provides a graphical interfac
 
 
 ## Quick Installation
-> Note: In local running mode, all changes are recorded in memory (not actually saved). To save, please download the files locally; or use the official deployment method.
-
-1. Download the specified version of the editor and driver on the release page. 
-2. Execute the driver end in memory mode on the command line `./gobot-driver-win32-v0.3.x.exe --no_database --mock`
-3. Start gobot_editor_win_x64_v0.3.x and fill in the driver address http://127.0.0.1:8888
-4.  If using for the first time, you can find sample robots in the /sample directory and load them on the bots page.
+> Note: Enable local running mode. All changes are recorded in memory (not saved permanently). If you need to save, download the files to your local machine or use the formal deployment method.
+* windows
+1. Go to the [release page](https://github.com/pojol/gobot/releases/tag/v0.3.8) and download the executable program.
+2. Run the server by executing the run.bat file in the gobot_driver_win_x64_v0.3.8 directory.
+    * Run the editor program by executing gobot.ext in the gobot_editor_win_x64_v0.3.8 directory.
+3. Fill in the address input window that pops up or the address bar on the config page with http://127.0.0.1:8888, the local server address.
+4. Switch to the bots panel in the editor, and drag in the two test cases, http_sample.txt and tcp_sample.txt.
+5. Select a test case, click load to load the robot into the editing interface.
+    * Click the debug (spider) button below to debug (create a new debugging robot).
+    * Click the adjacent run button to execute step by step (run behavior tree nodes).
+    * Click on any node in the editor to view its settings.
+    * The Meta panel displays all data of the robot.
+    * Response displays the return values of each node.
+    * RuntimeErr displays any error messages encountered during node execution (automatically switches to it).
 
 
 ## Feature
-
 * Utilizes the 'behavior tree' to control the robot's execution order and uses 'scripts' for specific node behaviors, such as making HTTP requests.
 * Provides graphical editing and debugging capabilities.
 * Allows creating and reusing 'prefab' template nodes in the configuration page.
