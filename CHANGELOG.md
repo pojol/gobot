@@ -1,3 +1,13 @@
+# v0.4.1
+* Features
+    - Added websocket module
+* Fixes
+    - Fixed missing banner print
+
+# v0.4.0
+* Features
+    - Added cluster deployment mode
+
 # v0.3.6 (pre
 * feature
     - The way of previewing report has been changed from clicking tags to displaying directly at the bottom, with tab switching for charts (more intuitive) 

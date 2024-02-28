@@ -32,11 +32,12 @@ var (
 	scriptPath   string
 	openHttpMock bool
 	openTcpMock  bool
+	openWSMock   bool
 )
 
 const (
 	// Version of gobot driver
-	Version = "v0.4.0"
+	Version = "v0.4.1"
 
 	banner = `
               __              __      
@@ -59,6 +60,7 @@ func initFlag() {
 	flag.BoolVar(&dbmode, "no_database", false, "Run in local mode")
 	flag.BoolVar(&openHttpMock, "httpmock", false, "open http mock server")
 	flag.BoolVar(&openTcpMock, "tcpmock", false, "open tcp mock server")
+	flag.BoolVar(&openWSMock, "websocketmock", false, "open websocket mock server")
 	flag.StringVar(&scriptPath, "script_path", "script/", "Path to bot script")
 }
 
@@ -138,6 +140,13 @@ func main() {
 		defer tcpls.Close()
 	}
 
+	fmt.Println("open websocket mock", openWSMock)
+	if openWSMock {
+		ws := mock.StartWebsocketServe()
+		go ws.Start(":6668")
+		defer ws.Close()
+	}
+
 	go func() {
 		http.ListenAndServe(":6060", nil)
 	}()
@@ -149,8 +158,10 @@ func main() {
 	e.HideBanner = true
 	e.Use(middleware.CORS())
 	e.Use(middleware.Recover())
-
 	server.Route(e)
+
+	fmt.Printf(banner, Version)
+
 	e.Start(":8888")
 	// Stop the service gracefully.
 	if err := e.Shutdown(context.TODO()); err != nil {
