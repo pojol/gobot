@@ -13,6 +13,15 @@ import (
 	lua "github.com/yuin/gopher-lua"
 )
 
+type headerPair struct {
+	Desc string
+	Len  int
+}
+
+type customHeader struct {
+	header []headerPair
+}
+
 type TCPModule struct {
 	conn *net.TCPConn
 	fd   int
@@ -100,7 +109,6 @@ func (t *TCPModule) dail(L *lua.LState) int {
 }
 
 func (t *TCPModule) _dail(host string, port string) error {
-	fmt.Println("_dail")
 	tcpServer, err := net.ResolveTCPAddr("tcp", host+":"+port)
 	if err != nil {
 		return fmt.Errorf("resolve tcp addr err:%s", err.Error())

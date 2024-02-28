@@ -12,19 +12,11 @@ import (
 
 // 消息头定义
 const (
-	HEAD_LEN = 7
-
-	PACKET_LEN_OFFSET = 0
+	HEAD_LEN          = 7
 	PACKET_LEN_SIZE   = 2
-
-	PACKET_TYPE_OFFSET = 2
-	PACKET_TYPE_SIZE   = 1
-
-	CUSTOM_BYTES_OFFSET = 3
-	CUSTOM_BYTES_SIZE   = 2
-
-	MSG_ID_OFFSET = 5
-	MSG_ID_SIZE   = 2
+	PACKET_TYPE_SIZE  = 1
+	CUSTOM_BYTES_SIZE = 2
+	MSG_ID_SIZE       = 2
 )
 
 func _readPackageLength(buf []byte) uint16 {
