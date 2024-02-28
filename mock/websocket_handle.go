@@ -1,34 +1,40 @@
 package mock
 
 import (
+	"bytes"
+	"encoding/binary"
 	"math/rand"
-	"sync"
 
 	proto "github.com/gogo/protobuf/proto"
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
 
-var (
-	sessionmap = make(map[string]*websocket.Conn)
-	sessionMu  sync.RWMutex
-)
+func wsGuestHandle(conn *websocket.Conn) error {
+	var heros []*Hero
 
-func getSession(id string) *websocket.Conn {
-	sessionMu.RLock()
-	defer sessionMu.RUnlock()
-	return sessionmap[id]
-}
+	acc := createAcc(uuid.NewString())
+	for _, v := range acc.Heros {
+		heros = append(heros, &Hero{
+			ID: v.ID,
+			Lv: v.Lv,
+		})
+	}
 
-func setSession(id string, ws *websocket.Conn) {
-	sessionMu.Lock()
-	sessionmap[id] = ws
-	sessionMu.Unlock()
-}
+	res := LoginGuestRes{
+		AccInfo: &Acc{
+			Heros:   heros,
+			Diamond: acc.Diamond,
+			Gold:    acc.Gold,
+		},
+		SessionID: acc.SessionID,
+	}
 
-func delSession(id string) {
-	sessionMu.Lock()
-	delete(sessionmap, id)
-	sessionMu.Unlock()
+	byt, _ := proto.Marshal(&res)
+	buf := new(bytes.Buffer)
+	binary.Write(buf, binary.LittleEndian, uint16(LoginGuest))
+	binary.Write(buf, binary.LittleEndian, byt)
+	return conn.WriteMessage(websocket.BinaryMessage, buf.Bytes())
 }
 
 func wsHelloHandle(conn *websocket.Conn) error {
@@ -44,8 +50,10 @@ func wsHelloHandle(conn *websocket.Conn) error {
 	}
 
 	byt, _ := proto.Marshal(&res)
-
-	return conn.WriteMessage(Hello, byt)
+	buf := new(bytes.Buffer)
+	binary.Write(buf, binary.LittleEndian, uint16(Hello))
+	binary.Write(buf, binary.LittleEndian, byt)
+	return conn.WriteMessage(websocket.BinaryMessage, buf.Bytes())
 }
 
 func wsHeroInfoHandle(conn *websocket.Conn, msgBody []byte) error {
@@ -73,8 +81,10 @@ func wsHeroInfoHandle(conn *websocket.Conn, msgBody []byte) error {
 	}
 
 	byt, _ := proto.Marshal(res)
-
-	return conn.WriteMessage(HeroInfo, byt)
+	buf := new(bytes.Buffer)
+	binary.Write(buf, binary.LittleEndian, uint16(HeroInfo))
+	binary.Write(buf, binary.LittleEndian, byt)
+	return conn.WriteMessage(websocket.BinaryMessage, buf.Bytes())
 }
 
 func wsHeroLvupHandle(conn *websocket.Conn, msgBody []byte) error {
@@ -116,5 +126,8 @@ func wsHeroLvupHandle(conn *websocket.Conn, msgBody []byte) error {
 
 	byt, _ := proto.Marshal(&res)
 
-	return conn.WriteMessage(HeroLvup, byt)
+	buf := new(bytes.Buffer)
+	binary.Write(buf, binary.LittleEndian, uint16(HeroLvup))
+	binary.Write(buf, binary.LittleEndian, byt)
+	return conn.WriteMessage(websocket.BinaryMessage, byt)
 }

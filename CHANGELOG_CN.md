@@ -1,3 +1,13 @@
+# v0.4.1
+* feature
+    - 添加了 websocket 模块
+* fix
+    - 修复丢失的 banner 打印
+
+# v0.4.0
+* feature
+    - 添加了集群部署模式
+
 # v0.3.6 (pre
 * feature 
     - 将 report 中的预览方式从通过点击 tag 的形式换为直接显示在下方，通过tab 进行图表的切换（更直观

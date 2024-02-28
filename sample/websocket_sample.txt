@@ -1,0 +1,410 @@
+<behavior>
+  <id>dda6b64a-576c-4834-9155-763f26812859</id>
+  <ty>RootNode</ty>
+  <pos>
+    <x>518</x>
+    <y>281</y>
+  </pos>
+  <children>
+    <id>ad9455c3-0182-40b2-89cc-02b51e8f4dee</id>
+    <ty>邮件领取</ty>
+    <code>
+function execute()
+   
+end
+</code>
+    <loop>1</loop>
+    <wait>1</wait>
+    <pos>
+      <x>523</x>
+      <y>336</y>
+    </pos>
+    <alias>环境变量设置</alias>
+    <children>
+      <id>cd538d4a-b170-47d6-937c-666d3e03b46f</id>
+      <ty>邮件领取</ty>
+      <code>
+CONN = require(&#34;websocket&#34;)
+
+local ret = CONN.dail(&#34;127.0.0.1&#34;, &#34;6668&#34;)
+print(&#34;conn dail &#34; .. ret)
+
+QUEUE = {}
+
+STATE = 1
+
+function execute()
+    
+end</code>
+      <loop>1</loop>
+      <wait>1</wait>
+      <pos>
+        <x>523</x>
+        <y>389</y>
+      </pos>
+      <alias>建立ws连接</alias>
+      <children>
+        <id>f016f1cc-a9a0-42d1-ab47-25e3fed86ae9</id>
+        <ty>ParallelNode</ty>
+        <loop>1</loop>
+        <wait>1</wait>
+        <pos>
+          <x>528</x>
+          <y>445</y>
+        </pos>
+        <children>
+          <id>e80c9a6e-68b0-4b08-83c9-23041ae40cba</id>
+          <ty>LoopNode</ty>
+          <loop>0</loop>
+          <wait>1</wait>
+          <pos>
+            <x>386</x>
+            <y>526</y>
+          </pos>
+          <children>
+            <id>68659e0c-68ea-433f-9033-140ce0c0f82f</id>
+            <ty>WaitNode</ty>
+            <loop>1</loop>
+            <wait>1000</wait>
+            <pos>
+              <x>406</x>
+              <y>586</y>
+            </pos>
+            <children>
+              <id>654a7e7d-a960-4d7a-9076-164d7cea216d</id>
+              <ty>http_request</ty>
+              <code>
+--[[
+    | 2 byte,   1 byte,     2 byte,     2byte		  |                        |
+    |包长度 len, 协议格式 ty, 预留2自定义字节, 协议号 msgid |                        |
+    |                  消息头                          |     消息体          |
+]]--
+
+function execute()
+
+  msgid, msgbody, err = CONN.read_msg()
+  print(&#34;read==&gt; &#34;, msgid, msgbody, err)
+
+  if err == &#34;succ&#34; then
+    table.insert(QUEUE, {id = msgid, body = msgbody})
+  end
+end
+</code>
+              <loop>1</loop>
+              <wait>1</wait>
+              <pos>
+                <x>396</x>
+                <y>636</y>
+              </pos>
+              <alias>recv</alias>
+            </children>
+          </children>
+        </children>
+        <children>
+          <id>6141e855-9f0c-4c51-9684-c0d2f1442cd0</id>
+          <ty>SequenceNode</ty>
+          <loop>1</loop>
+          <wait>1</wait>
+          <pos>
+            <x>613</x>
+            <y>526</y>
+          </pos>
+          <children>
+            <id>f31108c3-6f9f-47b6-a0c5-f5750eea7886</id>
+            <ty>test</ty>
+            <code>
+local proto = require(&#34;proto&#34;)
+
+function execute()
+
+  body, errmsg = proto.marshal(&#34;LoginGuestReq&#34;, json.encode({}))
+  if errmsg ~= nil then
+      meta.Err = &#34;proto.marshal&#34; .. errmsg
+  end
+
+  local ret = CONN.write_msg(1001, body)
+  print(&#34;write msg 1001 &#34; .. ret)
+  
+end</code>
+            <loop>1</loop>
+            <wait>1</wait>
+            <pos>
+              <x>548</x>
+              <y>586</y>
+            </pos>
+            <alias>登录</alias>
+          </children>
+          <children>
+            <id>1f28a132-5109-42b5-9786-b06f6dc32ffd</id>
+            <ty>LoopNode</ty>
+            <loop>0</loop>
+            <wait>1</wait>
+            <pos>
+              <x>693</x>
+              <y>586</y>
+            </pos>
+            <children>
+              <id>845f2a18-9b83-4ed8-8b84-7b091bdcd6d2</id>
+              <ty>WaitNode</ty>
+              <loop>1</loop>
+              <wait>1000</wait>
+              <pos>
+                <x>713</x>
+                <y>646</y>
+              </pos>
+              <children>
+                <id>813fe292-41f0-4344-87cc-bef2ff8557fd</id>
+                <ty>SequenceNode</ty>
+                <loop>1</loop>
+                <wait>1</wait>
+                <pos>
+                  <x>693</x>
+                  <y>685</y>
+                </pos>
+                <children>
+                  <id>428a5de0-20f6-445d-bc37-72e99929c580</id>
+                  <ty>邮件领取</ty>
+                  <code>
+function execute()
+    CURMSG = {}
+  
+    if #QUEUE == 0 then 
+      return 
+    end
+  
+    CURMSG = table.remove(QUEUE, 1)
+    print(&#34;pop msg&#34;)
+    table.print(CURMSG)
+end
+</code>
+                  <loop>1</loop>
+                  <wait>1</wait>
+                  <pos>
+                    <x>598</x>
+                    <y>742</y>
+                  </pos>
+                  <alias>消息弹出</alias>
+                  <children>
+                    <id>1b0f122f-ae25-46fa-ac16-59f7cef1144f</id>
+                    <ty>SelectorNode</ty>
+                    <loop>1</loop>
+                    <wait>1</wait>
+                    <pos>
+                      <x>588</x>
+                      <y>792</y>
+                    </pos>
+                    <children>
+                      <id>f3cc1f4a-d09b-4ac4-817a-751592ca6ab4</id>
+                      <ty>ConditionNode</ty>
+                      <code>
+  -- Write expression to return true or false
+function execute()
+  return CURMSG.id == 1001
+end
+        </code>
+                      <loop>1</loop>
+                      <wait>1</wait>
+                      <pos>
+                        <x>495</x>
+                        <y>861</y>
+                      </pos>
+                      <alias>loginguset</alias>
+                      <children>
+                        <id>8db1f756-b7f0-494e-9968-bca569192b59</id>
+                        <ty>邮件领取</ty>
+                        <code>
+local proto = require(&#34;proto&#34;)
+
+
+function execute()
+  body = proto.unmarshal(&#34;LoginGuestRes&#34;, CURMSG.body)
+  merge(meta, json.decode(body))
+
+  body, errmsg = proto.marshal(&#34;HelloReq&#34;, json.encode({
+        SessionID = meta.SessionID,
+        Message = &#34;hello gobot&#34;,
+  }))
+  if errmsg ~= nil then
+      meta.Err = &#34;proto.marshal&#34; .. errmsg
+      return
+  end
+
+  local ret = CONN.write_msg(1002, body)
+  print(&#34;write msg 1002 &#34; .. ret)
+  
+end
+</code>
+                        <loop>1</loop>
+                        <wait>1</wait>
+                        <pos>
+                          <x>485</x>
+                          <y>909</y>
+                        </pos>
+                        <alias>游客登录</alias>
+                      </children>
+                    </children>
+                    <children>
+                      <id>ba1cbf80-9134-46b6-865f-cb8924d36453</id>
+                      <ty>ConditionNode</ty>
+                      <code>
+  -- Write expression to return true or false
+  function execute()
+    return CURMSG.id == 1002
+  end
+        </code>
+                      <loop>1</loop>
+                      <wait>1</wait>
+                      <pos>
+                        <x>568</x>
+                        <y>861</y>
+                      </pos>
+                      <alias>hello</alias>
+                      <children>
+                        <id>b067df0a-e1d7-4798-a3cb-5e578a89abfb</id>
+                        <ty>邮件领取</ty>
+                        <code>
+local proto = require(&#34;proto&#34;)
+
+function execute()
+  body = proto.unmarshal(&#34;HelloRes&#34;, CURMSG.body)
+  merge(meta, json.decode(body))
+
+  reqbody, errmsg = proto.marshal(&#34;GetHeroInfoReq&#34;, json.encode({
+        SessionID = meta.SessionID,
+        HeroID = meta.AccInfo.Heros[1].ID,
+  }))
+  if errmsg ~= nil then
+      meta.Err = &#34;proto.marshal&#34; .. errmsg
+      return
+  end
+
+  local ret = CONN.write_msg(1003, reqbody)
+  print(&#34;write msg 1003 &#34; .. ret)
+end
+</code>
+                        <loop>1</loop>
+                        <wait>1</wait>
+                        <pos>
+                          <x>558</x>
+                          <y>909</y>
+                        </pos>
+                        <alias>hello</alias>
+                      </children>
+                    </children>
+                    <children>
+                      <id>e2419ad8-b74d-4cc0-ab9f-fb1ed0d0c784</id>
+                      <ty>ConditionNode</ty>
+                      <code>
+  -- Write expression to return true or false
+  function execute()
+    return CURMSG.id == 1003
+  end
+        </code>
+                      <loop>1</loop>
+                      <wait>1</wait>
+                      <pos>
+                        <x>643</x>
+                        <y>861</y>
+                      </pos>
+                      <alias>heroinfo</alias>
+                      <children>
+                        <id>24a823e0-3b97-4423-89d1-8e4d6cd7c6f2</id>
+                        <ty>邮件领取</ty>
+                        <code>
+local proto = require(&#34;proto&#34;)
+
+function execute()
+  body = proto.unmarshal(&#34;GetHeroInfoRes&#34;, CURMSG.body)
+  print(&#34;get heroinfo&#34;)
+  print(body)
+
+  body, errmsg = proto.marshal(&#34;HeroLvupReq&#34;, json.encode({
+        SessionID = meta.SessionID,
+        HeroID = meta.AccInfo.Heros[1].ID,
+  }))
+  if errmsg ~= nil then
+      meta.Err = &#34;proto.marshal&#34; .. errmsg
+      return
+  end
+
+  local ret = CONN.write_msg(1004, body)
+  print(&#34;write msg 1004 &#34; .. ret)
+  
+end
+</code>
+                        <loop>1</loop>
+                        <wait>1</wait>
+                        <pos>
+                          <x>633</x>
+                          <y>909</y>
+                        </pos>
+                        <alias>英雄信息</alias>
+                      </children>
+                    </children>
+                    <children>
+                      <id>51c77a39-a62b-45a9-a4df-672e5e73b623</id>
+                      <ty>ConditionNode</ty>
+                      <code>
+  -- Write expression to return true or false
+  function execute()
+    return CURMSG.id == 1004
+  end
+        </code>
+                      <loop>1</loop>
+                      <wait>1</wait>
+                      <pos>
+                        <x>723</x>
+                        <y>861</y>
+                      </pos>
+                      <alias>herolvup</alias>
+                      <children>
+                        <id>a2a59b8a-ee83-4089-88a2-b700069c0a64</id>
+                        <ty>邮件领取</ty>
+                        <code>
+local proto = require(&#34;proto&#34;)
+
+function execute()
+  body = proto.unmarshal(&#34;GetHeroInfoRes&#34;, CURMSG.body)
+  merge(meta, json.decode(body))
+
+  STATE = 0
+end
+</code>
+                        <loop>1</loop>
+                        <wait>1</wait>
+                        <pos>
+                          <x>713</x>
+                          <y>909</y>
+                        </pos>
+                        <alias>英雄升级</alias>
+                      </children>
+                    </children>
+                  </children>
+                </children>
+                <children>
+                  <id>ef3dfae4-3181-4a05-ad67-843b16bd545d</id>
+                  <ty>http_request</ty>
+                  <code>
+function execute()
+  if STATE == 0 then
+    print(&#34;exit&#34;)
+    return state.Exit, {}
+  end
+end
+</code>
+                  <loop>1</loop>
+                  <wait>1</wait>
+                  <pos>
+                    <x>810</x>
+                    <y>742</y>
+                  </pos>
+                  <alias>exit_check</alias>
+                </children>
+              </children>
+            </children>
+          </children>
+        </children>
+      </children>
+    </children>
+  </children>
+</behavior>

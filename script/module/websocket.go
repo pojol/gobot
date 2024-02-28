@@ -1,6 +1,8 @@
 package script
 
 import (
+	"bytes"
+	"encoding/binary"
 	"fmt"
 	"net/url"
 	"sync"
@@ -19,6 +21,12 @@ type WebsocketModule struct {
 
 type queue struct {
 	buff []byte
+}
+
+func NewWebsocketModule() *WebsocketModule {
+	return &WebsocketModule{
+		done: make(chan struct{}),
+	}
 }
 
 func (ws *WebsocketModule) Loader(L *lua.LState) int {
@@ -77,7 +85,9 @@ func (ws *WebsocketModule) _read() {
 
 func (ws *WebsocketModule) _dail(host string, port string) error {
 
-	u := url.URL{Scheme: "ws", Host: host + ":" + port, Path: "/echo"}
+	u := url.URL{Scheme: "ws", Host: host + ":" + port, Path: "/ws"}
+
+	fmt.Println("dail", u.String())
 
 	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
 	if err != nil {
@@ -114,17 +124,22 @@ func (ws *WebsocketModule) read_msg(L *lua.LState) int {
 	ws.qmu.Lock()
 	if len(ws.q) == 0 {
 		ws.qmu.Unlock()
-		L.Push(lua.LString("succ"))
 		L.Push(lua.LString("nodata"))
+		L.Push(lua.LString("succ"))
 		return 2
 	}
 
+	br := bytes.NewReader(ws.q[0].buff)
+	var msgId uint16
+	binary.Read(br, binary.LittleEndian, &msgId)
+
+	L.Push(lua.LNumber(msgId))
+	L.Push(lua.LString(ws.q[0].buff[2:]))
 	L.Push(lua.LString("succ"))
-	L.Push(lua.LString(ws.q[0].buff))
 	ws.q = ws.q[1:]
 	ws.qmu.Unlock()
 
-	return 2
+	return 3
 }
 
 func (ws *WebsocketModule) write_msg(L *lua.LState) int {
@@ -136,7 +151,12 @@ func (ws *WebsocketModule) write_msg(L *lua.LState) int {
 
 	msgid := L.ToInt(1)
 	msgbody := L.ToString(2)
-	err := ws.conn.WriteMessage(msgid, []byte(msgbody))
+
+	buf := new(bytes.Buffer)
+	binary.Write(buf, binary.LittleEndian, uint16(msgid))
+	buf.WriteString(msgbody)
+
+	err := ws.conn.WriteMessage(websocket.BinaryMessage, buf.Bytes())
 	if err != nil {
 		L.Push(lua.LString(err.Error()))
 		return 1
