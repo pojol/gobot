@@ -16,11 +16,12 @@ import (
 // from https://github.com/cjoudrey/gluahttp
 
 type Report struct {
-	Api     string
-	ReqBody int
-	ResBody int
-	Consume int
-	Err     string
+	Api       string
+	ReqBody   int
+	ResBody   int
+	Consume   int
+	BeginTime time.Time
+	Err       string
 }
 
 type HttpModule struct {

@@ -11,6 +11,7 @@ import (
 	"github.com/pojol/braid-go/module/meta"
 	"github.com/pojol/gobot/bot"
 	"github.com/pojol/gobot/bot/behavior"
+	"github.com/pojol/gobot/constant"
 	"github.com/pojol/gobot/database"
 	script "github.com/pojol/gobot/script/module"
 	"github.com/pojol/gobot/utils"
@@ -39,7 +40,9 @@ type Batch struct {
 	path         string
 	globalScript string
 
-	bots map[string]*bot.Bot
+	beginTime time.Time
+	bots      map[string]*bot.Bot
+	reports   []script.Report
 
 	bwg  utils.SizeWaitGroup
 	exit *utils.Switch
@@ -83,6 +86,7 @@ func CreateBatch(name, id string, cur, total int32, tbyt []byte, cfg BatchConfig
 		BatchDone:    make(chan interface{}, 1),
 		botDoneCh:    make(chan string),
 		botErrCh:     make(chan bot.ErrInfo),
+		beginTime:    time.Now(),
 
 		bots: make(map[string]*bot.Bot),
 	}
@@ -194,12 +198,21 @@ func (b *Batch) Close() {
 
 }
 
+func (b *Batch) Report() []script.Report {
+	return b.reports
+}
+
+func (b *Batch) GetBeginTime() time.Time {
+	return b.beginTime
+}
+
 func (b *Batch) pushReport(bot *bot.Bot) {
 
-	dat, err := json.Marshal(BatchReport{
+	rep := BatchReport{
 		ID:      b.ID,
 		Reports: bot.GetReport(),
-	})
+	}
+	dat, err := json.Marshal(rep)
 	if err != nil {
 		fmt.Println("batch.pushReport", err.Error())
 		return
@@ -207,7 +220,12 @@ func (b *Batch) pushReport(bot *bot.Bot) {
 
 	atomic.AddInt32(&b.reportTick, 1)
 
-	braid.Topic("batch.report").Pub(context.TODO(), &meta.Message{
-		Body: dat,
-	})
+	if constant.GetClusterState() {
+		braid.Topic("batch.report").Pub(context.TODO(), &meta.Message{
+			Body: dat,
+		})
+	} else {
+		b.reports = append(b.reports, rep.Reports...) // 暂存下
+	}
+
 }

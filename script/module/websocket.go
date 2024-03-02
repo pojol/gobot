@@ -5,7 +5,9 @@ import (
 	"encoding/binary"
 	"fmt"
 	"net/url"
+	"strconv"
 	"sync"
+	"time"
 
 	"github.com/gorilla/websocket"
 	lua "github.com/yuin/gopher-lua"
@@ -17,6 +19,8 @@ type WebsocketModule struct {
 
 	q   []queue
 	qmu sync.Mutex
+
+	repolst []Report
 }
 
 type queue struct {
@@ -131,15 +135,31 @@ func (ws *WebsocketModule) read_msg(L *lua.LState) int {
 
 	br := bytes.NewReader(ws.q[0].buff)
 	var msgId uint16
-	binary.Read(br, binary.LittleEndian, &msgId)
+	binary.Read(br, binary.BigEndian, &msgId)
+
+	body := ws.q[0].buff[2:]
 
 	L.Push(lua.LNumber(msgId))
-	L.Push(lua.LString(ws.q[0].buff[2:]))
+	L.Push(lua.LString(body))
 	L.Push(lua.LString("succ"))
 	ws.q = ws.q[1:]
 	ws.qmu.Unlock()
 
+	ws.findReport(int(msgId), len(body))
+
 	return 3
+}
+
+func (ws *WebsocketModule) findReport(msgid int, byteslen int) {
+
+	for i := len(ws.repolst) - 1; i > 0; i-- {
+		if ws.repolst[i].Api == strconv.Itoa(msgid) {
+			ws.repolst[i].ResBody = byteslen
+			ws.repolst[i].Consume = int(time.Since(ws.repolst[i].BeginTime).Milliseconds())
+			return
+		}
+	}
+
 }
 
 func (ws *WebsocketModule) write_msg(L *lua.LState) int {
@@ -153,8 +173,14 @@ func (ws *WebsocketModule) write_msg(L *lua.LState) int {
 	msgbody := L.ToString(2)
 
 	buf := new(bytes.Buffer)
-	binary.Write(buf, binary.LittleEndian, uint16(msgid))
+	binary.Write(buf, binary.BigEndian, uint16(msgid))
 	buf.WriteString(msgbody)
+
+	ws.repolst = append(ws.repolst, Report{
+		Api:       strconv.Itoa(int(msgid)),
+		ReqBody:   int(len(msgbody)),
+		BeginTime: time.Now(),
+	})
 
 	err := ws.conn.WriteMessage(websocket.BinaryMessage, buf.Bytes())
 	if err != nil {
@@ -164,4 +190,14 @@ func (ws *WebsocketModule) write_msg(L *lua.LState) int {
 
 	L.Push(lua.LString("succ"))
 	return 1
+}
+
+func (ws *WebsocketModule) GetReport() []Report {
+
+	rep := []Report{}
+	rep = append(rep, ws.repolst...)
+
+	ws.repolst = ws.repolst[:0]
+
+	return rep
 }
