@@ -32,18 +32,6 @@ function print_table ( t )
     print()
 end
 
-CustomMsgHeader = {
-    HeadLen = 7,            -- 包头长度
-    PackageLen = 2,         -- 包长度
-    PackageTyLen = 1,       -- 包类型长度
-    CustomLen = 2,          -- 自定义长度
-    MsgIDLen = 2,           -- 消息ID长度
-}
-
--- 字节序
--- 大端：BigEndian
--- 小端：LittleEndian
-ByteOrder = "LittleEndian"
 
 -- initialize the meta structure
 meta = {

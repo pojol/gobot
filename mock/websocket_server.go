@@ -11,8 +11,16 @@ import (
 )
 
 var (
-	upgrader = websocket.Upgrader{}
+	upgrader  = websocket.Upgrader{}
+	byteOrder = "LittleEndian"
 )
+
+func getByteOrder() binary.ByteOrder {
+	if byteOrder == "BigEndian" {
+		return binary.BigEndian
+	}
+	return binary.LittleEndian
+}
 
 func routes(c echo.Context) error {
 
@@ -32,7 +40,7 @@ func routes(c echo.Context) error {
 		br := bytes.NewReader(msg)
 
 		var msgId uint16
-		binary.Read(br, binary.LittleEndian, &msgId)
+		binary.Read(br, getByteOrder(), &msgId)
 
 		if msgId == LoginGuest {
 			err = wsGuestHandle(ws)
@@ -54,7 +62,9 @@ func routes(c echo.Context) error {
 	return nil
 }
 
-func StartWebsocketServe() *echo.Echo {
+func StartWebsocketServe(btorder string) *echo.Echo {
+
+	byteOrder = btorder
 
 	s := echo.New()
 	s.HideBanner = true

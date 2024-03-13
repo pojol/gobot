@@ -22,6 +22,7 @@ import (
 	"github.com/pojol/gobot/mock"
 	"github.com/pojol/gobot/server"
 	"github.com/redis/go-redis/v9"
+	lua "github.com/yuin/gopher-lua"
 )
 
 var (
@@ -142,7 +143,10 @@ func main() {
 
 	fmt.Println("open websocket mock", openWSMock)
 	if openWSMock {
-		ws := mock.StartWebsocketServe()
+		L := lua.NewState()
+		defer L.Close()
+		L.DoFile(scriptPath + "/" + "global.lua")
+		ws := mock.StartWebsocketServe(L.GetGlobal("ByteOrder").String())
 		go ws.Start(":6668")
 		defer ws.Close()
 	}
