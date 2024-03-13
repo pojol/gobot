@@ -55,8 +55,11 @@ func Init(NoDBMode bool) (*Cache, error) {
 	var sqlptr *gorm.DB
 	var err error
 
+	host := ""
+
 	if NoDBMode {
-		sqlptr, err = gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
+		host = ":memory:"
+		sqlptr, err = gorm.Open(sqlite.Open(host), &gorm.Config{})
 	} else {
 		pwd := os.Getenv("MYSQL_PASSWORD")
 		if pwd == "" {
@@ -68,7 +71,7 @@ func Init(NoDBMode bool) (*Cache, error) {
 			panic(errors.New("mysql database is not defined"))
 		}
 
-		host := os.Getenv("MYSQL_HOST")
+		host = os.Getenv("MYSQL_HOST")
 		if host == "" {
 			panic(errors.New("mysql host is not defined"))
 		}
@@ -91,7 +94,7 @@ func Init(NoDBMode bool) (*Cache, error) {
 	}
 
 	if err != nil {
-		fmt.Println("gorm open err", err.Error())
+		fmt.Println("gorm open err", host, err.Error())
 		return nil, err
 	}
 

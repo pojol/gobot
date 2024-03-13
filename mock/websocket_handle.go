@@ -32,8 +32,8 @@ func wsGuestHandle(conn *websocket.Conn) error {
 
 	byt, _ := proto.Marshal(&res)
 	buf := new(bytes.Buffer)
-	binary.Write(buf, binary.LittleEndian, uint16(LoginGuest))
-	binary.Write(buf, binary.LittleEndian, byt)
+	binary.Write(buf, getByteOrder(), uint16(LoginGuest))
+	binary.Write(buf, getByteOrder(), byt)
 	return conn.WriteMessage(websocket.BinaryMessage, buf.Bytes())
 }
 
@@ -51,8 +51,8 @@ func wsHelloHandle(conn *websocket.Conn) error {
 
 	byt, _ := proto.Marshal(&res)
 	buf := new(bytes.Buffer)
-	binary.Write(buf, binary.LittleEndian, uint16(Hello))
-	binary.Write(buf, binary.LittleEndian, byt)
+	binary.Write(buf, getByteOrder(), uint16(Hello))
+	binary.Write(buf, getByteOrder(), byt)
 	return conn.WriteMessage(websocket.BinaryMessage, buf.Bytes())
 }
 
@@ -82,8 +82,8 @@ func wsHeroInfoHandle(conn *websocket.Conn, msgBody []byte) error {
 
 	byt, _ := proto.Marshal(res)
 	buf := new(bytes.Buffer)
-	binary.Write(buf, binary.LittleEndian, uint16(HeroInfo))
-	binary.Write(buf, binary.LittleEndian, byt)
+	binary.Write(buf, getByteOrder(), uint16(HeroInfo))
+	binary.Write(buf, getByteOrder(), byt)
 	return conn.WriteMessage(websocket.BinaryMessage, buf.Bytes())
 }
 
@@ -127,7 +127,7 @@ func wsHeroLvupHandle(conn *websocket.Conn, msgBody []byte) error {
 	byt, _ := proto.Marshal(&res)
 
 	buf := new(bytes.Buffer)
-	binary.Write(buf, binary.LittleEndian, uint16(HeroLvup))
-	binary.Write(buf, binary.LittleEndian, byt)
+	binary.Write(buf, getByteOrder(), uint16(HeroLvup))
+	binary.Write(buf, getByteOrder(), byt)
 	return conn.WriteMessage(websocket.BinaryMessage, byt)
 }

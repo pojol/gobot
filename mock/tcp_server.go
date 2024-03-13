@@ -12,26 +12,18 @@ import (
 
 // 消息头定义
 const (
-	HEAD_LEN = 7
-
-	PACKET_LEN_OFFSET = 0
+	HEAD_LEN          = 7
 	PACKET_LEN_SIZE   = 2
-
-	PACKET_TYPE_OFFSET = 2
-	PACKET_TYPE_SIZE   = 1
-
-	CUSTOM_BYTES_OFFSET = 3
-	CUSTOM_BYTES_SIZE   = 2
-
-	MSG_ID_OFFSET = 5
-	MSG_ID_SIZE   = 2
+	PACKET_TYPE_SIZE  = 1
+	CUSTOM_BYTES_SIZE = 2
+	MSG_ID_SIZE       = 2
 )
 
 func _readPackageLength(buf []byte) uint16 {
 	var packetLen uint16
 
 	br := bytes.NewReader(buf)
-	binary.Read(br, binary.LittleEndian, &packetLen)
+	binary.Read(br, binary.BigEndian, &packetLen)
 
 	return packetLen
 }
@@ -68,9 +60,9 @@ func tcpHeaderHandle(conn *net.TCPConn) {
 		var msgId uint16
 
 		br := bytes.NewReader(msgbodyBuf)
-		binary.Read(br, binary.LittleEndian, &packetType)
-		binary.Read(br, binary.LittleEndian, &customBytes)
-		binary.Read(br, binary.LittleEndian, &msgId)
+		binary.Read(br, binary.BigEndian, &packetType)
+		binary.Read(br, binary.BigEndian, &customBytes)
+		binary.Read(br, binary.BigEndian, &msgId)
 
 		f, _ := conn.File()
 		fmt.Printf("tcp server recv fd:%v msg:%v \n", f.Fd(), msgId)
@@ -102,11 +94,11 @@ func writeMsg(conn *net.TCPConn, msgId uint16, custom []byte, msgBody []byte) er
 
 	// 构造消息头
 	headerBuf := new(bytes.Buffer)
-	binary.Write(headerBuf, binary.LittleEndian, uint16(7+len(msgBody)))
-	binary.Write(headerBuf, binary.LittleEndian, uint8(1))
-	binary.Write(headerBuf, binary.LittleEndian, custom)
-	binary.Write(headerBuf, binary.LittleEndian, msgId)
-	binary.Write(headerBuf, binary.LittleEndian, msgBody)
+	binary.Write(headerBuf, binary.BigEndian, uint16(7+len(msgBody)))
+	binary.Write(headerBuf, binary.BigEndian, uint8(1))
+	binary.Write(headerBuf, binary.BigEndian, custom)
+	binary.Write(headerBuf, binary.BigEndian, msgId)
+	binary.Write(headerBuf, binary.BigEndian, msgBody)
 
 	// 发送消息头+消息体
 	_, err := conn.Write(headerBuf.Bytes())

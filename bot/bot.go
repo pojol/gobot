@@ -225,8 +225,14 @@ func (b *Bot) RunByBlock() error {
 func (b *Bot) GetReport() []script.Report {
 	httpreport := b.bs.HttpMod.GetReport()
 	tcpreport := b.bs.TCPMod.GetReport()
+	wsreport := b.bs.WebsocketMod.GetReport()
 
-	return append(httpreport, tcpreport...)
+	report := []script.Report{}
+	report = append(report, httpreport...)
+	report = append(report, tcpreport...)
+	report = append(report, wsreport...)
+
+	return report
 }
 
 func (b *Bot) close() {

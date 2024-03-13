@@ -229,6 +229,18 @@ func (f *Factory) popBatch() {
 	b.Close()
 
 	fmt.Println("pop batch", b.ID, b.Name)
+	if !constant.GetClusterState() {
+		rep := Report{
+			rep: &database.ReportDetail{
+				ID:        b.ID,
+				Name:      b.Name,
+				BeginTime: b.GetBeginTime(),
+				UrlMap:    make(map[string]*database.ApiDetail),
+			},
+		}
+		rep.Record(b.Report())
+		rep.Generate()
+	}
 
 	/*
 		s := bot.BotStatusUnknow

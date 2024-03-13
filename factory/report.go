@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"sort"
 	"strconv"
 	"sync"
@@ -100,10 +101,10 @@ func (r *FactoryReport) create(id, name string, cnt int) error {
 				if v.rep.ID == batchreport.ID {
 
 					r.Lock()
-					r.lst[k].record(batchreport.Reports)
+					r.lst[k].Record(batchreport.Reports)
 
 					if r.lst[k].recordcnt >= r.lst[k].recordtotal {
-						v.generate()
+						v.Generate()
 						r.lst[k].chann.Close()
 
 						fmt.Println("batch", batchreport.ID, "record", r.lst[k].recordcnt, "succ")
@@ -137,7 +138,7 @@ func (r *FactoryReport) Close() {
 	r.createbatchchan.Close()
 }
 
-func (b *Report) record(report []script.Report) {
+func (b *Report) Record(report []script.Report) {
 	b.rep.BotNum++
 	b.recordcnt++
 
@@ -160,7 +161,7 @@ func (b *Report) record(report []script.Report) {
 	}
 }
 
-func (b *Report) generate() {
+func (b *Report) Generate() {
 
 	fmt.Println("+--------------------------------------------------------------------------------------------------------+")
 	fmt.Printf("Req url%-33s Req count %-5s Average time %-5s Body req/res %-5s Succ rate %-10s\n", "", "", "", "", "")
@@ -175,22 +176,22 @@ func (b *Report) generate() {
 
 	for _, sk := range arr {
 		v := b.rep.UrlMap[sk]
-		//var avg string
-		//if v.AvgNum == 0 {
-		//avg = "0 ms"
-		//} else {
-		//	avg = strconv.Itoa(int(v.AvgNum/int64(v.ReqNum))) + "ms"
-		//}
+		var avg string
+		if v.AvgNum == 0 {
+			avg = "0 ms"
+		} else {
+			avg = strconv.Itoa(int(v.AvgNum/int64(v.ReqNum))) + "ms"
+		}
 
-		//succ := strconv.Itoa(v.ReqNum-v.ErrNum) + "/" + strconv.Itoa(v.ReqNum)
+		succ := strconv.Itoa(v.ReqNum-v.ErrNum) + "/" + strconv.Itoa(v.ReqNum)
 
-		//reqsize := strconv.Itoa(int(v.ReqSize/1024)) + "kb"
-		//ressize := strconv.Itoa(int(v.ResSize/1024)) + "kb"
+		reqsize := strconv.Itoa(int(v.ReqSize/1024)) + "kb"
+		ressize := strconv.Itoa(int(v.ResSize/1024)) + "kb"
 
 		reqtotal += int64(v.ReqNum)
 
-		//u, _ := url.Parse(sk)
-		//fmt.Printf("%-40s %-15d %-18s %-18s %-10s\n", u.Path, v.ReqNum, avg, reqsize+" / "+ressize, succ)
+		u, _ := url.Parse(sk)
+		fmt.Printf("%-40s %-15d %-18s %-18s %-10s\n", u.Path, v.ReqNum, avg, reqsize+" / "+ressize, succ)
 
 	}
 	fmt.Println("+--------------------------------------------------------------------------------------------------------+")
