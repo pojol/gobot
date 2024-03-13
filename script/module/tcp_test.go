@@ -64,6 +64,7 @@ func TestCustomMsgPack(t *testing.T) {
 			elseif msgid == 1002 then
 				body = proto.unmarshal("HelloRes", msgbody)
 			end
+			print("read==>", msgid, body, err)
 
 			local reqbody, errmsg = proto.marshal("HelloReq", json.encode({
 				Message = "hello",
@@ -71,7 +72,6 @@ func TestCustomMsgPack(t *testing.T) {
 			ret = conn.write(TCPPackMsg(1002, reqbody))
 			print("write msg 1002 " .. ret)
 
-			print("read==>", msgid, body, err)
 			os.execute("sleep " .. 0.5)
 		end
 

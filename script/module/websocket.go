@@ -4,9 +4,7 @@ import (
 	"fmt"
 	"net/url"
 	"runtime"
-	"strconv"
 	"sync"
-	"time"
 
 	"github.com/gorilla/websocket"
 	lua "github.com/yuin/gopher-lua"
@@ -20,17 +18,6 @@ type WebsocketModule struct {
 	qmu sync.Mutex
 
 	repolst []Report
-}
-
-var pairmap = map[int]int{
-	6003: 6002, // login
-	6008: 6007, // create role
-
-	6011: 0, // notify
-	6012: 0,
-	6013: 0,
-	6014: 0,
-	6015: 0,
 }
 
 type queue struct {
@@ -161,30 +148,6 @@ func (ws *WebsocketModule) readmsg(L *lua.LState) int {
 	ws.qmu.Unlock()
 
 	return 2
-}
-
-func (ws *WebsocketModule) findReport(msgid int, byteslen int) {
-
-	if _, ok := pairmap[msgid]; ok {
-
-		if pairmap[msgid] == 0 {
-			ws.repolst = append(ws.repolst, Report{
-				Api:     strconv.Itoa(int(msgid)),
-				ResBody: byteslen,
-				Consume: 1,
-			})
-			return
-		}
-
-		for i := len(ws.repolst) - 1; i > 0; i-- {
-			if ws.repolst[i].Api == strconv.Itoa(pairmap[msgid]) {
-				ws.repolst[i].ResBody = byteslen
-				ws.repolst[i].Consume = int(time.Since(ws.repolst[i].BeginTime).Milliseconds())
-				return
-			}
-		}
-	}
-
 }
 
 func (ws *WebsocketModule) writemsg(L *lua.LState) int {
