@@ -31,7 +31,7 @@ Gobot is a powerful stateful API testing robot. It provides a graphical interfac
 * Provides graphical editing and debugging capabilities.
 * Allows creating and reusing 'prefab' template nodes in the configuration page.
 * Supports driving via HTTP API (post /bot.run -d '{"Name":"a robot"}'), making it easy to integrate into CI.
-* Supports multiple protocol formats (HTTP, TCP, etc.).
+* Supports multiple protocol formats (HTTP, TCP, WebSocket...) and supports pack/unpack of byte streams at the script layer
 * Offers 'stress testing' with configurable concurrency settings on the configuration page.
 
 

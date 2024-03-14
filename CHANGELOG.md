@@ -1,3 +1,7 @@
+# v.0.4.2
+* Feature
+    - The message module is provided, and users can now process stream byte data by themselves at the script layer (unpacking, packaging
+
 # v0.4.1
 * Features
     - Added websocket module

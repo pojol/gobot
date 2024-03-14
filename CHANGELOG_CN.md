@@ -1,3 +1,7 @@
+# v.0.4.2
+* feature 
+    - 提供了 message 模块，用户现在可以在脚本层自行对 stream byte data 进行处理（拆包，封包
+
 # v0.4.1
 * feature
     - 添加了 websocket 模块

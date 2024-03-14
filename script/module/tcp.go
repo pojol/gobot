@@ -100,6 +100,7 @@ func (t *TCPModule) dail(L *lua.LState) int {
 		return 1
 	}
 
+	// 需要解析 msglen，所以需要传个 byteorder 类型进来
 	bs := L.GetGlobal("ByteOrder").String()
 	if bs != Little && bs != Big {
 		t.br = binary.LittleEndian

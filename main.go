@@ -38,7 +38,7 @@ var (
 
 const (
 	// Version of gobot driver
-	Version = "v0.4.1"
+	Version = "v0.4.2"
 
 	banner = `
               __              __      
