@@ -25,7 +25,7 @@ type Message struct {
 const luaMessageType = "message"
 
 // Registers type to given L.
-func registerMessageType(L *lua.LState) {
+func RegisterMessageType(L *lua.LState) {
 	mt := L.NewTypeMetatable(luaMessageType)
 	L.SetGlobal(luaMessageType, mt)
 	// static attributes
@@ -36,9 +36,9 @@ func registerMessageType(L *lua.LState) {
 
 // Constructor
 //
-//		buff - 需要解析的二进制数据
-//	 byteSort - 字节序
-//	 msglen - 消息长度（用于创建buff）
+// buff - 需要解析的二进制数据
+// byteSort - 字节序
+// msglen - 消息长度（用于创建buff）
 func newMessage(L *lua.LState) int {
 	person := &Message{[]byte(L.ToString(1)), L.CheckString(2), L.CheckInt(3), nil, nil, nil}
 	person.br = bytes.NewReader(person.buff)
@@ -156,7 +156,8 @@ func readString(L *lua.LState) int {
 func pack(L *lua.LState) int {
 	p := checkPerson(L)
 
-	L.Push(lua.LString(p.bw.Bytes()))
+	bytes := p.bw.Bytes()
+	L.Push(lua.LString(bytes))
 
 	return 1
 }
@@ -201,7 +202,7 @@ func writeString(L *lua.LState) int {
 	p := checkPerson(L)
 	str := L.ToString(2)
 
-	binary.Write(p.bw, p.bs, str)
+	binary.Write(p.bw, p.bs, []byte(str))
 
 	return 0
 }

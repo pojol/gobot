@@ -24,7 +24,7 @@ end
 
 function WSPackMsg(msgid, msgbody)
 
-    local msg = message.new("", ByteOrder, 2+#msgbody)
+    local msg = message.new("", ByteOrder, 6+#msgbody)
     msg:writei2(msgid)
     msg:writeBytes(msgbody)
 

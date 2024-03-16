@@ -31,7 +31,7 @@ func TestCustomMsgPack(t *testing.T) {
 	}
 	L.PreloadModule("proto", protomod.Loader)
 	L.PreloadModule("tcpconn", tcpMod.Loader)
-	registerMessageType(L)
+	RegisterMessageType(L)
 
 	go func() {
 		err := L.DoString(`

@@ -234,23 +234,14 @@ func (f *Factory) popBatch() {
 			rep: &database.ReportDetail{
 				ID:        b.ID,
 				Name:      b.Name,
-				BeginTime: b.GetBeginTime(),
-				UrlMap:    make(map[string]*database.ApiDetail),
+				BeginTime: b.GetBeginTime().Unix(),
+				ApiMap:    make(map[string]*database.ApiDetail),
 			},
 		}
-		rep.Record(b.Report())
+		rep.Record(b.TotalNum, b.Report())
 		rep.Generate()
 	}
 
-	/*
-		s := bot.BotStatusUnknow
-		if b.Report().ErrNum > 0 {
-			s = bot.BotStatusFail
-		} else {
-			s = bot.BotStatusSucc
-		}
-		database.GetBehavior().UpdateStatus(b.Name, s)
-	*/
 	f.batches = f.batches[1:]
 	f.batchLock.Unlock()
 }

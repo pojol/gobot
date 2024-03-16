@@ -29,7 +29,7 @@ func TestWebsocket(t *testing.T) {
 
 	L.PreloadModule("proto", protomod.Loader)
 	L.PreloadModule("websocket", WebsocketMod.Loader)
-	registerMessageType(L)
+	RegisterMessageType(L)
 
 	ln := mock.StartWebsocketServe(L.GetGlobal("ByteOrder").String())
 	go ln.Start(":6669")

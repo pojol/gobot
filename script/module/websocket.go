@@ -42,6 +42,8 @@ func (ws *WebsocketModule) Loader(L *lua.LState) int {
 
 		"read":  ws.readmsg,
 		"write": ws.writemsg,
+
+		"report": ws.report,
 	})
 
 	L.Push(mod)
@@ -166,6 +168,13 @@ func (ws *WebsocketModule) writemsg(L *lua.LState) int {
 
 	L.Push(ErrNil)
 	return 1
+}
+
+func (t *WebsocketModule) report(L *lua.LState) int {
+	id := L.ToString(1)
+	errmsg := L.ToString(2)
+	t.repolst = append(t.repolst, Report{id, errmsg})
+	return 0
 }
 
 func (ws *WebsocketModule) GetReport() []Report {

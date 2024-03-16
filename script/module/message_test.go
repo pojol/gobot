@@ -9,7 +9,7 @@ import (
 func TestMessage(t *testing.T) {
 	L := lua.NewState()
 	defer L.Close()
-	registerMessageType(L)
+	RegisterMessageType(L)
 
 	if err := L.DoString(`
         

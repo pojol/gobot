@@ -6,19 +6,9 @@ import (
 	"fmt"
 	"net"
 	"sync"
-	"time"
 
 	lua "github.com/yuin/gopher-lua"
 )
-
-type headerPair struct {
-	Desc string
-	Len  int
-}
-
-type customHeader struct {
-	header []headerPair
-}
 
 type TCPModule struct {
 	conn *net.TCPConn
@@ -28,8 +18,7 @@ type TCPModule struct {
 	buf   byteQueue
 	bufMu sync.Mutex
 
-	writeTime time.Time
-	repolst   []Report
+	repolst []Report
 
 	done chan struct{} // 通知协程停止的通道
 }
@@ -67,11 +56,8 @@ func (q *byteQueue) haveFull(br binary.ByteOrder) bool {
 
 	var msgleni int16
 	binary.Read(bytes.NewBuffer(header[:]), br, &msgleni)
-	if len(*q) < int(msgleni) {
-		return false
-	}
 
-	return true
+	return len(*q) >= int(msgleni)
 }
 
 func NewTCPModule() *TCPModule {
@@ -88,6 +74,8 @@ func (t *TCPModule) Loader(L *lua.LState) int {
 
 		"write": t.write,
 		"read":  t.read,
+
+		"report": t.report,
 	})
 	L.Push(mod)
 	return 1
@@ -229,6 +217,13 @@ func (t *TCPModule) read(L *lua.LState) int {
 
 	// 立即返回,不阻塞
 	return 3
+}
+
+func (t *TCPModule) report(L *lua.LState) int {
+	id := L.ToString(1)
+	errmsg := L.ToString(2)
+	t.repolst = append(t.repolst, Report{id, errmsg})
+	return 0
 }
 
 func (t *TCPModule) GetReport() []Report {

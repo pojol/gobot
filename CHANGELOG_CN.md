@@ -1,6 +1,7 @@
 # v.0.4.2
 * feature 
     - 提供了 message 模块，用户现在可以在脚本层自行对 stream byte data 进行处理（拆包，封包
+    - 修改了 report 的概念，不再提供请求耗时等信息（交由后台去统计更合理）report 目前仅提供，req,res,ntf等次数维度的统计
 
 # v0.4.1
 * feature
