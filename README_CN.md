@@ -76,9 +76,8 @@ end
 | utils | `uuid` `random` | Generates random values, UUIDs. |
 | ... | More modules available. |
 
-## [在线试用](http://43.134.38.169:7777)
-驱动端地址 http://43.134.38.169:8888
-> 服务器部署在新加坡（ping有些高
+## [在线试用](http://47.120.59.203:7777/) <-- 点击试用
+> 驱动端地址 http://47.120.59.203:8888 （弹出窗口填写
 
 ## [文档](https://pojol.gitee.io/gobot/#/)
 

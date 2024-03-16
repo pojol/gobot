@@ -164,9 +164,8 @@ function Layout() {
         onOk={modalHandleOk}
         onCancel={modalHandleCancel}
       >
-        <Tag>e.g. http://178.128.113.58:30000 (Sample driver server address</Tag>
         <Input
-          placeholder={"Input drive server address"}
+          placeholder={"http://47.120.59.203:8888"}
           onChange={modalConfigChange}
         />
       </Modal>
