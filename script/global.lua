@@ -32,6 +32,7 @@ function print_table ( t )
     print()
 end
 
+
 -- initialize the meta structure
 meta = {
     SessionID = "",

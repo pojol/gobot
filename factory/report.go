@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"sort"
-	"strconv"
 	"sync"
 	"time"
 
@@ -100,10 +100,10 @@ func (r *FactoryReport) create(id, name string, cnt int) error {
 				if v.rep.ID == batchreport.ID {
 
 					r.Lock()
-					r.lst[k].record(batchreport.Reports)
+					r.lst[k].Record(1, batchreport.Reports)
 
 					if r.lst[k].recordcnt >= r.lst[k].recordtotal {
-						v.generate()
+						v.Generate()
 						r.lst[k].chann.Close()
 
 						fmt.Println("batch", batchreport.ID, "record", r.lst[k].recordcnt, "succ")
@@ -123,8 +123,8 @@ func (r *FactoryReport) create(id, name string, cnt int) error {
 			rep: &database.ReportDetail{
 				ID:        id,
 				Name:      name,
-				BeginTime: time.Now(),
-				UrlMap:    make(map[string]*database.ApiDetail),
+				BeginTime: time.Now().Unix(),
+				ApiMap:    make(map[string]*database.ApiDetail),
 			},
 		})
 
@@ -137,36 +137,31 @@ func (r *FactoryReport) Close() {
 	r.createbatchchan.Close()
 }
 
-func (b *Report) record(report []script.Report) {
-	b.rep.BotNum++
+func (b *Report) Record(botnum int32, report []script.Report) {
+	b.rep.BotNum += botnum
 	b.recordcnt++
 
-	//fmt.Println("report", b.rep.ID, b.recordcnt, "=>", b.recordtotal)
-
-	b.rep.ReqNum += len(report)
+	b.rep.MatchNum += int32(len(report))
 	for _, v := range report {
-		if _, ok := b.rep.UrlMap[v.Api]; !ok {
-			b.rep.UrlMap[v.Api] = &database.ApiDetail{}
+		if _, ok := b.rep.ApiMap[v.MsgID]; !ok {
+			b.rep.ApiMap[v.MsgID] = &database.ApiDetail{}
 		}
 
-		b.rep.UrlMap[v.Api].ReqNum++
-		b.rep.UrlMap[v.Api].AvgNum += int64(v.Consume)
-		b.rep.UrlMap[v.Api].ReqSize += int64(v.ReqBody)
-		b.rep.UrlMap[v.Api].ResSize += int64(v.ResBody)
+		b.rep.ApiMap[v.MsgID].MatchCnt++
 		if v.Err != "" {
 			b.rep.ErrNum++
-			b.rep.UrlMap[v.Api].ErrNum++
+			b.rep.ApiMap[v.MsgID].ErrCnt++
 		}
 	}
 }
 
-func (b *Report) generate() {
+func (b *Report) Generate() {
 
 	fmt.Println("+--------------------------------------------------------------------------------------------------------+")
-	fmt.Printf("Req url%-33s Req count %-5s Average time %-5s Body req/res %-5s Succ rate %-10s\n", "", "", "", "", "")
+	fmt.Printf("Req url%-33s Req count %-5s\n", "", "")
 
 	arr := []string{}
-	for k := range b.rep.UrlMap {
+	for k := range b.rep.ApiMap {
 		arr = append(arr, k)
 	}
 	sort.Strings(arr)
@@ -174,38 +169,17 @@ func (b *Report) generate() {
 	var reqtotal int64
 
 	for _, sk := range arr {
-		v := b.rep.UrlMap[sk]
-		//var avg string
-		//if v.AvgNum == 0 {
-		//avg = "0 ms"
-		//} else {
-		//	avg = strconv.Itoa(int(v.AvgNum/int64(v.ReqNum))) + "ms"
-		//}
+		v := b.rep.ApiMap[sk]
 
-		//succ := strconv.Itoa(v.ReqNum-v.ErrNum) + "/" + strconv.Itoa(v.ReqNum)
+		reqtotal += int64(v.MatchCnt)
 
-		//reqsize := strconv.Itoa(int(v.ReqSize/1024)) + "kb"
-		//ressize := strconv.Itoa(int(v.ResSize/1024)) + "kb"
-
-		reqtotal += int64(v.ReqNum)
-
-		//u, _ := url.Parse(sk)
-		//fmt.Printf("%-40s %-15d %-18s %-18s %-10s\n", u.Path, v.ReqNum, avg, reqsize+" / "+ressize, succ)
+		u, _ := url.Parse(sk)
+		fmt.Printf("%-40s %-15d\n", u.Path, v.MatchCnt)
 
 	}
 	fmt.Println("+--------------------------------------------------------------------------------------------------------+")
 
-	durations := int(time.Since(b.rep.BeginTime).Seconds())
-	if durations <= 0 {
-		durations = 1
-	}
-
-	qps := int(reqtotal / int64(durations))
-	duration := strconv.Itoa(durations) + "s"
-
-	b.rep.Tps = qps
-	b.rep.Dura = duration
-	fmt.Printf("robot : %d match to %d APIs req count : %d duration : %s qps : %d errors : %d\n", b.rep.BotNum, len(b.rep.UrlMap), b.rep.ReqNum, duration, qps, b.rep.ErrNum)
+	fmt.Printf("robot : %d match to %d APIs req count : %d errors : %d\n", b.rep.BotNum, len(b.rep.ApiMap), b.rep.MatchNum, b.rep.ErrNum)
 
 	database.GetReport().Append(*b.rep)
 }

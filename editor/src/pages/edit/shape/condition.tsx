@@ -14,7 +14,7 @@ ConditionLightNode.config({
       refPoints: "0,2.5 2.5,0 5,2.5 2.5,5",
     },
     label: {
-      text: "Condition",
+      text: "",
     },
     type: { name: "ConditionNode" }
   },
@@ -67,7 +67,7 @@ ConditionDarkNode.config({
     },
     label: {
       fill : "#fff",
-      text: "Condition",
+      text: "",
     },
     type: { name: "ConditionNode" }
   },

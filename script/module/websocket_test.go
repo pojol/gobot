@@ -11,15 +11,12 @@ import (
 	lua "github.com/yuin/gopher-lua"
 )
 
-func TestCustomMsgPack(t *testing.T) {
+func TestWebsocket(t *testing.T) {
 
 	L := lua.NewState()
 	defer L.Close()
 
-	ln := mock.StarTCPServer(":20008")
-	defer ln.Close()
-
-	tcpMod := TCPModule{}
+	WebsocketMod := NewWebsocketModule()
 	protomod := ProtoModule{}
 	path := "../../script"
 	rand.Seed(time.Now().UnixMicro())
@@ -29,17 +26,23 @@ func TestCustomMsgPack(t *testing.T) {
 	for _, v := range preScripts {
 		L.DoFile(path + "/" + v)
 	}
+
 	L.PreloadModule("proto", protomod.Loader)
-	L.PreloadModule("tcpconn", tcpMod.Loader)
+	L.PreloadModule("websocket", WebsocketMod.Loader)
 	RegisterMessageType(L)
+
+	ln := mock.StartWebsocketServe(L.GetGlobal("ByteOrder").String())
+	go ln.Start(":6669")
+	defer ln.Close()
 
 	go func() {
 		err := L.DoString(`
-		local conn = require("tcpconn")
+		local conn = require("websocket")
 		local proto = require("proto")
 
-		local ret = conn.dail("127.0.0.1", "20008")
-		print("conn dail " .. ret)
+		-- 建立连接
+		local ret = conn.dail("ws", "127.0.0.1", "6669")
+		print("connect websocket " .. ret)
 
 		os.execute("sleep " .. 0.5)
 
@@ -47,30 +50,27 @@ func TestCustomMsgPack(t *testing.T) {
 		if errmsg ~= nil then
 			meta.Err = "proto.marshal" .. errmsg
 		end
-		ret = conn.write(TCPPackMsg(1001, body))
-		print("write msg 1001 " .. ret)
+		ret = conn.write(WSPackMsg(1001, body))
+		print("create guest account " .. ret)
 
 		for i = 0, 5, 1 do
-			--[[
-				| 2 byte   , 1 byte,    2 byte      , 2byte		  |                        |
-				|包长度 len, 协议格式 ty, 预留2自定义字节, 协议号 msgid |                        |
-				|                  消息头                          |         消息体          |
-			]]--
 
-			msgid, msgbody = TCPUnpackMsg(conn.read(2))
-
+			msgid, msgbody = WSUnpackMsg(conn.read())
 			if msgid == 1001 then
 				body = proto.unmarshal("LoginGuestRes", msgbody)
 			elseif msgid == 1002 then
 				body = proto.unmarshal("HelloRes", msgbody)
 			end
-			print("read==>", msgid, body, err)
+
+			if msgid ~= 0 then
+				print("recv=>", msgid, body,  err)
+			end 
 
 			local reqbody, errmsg = proto.marshal("HelloReq", json.encode({
 				Message = "hello",
 			}))
-			ret = conn.write(TCPPackMsg(1002, reqbody))
-			print("write msg 1002 " .. ret)
+			conn.write(WSPackMsg(1002, reqbody))
+			print(i, "send say hello " .. ret)
 
 			os.execute("sleep " .. 0.5)
 		end
@@ -85,7 +85,7 @@ func TestCustomMsgPack(t *testing.T) {
 	}()
 
 	for {
-		<-time.After(time.Second * 3)
+		<-time.After(time.Second * 5)
 		break
 	}
 }

@@ -6,44 +6,34 @@ import (
 	"fmt"
 	"net/url"
 	"sync"
-	"time"
 
 	"gorm.io/gorm"
 )
 
 type ApiDetail struct {
-	ReqNum int
-	ErrNum int
-	AvgNum int64
-
-	ReqSize int64
-	ResSize int64
+	MatchCnt int32
+	ErrCnt   int32
 }
 
 type ReportDetail struct {
-	ID     string
-	Name   string
-	BotNum int
-	ReqNum int
-	ErrNum int
-	Tps    int
-	Dura   string
+	ID   string
+	Name string
 
-	BeginTime time.Time
+	MatchNum int32
+	ErrNum   int32
 
-	UrlMap map[string]*ApiDetail
+	BeginTime int64 // 队列的开始时间
+	BotNum    int32 // 一个执行队列中机器人总数量
+
+	ApiMap map[string]*ApiDetail
 }
 
 ////////////////////////////////////////////////////////
 
 type ReportApiInfo struct {
-	Api        string
-	ReqNum     int
-	ErrNum     int
-	ConsumeNum int64
-
-	ReqSize int64
-	ResSize int64
+	Api    string
+	ReqNum int
+	ErrNum int
 }
 
 type ReportApiArr []ReportApiInfo
@@ -60,11 +50,9 @@ type ReportTable struct {
 	gorm.Model
 	ID         string
 	Name       string
-	BotNum     int
-	ReqNum     int
-	ErrNum     int
-	Tps        int
-	Dura       string
+	BotNum     int32
+	ReqNum     int32
+	ErrNum     int32
 	BeginTime  int64
 	ApiInfoLst ReportApiArr `gorm:"column:childrens;type:longtext"`
 }
@@ -93,25 +81,19 @@ func (r *Report) Append(info ReportDetail) error {
 		ID:        info.ID,
 		Name:      info.Name,
 		BotNum:    info.BotNum,
-		ReqNum:    info.ReqNum,
 		ErrNum:    info.ErrNum,
-		Tps:       info.Tps,
-		Dura:      info.Dura,
-		BeginTime: info.BeginTime.Unix(),
+		BeginTime: info.BeginTime,
 	}
-	for api, detail := range info.UrlMap {
+	for api, detail := range info.ApiMap {
 		u, err := url.Parse(api)
 		fmtapi := ""
 		if err == nil {
 			fmtapi = u.Path
 		}
 		ri.ApiInfoLst = append(ri.ApiInfoLst, ReportApiInfo{
-			Api:        fmtapi,
-			ReqNum:     detail.ReqNum,
-			ConsumeNum: int64(detail.AvgNum / int64(detail.ReqNum)),
-			ReqSize:    detail.ReqSize,
-			ResSize:    detail.ResSize,
-			ErrNum:     detail.ErrNum,
+			Api:    fmtapi,
+			ReqNum: int(detail.MatchCnt),
+			ErrNum: int(detail.ErrCnt),
 		})
 	}
 

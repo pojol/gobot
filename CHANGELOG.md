@@ -1,3 +1,18 @@
+# v.0.4.2
+* Feature
+    - The message module is provided, and users can now process stream byte data by themselves at the script layer (unpacking, packaging
+    - The concept of report has been modified, and information such as request time-consuming is no longer provided (it is more reasonable to leave it to the background for statistics). Report currently only provides statistics on the number dimensions such as req, res, ntf and so on.
+
+# v0.4.1
+* Features
+    - Added websocket module
+* Fixes
+    - Fixed missing banner print
+
+# v0.4.0
+* Features
+    - Added cluster deployment mode
+
 # v0.3.6 (pre
 * feature
     - The way of previewing report has been changed from clicking tags to displaying directly at the bottom, with tab switching for charts (more intuitive) 

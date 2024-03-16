@@ -142,7 +142,7 @@ func NewWithBehaviorTree(path string, bt *behavior.Tree, mode behavior.Mode, nam
 	if globalScript != "" {
 		pool.DoString(bot.bs.L, globalScript)
 	}
-
+	script.RegisterMessageType(bot.bs.L)
 	// 这里要对script目录进行一次检查，将lua脚本都载入进来
 	preScripts := utils.GetDirectoryFiels(path, ".lua")
 	for _, v := range preScripts {
@@ -225,8 +225,14 @@ func (b *Bot) RunByBlock() error {
 func (b *Bot) GetReport() []script.Report {
 	httpreport := b.bs.HttpMod.GetReport()
 	tcpreport := b.bs.TCPMod.GetReport()
+	wsreport := b.bs.WebsocketMod.GetReport()
 
-	return append(httpreport, tcpreport...)
+	report := []script.Report{}
+	report = append(report, httpreport...)
+	report = append(report, tcpreport...)
+	report = append(report, wsreport...)
+
+	return report
 }
 
 func (b *Bot) close() {

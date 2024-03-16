@@ -15,14 +15,6 @@ import (
 
 // from https://github.com/cjoudrey/gluahttp
 
-type Report struct {
-	Api     string
-	ReqBody int
-	ResBody int
-	Consume int
-	Err     string
-}
-
 type HttpModule struct {
 	repolst []Report
 	client  *http.Client
@@ -78,7 +70,7 @@ func (h *HttpModule) request(L *lua.LState) int {
 func (h *HttpModule) doRequest(L *lua.LState, method string, url string, options *lua.LTable) (*lua.LUserData, error) {
 
 	req, err := http.NewRequest(method, url, nil)
-	var reqlen, reslen int
+	var reslen int
 	if err != nil {
 		fmt.Printf("new request %v err : %v\n", method, err.Error())
 		return nil, err
@@ -114,11 +106,9 @@ func (h *HttpModule) doRequest(L *lua.LState, method string, url string, options
 				fmt.Println("ltable marshal err", err.Error())
 				return nil, err
 			}
-			reqlen = len(byt)
 			req.Body = ioutil.NopCloser(bytes.NewReader(byt))
 			req.Header.Set("Content-Type", "application/json")
 		case lua.LString:
-			reqlen = len(reqBody.String())
 			req.Body = ioutil.NopCloser(bytes.NewBufferString(reqBody.String()))
 			req.Header.Set("Content-Type", "application/json")
 		}
@@ -160,17 +150,15 @@ func (h *HttpModule) doRequest(L *lua.LState, method string, url string, options
 		}
 	}
 
-	cur := time.Now()
-	inf := Report{
-		Api:     url,
-		ReqBody: reqlen,
+	rep := Report{
+		MsgID: url,
 	}
 
 	res, err := h.client.Do(req)
 	if err != nil {
 		err = fmt.Errorf("client do err : %v", err.Error())
-		inf.Err = err.Error()
-		h.repolst = append(h.repolst, inf)
+		rep.Err = err.Error()
+		h.repolst = append(h.repolst, rep)
 		return nil, err
 	}
 
@@ -178,16 +166,12 @@ func (h *HttpModule) doRequest(L *lua.LState, method string, url string, options
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		err = fmt.Errorf("read body err : %v", err.Error())
-		inf.Err = err.Error()
-		h.repolst = append(h.repolst, inf)
+		rep.Err = err.Error()
+		h.repolst = append(h.repolst, rep)
 		return nil, err
 	}
 
-	reslen = len(body)
-	inf.ResBody = reslen
-	inf.Consume = int(time.Since(cur).Milliseconds())
-
-	h.repolst = append(h.repolst, inf)
+	h.repolst = append(h.repolst, rep)
 	return newHttpResponse(res, &body, reslen, L), nil
 }
 
