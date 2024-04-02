@@ -69,6 +69,7 @@ end
 | base64 | `encode` `decode` |Provides base64 encoding/decoding functionality.|
 | http | `post` `get` `put` | Support HTTP connection. |
 | tcp | `dail` `close` `write` `read` | Support TCP connection. |
+| websocket | `dail` `close` `write` `read` | Support WebSocket connection. |
 | protobuf | `marshal` `unmarshal` | Provides Protobuf operations. |
 | mongoDB | `insert` `find` `update` `delete` ... | Provides MongoDB operations. |
 | json | `encode` `decode` | Offers JSON functionalities. |
