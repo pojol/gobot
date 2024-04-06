@@ -11,6 +11,8 @@ import PubSub from "pubsub-js";
 
 import { Provider, useSelector, useDispatch } from 'react-redux';
 import store, { RootState } from '../models/store';
+import "./index.css";
+
 
 import {
   GithubFilled,
@@ -150,7 +152,7 @@ function Layout() {
               <Radio.Button value={ThemeType.Dark}>Dark</Radio.Button>
               <Radio.Button value={ThemeType.Light}>Light</Radio.Button>
             </Radio.Group>,
-            <Tag color={color}>{desc}</Tag>,
+            <Tag className="custom-tag" color={color}>{desc}</Tag>,
             <GithubFilled key="GithubFilled" twoToneColor='#eb2f96' onClick={function () { window.open("https://github.com/pojol/gobot"); }} />,
           ];
 

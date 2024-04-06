@@ -1,0 +1,7 @@
+.custom-tag {
+    width: 60px; /* 设置固定宽度 */
+    white-space: nowrap; /* 不换行 */
+    overflow: hidden; /* 超出部分隐藏 */
+    text-overflow: ellipsis; /* 显示省略号 */
+    text-align: center; /* 文本居中对齐 */
+  }
