@@ -88,7 +88,7 @@ export default function Blackboard() {
                     tab={
                         <span>
                             <FileSearchOutlined />
-                            Meta
+                            Blackboard
                         </span>
                     }
                     key="1"
