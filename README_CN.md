@@ -77,6 +77,59 @@ end
 | utils | `uuid` `random` | Generates random values, UUIDs. |
 | ... | More modules available. |
 
+## 解析流式协议包
+> 示例 message.lua 位于 script/ 用户可以参考里面的实现，更改自己项目中的协议包解析方式
+```lua
+-- message.lua
+function TCPUnpackMsg(msglen, buf, errmsg)
+    if errmsg ~= "nil" then
+        return 0, ""
+    end
+
+    local msg = message.new(buf, ByteOrder, 0)
+
+    local msgTy = msg:readi1()
+    local msgCustom = msg:readi2()
+    local msgId = msg:readi2()
+    local msgbody = msg:readBytes(msglen-(2+1+2+2), -1)
+
+    return msgId, msgbody
+
+end
+
+function TCPPackMsg(msgid, msgbody)
+    local msglen = #msgbody+2+1+2+2
+
+    local msg = message.new("", ByteOrder, msglen)
+    msg:writei2(msglen)
+    msg:writei1(1)
+    msg:writei2(0)
+    msg:writei2(msgid)
+    msg:writeBytes(msgbody)
+
+    return msg:pack()
+
+end
+
+-- use
+--------------------------------------------------------
+-- 使用 proto.marshal 序列化
+-- 使用 TCPPackMsg 组装 TCP 报文
+local reqbody, errmsg = proto.marshal("HelloReq", json.encode({
+    Message = "hello",
+}))
+ret = conn.write(TCPPackMsg(1002, reqbody))
+
+--------------------------------------------------------
+-- 2 是 message length 的设计字节长度，conn会首先尝试读取指定的字节数用于解析报文大小
+-- 通过 msgid 解析协议报文内容
+-- TCPUnpackMsg 用户可以自行定义，不一定按 msgid, msgbody 的形式返回，也可以是 msghead, msgbody 看用户的报文结构设计
+msgid, msgbody = TCPUnpackMsg(conn.read(2))
+if msgid == 1002 then
+    body = proto.unmarshal("HelloRes", msgbody)
+end
+```
+
 ## [在线试用](http://47.120.59.203:7777/) <-- 点击试用
 > 驱动端地址 http://47.120.59.203:8888 （弹出窗口填写
 

@@ -83,6 +83,59 @@ end
 | utils | `uuid` `random` | Generates random values, UUIDs. |
 | ... | More modules available. |
 
+## Parsing Stream Protocol Packets
+> Example message.lua is located in script/. Users can refer to its implementation and modify the protocol packet parsing method in their own projects
+```lua
+-- message.lua
+function TCPUnpackMsg(msglen, buf, errmsg)
+    if errmsg ~= "nil" then
+        return 0, ""
+    end
+
+    local msg = message.new(buf, ByteOrder, 0)
+
+    local msgTy = msg:readi1()
+    local msgCustom = msg:readi2()
+    local msgId = msg:readi2()
+    local msgbody = msg:readBytes(msglen-(2+1+2+2), -1)
+
+    return msgId, msgbody
+
+end
+
+function TCPPackMsg(msgid, msgbody)
+    local msglen = #msgbody+2+1+2+2
+
+    local msg = message.new("", ByteOrder, msglen)
+    msg:writei2(msglen)
+    msg:writei1(1)
+    msg:writei2(0)
+    msg:writei2(msgid)
+    msg:writeBytes(msgbody)
+
+    return msg:pack()
+
+end
+
+-- use
+--------------------------------------------------------
+-- Serialize using proto.marshal
+-- Assemble TCP packet using TCPPackMsg
+local reqbody, errmsg = proto.marshal("HelloReq", json.encode({
+    Message = "hello",
+}))
+ret = conn.write(TCPPackMsg(1002, reqbody))
+
+--------------------------------------------------------
+-- 2 is the designed byte length of the message length, conn will first attempt to read the specified bytes for parsing the message size
+-- Parse protocol message content based on msgid
+-- TCPUnpackMsg can be user-defined, not necessarily returning in the form of msgid, msgbody, it can also be msghead, msgbody depending on the user's message structure design
+msgid, msgbody = TCPUnpackMsg(conn.read(2))
+if msgid == 1002 then
+    body = proto.unmarshal("HelloRes", msgbody)
+end
+```
+
 ## Try it out
 Try the editor out [on website](http://43.134.38.169:7777)
 driver server address http://43.134.38.169:8888
