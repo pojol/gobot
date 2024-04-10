@@ -30,7 +30,7 @@ type Parm struct {
 	ServiceID string
 
 	// 无数据库模式运行
-	NoDBMode bool
+	db string
 }
 
 // Option consul discover config wrapper
@@ -54,8 +54,8 @@ func WithReportLimit(limit int) Option {
 	}
 }
 
-func WithNoDatabase(flag bool) Option {
+func WithDatabase(db string) Option {
 	return func(c *Parm) {
-		c.NoDBMode = flag
+		c.db = db
 	}
 }

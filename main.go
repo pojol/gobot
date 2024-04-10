@@ -28,17 +28,17 @@ import (
 var (
 	help bool
 
-	dbmode       bool
 	cluster      bool
 	scriptPath   string
 	openHttpMock bool
 	openTcpMock  bool
 	openWSMock   bool
+	db           string
 )
 
 const (
 	// Version of gobot driver
-	Version = "v0.4.2"
+	Version = "v0.4.3"
 
 	banner = `
               __              __      
@@ -58,7 +58,7 @@ func initFlag() {
 	flag.BoolVar(&help, "h", false, "this help")
 
 	flag.BoolVar(&cluster, "cluster", false, "open cluster mode")
-	flag.BoolVar(&dbmode, "no_database", false, "Run in local mode")
+	flag.StringVar(&db, "db", "sqlite", "The database schema, defaulting to sqlite, can also be configured to mysql.")
 	flag.BoolVar(&openHttpMock, "httpmock", false, "open http mock server")
 	flag.BoolVar(&openTcpMock, "tcpmock", false, "open tcp mock server")
 	flag.BoolVar(&openWSMock, "websocketmock", false, "open websocket mock server")
@@ -83,7 +83,7 @@ func main() {
 	}
 
 	_, err := factory.Create(
-		factory.WithNoDatabase(dbmode),
+		factory.WithDatabase(db),
 	)
 	if err != nil {
 		panic(err)

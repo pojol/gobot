@@ -57,14 +57,14 @@ func Create(opts ...Option) (*Factory, error) {
 		Interrupt:   true,
 		ReportLimit: 100,
 		ScriptPath:  "script/",
-		NoDBMode:    false,
+		db:          "sqlite",
 	}
 
 	for _, opt := range opts {
 		opt(&p)
 	}
 
-	db, err := database.Init(p.NoDBMode)
+	db, err := database.Init(p.db)
 	if err != nil {
 		panic(err)
 	}
@@ -81,8 +81,6 @@ func Create(opts ...Option) (*Factory, error) {
 		f.watch()
 		f.report.watch()
 	}
-
-	fmt.Println("create bot driver", "mode", p.NoDBMode)
 
 	Global = f
 	return f, nil

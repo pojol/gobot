@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/glebarez/sqlite"
 	"gorm.io/driver/mysql"
@@ -50,17 +51,29 @@ func GetTask() *Task {
 	return db.task
 }
 
-func Init(NoDBMode bool) (*Cache, error) {
+func Init(dbtype string) (*Cache, error) {
 
 	var sqlptr *gorm.DB
 	var err error
 
 	host := ""
 
-	if NoDBMode {
-		host = ":memory:"
-		sqlptr, err = gorm.Open(sqlite.Open(host), &gorm.Config{})
-	} else {
+	if dbtype == "sqlite" {
+
+		executablePath, err := os.Executable()
+		if err != nil {
+			panic(fmt.Errorf("os.Executable() failed: %v", err))
+		}
+
+		// 构建 SQLite 数据库文件的相对路径
+		dbFilePath := filepath.Join(filepath.Dir(executablePath), "bot.db")
+
+		sqlptr, err = gorm.Open(sqlite.Open(dbFilePath), &gorm.Config{})
+		if err != nil {
+			panic(fmt.Errorf("sqlite.Open() failed: %v", err))
+		}
+
+	} else if dbtype == "mysql" {
 		pwd := os.Getenv("MYSQL_PASSWORD")
 		if pwd == "" {
 			panic(errors.New("mysql password is not defined"))
@@ -91,6 +104,8 @@ func Init(NoDBMode bool) (*Cache, error) {
 			DontSupportRenameColumn:   true,  // `change` when rename column, rename column not supported before MySQL 8, MariaDB
 			SkipInitializeWithVersion: false, // auto configure based on currently MySQL version
 		}), &gorm.Config{})
+	} else {
+		panic(fmt.Errorf("unknown database type: %s", db))
 	}
 
 	if err != nil {
