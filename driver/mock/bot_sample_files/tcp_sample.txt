@@ -24,9 +24,9 @@ end
       <id>cd538d4a-b170-47d6-937c-666d3e03b46f</id>
       <ty>邮件领取</ty>
       <code>
-CONN = require(&#34;websocket&#34;)
+CONN = require(&#34;tcpconn&#34;)
 
-local ret = CONN.dail(&#34;127.0.0.1&#34;, &#34;6668&#34;)
+local ret = CONN.dail(&#34;127.0.0.1&#34;, &#34;6667&#34;)
 print(&#34;conn dail &#34; .. ret)
 
 QUEUE = {}
@@ -42,7 +42,7 @@ end</code>
         <x>523</x>
         <y>389</y>
       </pos>
-      <alias>建立ws连接</alias>
+      <alias>建立连接</alias>
       <children>
         <id>f016f1cc-a9a0-42d1-ab47-25e3fed86ae9</id>
         <ty>ParallelNode</ty>
@@ -82,10 +82,10 @@ end</code>
 
 function execute()
 
-  msgid, msgbody, err = CONN.read_msg()
-  print(&#34;read==&gt; &#34;, msgid, msgbody, err)
+  ty, _, msgid, msgbody, err = CONN.read_msg(2, 1, 2, 2)
+  print(&#34;read==&gt; &#34;, ty, msgid, msgbody, err)
 
-  if err == &#34;succ&#34; then
+  if err == &#34;&#34; then
     table.insert(QUEUE, {id = msgid, body = msgbody})
   end
 end
@@ -119,10 +119,10 @@ function execute()
 
   body, errmsg = proto.marshal(&#34;LoginGuestReq&#34;, json.encode({}))
   if errmsg ~= nil then
-      meta.Err = &#34;proto.marshal&#34; .. errmsg
+      bot.Err = &#34;proto.marshal&#34; .. errmsg
   end
 
-  local ret = CONN.write_msg(1001, body)
+  local ret = CONN.write_msg(7+0, 1, 0, 1001, body)
   print(&#34;write msg 1001 &#34; .. ret)
   
 end</code>
@@ -218,18 +218,18 @@ local proto = require(&#34;proto&#34;)
 
 function execute()
   body = proto.unmarshal(&#34;LoginGuestRes&#34;, CURMSG.body)
-  merge(meta, json.decode(body))
+  merge(bot, json.decode(body))
 
   body, errmsg = proto.marshal(&#34;HelloReq&#34;, json.encode({
-        SessionID = meta.SessionID,
+        SessionID = bot.SessionID,
         Message = &#34;hello gobot&#34;,
   }))
   if errmsg ~= nil then
-      meta.Err = &#34;proto.marshal&#34; .. errmsg
+      bot.Err = &#34;proto.marshal&#34; .. errmsg
       return
   end
 
-  local ret = CONN.write_msg(1002, body)
+  local ret = CONN.write_msg(7+#body, 1, 0, 1002, body)
   print(&#34;write msg 1002 &#34; .. ret)
   
 end
@@ -267,18 +267,18 @@ local proto = require(&#34;proto&#34;)
 
 function execute()
   body = proto.unmarshal(&#34;HelloRes&#34;, CURMSG.body)
-  merge(meta, json.decode(body))
+  merge(bot, json.decode(body))
 
   reqbody, errmsg = proto.marshal(&#34;GetHeroInfoReq&#34;, json.encode({
-        SessionID = meta.SessionID,
-        HeroID = meta.AccInfo.Heros[1].ID,
+        SessionID = bot.SessionID,
+        HeroID = bot.AccInfo.Heros[1].ID,
   }))
   if errmsg ~= nil then
-      meta.Err = &#34;proto.marshal&#34; .. errmsg
+      bot.Err = &#34;proto.marshal&#34; .. errmsg
       return
   end
 
-  local ret = CONN.write_msg(1003, reqbody)
+  local ret = CONN.write_msg(7+#reqbody, 1, 0, 1003, reqbody)
   print(&#34;write msg 1003 &#34; .. ret)
 end
 </code>
@@ -319,15 +319,15 @@ function execute()
   print(body)
 
   body, errmsg = proto.marshal(&#34;HeroLvupReq&#34;, json.encode({
-        SessionID = meta.SessionID,
-        HeroID = meta.AccInfo.Heros[1].ID,
+        SessionID = bot.SessionID,
+        HeroID = bot.AccInfo.Heros[1].ID,
   }))
   if errmsg ~= nil then
-      meta.Err = &#34;proto.marshal&#34; .. errmsg
+      bot.Err = &#34;proto.marshal&#34; .. errmsg
       return
   end
 
-  local ret = CONN.write_msg(1004, body)
+  local ret = CONN.write_msg(7+#body, 1, 0, 1004, body)
   print(&#34;write msg 1004 &#34; .. ret)
   
 end
@@ -365,7 +365,7 @@ local proto = require(&#34;proto&#34;)
 
 function execute()
   body = proto.unmarshal(&#34;GetHeroInfoRes&#34;, CURMSG.body)
-  merge(meta, json.decode(body))
+  merge(bot, json.decode(body))
 
   STATE = 0
 end

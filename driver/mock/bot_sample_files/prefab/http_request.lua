@@ -22,17 +22,17 @@ local http = require("http")
 function execute()
     res, errmsg = http.post(url, parm)
     if errmsg ~= nil then
-        meta.Err = errmsg
+        bot.Meta.Err = errmsg
         return
     end
 
     if res["status_code"] ~= 200 then
-        meta.Err = "post " .. url .. " http status code err " .. res["status_code"]
+        bot.Meta.Err = "post " .. url .. " http status code err " .. res["status_code"]
         return
     end
 
     body = json.decode(res["body"])
-    merge(meta, body.Body)  -- 将 res 数据合并到 meta 结构中（覆盖
+    merge(bot, body.Body)  -- 将 res 数据合并到 meta 结构中（覆盖
 
     return state.Succ, body -- 将http response传递给 editor 中的 response 栏
 end
