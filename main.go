@@ -5,40 +5,21 @@ import (
 	"flag"
 	"fmt"
 	"net/http"
-	"os"
 	"runtime"
+	"strconv"
 
 	_ "net/http/pprof"
 
-	"github.com/google/uuid"
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
-	"github.com/pojol/braid-go"
-	"github.com/pojol/braid-go/components"
-	"github.com/pojol/braid-go/components/discoverk8s"
-	"github.com/pojol/braid-go/module/meta"
-	"github.com/pojol/gobot/constant"
-	"github.com/pojol/gobot/factory"
-	"github.com/pojol/gobot/mock"
-	"github.com/pojol/gobot/server"
-	"github.com/redis/go-redis/v9"
+	"github.com/pojol/gobot/driver/factory"
+	"github.com/pojol/gobot/driver/mock"
+	"github.com/pojol/gobot/driver/openapi"
+	"github.com/pojol/gobot/driver/utils"
 	lua "github.com/yuin/gopher-lua"
-)
-
-var (
-	help bool
-
-	cluster      bool
-	scriptPath   string
-	openHttpMock bool
-	openTcpMock  bool
-	openWSMock   bool
-	db           string
 )
 
 const (
 	// Version of gobot driver
-	Version = "v0.4.3"
+	Version = "v0.4.4"
 
 	banner = `
               __              __      
@@ -54,17 +35,6 @@ const (
 `
 )
 
-func initFlag() {
-	flag.BoolVar(&help, "h", false, "this help")
-
-	flag.BoolVar(&cluster, "cluster", false, "open cluster mode")
-	flag.StringVar(&db, "db", "sqlite", "The database schema, defaulting to sqlite, can also be configured to mysql.")
-	flag.BoolVar(&openHttpMock, "httpmock", false, "open http mock server")
-	flag.BoolVar(&openTcpMock, "tcpmock", false, "open tcp mock server")
-	flag.BoolVar(&openWSMock, "websocketmock", false, "open websocket mock server")
-	flag.StringVar(&scriptPath, "script_path", "script/", "Path to bot script")
-}
-
 func main() {
 
 	defer func() {
@@ -75,79 +45,39 @@ func main() {
 		}
 	}()
 
-	initFlag()
+	f := utils.InitFlag()
 	flag.Parse()
-	if help {
-		flag.Usage()
+	if utils.ShowUseage() {
 		return
 	}
 
-	_, err := factory.Create(
-		factory.WithDatabase(db),
+	botFactory, err := factory.Create(
+		factory.WithDatabase(f.DBType),
+		factory.WithClusterMode(f.Cluster),
 	)
 	if err != nil {
 		panic(err)
 	}
+	defer botFactory.Close()
 
-	fmt.Println("open cluster mode", cluster)
-	if cluster {
-		constant.SetClusterState(true)
+	L := lua.NewState()
+	defer L.Close()
+	L.DoFile(f.ScriptPath + "/" + "message.lua")
+	byteOrder := L.GetGlobal("ByteOrder").String()
 
-		redis_addr := os.Getenv("REDIS_ADDR")
-
-		b, _ := braid.NewService(
-			"bot",
-			os.Getenv("POD_NAME"),
-			&components.DefaultDirector{
-				Opts: &components.DirectorOpts{
-					RedisCliOpts: &redis.Options{
-						Addr: redis_addr,
-					},
-					DiscoverOpts: []discoverk8s.Option{
-						discoverk8s.WithNamespace("bot"),
-						discoverk8s.WithSelectorTag("bot"),
-					},
-				},
-			},
-		)
-
-		b.Init()
-		b.Run()
-		defer b.Close()
-
-		statechan, err := braid.Topic(meta.TopicElectionChangeState).Sub(context.TODO(), "election"+uuid.NewString())
-		if err != nil {
-			panic(err)
-		}
-		defer statechan.Close()
-
-		statechan.Arrived(func(msg *meta.Message) error {
-			smsg := meta.DecodeStateChangeMsg(msg)
-			constant.SetServerState(smsg.State)
-			return nil
-		})
-	}
-
-	fmt.Println("open http mock", openHttpMock)
-	if openHttpMock {
+	if f.OpenHttpMock != 0 {
 		ms := mock.NewHttpServer()
-		go ms.Start(":6666")
+		go ms.Start(":" + strconv.Itoa(f.OpenHttpMock))
 		defer ms.Close()
 	}
 
-	fmt.Println("open tcp mock", openTcpMock)
-	if openTcpMock {
-		tcpls := mock.StarTCPServer(":6667")
+	if f.OpenTcpMock != 0 {
+		tcpls := mock.StarTCPServer(byteOrder, ":"+strconv.Itoa(f.OpenTcpMock))
 		defer tcpls.Close()
 	}
 
-	fmt.Println("open websocket mock", openWSMock)
-	if openWSMock {
-		L := lua.NewState()
-		defer L.Close()
-		L.DoFile(scriptPath + "/" + "global.lua")
-		ws := mock.StartWebsocketServe(L.GetGlobal("ByteOrder").String())
-		go ws.Start(":6668")
+	if f.OpenWSMock != 0 {
+		ws := mock.StartWebsocketServe(byteOrder, ":"+strconv.Itoa(f.OpenWSMock))
 		defer ws.Close()
 	}
 
@@ -158,15 +88,16 @@ func main() {
 	// 查看有没有未完成的队列
 	factory.Global.CheckTaskHistory()
 
-	e := echo.New()
-	e.HideBanner = true
-	e.Use(middleware.CORS())
-	e.Use(middleware.Recover())
-	server.Route(e)
-
 	fmt.Printf(banner, Version)
 
-	e.Start(":8888")
+	openApiPort := 8888
+	if f.OpenAPIPort != 0 {
+		openApiPort = f.OpenAPIPort
+	}
+
+	e := openapi.Start(openApiPort)
+	defer e.Close()
+
 	// Stop the service gracefully.
 	if err := e.Shutdown(context.TODO()); err != nil {
 		panic(err)
