@@ -18,7 +18,7 @@ func (b *Base64Module) Loader(l *lua.LState) int {
 	return 1
 }
 
-func (b *Base64Module) doEncode(l *lua.LState, s string) lua.LString {
+func (b *Base64Module) doEncode(s string) lua.LString {
 
 	ds := base64.StdEncoding.EncodeToString([]byte(s))
 	return lua.LString(ds)
@@ -26,13 +26,13 @@ func (b *Base64Module) doEncode(l *lua.LState, s string) lua.LString {
 
 func (b *Base64Module) Encode(l *lua.LState) int {
 
-	v := b.doEncode(l, l.ToString(1))
+	v := b.doEncode(l.ToString(1))
 	l.Push(v)
 
 	return 1
 }
 
-func (b *Base64Module) doDecode(l *lua.LState, s string) (lua.LString, error) {
+func (b *Base64Module) doDecode(s string) (lua.LString, error) {
 	byt, err := base64.StdEncoding.DecodeString(s)
 	if err != nil {
 		return lua.LString(""), err
@@ -43,7 +43,7 @@ func (b *Base64Module) doDecode(l *lua.LState, s string) (lua.LString, error) {
 
 func (b *Base64Module) Decode(l *lua.LState) int {
 
-	v, err := b.doDecode(l, l.ToString(1))
+	v, err := b.doDecode(l.ToString(1))
 	l.Push(v)
 
 	if err != nil {

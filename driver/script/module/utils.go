@@ -20,7 +20,7 @@ func (u *UtilsModule) Loader(l *lua.LState) int {
 	return 1
 }
 
-func (u *UtilsModule) doRandom(l *lua.LState, n int) (lua.LNumber, error) {
+func (u *UtilsModule) doRandom(n int) (lua.LNumber, error) {
 
 	if n <= 0 {
 		return lua.LNumber(0), errors.New("")
@@ -32,7 +32,7 @@ func (u *UtilsModule) doRandom(l *lua.LState, n int) (lua.LNumber, error) {
 
 func (u *UtilsModule) Random(l *lua.LState) int {
 
-	v, err := u.doRandom(l, l.ToInt(1))
+	v, err := u.doRandom(l.ToInt(1))
 
 	l.Push(v)
 	if err != nil {

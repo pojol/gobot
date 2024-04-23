@@ -1,5 +1,5 @@
 import { Cell, Graph, Node, Shape } from "@antv/x6";
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 
 /// <reference path="graph.d.ts" />
 import OBJ2XML from "object-to-xml";
@@ -7,7 +7,7 @@ import OBJ2XML from "object-to-xml";
 import { RootState } from "@/models/store";
 import PubSub from "pubsub-js";
 import Topic from "../../constant/topic";
-import { TaskTimer } from "tasktimer/lib/TaskTimer";
+import { TaskTimer } from 'tasktimer';
 
 
 import { setDebugInfo, setLock } from "@/models/debuginfo";
@@ -16,9 +16,9 @@ import { history } from "umi";
 import {
     AimOutlined,
     BugOutlined,
-    CaretRightOutlined,
+    StepForwardOutlined,
     ClearOutlined,
-    CloudUploadOutlined,
+    FastForwardOutlined,
     CloudSyncOutlined,
     DeleteOutlined,
     UndoOutlined,
@@ -93,8 +93,12 @@ const GraphView = (props: GraphViewProps) => {
 
     const { graphFlex } = useSelector((state: RootState) => state.resizeSlice)
     const { lock } = useSelector((state: RootState) => state.debugInfoSlice)
-    const { currentTreeName, nodes, updatetick, currentClickNode, currentLockedNode } = useSelector((state: RootState) => state.treeSlice)
+    const { currentTreeName, nodes, updatetick, currentClickNode, currentLockedNode, currentDebugBot } = useSelector((state: RootState) => state.treeSlice)
     const [isGraphCreated, setIsGraphCreated] = useState(false);
+
+    const [timer, setTimer] = useState<TaskTimer | null>(null);
+    // 使用 useRef 创建 ref 对象
+    const timerRef = useRef<TaskTimer | null>(null);
 
     useEffect(() => {
         console.info("create graph")
@@ -122,7 +126,7 @@ const GraphView = (props: GraphViewProps) => {
                 return;
             }
 
-            findNode(edge.getTargetCellId(), (child) => {
+            _findCell(edge.getTargetCellId(), (child) => {
                 props.dispatch(nodeUnlink({ targetid: child.id, silent: false }))
                 props.dispatch(nodeRedraw())
                 //child.getParent()?.removeChild(edge);
@@ -140,8 +144,6 @@ const GraphView = (props: GraphViewProps) => {
                         message.warning("Cannot get node name");
                         return
                     }
-
-                    console.info("link parent", source.getAttrs().type.name)
 
                     if (target.getAttrs().type.name === NodeTy.Root) {
                         message.warning("Cannot connect to root node");
@@ -172,6 +174,27 @@ const GraphView = (props: GraphViewProps) => {
             props.dispatch(nodeClick({ id: node.id, type: node.getAttrs().type.name as string }))
         });
 
+        graph.on("node:dblclick", ({ node }) => {
+
+        });
+
+        graph.on("blank:click", () => {
+            props.dispatch(nodeClick({ id: "", type: "" }))
+
+            var nods = graph.getRootNodes();
+            if (nods.length > 0) {
+                iterate(nods[0], (nod) => {
+                    if (nod.getAttrs().type !== undefined) {
+                        nod.setPortProp(
+                            nod.getPorts()[0].id as string,
+                            "attrs/portBody/r",
+                            4
+                        );
+                    }
+                });
+            }
+        })
+
         graph.on("node:added", ({ node, index, options }) => {
             let build = false
             if (options.others !== undefined) {
@@ -188,24 +211,6 @@ const GraphView = (props: GraphViewProps) => {
 
         graph.on("node:mouseenter", ({ node }) => {
             node.setPortProp(node.getPorts()[0].id as string, "attrs/portBody/r", 8);
-        });
-
-        // node:mouseleave 消息容易获取不到，先每次获取到这个消息将所有节点都设置一下
-        graph.on("node:mouseleave", ({ node }) => {
-            node.setPortProp(node.getPorts()[0].id as string, "attrs/portBody/r", 4);
-
-            var nods = graph.getRootNodes();
-            if (nods.length > 0) {
-                iterate(nods[0], (nod) => {
-                    if (nod.getAttrs().type !== undefined) {
-                        nod.setPortProp(
-                            nod.getPorts()[0].id as string,
-                            "attrs/portBody/r",
-                            4
-                        );
-                    }
-                });
-            }
         });
 
         graph.on("node:moved", ({ e, x, y, node, view: NodeView }) => {
@@ -284,7 +289,7 @@ const GraphView = (props: GraphViewProps) => {
                         },
                     });
 
-                    if (nod.isEdge() && (nod.parent instanceof SequenceDarkNode || nod.parent instanceof SequenceLightNode)) {              
+                    if (nod.isEdge() && (nod.parent instanceof SequenceDarkNode || nod.parent instanceof SequenceLightNode)) {
                         nod.setLabelAt(0, {
                             attrs: {
                                 text: {
@@ -310,7 +315,6 @@ const GraphView = (props: GraphViewProps) => {
         graphRef.current = graph;
         console.info("graph init done", graphRef.current)
 
-        console.info("load path", history.location.pathname)
         if (history.location.pathname.length > 8) { // "/editor"
             let botname = history.location.pathname.slice(8);
 
@@ -334,12 +338,9 @@ const GraphView = (props: GraphViewProps) => {
 
         setIsGraphCreated(true);
 
-        return ()=>{
+        return () => {
             graph.dispose()
         }
-        //containerRef.current = graph.container;
-        //containerRef.current.appendChild(graph.container);
-        //stencilContainerRef.current.appendChild(graph.container);
     }, []);
 
     useEffect(() => {
@@ -349,11 +350,91 @@ const GraphView = (props: GraphViewProps) => {
     }, [updatetick])
 
     useEffect(() => {
+
         resizeViewpoint(graphFlex)
 
-        // redraw
-
     }, [graphFlex])
+
+    useEffect(() => {
+        const newTimer = new TaskTimer(200);
+        newTimer.on('tick', ()=>{
+            step(currentDebugBot);
+        });
+        setTimer(newTimer);
+
+        // 将新创建的 timer 赋值给 ref 对象
+        timerRef.current = newTimer;
+
+        return () => {
+            // 清理定时器
+            if (timer) {
+                timer.stop();
+            }
+            setTimer(null);
+            // 在组件卸载时将 ref 对象置为 null
+            timerRef.current = null;
+        }
+    }, [currentDebugBot]);
+
+    useEffect(() => {
+
+        if (graphRef.current) {
+            graphRef.current.bindKey(["up"], () => {
+                if (currentClickNode.id !== "") {
+                    _findCell(currentClickNode.id, (cell) => {
+                        var nod = (cell as Node<Node.Properties>)
+                        nod.setPosition({
+                            x: nod.position().x,
+                            y: nod.position().y - 1,
+                        })
+                    });
+                }
+            });
+            graphRef.current.bindKey(["down"], () => {
+                if (currentClickNode.id !== "") {
+                    _findCell(currentClickNode.id, (cell) => {
+                        var nod = (cell as Node<Node.Properties>)
+                        nod.setPosition({
+                            x: nod.position().x,
+                            y: nod.position().y + 1,
+                        })
+                    });
+                }
+            });
+            graphRef.current.bindKey(["left"], () => {
+                if (currentClickNode.id !== "") {
+                    _findCell(currentClickNode.id, (cell) => {
+                        var nod = (cell as Node<Node.Properties>)
+                        nod.setPosition({
+                            x: nod.position().x - 1,
+                            y: nod.position().y,
+                        })
+                    });
+                }
+            });
+            graphRef.current.bindKey(["right"], () => {
+                if (currentClickNode.id !== "") {
+                    _findCell(currentClickNode.id, (cell) => {
+                        var nod = (cell as Node<Node.Properties>)
+                        nod.setPosition({
+                            x: nod.position().x + 1,
+                            y: nod.position().y,
+                        })
+                    });
+                }
+            });
+        }
+
+        return () => {
+            if (graphRef.current) {
+                graphRef.current.unbindKey(["up"])
+                graphRef.current.unbindKey(["down"])
+                graphRef.current.unbindKey(["left"])
+                graphRef.current.unbindKey(["right"])
+            }
+        }
+
+    }, [currentClickNode])
 
     const redrawTree = () => {
 
@@ -399,22 +480,31 @@ const GraphView = (props: GraphViewProps) => {
         // 设置视口大小
         if (graphRef.current) {
             graphRef.current.resize(width, document.documentElement.clientHeight - 62);
+            /*
+                        var root = GetNode(NodeTy.Root, {});
+                        if (root !== null && root !== undefined) {
+                            console.info("root set position", graphRef.current.getGraphArea().width / 2, graphRef.current.getGraphArea().height / 2 - 200);
+                            root.setPosition(
+                                graphRef.current.getGraphArea().width / 2,
+                                graphRef.current.getGraphArea().height / 2 - 200
+                            );
+                        }
+                        */
         }
     }
 
-
-    const findChild = (parent: Cell, id: String, callback: (nod: Cell) => void) => {
+    const _findCellChild = (parent: Cell, id: String, callback: (nod: Cell) => void) => {
         if (parent.id === id) {
             callback(parent);
             return;
         } else {
             parent.eachChild((child, idx) => {
-                findChild(child, id, callback);
+                _findCellChild(child, id, callback);
             });
         }
     };
 
-    const findNode = (id: String, callback: (nod: Cell) => void) => {
+    const _findCell = (id: String, callback: (nod: Cell) => void) => {
         let nods: Node<Node.Properties>[]
 
         if (graphRef.current) {
@@ -424,13 +514,12 @@ const GraphView = (props: GraphViewProps) => {
                     callback(nods[0]);
                 } else {
                     nods[0].eachChild((child, idx) => {
-                        findChild(child, id, callback);
+                        _findCellChild(child, id, callback);
                     });
                 }
             }
         }
     };
-
 
     const redrawChild = (parent: any, parentty: string, child: any, build: boolean, idx: number) => {
         var nod: Node;
@@ -512,7 +601,7 @@ const GraphView = (props: GraphViewProps) => {
                 edge.appendLabel({
                     attrs: {
                         text: {
-                            text: (idx+1).toString(),
+                            text: (idx + 1).toString(),
                         },
                         body: {
                             fill: bodyfill,
@@ -574,11 +663,13 @@ const GraphView = (props: GraphViewProps) => {
 
     // 加亮显示当前运行到的某个 Node
     const debugFocus = (info: Array<string>) => {
+        console.info("debug focus", info)
+
         // clean
         cleanStepInfo();
 
         info.forEach(element => {
-            findNode(element, (nod) => {
+            _findCell(element, (nod) => {
                 nod.transition(
                     "attrs/body/strokeWidth", "4px", {
                     //interp: Interp.unit,
@@ -627,32 +718,6 @@ const GraphView = (props: GraphViewProps) => {
 
     const CleanTree = () => {
         props.dispatch(cleanTree())
-    }
-
-    const UnlockFocus = () => {
-        console.info("lock/unlock")
-        if (currentClickNode.id == "") {
-            message.warning("please select a node")
-            return
-        }
-
-        if (currentClickNode.type == NodeTy.Root) {
-            message.warning("root node can't be locked")
-            return
-        }
-
-        if (currentLockedNode.id == "") {  // locked
-            props.dispatch(unlockFocus({
-                id: currentClickNode.id,
-                type: currentClickNode.type,
-            }))
-        } else {
-            props.dispatch(unlockFocus({
-                id: "",
-                type: "",
-            }))
-        }
-
     }
 
     const ClickUpload = () => {
@@ -716,19 +781,29 @@ const GraphView = (props: GraphViewProps) => {
         }
     };
 
-    const _step_loop = (botid: string, done: any) => {
+    const ClickStep = (e: any) => {
+        if (props.tree.currentDebugBot === "") {
+            message.warning("have not created bot");
+            return;
+        }
+
+        props.dispatch(setLock(true))
+        step(props.tree.currentDebugBot);
+    };
+
+    const step = (botid : string) => {
         Post(localStorage.remoteAddr, Api.DebugStep, { BotID: botid }).then(
             (json: any) => {
-
                 if (json.Code !== 200) {
+                    if (timerRef.current?.state === "running") {
+                        timerRef.current?.stop();
+                    }
+
                     if (json.Code === 1009) {
                         message.warning(json.Code.toString() + " " + json.Msg)
-                        done()
                         return;
                     } else if (json.Code === 1007) {
                         message.success("the end");
-                        done()
-                        return;
                     } else {
                         message.warning(json.Code.toString() + " " + json.Msg)
                     }
@@ -741,20 +816,9 @@ const GraphView = (props: GraphViewProps) => {
 
                 // 推送当前节点信息
                 let focusLst = new Array<string>
-                try {
-                    threadinfo.forEach(element => {
-                        focusLst.push(element.curnod)
-
-                        if (element.curnod === currentLockedNode.id) {
-                            console.info("focus", element.curnod)
-                            throw new Error("find")
-                        }
-                    });
-                } catch (error) {
-                    done()
-                    return
-                }
-
+                threadinfo.forEach(element => {
+                    focusLst.push(element.curnod)
+                });
                 debugFocus(focusLst)
 
                 // 推送 meta 面板信息
@@ -762,76 +826,24 @@ const GraphView = (props: GraphViewProps) => {
                 props.dispatch(setDebugInfo({
                     metaInfo: metaStr,
                     threadInfo: threadinfo,
-                    lock: true,
+                    lock: false,
                 }))
             }
         );
 
     }
 
-    const ClickStep = (e: any) => {
+    const ClickRunning = (e: any) => {
         if (props.tree.currentDebugBot === "") {
             message.warning("have not created bot");
             return;
         }
 
-        var botid = props.tree.currentDebugBot
-
-        if (currentLockedNode.id !== "") {
-            const timer = new TaskTimer(100);
-
-            timer.on('tick', () => {
-
-                const donecallback = () => {
-                    console.info("step loop done")
-                    timer.stop();
-                    props.dispatch(setLock(false))
-                }
-
-                _step_loop(botid, donecallback)
-
-            });
-            timer.start();
-
-        } else {
-            props.dispatch(setLock(true))
-            Post(localStorage.remoteAddr, Api.DebugStep, { BotID: botid }).then(
-                (json: any) => {
-
-                    if (json.Code !== 200) {
-                        if (json.Code === 1009) {
-                            message.warning(json.Code.toString() + " " + json.Msg)
-                            return;
-                        } else if (json.Code === 1007) {
-                            message.success("the end");
-                        } else {
-                            message.warning(json.Code.toString() + " " + json.Msg)
-                        }
-                    }
-
-                    debugFocus([]); // clean
-
-                    // 推送 reponse 面板信息
-                    let threadinfo = JSON.parse(json.Body.ThreadInfo) as Array<ThreadInfo>
-
-                    // 推送当前节点信息
-                    let focusLst = new Array<string>
-                    threadinfo.forEach(element => {
-                        focusLst.push(element.curnod)
-                    });
-                    debugFocus(focusLst)
-
-                    // 推送 meta 面板信息
-                    let metaStr = JSON.stringify(JSON.parse(json.Body.Blackboard))
-                    props.dispatch(setDebugInfo({
-                        metaInfo: metaStr,
-                        threadInfo: threadinfo,
-                        lock: false,
-                    }))
-                }
-            );
+        if (timer?.state !== "running") {
+            console.info("running this timer", timer)
+            timer?.start()
         }
-    };
+    }
 
     const behaviorNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setBehaviorName(e.target.value);
@@ -914,20 +926,7 @@ const GraphView = (props: GraphViewProps) => {
                 </Tooltip>
             </div>
 
-            <div className={"app-step-win"}>
-                <Tooltip placement="topRight" title={"Run to the next node [F10]"}>
-                    <Button
-                        type="primary"
-                        style={{ width: 70 }}
-                        icon={<CaretRightOutlined />}
-                        disabled={lock}
-                        onClick={ClickStep}
-                    >
-                        { }
-                    </Button>
-                </Tooltip>
-            </div>
-            <div className={"app-reset-win"}>
+            <div className={"app-debug-reset"}>
                 <Tooltip
                     placement="topRight"
                     title={"Create or reset to starting point [F11]"}
@@ -941,7 +940,29 @@ const GraphView = (props: GraphViewProps) => {
                     </Button>
                 </Tooltip>
             </div>
-            <div className={"app-upload-win"}>
+            <div className={"app-debug-run"}>
+                <Tooltip placement="topRight" title={"Run to the end node [F10]"}>
+                    <Button
+                        style={{ width: 50 }}
+                        icon={<FastForwardOutlined />}
+                        onClick={ClickRunning}
+                    >
+                        { }
+                    </Button>
+                </Tooltip>
+            </div>
+            <div className={"app-debug-step"}>
+                <Tooltip placement="topRight" title={"Run to the next node [F10]"}>
+                    <Button
+                        style={{ width: 50 }}
+                        icon={<StepForwardOutlined />}
+                        onClick={ClickStep}
+                    >
+                        { }
+                    </Button>
+                </Tooltip>
+            </div>
+            <div className={"app-debug-upload"}>
                 <Tooltip placement="topRight" title={"Upload the bot to the server"}>
                     <Button
                         icon={<CloudSyncOutlined />}

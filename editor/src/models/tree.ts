@@ -261,7 +261,7 @@ const treeSlice = createSlice({
             update(state, info)
         },
         nodeClick(state, action: PayloadAction<NodeClickInfo>) {
-            state.currentClickNode = action.payload
+            state.currentClickNode = { ...action.payload }
         },
         nodeRedraw(state, action: PayloadAction<void>) {
             state.updatetick++

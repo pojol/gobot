@@ -151,7 +151,7 @@ func StarTCPServer(byteOrder string, port string) net.Listener {
 		panic(err)
 	}
 
-	fmt.Println("Server listening on port " + port)
+	fmt.Println("Server listening on port "+port, tcpByteOrder)
 	go func() {
 		for {
 			// 接收新连接

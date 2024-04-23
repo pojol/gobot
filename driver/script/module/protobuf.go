@@ -25,7 +25,7 @@ func (p *ProtoModule) Loader(l *lua.LState) int {
 	return 1
 }
 
-func (p *ProtoModule) doMarshal(L *lua.LState, msgty string, jstr string) (lua.LString, error) {
+func (p *ProtoModule) doMarshal(msgty string, jstr string) (lua.LString, error) {
 	var err error
 	var byt []byte
 
@@ -55,7 +55,7 @@ func (p *ProtoModule) doMarshal(L *lua.LState, msgty string, jstr string) (lua.L
 
 func (p *ProtoModule) Marshal(L *lua.LState) int {
 
-	res, err := p.doMarshal(L, L.ToString(1), L.ToString(2))
+	res, err := p.doMarshal(L.ToString(1), L.ToString(2))
 	if err != nil {
 		L.Push(lua.LNil)
 		L.Push(lua.LString(fmt.Sprintf("%s", err)))
@@ -66,7 +66,7 @@ func (p *ProtoModule) Marshal(L *lua.LState) int {
 	return 1
 }
 
-func (p *ProtoModule) doUnmarshal(L *lua.LState, msgty string, buf string) (lua.LString, error) {
+func (p *ProtoModule) doUnmarshal(msgty string, buf string) (lua.LString, error) {
 	var err error
 
 	t := ggp.MessageType(msgty)
@@ -94,7 +94,7 @@ func (p *ProtoModule) doUnmarshal(L *lua.LState, msgty string, buf string) (lua.
 }
 
 func (p *ProtoModule) Unmarshal(L *lua.LState) int {
-	t, err := p.doUnmarshal(L, L.ToString(1), L.ToString(2))
+	t, err := p.doUnmarshal(L.ToString(1), L.ToString(2))
 	if err != nil {
 		L.Push(lua.LNil)
 		L.Push(lua.LString(fmt.Sprintf("%s", err)))

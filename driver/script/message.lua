@@ -33,7 +33,7 @@ function WSPackMsg(msgid, msgbody)
 end
 
 ------------------------------------------------------------------------
-
+-- msglen : conn will first read the predefined message length field 
 function TCPUnpackMsg(msglen, buf, errmsg)
     if errmsg ~= "nil" then
         return 0, ""
