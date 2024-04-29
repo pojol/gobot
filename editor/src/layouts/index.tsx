@@ -153,7 +153,7 @@ function Layout() {
               <Radio.Button value={ThemeType.Light}>Light</Radio.Button>
             </Radio.Group>,
             <Tag className="custom-tag" color={color}>{desc}</Tag>,
-            <GithubFilled key="GithubFilled" twoToneColor='#eb2f96' onClick={function () { window.open("https://github.com/pojol/gobot"); }} />,
+            <GithubFilled key="GithubFilled" twoToneColor='#eb2f96' onClick={function () { window.open("https://github.com/pojol/gobot/driver"); }} />,
           ];
 
         }}

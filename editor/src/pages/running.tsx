@@ -5,7 +5,7 @@ import {
 import React, { useState, useEffect } from 'react';
 const { Post } = require("../utils/request");
 import Api from "../constant/api";
-import { TaskTimer } from "tasktimer/lib/TaskTimer";
+import { TaskTimer } from 'tasktimer';
 import { useSelector } from 'react-redux';
 import { RootState } from "@/models/store";
 

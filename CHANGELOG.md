@@ -1,3 +1,18 @@
+# v0.4.4
+> Milestone version, completing the writing of all major features; subsequent maintenance will focus on collecting new features, optimizing user interface usage, and writing documentation.
+* Feature
+    - Directory relocation: Move driver-related code to the driver directory, keeping only the editor & driver directories in the root directory.
+    - Directory relocation: Move robot runtime files originally in the sample directory to /mock/bot_sample_files.
+    - Fix selection node issue in editor: Clicking on blank space now properly resets the selected node.
+    - Fine control of node offset: When a node is selected, pressing [up, down, left, right] will offset the node by one pixel.
+    - Connector hole setting: When the mouse moves over a node, the size of the connector hole is increased, and it returns to normal size when clicking on blank space.
+    - Adjustment to startup command: The new -h is more readable and provides the ability to change the port.
+    - More detailed documentation.
+    - Introduction of logging library, improving logging output in the program.
+    - Change the original meta structure at the script layer to bot (more intuitive semantics).
+    - Debug logic adjustment: More runtime debugging capabilities are now provided. #20
+    - Support running multiple batches concurrently #16
+
 # v0.4.3
 * Features
     - Renamed the meta panel to blackboard, aligning with the semantics of behavior trees #19

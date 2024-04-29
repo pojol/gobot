@@ -11,6 +11,7 @@ import RootLightNode, { RootDarkNode } from "./root";
 import SelectorLightNode, { SelectorDarkNode } from "./selector";
 import SequenceLightNode, { SequenceDarkNode } from "./sequence";
 import WaitLightNode, { WaitDarkNode } from "./wait";
+import BPLightNode, { BPDarkNode } from "./break_point";
 
 
 export function GetNode(ty: string, parm: any): Node {
@@ -34,6 +35,8 @@ export function GetNode(ty: string, parm: any): Node {
                 return new SequenceDarkNode(parm)
             case NodeTy.Wait:
                 return new WaitDarkNode(parm)
+            case NodeTy.BreakPoint:
+                return new BPDarkNode(parm)
             default:
                 return new ActionDarkNode(parm)
         }
@@ -57,6 +60,8 @@ export function GetNode(ty: string, parm: any): Node {
                 return new SequenceLightNode(parm)
             case NodeTy.Wait:
                 return new WaitLightNode(parm)
+            case NodeTy.BreakPoint:
+                return new BPLightNode(parm)
             default:
                 return new ActionLightNode(parm)
         }

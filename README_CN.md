@@ -1,14 +1,14 @@
 # gobot
 Gobot是一个功能强大的有状态API测试机器人。它提供图形界面进行测试场景的搭建,可以方便的进行测试脚本编写、单步调试和压力测试,并可以在测试过程的每个阶段之间共享和存储状态。
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/pojol/gobot)](https://goreportcard.com/report/github.com/pojol/gobot)
+[![Go Report Card](https://goreportcard.com/badge/github.com/pojol/gobot/driver)](https://goreportcard.com/report/github.com/pojol/gobot/driver)
 [![](https://img.shields.io/badge/%E6%96%87%E6%A1%A3-Doc-2ca5e0?style=flat&logo=github)](https://pojol.gitee.io/gobot/#/)
 [![](https://img.shields.io/badge/Trello-Todo-2ca5e0?style=flat&logo=trello)](https://trello.com/b/8eDZ6h7n/)
-[![CI](https://github.com/pojol/gobot/actions/workflows/dockerimage.yml/badge.svg?branch=develop)](https://github.com/pojol/gobot/actions/workflows/dockerimage.yml)
+[![CI](https://github.com/pojol/gobot/driver/actions/workflows/dockerimage.yml/badge.svg?branch=develop)](https://github.com/pojol/gobot/driver/actions/workflows/dockerimage.yml)
 
 ## 快速安装
 > 注：开启本地运行模式，所有的改动被记录在内存（并不会真正保存）如果需要保存请将文件下载到本地；或采用正式的部署方式
-1. 进入最新的 [release页面](https://github.com/pojol/gobot/releases/tag/v0.3.8) 下载可执行程序
+1. 进入最新的 [release页面](https://github.com/pojol/gobot/driver/releases/tag/v0.3.8) 下载可执行程序
 2. 执行 gobot_driver_win_x64_v0.3.8 目录中的 run.bat 文件， 运行服务器
     * 执行 gobot_editor_win_x64_v0.3.8 目录中的 gobot.ext， 运行编辑器程序
 3. 在弹出的地址输入窗口 或 config 页的地址栏中填入 http://127.0.0.1:8888 本地服务器地址

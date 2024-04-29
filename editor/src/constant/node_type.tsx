@@ -15,6 +15,9 @@ const NodeTy = {
   Selector: "SelectorNode",
   Sequence: "SequenceNode",
   Parallel: "ParallelNode",
+
+  /////////////////////////////////////////////////////////////////
+  BreakPoint : "BreakPointNode",
 };
 
 function IsScriptNode(ty: string) {
