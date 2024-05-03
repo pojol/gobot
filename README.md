@@ -2,9 +2,8 @@
 Gobot is a powerful stateful API testing robot. It provides a graphical interface for building test scenarios, allows for easy test script writing, step-by-step debugging and pressure testing, and can share and store states between each stage of the testing process. 
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/pojol/gobot/driver)](https://goreportcard.com/report/github.com/pojol/gobot/driver)
-[![](https://img.shields.io/badge/%E6%96%87%E6%A1%A3-Doc-2ca5e0?style=flat&logo=github)](https://pojol.gitee.io/gobot/#/)
+[![](https://img.shields.io/badge/%E6%96%87%E6%A1%A3-Doc-2ca5e0?style=flat&logo=github)](https://pojol.github.io/gobot/#/)
 [![](https://img.shields.io/badge/Trello-Todo-2ca5e0?style=flat&logo=trello)](https://trello.com/b/8eDZ6h7n/)
-[![CI](https://github.com/pojol/gobot/driver/actions/workflows/dockerimage.yml/badge.svg?branch=develop)](https://github.com/pojol/gobot/driver/actions/workflows/dockerimage.yml)
 
 [中文](https://github.com/pojol/gobot/driver/blob/master/README_CN.md)
 
