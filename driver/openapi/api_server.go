@@ -21,7 +21,7 @@ import (
 )
 
 func FileBlobUpload(ctx echo.Context) error {
-	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
+
 	res := &response{}
 	code := Succ
 
@@ -57,7 +57,7 @@ EXT:
 }
 
 func FileTextUpload(ctx echo.Context) error {
-	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
+
 	res := &response{}
 	code := Succ
 	var upload *utils.UploadFile
@@ -97,7 +97,7 @@ EXT:
 }
 
 func PrefabUpload(ctx echo.Context) error {
-	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
+
 	res := &response{
 		Code: int(Succ),
 	}
@@ -119,7 +119,7 @@ ext:
 }
 
 func PrefabList(ctx echo.Context) error {
-	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
+
 	res := &response{
 		Code: int(Succ),
 	}
@@ -144,7 +144,6 @@ func PrefabList(ctx echo.Context) error {
 }
 
 func PrefabGetInfo(ctx echo.Context) error {
-	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
 
 	name := ctx.Request().Header.Get("FileName")
 
@@ -156,7 +155,6 @@ func PrefabGetInfo(ctx echo.Context) error {
 
 func PrefabRmv(ctx echo.Context) error {
 
-	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
 	res := &response{
 		Code: int(Succ),
 	}
@@ -190,7 +188,7 @@ ext:
 }
 
 func PrefabSetTags(ctx echo.Context) error {
-	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
+
 	res := &response{
 		Code: int(Succ),
 	}
@@ -227,7 +225,7 @@ ext:
 }
 
 func FileRemove(ctx echo.Context) error {
-	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
+
 	code := Succ
 	res := &response{}
 	req := &FileRemoveReq{}
@@ -272,7 +270,7 @@ EXT:
 }
 
 func FileGetList(ctx echo.Context) error {
-	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
+
 	res := &response{
 		Code: int(Succ),
 	}
@@ -304,7 +302,7 @@ ext:
 }
 
 func FileSetTags(ctx echo.Context) error {
-	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
+
 	code := Succ
 	res := &response{}
 	req := &SetBehaviorTagsReq{}
@@ -360,7 +358,7 @@ EXT:
 }
 
 func ConfigGetSysInfo(ctx echo.Context) error {
-	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
+
 	res := &response{
 		Code: int(Succ),
 	}
@@ -384,7 +382,7 @@ ext:
 }
 
 func ConfigSetSysInfo(ctx echo.Context) error {
-	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
+
 	res := &response{
 		Code: int(Succ),
 	}
@@ -433,7 +431,7 @@ EXT:
 }
 
 func ConfigGetGlobalInfo(ctx echo.Context) error {
-	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
+
 	code := Succ
 	res := &response{}
 
@@ -445,7 +443,7 @@ func ConfigGetGlobalInfo(ctx echo.Context) error {
 }
 
 func ConfigSetGlobalInfo(ctx echo.Context) error {
-	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
+
 	res := &response{
 		Code: int(Succ),
 	}
@@ -470,7 +468,7 @@ EXT:
 }
 
 func FileGetBlob(ctx echo.Context) error {
-	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
+
 	req := &FindBehaviorReq{}
 	info := database.BehaviorTable{}
 
@@ -498,7 +496,7 @@ EXT:
 }
 
 func GetReport(ctx echo.Context) error {
-	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
+
 	res := &response{
 		Code: int(Succ),
 	}
@@ -518,7 +516,7 @@ func GetReport(ctx echo.Context) error {
 }
 
 func BotRun(ctx echo.Context) error {
-	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
+
 	res := &response{}
 	req := &BotRunRequest{}
 	code := Succ
@@ -592,7 +590,7 @@ func splitEqually(num int, n int) []int {
 }
 
 func BotCreateBatch(ctx echo.Context) error {
-	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
+
 	res := &response{}
 	req := &BotBatchCreateRequest{}
 	code := Succ
@@ -656,7 +654,7 @@ EXT:
 }
 
 func BotList(ctx echo.Context) error {
-	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
+
 	res := &response{}
 	body := &BotListResponse{}
 	code := Succ
@@ -671,7 +669,7 @@ func BotList(ctx echo.Context) error {
 }
 
 func DebugStep(ctx echo.Context) error {
-	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
+
 	res := &response{}
 	req := &StepRequest{}
 	body := &StepResponse{}
@@ -725,7 +723,7 @@ EXT:
 }
 
 func DebugCreate(ctx echo.Context) error {
-	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
+
 	res := &response{}
 	body := &CreateDebugBotResponse{}
 	code := Succ
@@ -807,7 +805,12 @@ func Route(e *echo.Echo) {
 func Start(port int) *echo.Echo {
 	e := echo.New()
 	e.HideBanner = true
-	e.Use(middleware.CORS())
+	e.Use(middleware.CORSWithConfig(
+		middleware.CORSConfig{
+			AllowOrigins: []string{"*"},
+			AllowMethods: []string{echo.GET, echo.PUT, echo.POST, echo.DELETE},
+		},
+	))
 	e.Use(middleware.Recover())
 
 	Route(e)
