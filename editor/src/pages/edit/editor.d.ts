@@ -11,6 +11,11 @@ interface Window {
     tree: Map<string, any>,
 }
 
+interface BPNodeLinkInfo {
+    parentid: string,
+    bpid: string,
+}
+
 interface NodeUpdateInfo {
     type: string[],
     info: NodeNotifyInfo

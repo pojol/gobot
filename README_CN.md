@@ -1,25 +1,16 @@
 # gobot
 Gobot是一个功能强大的有状态API测试机器人。它提供图形界面进行测试场景的搭建,可以方便的进行测试脚本编写、单步调试和压力测试,并可以在测试过程的每个阶段之间共享和存储状态。
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/pojol/gobot)](https://goreportcard.com/report/github.com/pojol/gobot)
+[![Go Report Card](https://goreportcard.com/badge/github.com/pojol/gobot/driver)](https://goreportcard.com/report/github.com/pojol/gobot/driver)
 [![](https://img.shields.io/badge/%E6%96%87%E6%A1%A3-Doc-2ca5e0?style=flat&logo=github)](https://pojol.gitee.io/gobot/#/)
 [![](https://img.shields.io/badge/Trello-Todo-2ca5e0?style=flat&logo=trello)](https://trello.com/b/8eDZ6h7n/)
-[![CI](https://github.com/pojol/gobot/actions/workflows/dockerimage.yml/badge.svg?branch=develop)](https://github.com/pojol/gobot/actions/workflows/dockerimage.yml)
+[![CI](https://github.com/pojol/gobot/driver/actions/workflows/dockerimage.yml/badge.svg?branch=develop)](https://github.com/pojol/gobot/driver/actions/workflows/dockerimage.yml)
 
 ## 快速安装
-> 注：开启本地运行模式，所有的改动被记录在内存（并不会真正保存）如果需要保存请将文件下载到本地；或采用正式的部署方式
-1. 进入最新的 [release页面](https://github.com/pojol/gobot/releases/tag/v0.3.8) 下载可执行程序
-2. 执行 gobot_driver_win_x64_v0.3.8 目录中的 run.bat 文件， 运行服务器
-    * 执行 gobot_editor_win_x64_v0.3.8 目录中的 gobot.ext， 运行编辑器程序
-3. 在弹出的地址输入窗口 或 config 页的地址栏中填入 http://127.0.0.1:8888 本地服务器地址
-4. 切换到编辑器的 bots 面板，将 http_sample.txt 和 tcp_sample.txt 两个用例拖入
-5. 选择一个用例，点击 load 将机器人加载到编辑界面
-    * 点击下方的 debug （爬虫）按钮进行调试（创建一个新的调试机器人
-    * 点击旁边的 运行 按钮，单步执行（运行行为树节点
-    * 点击编辑器中的任意一个节点 可以查看这个节点的设置
-    * Meta 面板 可以查看机器人的所有数据
-    * Response 显示的是每个节点中的返回值
-    * RuntimeErr 显示的是执行节点可能遇到的错误信息（会自动切换过去
+1. 进入最新的 [release页面](https://github.com/pojol/gobot/releases/tag/v0.4.4) 下载可执行程序
+2. 执行 gobot_driver_win_x64_v0.3.8 目录中的 start.bat 文件， 运行服务器
+3. 执行 gobot_editor_win_x64_v0.3.8 目录中的 gobot.exe， 运行编辑器程序
+4. 在弹出的地址输入窗口 或 config 页的地址栏中填入 http://127.0.0.1:8888 本地服务器地址
 
 ## 特性
 * 使用`行为树`控制机器人的运行逻辑，使用`脚本`控制节点的具体行为（比如发起一次http请求
@@ -69,12 +60,66 @@ end
 | base64 | `encode` `decode` |Provides base64 encoding/decoding functionality.|
 | http | `post` `get` `put` | Support HTTP connection. |
 | tcp | `dail` `close` `write` `read` | Support TCP connection. |
+| websocket | `dail` `close` `write` `read` | Support WebSocket connection. |
 | protobuf | `marshal` `unmarshal` | Provides Protobuf operations. |
 | mongoDB | `insert` `find` `update` `delete` ... | Provides MongoDB operations. |
 | json | `encode` `decode` | Offers JSON functionalities. |
 | md5 | `sum` | Calculates MD5 hashes. |
 | utils | `uuid` `random` | Generates random values, UUIDs. |
 | ... | More modules available. |
+
+## 解析流式协议包
+> 示例 message.lua 位于 script/ 用户可以参考里面的实现，更改自己项目中的协议包解析方式
+```lua
+-- message.lua
+function TCPUnpackMsg(msglen, buf, errmsg)
+    if errmsg ~= "nil" then
+        return 0, ""
+    end
+
+    local msg = message.new(buf, ByteOrder, 0)
+
+    local msgTy = msg:readi1()
+    local msgCustom = msg:readi2()
+    local msgId = msg:readi2()
+    local msgbody = msg:readBytes(msglen-(2+1+2+2), -1)
+
+    return msgId, msgbody
+
+end
+
+function TCPPackMsg(msgid, msgbody)
+    local msglen = #msgbody+2+1+2+2
+
+    local msg = message.new("", ByteOrder, msglen)
+    msg:writei2(msglen)
+    msg:writei1(1)
+    msg:writei2(0)
+    msg:writei2(msgid)
+    msg:writeBytes(msgbody)
+
+    return msg:pack()
+
+end
+
+-- use
+--------------------------------------------------------
+-- 使用 proto.marshal 序列化
+-- 使用 TCPPackMsg 组装 TCP 报文
+local reqbody, errmsg = proto.marshal("HelloReq", json.encode({
+    Message = "hello",
+}))
+ret = conn.write(TCPPackMsg(1002, reqbody))
+
+--------------------------------------------------------
+-- 2 是 message length 的设计字节长度，conn会首先尝试读取指定的字节数用于解析报文大小
+-- 通过 msgid 解析协议报文内容
+-- TCPUnpackMsg 用户可以自行定义，不一定按 msgid, msgbody 的形式返回，也可以是 msghead, msgbody 看用户的报文结构设计
+msgid, msgbody = TCPUnpackMsg(conn.read(2))
+if msgid == 1002 then
+    body = proto.unmarshal("HelloRes", msgbody)
+end
+```
 
 ## [在线试用](http://47.120.59.203:7777/) <-- 点击试用
 > 驱动端地址 http://47.120.59.203:8888 （弹出窗口填写

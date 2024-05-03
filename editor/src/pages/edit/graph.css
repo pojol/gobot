@@ -23,24 +23,31 @@
     left: 252px;
 }
 
-.app-step-win {
+.app-debug-reset {
     position: absolute;
     z-index: 10;
-    right: 75px;
+    right: 180px;
     bottom: 90px;
 }
 
-.app-reset-win {
+.app-debug-run {
     position: absolute;
     z-index: 10;
-    right: 150px;
+    right: 125px;
     bottom: 90px;
 }
 
-.app-upload-win {
+.app-debug-step {
     position: absolute;
     z-index: 10;
-    right: 18px;
+    right: 70px;
+    bottom: 90px;
+}
+
+.app-debug-upload {
+    position: absolute;
+    z-index: 10;
+    right: 15px;
     bottom: 90px;
 }
 

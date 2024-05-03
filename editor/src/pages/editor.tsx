@@ -24,6 +24,8 @@ export default function Editor() {
   const dispatch = useDispatch()
 
   useEffect(() => {
+    const heartTaskComponent = <HeartTask />;
+
     if (localStorage.codeboxTheme === undefined || localStorage.codeboxTheme === "") {
       localStorage.codeboxTheme = "ayu-dark"
     }
@@ -40,8 +42,8 @@ export default function Editor() {
 
     return (
       <div>
-        <HeartTask />
         <div className="container">
+          <HeartTask />
           <ReflexContainer orientation="vertical">
             <ReflexElement className="left-pane" flex={0.6} minSize={200} onStopResize={onResizeGraphPane}>
               <ReflexContainer orientation="horizontal">

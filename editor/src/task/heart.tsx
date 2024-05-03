@@ -1,4 +1,4 @@
-import * as React from "react";
+import React, { useEffect, useState } from 'react';
 
 import { TaskTimer } from 'tasktimer';
 import axios from "axios";
@@ -27,28 +27,44 @@ const heart = async (): Promise<number> => {
 
 }
 
-export default function HeartTask() {
-    const dispatch = useDispatch()
-    
-
-    let callback = async () => {
-        let ping = await heart()
-        if (ping != 0) {
-            dispatch(setHeartColor(ping + " ms"))
-        } else {
-            dispatch(setHeartColor(""))
+const HeartTask = () => {
+    const dispatch = useDispatch();
+    const [timer, setTimer] = useState<TaskTimer | null>(null);
+  
+    useEffect(() => {
+      let mounted = true;
+  
+      const callback = async () => {
+        let ping = await heart();
+        if (mounted) {
+          if (ping !== 0) {
+            dispatch(setHeartColor(ping + " ms"));
+          } else {
+            dispatch(setHeartColor(""));
+          }
         }
-    }
-
-    callback()
-
-    const timer = new TaskTimer(2000);
-    timer.on('tick', () => {
-        callback()
-    });
-    timer.start();
-
-
-    return (<div></div>);
-
-}
+      };
+  
+      callback();
+  
+      const newTimer = new TaskTimer(2000);
+      newTimer.on('tick', callback);
+      newTimer.start();
+  
+      setTimer(newTimer);
+  
+      return () => {
+        // 在组件卸载时清除定时器
+        if (timer) {
+          timer.stop();
+        }
+        setTimer(null);
+        mounted = false;
+      };
+    }, [dispatch]);
+  
+    return <div></div>;
+  }
+  
+  export default HeartTask;
+  
