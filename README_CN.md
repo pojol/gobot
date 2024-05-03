@@ -7,19 +7,10 @@ Gobot是一个功能强大的有状态API测试机器人。它提供图形界面
 [![CI](https://github.com/pojol/gobot/driver/actions/workflows/dockerimage.yml/badge.svg?branch=develop)](https://github.com/pojol/gobot/driver/actions/workflows/dockerimage.yml)
 
 ## 快速安装
-> 注：开启本地运行模式，所有的改动被记录在内存（并不会真正保存）如果需要保存请将文件下载到本地；或采用正式的部署方式
-1. 进入最新的 [release页面](https://github.com/pojol/gobot/driver/releases/tag/v0.3.8) 下载可执行程序
-2. 执行 gobot_driver_win_x64_v0.3.8 目录中的 run.bat 文件， 运行服务器
-    * 执行 gobot_editor_win_x64_v0.3.8 目录中的 gobot.ext， 运行编辑器程序
-3. 在弹出的地址输入窗口 或 config 页的地址栏中填入 http://127.0.0.1:8888 本地服务器地址
-4. 切换到编辑器的 bots 面板，将 http_sample.txt 和 tcp_sample.txt 两个用例拖入
-5. 选择一个用例，点击 load 将机器人加载到编辑界面
-    * 点击下方的 debug （爬虫）按钮进行调试（创建一个新的调试机器人
-    * 点击旁边的 运行 按钮，单步执行（运行行为树节点
-    * 点击编辑器中的任意一个节点 可以查看这个节点的设置
-    * Meta 面板 可以查看机器人的所有数据
-    * Response 显示的是每个节点中的返回值
-    * RuntimeErr 显示的是执行节点可能遇到的错误信息（会自动切换过去
+1. 进入最新的 [release页面](https://github.com/pojol/gobot/driver/releases/tag/v0.4.4) 下载可执行程序
+2. 执行 gobot_driver_win_x64_v0.3.8 目录中的 start.bat 文件， 运行服务器
+3. 执行 gobot_editor_win_x64_v0.3.8 目录中的 gobot.exe， 运行编辑器程序
+4. 在弹出的地址输入窗口 或 config 页的地址栏中填入 http://127.0.0.1:8888 本地服务器地址
 
 ## 特性
 * 使用`行为树`控制机器人的运行逻辑，使用`脚本`控制节点的具体行为（比如发起一次http请求
