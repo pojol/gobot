@@ -2,28 +2,18 @@
 Gobot is a powerful stateful API testing robot. It provides a graphical interface for building test scenarios, allows for easy test script writing, step-by-step debugging and pressure testing, and can share and store states between each stage of the testing process. 
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/pojol/gobot/driver)](https://goreportcard.com/report/github.com/pojol/gobot/driver)
-[![](https://img.shields.io/badge/%E6%96%87%E6%A1%A3-Doc-2ca5e0?style=flat&logo=github)](https://pojol.gitee.io/gobot/#/)
+[![](https://img.shields.io/badge/%E6%96%87%E6%A1%A3-Doc-2ca5e0?style=flat&logo=github)](https://pojol.github.io/gobot/#/)
 [![](https://img.shields.io/badge/Trello-Todo-2ca5e0?style=flat&logo=trello)](https://trello.com/b/8eDZ6h7n/)
-[![CI](https://github.com/pojol/gobot/driver/actions/workflows/dockerimage.yml/badge.svg?branch=develop)](https://github.com/pojol/gobot/driver/actions/workflows/dockerimage.yml)
 
 [中文](https://github.com/pojol/gobot/driver/blob/master/README_CN.md)
 
 
 ## Quick Installation
-> Note: Enable local running mode. All changes are recorded in memory (not saved permanently). If you need to save, download the files to your local machine or use the formal deployment method.
 * windows
-1. Go to the [release page](https://github.com/pojol/gobot/driver/releases/tag/v0.3.8) and download the executable program.
+1. Go to the [release page](https://github.com/pojol/gobot/releases/tag/v0.4.4) and download the executable program.
 2. Run the server by executing the run.bat file in the gobot_driver_win_x64_v0.3.8 directory.
-    * Run the editor program by executing gobot.ext in the gobot_editor_win_x64_v0.3.8 directory.
-3. Fill in the address input window that pops up or the address bar on the config page with http://127.0.0.1:8888, the local server address.
-4. Switch to the bots panel in the editor, and drag in the two test cases, http_sample.txt and tcp_sample.txt.
-5. Select a test case, click load to load the robot into the editing interface.
-    * Click the debug (spider) button below to debug (create a new debugging robot).
-    * Click the adjacent run button to execute step by step (run behavior tree nodes).
-    * Click on any node in the editor to view its settings.
-    * The Meta panel displays all data of the robot.
-    * Response displays the return values of each node.
-    * RuntimeErr displays any error messages encountered during node execution (automatically switches to it).
+3. Run the editor program by executing gobot.ext in the gobot_editor_win_x64_v0.3.8 directory.
+4. Fill in the address input window that pops up or the address bar on the config page with http://127.0.0.1:8888, the local server address.
 
 
 ## Feature
