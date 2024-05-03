@@ -87,6 +87,8 @@ const GraphView = (props: GraphViewProps) => {
     const graphRef = React.useRef<Graph>();
     const containerRef = React.useRef<HTMLDivElement>(null);
 
+    const [BpNodes, setBpNodes] = useState<BPNodeLinkInfo[]>();
+
     const [modalVisible, setModalVisible] = useState<boolean>(false);
     const [behaviorName, setBehaviorName] = useState<string>("");
     const [wflex, setWflex] = useState<number>(0.6);
@@ -176,6 +178,30 @@ const GraphView = (props: GraphViewProps) => {
 
         graph.on("node:dblclick", ({ node }) => {
 
+            // 只对脚本节点进行操作
+            if (IsScriptNode(node.getAttrs().type.name as string)) {
+                setBpNodes(prevBpNodes => {
+                    const tmp = prevBpNodes || []; // 保证 tmp 不为 undefined
+                    const ln = tmp.find((element) => element.parentid === node.id);
+
+                    console.info(prevBpNodes, "node dblclick", node.id, ln);
+                    if (ln !== undefined) { // 删除
+                        graph.removeNode(ln.bpid);
+                        const updatedNodes = tmp.filter((element) => element.parentid !== node.id);
+                        console.info("remove bp node", updatedNodes);
+                        return updatedNodes;
+                    } else {
+                        var bpnode = GetNode(NodeTy.BreakPoint, {});
+                        bpnode.setPosition(node.position().x - (bpnode.getSize().width + 7),
+                            node.position().y + (bpnode.getSize().height / 2));
+                        graph.addNode(bpnode, { others : { build: true} });  // 不发送addnode事件
+
+                        const updatedNodes = [...tmp, { parentid: node.id, bpid: bpnode.id }];
+                        console.info("add bp node", updatedNodes);
+                        return updatedNodes;
+                    }
+                });
+            }
         });
 
         graph.on("blank:click", () => {
@@ -210,7 +236,12 @@ const GraphView = (props: GraphViewProps) => {
         });
 
         graph.on("node:mouseenter", ({ node }) => {
-            node.setPortProp(node.getPorts()[0].id as string, "attrs/portBody/r", 8);
+
+            var ty = node.getAttrs().type.name as string
+            if (ty !== NodeTy.BreakPoint) {
+                node.setPortProp(node.getPorts()[0].id as string, "attrs/portBody/r", 8);
+            }
+
         });
 
         graph.on("node:moved", ({ e, x, y, node, view: NodeView }) => {
@@ -339,6 +370,7 @@ const GraphView = (props: GraphViewProps) => {
         setIsGraphCreated(true);
 
         return () => {
+            setBpNodes(prevBpNodes => {return []})
             graph.dispose()
         }
     }, []);
@@ -357,8 +389,8 @@ const GraphView = (props: GraphViewProps) => {
 
     useEffect(() => {
         const newTimer = new TaskTimer(200);
-        newTimer.on('tick', ()=>{
-            step(currentDebugBot);
+        newTimer.on('tick', () => {
+            step(currentDebugBot, BpNodes);
         });
         setTimer(newTimer);
 
@@ -374,7 +406,7 @@ const GraphView = (props: GraphViewProps) => {
             // 在组件卸载时将 ref 对象置为 null
             timerRef.current = null;
         }
-    }, [currentDebugBot]);
+    }, [currentDebugBot, BpNodes]);
 
     useEffect(() => {
 
@@ -440,6 +472,8 @@ const GraphView = (props: GraphViewProps) => {
 
         if (graphRef.current) {
             graphRef.current.clearCells();
+
+            console.info("redraw tree nods", nodes)
 
             if (nodes.length > 0) {
                 for (var i = 0; i < nodes.length; i++) {
@@ -788,10 +822,10 @@ const GraphView = (props: GraphViewProps) => {
         }
 
         props.dispatch(setLock(true))
-        step(props.tree.currentDebugBot);
+        step(props.tree.currentDebugBot, BpNodes);
     };
 
-    const step = (botid : string) => {
+    const step = (botid: string, bpnodes : BPNodeLinkInfo[] | undefined) => {
         Post(localStorage.remoteAddr, Api.DebugStep, { BotID: botid }).then(
             (json: any) => {
                 if (json.Code !== 200) {
@@ -817,6 +851,13 @@ const GraphView = (props: GraphViewProps) => {
                 // 推送当前节点信息
                 let focusLst = new Array<string>
                 threadinfo.forEach(element => {
+                    const ln = bpnodes?.find((bp) => bp.parentid === element.curnod);
+                    if (ln !== undefined) { // match bp node
+                        if (timerRef.current?.state === "running") {
+                            timerRef.current?.stop();
+                        }
+                    }
+
                     focusLst.push(element.curnod)
                 });
                 debugFocus(focusLst)
@@ -828,6 +869,8 @@ const GraphView = (props: GraphViewProps) => {
                     threadInfo: threadinfo,
                     lock: false,
                 }))
+
+
             }
         );
 
