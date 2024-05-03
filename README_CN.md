@@ -7,7 +7,7 @@ Gobot是一个功能强大的有状态API测试机器人。它提供图形界面
 [![CI](https://github.com/pojol/gobot/driver/actions/workflows/dockerimage.yml/badge.svg?branch=develop)](https://github.com/pojol/gobot/driver/actions/workflows/dockerimage.yml)
 
 ## 快速安装
-1. 进入最新的 [release页面](https://github.com/pojol/gobot/driver/releases/tag/v0.4.4) 下载可执行程序
+1. 进入最新的 [release页面](https://github.com/pojol/gobot/releases/tag/v0.4.4) 下载可执行程序
 2. 执行 gobot_driver_win_x64_v0.3.8 目录中的 start.bat 文件， 运行服务器
 3. 执行 gobot_editor_win_x64_v0.3.8 目录中的 gobot.exe， 运行编辑器程序
 4. 在弹出的地址输入窗口 或 config 页的地址栏中填入 http://127.0.0.1:8888 本地服务器地址

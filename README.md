@@ -11,7 +11,7 @@ Gobot is a powerful stateful API testing robot. It provides a graphical interfac
 
 ## Quick Installation
 * windows
-1. Go to the [release page](https://github.com/pojol/gobot/driver/releases/tag/v0.4.4) and download the executable program.
+1. Go to the [release page](https://github.com/pojol/gobot/releases/tag/v0.4.4) and download the executable program.
 2. Run the server by executing the run.bat file in the gobot_driver_win_x64_v0.3.8 directory.
 3. Run the editor program by executing gobot.ext in the gobot_editor_win_x64_v0.3.8 directory.
 4. Fill in the address input window that pops up or the address bar on the config page with http://127.0.0.1:8888, the local server address.
