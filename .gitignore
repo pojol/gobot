@@ -1,11 +1,8 @@
-editor/node_modules/
-driver/main.exe
-driver/make.sh
-node_modules/
-logo.zip
-zh-cn/driver/main.exe
-driver/bot_linux
-bot_linux
-editor/build/
-editor/dist/
-editor/out/
+# OS generated files #
+######################
+.DS_Store
+.DS_Store?
+.vscode
+.vscode?
+.obsidian
+.obsidian?
