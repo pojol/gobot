@@ -159,9 +159,8 @@
       name: 'Gobot',
       repo: 'https://github.com/pojol/gobot',
       homepage: 'home.md',
-      loadSidebar: !(getURLParameterByName(['standalone', 'embedded']) || standalone || false),
-      loadNavbar: !(getURLParameterByName(['standalone', 'embedded']) && !(getURLParameterByName('navbar')) || standalone && !navbar ||false),
-      externalLinkTarget: (getURLParameterByName(['standalone', 'embedded'], '_top', '_blank')),
+      loadSidebar: true,
+      loadNavbar: true,
       loadFooter: (getURLParameterByName('footer') || footer || false),
       
       // SIDEBAR NAVIGATION
