@@ -1,4 +1,3 @@
-:memo: [Propose an Edit to this Site](https://github.com/paulhibbitts/docsify-this-multilanguage-site)
 
 ---
 

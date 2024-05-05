@@ -35,4 +35,7 @@
 ---
 
 ## Citations:
-- docs template https://github.com/hibbitts-design/docsify-this-multilanguage-site
+- UI library https://github.com/ant-design/ant-design
+- Graph Editing Engine https://github.com/antvis/X6
+- Go lua https://github.com/yuin/gopher-lua
+- Docs template https://github.com/hibbitts-design/docsify-this-multilanguage-site
