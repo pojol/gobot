@@ -44,7 +44,7 @@ function TCPUnpackMsg(msglen, buf, errmsg)
     local msgTy = msg:readi1()
     local msgCustom = msg:readi2()
     local msgId = msg:readi2()
-    local msgbody = msg:readBytes(msglen-(2+1+2+2), -1)
+    local msgbody = msg:readBytes((1+2+2), -1)
 
     return msgId, msgbody
 
