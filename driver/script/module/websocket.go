@@ -1,8 +1,6 @@
 package script
 
 import (
-	"bytes"
-	"encoding/binary"
 	"fmt"
 	"net/url"
 	"runtime"
@@ -66,15 +64,6 @@ func (ws *WebsocketModule) dail(L *lua.LState) int {
 	return 1
 }
 
-var blackmap = map[uint16]bool{
-	6245:  true, // 任务变更通知
-	6865:  true, //无畏之路签到，数据变更
-	24154: true, // 无畏之路礼包，数据变更
-	24157: true, // 战令数据变更
-	24170: true, // 周月战令变更通知协议
-	24163: true, // 运营活动数据改变通知
-}
-
 func (ws *WebsocketModule) _read() {
 	if ws.conn == nil {
 		return
@@ -100,20 +89,6 @@ func (ws *WebsocketModule) _read() {
 				fmt.Println("read msg err", err.Error())
 				return
 			}
-
-			checkmsg := make([]byte, len(msg))
-			copy(checkmsg, msg)
-			br := bytes.NewReader(checkmsg)
-			var msglen uint16
-			var msgid uint16
-			binary.Read(br, binary.BigEndian, &msglen)
-			binary.Read(br, binary.BigEndian, &msgid)
-
-			if _, ok := blackmap[msgid]; ok {
-				continue
-			}
-
-			fmt.Println("recv msg id", msgid)
 
 			ws.qmu.Lock()
 			ws.q = append(ws.q, queue{buff: msg})

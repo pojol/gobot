@@ -31,6 +31,10 @@
 -- Write expression to return true or false
 function execute()
 
+  if bot.SessionID == nil then
+    bot.SessionID = &#34;&#34;
+  end
+  
     return bot.SessionID == &#34;&#34;
 
 end
@@ -49,7 +53,7 @@ local parm = {
   headers = {},
 }
 
-local url = &#34;http://127.0.0.1:6666/login/guest&#34;
+local url = HttpMockServerAddr .. &#34;/login/guest&#34;
 local http = require(&#34;http&#34;)
 
 function execute()
@@ -100,7 +104,7 @@ local parm = {
   headers = {},
 }
 
-local url = &#34;http://127.0.0.1:6666/base/acc.info&#34;
+local url = HttpMockServerAddr .. &#34;/base/acc.info&#34;
 local http = require(&#34;http&#34;)
 
 function execute()
@@ -152,7 +156,7 @@ end
                 <id>53ea97df-def8-4359-b09c-276498c737ef</id>
                 <pos>
                   <x>490</x>
-                  <y>521</y>
+                  <y>518</y>
                 </pos>
                 <code>
 local parm = {
@@ -163,7 +167,7 @@ local parm = {
   headers = {},
 }
 
-local url = &#34;http://127.0.0.1:6666/base/hero.info&#34;
+local url = HttpMockServerAddr .. &#34;/base/hero.info&#34;
 local http = require(&#34;http&#34;)
 
 function execute()
@@ -205,7 +209,7 @@ local parm = {
   headers = {},
 }
 
-local url = &#34;http://127.0.0.1:6666/base/hero.lvup&#34;
+local url = HttpMockServerAddr .. &#34;/base/hero.lvup&#34;
 local http = require(&#34;http&#34;)
 
 function execute()

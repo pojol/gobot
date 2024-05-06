@@ -2,8 +2,8 @@
   <id>dda6b64a-576c-4834-9155-763f26812859</id>
   <ty>RootNode</ty>
   <pos>
-    <x>518</x>
-    <y>281</y>
+    <x>360</x>
+    <y>160</y>
   </pos>
   <children>
     <id>ad9455c3-0182-40b2-89cc-02b51e8f4dee</id>
@@ -16,10 +16,10 @@ end
     <loop>1</loop>
     <wait>1</wait>
     <pos>
-      <x>523</x>
-      <y>336</y>
+      <x>365</x>
+      <y>215</y>
     </pos>
-    <alias>环境变量设置</alias>
+    <alias>set-env</alias>
     <children>
       <id>cd538d4a-b170-47d6-937c-666d3e03b46f</id>
       <ty>邮件领取</ty>
@@ -39,18 +39,18 @@ end</code>
       <loop>1</loop>
       <wait>1</wait>
       <pos>
-        <x>523</x>
-        <y>389</y>
+        <x>365</x>
+        <y>268</y>
       </pos>
-      <alias>建立连接</alias>
+      <alias>tcp-conn</alias>
       <children>
         <id>f016f1cc-a9a0-42d1-ab47-25e3fed86ae9</id>
         <ty>ParallelNode</ty>
         <loop>1</loop>
         <wait>1</wait>
         <pos>
-          <x>528</x>
-          <y>445</y>
+          <x>370</x>
+          <y>324</y>
         </pos>
         <children>
           <id>e80c9a6e-68b0-4b08-83c9-23041ae40cba</id>
@@ -58,8 +58,8 @@ end</code>
           <loop>0</loop>
           <wait>1</wait>
           <pos>
-            <x>386</x>
-            <y>526</y>
+            <x>228</x>
+            <y>405</y>
           </pos>
           <children>
             <id>68659e0c-68ea-433f-9033-140ce0c0f82f</id>
@@ -67,8 +67,8 @@ end</code>
             <loop>1</loop>
             <wait>1000</wait>
             <pos>
-              <x>406</x>
-              <y>586</y>
+              <x>248</x>
+              <y>465</y>
             </pos>
             <children>
               <id>654a7e7d-a960-4d7a-9076-164d7cea216d</id>
@@ -76,16 +76,16 @@ end</code>
               <code>
 --[[
     | 2 byte,   1 byte,     2 byte,     2byte		  |                        |
-    |包长度 len, 协议格式 ty, 预留2自定义字节, 协议号 msgid |                        |
+    |package len, ty, custom, msgid |                 |
     |                  消息头                          |     消息体          |
 ]]--
 
 function execute()
 
-  ty, _, msgid, msgbody, err = CONN.read_msg(2, 1, 2, 2)
-  print(&#34;read==&gt; &#34;, ty, msgid, msgbody, err)
-
-  if err == &#34;&#34; then
+  msgid, msgbody = TCPUnpackMsg(CONN.read(2))
+  
+  if msgid ~= 0 then
+    print(&#34;read==&gt; &#34;, msgid, msgbody)
     table.insert(QUEUE, {id = msgid, body = msgbody})
   end
 end
@@ -93,8 +93,8 @@ end
               <loop>1</loop>
               <wait>1</wait>
               <pos>
-                <x>396</x>
-                <y>636</y>
+                <x>238</x>
+                <y>515</y>
               </pos>
               <alias>recv</alias>
             </children>
@@ -106,8 +106,8 @@ end
           <loop>1</loop>
           <wait>1</wait>
           <pos>
-            <x>613</x>
-            <y>526</y>
+            <x>455</x>
+            <y>405</y>
           </pos>
           <children>
             <id>f31108c3-6f9f-47b6-a0c5-f5750eea7886</id>
@@ -119,20 +119,20 @@ function execute()
 
   body, errmsg = proto.marshal(&#34;LoginGuestReq&#34;, json.encode({}))
   if errmsg ~= nil then
-      bot.Err = &#34;proto.marshal&#34; .. errmsg
+      meta.Err = &#34;proto.marshal&#34; .. errmsg
   end
 
-  local ret = CONN.write_msg(7+0, 1, 0, 1001, body)
+  local ret = CONN.write(TCPPackMsg(1001, body))
   print(&#34;write msg 1001 &#34; .. ret)
   
 end</code>
             <loop>1</loop>
             <wait>1</wait>
             <pos>
-              <x>548</x>
-              <y>586</y>
+              <x>390</x>
+              <y>465</y>
             </pos>
-            <alias>登录</alias>
+            <alias>login</alias>
           </children>
           <children>
             <id>1f28a132-5109-42b5-9786-b06f6dc32ffd</id>
@@ -140,8 +140,8 @@ end</code>
             <loop>0</loop>
             <wait>1</wait>
             <pos>
-              <x>693</x>
-              <y>586</y>
+              <x>535</x>
+              <y>465</y>
             </pos>
             <children>
               <id>845f2a18-9b83-4ed8-8b84-7b091bdcd6d2</id>
@@ -149,8 +149,8 @@ end</code>
               <loop>1</loop>
               <wait>1000</wait>
               <pos>
-                <x>713</x>
-                <y>646</y>
+                <x>555</x>
+                <y>525</y>
               </pos>
               <children>
                 <id>813fe292-41f0-4344-87cc-bef2ff8557fd</id>
@@ -158,8 +158,8 @@ end</code>
                 <loop>1</loop>
                 <wait>1</wait>
                 <pos>
-                  <x>693</x>
-                  <y>685</y>
+                  <x>535</x>
+                  <y>564</y>
                 </pos>
                 <children>
                   <id>428a5de0-20f6-445d-bc37-72e99929c580</id>
@@ -180,18 +180,18 @@ end
                   <loop>1</loop>
                   <wait>1</wait>
                   <pos>
-                    <x>598</x>
-                    <y>742</y>
+                    <x>440</x>
+                    <y>621</y>
                   </pos>
-                  <alias>消息弹出</alias>
+                  <alias>msg-pop</alias>
                   <children>
                     <id>1b0f122f-ae25-46fa-ac16-59f7cef1144f</id>
                     <ty>SelectorNode</ty>
                     <loop>1</loop>
                     <wait>1</wait>
                     <pos>
-                      <x>588</x>
-                      <y>792</y>
+                      <x>430</x>
+                      <y>671</y>
                     </pos>
                     <children>
                       <id>f3cc1f4a-d09b-4ac4-817a-751592ca6ab4</id>
@@ -205,10 +205,10 @@ end
                       <loop>1</loop>
                       <wait>1</wait>
                       <pos>
-                        <x>495</x>
-                        <y>861</y>
+                        <x>337</x>
+                        <y>740</y>
                       </pos>
-                      <alias>loginguset</alias>
+                      <alias></alias>
                       <children>
                         <id>8db1f756-b7f0-494e-9968-bca569192b59</id>
                         <ty>邮件领取</ty>
@@ -225,11 +225,11 @@ function execute()
         Message = &#34;hello gobot&#34;,
   }))
   if errmsg ~= nil then
-      bot.Err = &#34;proto.marshal&#34; .. errmsg
+      bot.Meta.Err = &#34;proto.marshal&#34; .. errmsg
       return
   end
 
-  local ret = CONN.write_msg(7+#body, 1, 0, 1002, body)
+  local ret = CONN.write(TCPPackMsg(1002, body))
   print(&#34;write msg 1002 &#34; .. ret)
   
 end
@@ -237,10 +237,10 @@ end
                         <loop>1</loop>
                         <wait>1</wait>
                         <pos>
-                          <x>485</x>
-                          <y>909</y>
+                          <x>327</x>
+                          <y>788</y>
                         </pos>
-                        <alias>游客登录</alias>
+                        <alias>login-guest</alias>
                       </children>
                     </children>
                     <children>
@@ -255,10 +255,10 @@ end
                       <loop>1</loop>
                       <wait>1</wait>
                       <pos>
-                        <x>568</x>
-                        <y>861</y>
+                        <x>410</x>
+                        <y>740</y>
                       </pos>
-                      <alias>hello</alias>
+                      <alias></alias>
                       <children>
                         <id>b067df0a-e1d7-4798-a3cb-5e578a89abfb</id>
                         <ty>邮件领取</ty>
@@ -274,19 +274,19 @@ function execute()
         HeroID = bot.AccInfo.Heros[1].ID,
   }))
   if errmsg ~= nil then
-      bot.Err = &#34;proto.marshal&#34; .. errmsg
+      bot.Meta.Err = &#34;proto.marshal&#34; .. errmsg
       return
   end
 
-  local ret = CONN.write_msg(7+#reqbody, 1, 0, 1003, reqbody)
+  local ret = CONN.write(TCPPackMsg(1003, reqbody))
   print(&#34;write msg 1003 &#34; .. ret)
 end
 </code>
                         <loop>1</loop>
                         <wait>1</wait>
                         <pos>
-                          <x>558</x>
-                          <y>909</y>
+                          <x>400</x>
+                          <y>788</y>
                         </pos>
                         <alias>hello</alias>
                       </children>
@@ -303,10 +303,10 @@ end
                       <loop>1</loop>
                       <wait>1</wait>
                       <pos>
-                        <x>643</x>
-                        <y>861</y>
+                        <x>485</x>
+                        <y>740</y>
                       </pos>
-                      <alias>heroinfo</alias>
+                      <alias></alias>
                       <children>
                         <id>24a823e0-3b97-4423-89d1-8e4d6cd7c6f2</id>
                         <ty>邮件领取</ty>
@@ -323,11 +323,11 @@ function execute()
         HeroID = bot.AccInfo.Heros[1].ID,
   }))
   if errmsg ~= nil then
-      bot.Err = &#34;proto.marshal&#34; .. errmsg
+      bot.Meta.Err = &#34;proto.marshal&#34; .. errmsg
       return
   end
 
-  local ret = CONN.write_msg(7+#body, 1, 0, 1004, body)
+  local ret = CONN.write(TCPPackMsg(1004, body))
   print(&#34;write msg 1004 &#34; .. ret)
   
 end
@@ -335,10 +335,10 @@ end
                         <loop>1</loop>
                         <wait>1</wait>
                         <pos>
-                          <x>633</x>
-                          <y>909</y>
+                          <x>475</x>
+                          <y>788</y>
                         </pos>
-                        <alias>英雄信息</alias>
+                        <alias>hero-info</alias>
                       </children>
                     </children>
                     <children>
@@ -353,10 +353,10 @@ end
                       <loop>1</loop>
                       <wait>1</wait>
                       <pos>
-                        <x>723</x>
-                        <y>861</y>
+                        <x>565</x>
+                        <y>740</y>
                       </pos>
-                      <alias>herolvup</alias>
+                      <alias></alias>
                       <children>
                         <id>a2a59b8a-ee83-4089-88a2-b700069c0a64</id>
                         <ty>邮件领取</ty>
@@ -373,10 +373,10 @@ end
                         <loop>1</loop>
                         <wait>1</wait>
                         <pos>
-                          <x>713</x>
-                          <y>909</y>
+                          <x>555</x>
+                          <y>788</y>
                         </pos>
-                        <alias>英雄升级</alias>
+                        <alias>hero-lvup</alias>
                       </children>
                     </children>
                   </children>
@@ -395,10 +395,10 @@ end
                   <loop>1</loop>
                   <wait>1</wait>
                   <pos>
-                    <x>810</x>
-                    <y>742</y>
+                    <x>652</x>
+                    <y>621</y>
                   </pos>
-                  <alias>exit_check</alias>
+                  <alias>exit-check</alias>
                 </children>
               </children>
             </children>

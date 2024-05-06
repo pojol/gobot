@@ -129,5 +129,5 @@ func wsHeroLvupHandle(conn *websocket.Conn, msgBody []byte) error {
 	buf := new(bytes.Buffer)
 	binary.Write(buf, getWSByteOrder(), uint16(HeroLvup))
 	binary.Write(buf, getWSByteOrder(), byt)
-	return conn.WriteMessage(websocket.BinaryMessage, byt)
+	return conn.WriteMessage(websocket.BinaryMessage, buf.Bytes())
 }
