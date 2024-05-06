@@ -1,7 +1,7 @@
 
 local parm = {
   body = {
-      Token = meta.Token,
+      Token = bot.Token,
       HeroID = "joy"
   },    -- request body
   timeout = "10s",
@@ -17,7 +17,7 @@ function execute()
   res, errmsg = http.post(url, parm)
   if errmsg == nil then
     body = json.decode(res["body"])
-    merge(meta, body.Body)
+    merge(bot, body.Body)
   end
 
   return state.Succ, body.Body
