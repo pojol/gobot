@@ -767,6 +767,7 @@ const GraphView = (props: GraphViewProps) => {
     // 基于某个模版，创建一个可运行的 Bot
     const ClickCreateDebug = (e: any) => {
         cleanStepInfo();
+        timer?.stop()
 
         props.dispatch(setDebugInfo({ metaInfo: "{}", threadInfo: [], lock: false }))
         for (var nod of nodes) {
