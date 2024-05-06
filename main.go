@@ -51,6 +51,8 @@ func main() {
 		return
 	}
 
+	fmt.Printf(banner, Version)
+
 	botFactory, err := factory.Create(
 		factory.WithDatabase(f.DBType),
 		factory.WithClusterMode(f.Cluster),
@@ -87,8 +89,6 @@ func main() {
 
 	// 查看有没有未完成的队列
 	factory.Global.CheckTaskHistory()
-
-	fmt.Printf(banner, Version)
 
 	openApiPort := 8888
 	if f.OpenAPIPort != 0 {
