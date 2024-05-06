@@ -44,7 +44,8 @@ type Factory struct {
 
 	debugBots map[string]*bot.Bot
 
-	pipelineCache []TaskInfo
+	pipelineCache     []TaskInfo
+	batchDoneChannels map[*Batch]chan struct{}
 
 	batches []*Batch
 	db      *database.Cache
@@ -115,13 +116,14 @@ func Create(opts ...Option) (*Factory, error) {
 	}
 
 	f := &Factory{
-		parm:      p,
-		bnet:      bnet,
-		statechan: statechan,
-		db:        db,
-		debugBots: make(map[string]*bot.Bot),
-		exit:      utils.NewSwitch(),
-		report:    BuildReport(p.ServiceID),
+		parm:              p,
+		bnet:              bnet,
+		statechan:         statechan,
+		db:                db,
+		batchDoneChannels: make(map[*Batch]chan struct{}),
+		debugBots:         make(map[string]*bot.Bot),
+		exit:              utils.NewSwitch(),
+		report:            BuildReport(p.ServiceID),
 	}
 
 	go f.taskLoop()
@@ -254,12 +256,19 @@ func (f *Factory) taskLoop() {
 			f.pipelineCache = f.pipelineCache[1:]
 
 			b := f.createBatch(info.Name, info.ID, info.Cur, info.Num)
-
+			f.batchDoneChannels[b] = b.BatchDone
 			f.pushBatch(b)
-			<-b.BatchDone
-			f.popBatch()
 		}
 		f.lock.Unlock()
+
+		for batch, ch := range f.batchDoneChannels {
+			select {
+			case <-ch:
+				f.popBatch(batch.ID)
+			default:
+				continue
+			}
+		}
 
 		time.Sleep(time.Millisecond)
 	}
@@ -273,27 +282,33 @@ func (f *Factory) pushBatch(b *Batch) {
 	f.batchLock.Unlock()
 }
 
-func (f *Factory) popBatch() {
+func (f *Factory) popBatch(id string) {
 
 	f.batchLock.Lock()
-	b := f.batches[0]
-	b.Close()
+	for i, batch := range f.batches {
+		if batch.ID == id {
 
-	fmt.Println("pop batch", b.ID, b.Name)
-	if !constant.GetClusterState() {
-		rep := Report{
-			rep: &database.ReportDetail{
-				ID:        b.ID,
-				Name:      b.Name,
-				BeginTime: b.GetBeginTime().Unix(),
-				ApiMap:    make(map[string]*database.ApiDetail),
-			},
+			batch.Close()
+			fmt.Println("pop batch", batch.ID, batch.Name)
+
+			if !constant.GetClusterState() {
+				rep := Report{
+					rep: &database.ReportDetail{
+						ID:        batch.ID,
+						Name:      batch.Name,
+						BeginTime: batch.GetBeginTime().Unix(),
+						ApiMap:    make(map[string]*database.ApiDetail),
+					},
+				}
+				rep.Record(batch.TotalNum, batch.Report())
+				rep.Generate()
+			}
+
+			f.batches = append(f.batches[:i], f.batches[i+1:]...)
+			break
 		}
-		rep.Record(b.TotalNum, b.Report())
-		rep.Generate()
 	}
 
-	f.batches = f.batches[1:]
 	f.batchLock.Unlock()
 }
 

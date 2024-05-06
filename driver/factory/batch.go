@@ -49,7 +49,7 @@ type Batch struct {
 
 	pipeline  chan *bot.Bot
 	done      chan interface{}
-	BatchDone chan interface{}
+	BatchDone chan struct{}
 
 	botDoneCh chan string
 	botErrCh  chan bot.ErrInfo
@@ -83,7 +83,7 @@ func CreateBatch(name, id string, cur, total int32, tbyt []byte, cfg BatchConfig
 		treeData:     tbyt,
 		pipeline:     make(chan *bot.Bot, cfg.batchsize),
 		done:         make(chan interface{}, 1),
-		BatchDone:    make(chan interface{}, 1),
+		BatchDone:    make(chan struct{}, 1),
 		botDoneCh:    make(chan string),
 		botErrCh:     make(chan bot.ErrInfo),
 		beginTime:    time.Now(),
@@ -150,7 +150,7 @@ func (b *Batch) loop() {
 	}
 ext:
 	b.exit.Done()
-	b.BatchDone <- 1
+	b.BatchDone <- struct{}{}
 }
 
 func (b *Batch) run() {
