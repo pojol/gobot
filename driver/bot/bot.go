@@ -113,7 +113,7 @@ func NewWithBehaviorTree(path string, bt *behavior.Tree, mode behavior.Mode, nam
 	var state *pool.BotState
 	var id string
 
-	if mode == behavior.Thread {
+	if mode == behavior.Thread { // batch mode
 		state = pool.GetState()
 		id = strconv.Itoa(int(idx))
 	} else {
