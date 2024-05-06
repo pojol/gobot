@@ -1,6 +1,5 @@
 # v0.4.4
 > Milestone version, completing the writing of all major features; subsequent maintenance will focus on collecting new features, optimizing user interface usage, and writing documentation.
-
 * Feature
     - Directory relocation: Move driver-related code to the driver directory, keeping only the editor & driver directories in the root directory.
     - Directory relocation: Move robot runtime files originally in the sample directory to /mock/bot_sample_files.
@@ -12,6 +11,7 @@
     - Introduction of logging library, improving logging output in the program.
     - Change the original meta structure at the script layer to bot (more intuitive semantics).
     - Debug logic adjustment: More runtime debugging capabilities are now provided. #20
+    - Support running multiple batches concurrently #16
 
 # v0.4.3
 * Features
