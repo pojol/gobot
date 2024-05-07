@@ -3,9 +3,9 @@
 ---
 
 ## Local Mode
-1. Go to the latest release page to download the executable program.
-2. Execute the start.bat file in the gobot_driver_win_x64_v0.4.4 directory to run the server.
-3. Execute gobot.exe in the gobot_editor_win_x64_v0.4.4 directory to run the editor program.
+1. Go to the latest [release](https://github.com/pojol/gobot/releases/tag/v0.4.4) page to download the executable program.
+2. Execute the start.bat file in the `gobot_driver_win_x64_v0.4.4` directory to run the server.
+3. Execute gobot.exe in the `gobot_editor_win_x64_v0.4.4` directory to run the editor program.
 4. In the popped-up address input window or the address bar on the config page, enter the local server address http://127.0.0.1:8888.
 
 ---
