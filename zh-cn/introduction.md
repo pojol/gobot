@@ -68,6 +68,11 @@ end
 ## 解析流式协议包
 > 示例 message.lua 位于 script/ 用户可以参考里面的实现，更改自己项目中的协议包解析方式
 ```lua
+--[[
+    | 2 byte   , 1 byte,    2 byte      , 2byte		  |                        |
+    |包长度 len, 协议格式 ty, 预留2自定义字节, 协议号 msgid |                       |
+    |                  消息头                          |         消息体          |
+]]--
 -- message.lua
 function TCPUnpackMsg(msglen, buf, errmsg)
     if errmsg ~= "nil" then
@@ -79,7 +84,7 @@ function TCPUnpackMsg(msglen, buf, errmsg)
     local msgTy = msg:readi1()
     local msgCustom = msg:readi2()
     local msgId = msg:readi2()
-    local msgbody = msg:readBytes(msglen-(2+1+2+2), -1)
+    local msgbody = msg:readBytes(2+1+2+2, -1)
 
     return msgId, msgbody
 

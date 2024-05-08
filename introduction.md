@@ -74,6 +74,11 @@ end
 ## Parsing Stream Protocol Packets
 > Example message.lua is located in script/. Users can refer to its implementation and modify the protocol packet parsing method in their own projects
 ```lua
+--[[
+    | 2 byte    1 byte    2 byte       2byte		  |                        |
+    |msg len   proto type custom     msgid    |                        |
+    |                  header                          |         body         |
+]]--
 -- message.lua
 function TCPUnpackMsg(msglen, buf, errmsg)
     if errmsg ~= "nil" then
@@ -85,7 +90,7 @@ function TCPUnpackMsg(msglen, buf, errmsg)
     local msgTy = msg:readi1()
     local msgCustom = msg:readi2()
     local msgId = msg:readi2()
-    local msgbody = msg:readBytes(msglen-(2+1+2+2), -1)
+    local msgbody = msg:readBytes(2+1+2+2, -1)
 
     return msgId, msgbody
 
