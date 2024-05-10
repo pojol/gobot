@@ -5,7 +5,7 @@ Gobot is a powerful stateful API testing robot. It provides a graphical interfac
 [![](https://img.shields.io/badge/%E6%96%87%E6%A1%A3-Doc-2ca5e0?style=flat&logo=github)](https://pojol.github.io/gobot/#/)
 [![](https://img.shields.io/badge/Trello-Todo-2ca5e0?style=flat&logo=trello)](https://trello.com/b/8eDZ6h7n/)
 
-[中文](https://github.com/pojol/gobot/driver/blob/master/README_CN.md)
+[中文](https://github.com/pojol/gobot/blob/master/README_CN.md)
 
 
 ## Quick Installation
@@ -35,7 +35,7 @@ Gobot is a powerful stateful API testing robot. It provides a graphical interfac
 ]]--
 
 -- Users can load "modules" they want to use in the script.
--- document https://pojol.gitee.io/gobot/#/zh-cn/script/meta
+-- document https://pojol.github.io/gobot/#/
 local http = require("http")
 
 -- request body
@@ -77,6 +77,12 @@ end
 > Example message.lua is located in script/. Users can refer to its implementation and modify the protocol packet parsing method in their own projects
 ```lua
 -- message.lua
+--[[
+    | 2 byte  |  1 byte     | 2 byte  |    2byte        |                        |
+    |msg len  |  proto type | custom  |   msgid         |                        |
+    |                  header                           |         body           |
+]]--
+
 function TCPUnpackMsg(msglen, buf, errmsg)
     if errmsg ~= "nil" then
         return 0, ""
@@ -87,7 +93,7 @@ function TCPUnpackMsg(msglen, buf, errmsg)
     local msgTy = msg:readi1()
     local msgCustom = msg:readi2()
     local msgId = msg:readi2()
-    local msgbody = msg:readBytes(msglen-(2+1+2+2), -1)
+    local msgbody = msg:readBytes(2+1+2+2, -1)
 
     return msgId, msgbody
 
@@ -127,8 +133,8 @@ end
 ```
 
 ## Try it out
-Try the editor out [on website](http://43.134.38.169:7777)
-driver server address http://43.134.38.169:8888
+Try the editor out [on website](http://47.120.59.203:7777)
+driver server address http://47.120.59.203:8888
 
 ## Preview
 [![image.png](https://i.postimg.cc/t4jMVjp1/image.png)](https://postimg.cc/PPS4B0Lh)

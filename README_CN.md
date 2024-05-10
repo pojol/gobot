@@ -4,7 +4,7 @@ Gobot是一个功能强大的有状态API测试机器人。它提供图形界面
 [![Go Report Card](https://goreportcard.com/badge/github.com/pojol/gobot/driver)](https://goreportcard.com/report/github.com/pojol/gobot/driver)
 [![](https://img.shields.io/badge/%E6%96%87%E6%A1%A3-Doc-2ca5e0?style=flat&logo=github)](https://pojol.gitee.io/gobot/#/)
 [![](https://img.shields.io/badge/Trello-Todo-2ca5e0?style=flat&logo=trello)](https://trello.com/b/8eDZ6h7n/)
-[![CI](https://github.com/pojol/gobot/driver/actions/workflows/dockerimage.yml/badge.svg?branch=develop)](https://github.com/pojol/gobot/driver/actions/workflows/dockerimage.yml)
+
 
 ## 快速安装
 1. 进入最新的 [release页面](https://github.com/pojol/gobot/releases/tag/v0.4.4) 下载可执行程序
@@ -121,10 +121,7 @@ if msgid == 1002 then
 end
 ```
 
-## [在线试用](http://47.120.59.203:7777/) <-- 点击试用
-> 驱动端地址 http://47.120.59.203:8888 （弹出窗口填写
-
-## [文档](https://pojol.gitee.io/gobot/#/)
+### [在线试用](http://47.120.59.203:7777/) <-- 点击试用， 驱动端地址 http://47.120.59.203:8888 （弹出窗口填写
 
 ## [视频演示](https://www.bilibili.com/video/BV1sS4y1z7Dg/?vd_source=7c2dfd750914fd5f8a9811b19f0bf447)
 
