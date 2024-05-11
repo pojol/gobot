@@ -21,21 +21,16 @@ import ThemeType from '@/constant/constant';
 
 const { Search } = Input;
 
-export default function ActionTab() {
+export default function ScriptTab() {
 
   const [state, setState] = useState({
     nod: getDefaultNodeNotifyInfo(),
     node_ty: "",
     code: "",
     defaultAlias: "",
-    hflex: 0.5,
-    wflex: 0.4,
   });
 
-  const [codeHeight, setCodeHeight] = useState("400px");
-
   const { currentClickNode } = useSelector((state: RootState) => state.treeSlice);
-  const { graphFlex, editFlex } = useSelector((state: RootState) => state.resizeSlice)
   const { nodes } = useSelector((state: RootState) => state.treeSlice)
   const dispatch = useDispatch()
 
@@ -55,33 +50,12 @@ export default function ActionTab() {
       });
     })
 
-    PubSub.subscribe(Topic.WindowResize, () => {
-      redraw(state.wflex, state.hflex)
-    });
-
     return () => {
       // 取消订阅
       PubSub.unsubscribe(Topic.WindowResize);
     };
   }, [currentClickNode])
 
-  useEffect(() => {
-    setState({
-      ...state,
-      wflex: 1 - graphFlex,
-    });
-
-    redraw((1 - graphFlex), state.hflex)
-  }, [graphFlex])
-
-  useEffect(() => {
-    setState({
-      ...state,
-      hflex: editFlex,
-    });
-
-    redraw(state.wflex, editFlex)
-  }, [editFlex])
 
   const getTheme = () => {
     if (themeValue === ThemeType.Dark) {
@@ -91,14 +65,6 @@ export default function ActionTab() {
     }
   }
 
-  const redraw = (wflex: number, hflwx: number) => {
-      // auto
-      // var width = document.documentElement.clientWidth * wflex - 18;
-
-      var height = document.documentElement.clientHeight * hflwx - 40;
-
-      setCodeHeight(height.toString() + "px")
-  }
 
   const applyClick = () => {
     if (state.nod.id === "") {
@@ -136,7 +102,6 @@ export default function ActionTab() {
       <CodeMirror
         value={state.code}
         readOnly={false}
-        height={codeHeight}
         theme={getTheme()}
         extensions={[StreamLanguage.define(lua)]}
         onChange={onChange}
