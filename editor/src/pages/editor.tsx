@@ -85,8 +85,14 @@ export default function Editor() {
               <ReflexContainer orientation="horizontal">
                 <ReflexElement className="left-pane" minSize={100}>
 
-                  <Stdout/>
                   <Blackboard />
+
+
+                </ReflexElement>
+                <ReflexSplitter/>
+                <ReflexElement className="left-pane" minSize={100}>
+
+                  <Stdout/>
 
                 </ReflexElement>
               </ReflexContainer>

@@ -25,7 +25,8 @@ import {
     ZoomInOutlined,
     ZoomOutOutlined,
     LockOutlined,
-    UnlockOutlined
+    UnlockOutlined,
+    PushpinOutlined
 } from "@ant-design/icons";
 import { Button, Input, Modal, Tooltip, theme } from "antd";
 import { IsActionNode, IsScriptNode, NodeTy } from "../../constant/node_type";
@@ -95,7 +96,7 @@ const GraphView = (props: GraphViewProps) => {
 
     const { graphFlex } = useSelector((state: RootState) => state.resizeSlice)
     const { lock } = useSelector((state: RootState) => state.debugInfoSlice)
-    const { currentTreeName, nodes, updatetick, currentClickNode, currentLockedNode, currentDebugBot } = useSelector((state: RootState) => state.treeSlice)
+    const { currentTreeName, nodes, updatetick, currentClickNode, currentDebugBot } = useSelector((state: RootState) => state.treeSlice)
     const [isGraphCreated, setIsGraphCreated] = useState(false);
 
     const [timer, setTimer] = useState<TaskTimer | null>(null);
@@ -174,34 +175,6 @@ const GraphView = (props: GraphViewProps) => {
 
         graph.on("node:click", ({ node }) => {
             props.dispatch(nodeClick({ id: node.id, type: node.getAttrs().type.name as string }))
-        });
-
-        graph.on("node:dblclick", ({ node }) => {
-
-            // 只对脚本节点进行操作
-            if (IsScriptNode(node.getAttrs().type.name as string)) {
-                setBpNodes(prevBpNodes => {
-                    const tmp = prevBpNodes || []; // 保证 tmp 不为 undefined
-                    const ln = tmp.find((element) => element.parentid === node.id);
-
-                    console.info(prevBpNodes, "node dblclick", node.id, ln);
-                    if (ln !== undefined) { // 删除
-                        graph.removeNode(ln.bpid);
-                        const updatedNodes = tmp.filter((element) => element.parentid !== node.id);
-                        console.info("remove bp node", updatedNodes);
-                        return updatedNodes;
-                    } else {
-                        var bpnode = GetNode(NodeTy.BreakPoint, {});
-                        bpnode.setPosition(node.position().x - (bpnode.getSize().width + 7),
-                            node.position().y + (bpnode.getSize().height / 2));
-                        graph.addNode(bpnode, { others : { build: true} });  // 不发送addnode事件
-
-                        const updatedNodes = [...tmp, { parentid: node.id, bpid: bpnode.id }];
-                        console.info("add bp node", updatedNodes);
-                        return updatedNodes;
-                    }
-                });
-            }
         });
 
         graph.on("blank:click", () => {
@@ -370,7 +343,7 @@ const GraphView = (props: GraphViewProps) => {
         setIsGraphCreated(true);
 
         return () => {
-            setBpNodes(prevBpNodes => {return []})
+            setBpNodes(prevBpNodes => { return [] })
             graph.dispose()
         }
     }, []);
@@ -455,6 +428,15 @@ const GraphView = (props: GraphViewProps) => {
                     });
                 }
             });
+
+            graphRef.current.bindKey(["f9", "command+f9", "ctrl+f9"], () => {
+                if (currentClickNode.id !== "") {
+                    _findCell(currentClickNode.id, (cell) => {
+                        var node = (cell as Node<Node.Properties>)
+                        ClickBreakpointImpl(node)
+                    })
+                }
+            })
         }
 
         return () => {
@@ -463,6 +445,7 @@ const GraphView = (props: GraphViewProps) => {
                 graphRef.current.unbindKey(["down"])
                 graphRef.current.unbindKey(["left"])
                 graphRef.current.unbindKey(["right"])
+                graphRef.current.unbindKey(["f9", "command+f9", "ctrl+f9"])
             }
         }
 
@@ -804,6 +787,48 @@ const GraphView = (props: GraphViewProps) => {
         }
     };
 
+    const ClickBreakpointImpl = (node: Node<Node.Properties> | null) => {
+
+        // 只对脚本节点进行操作
+        if (node !== null) {
+            if (IsScriptNode(node.getAttrs().type.name as string)) {
+                setBpNodes(prevBpNodes => {
+                    const tmp = prevBpNodes || []; // 保证 tmp 不为 undefined
+                    const ln = tmp.find((element) => element.parentid === node?.id);
+
+                    console.info(prevBpNodes, "node dblclick", node?.id, ln);
+                    if (ln !== undefined) { // 删除
+                        graphRef.current?.removeNode(ln.bpid);
+                        const updatedNodes = tmp.filter((element) => element.parentid !== node?.id);
+                        console.info("remove bp node", updatedNodes);
+                        return updatedNodes;
+                    } else {
+                        var bpnode = GetNode(NodeTy.BreakPoint, {});
+                        bpnode.setPosition(node.position().x - (bpnode.getSize().width + 7),
+                            node.position().y + (bpnode.getSize().height / 2));
+                        graphRef.current?.addNode(bpnode, { others: { build: true } });  // 不发送addnode事件
+
+                        const updatedNodes = [...tmp, { parentid: node?.id, bpid: bpnode.id }];
+                        console.info("add bp node", updatedNodes);
+                        return updatedNodes;
+                    }
+                });
+            }
+        }
+
+    }
+
+    const ClickBreakpoint = () => {
+
+        if (currentClickNode.id !== "") {
+            _findCell(currentClickNode.id, (cell) => {
+                var node = (cell as Node<Node.Properties>)
+                ClickBreakpointImpl(node)
+            })
+        }
+        
+    }
+
     const ClickZoomOut = () => {
         if (graphRef.current) {
             graphRef.current.zoomTo(graphRef.current.zoom() * 0.8);
@@ -826,7 +851,7 @@ const GraphView = (props: GraphViewProps) => {
         step(props.tree.currentDebugBot, BpNodes);
     };
 
-    const step = (botid: string, bpnodes : BPNodeLinkInfo[] | undefined) => {
+    const step = (botid: string, bpnodes: BPNodeLinkInfo[] | undefined) => {
         Post(localStorage.remoteAddr, Api.DebugStep, { BotID: botid }).then(
             (json: any) => {
                 if (json.Code !== 200) {
@@ -929,14 +954,6 @@ const GraphView = (props: GraphViewProps) => {
         props.dispatch(nodeUndo())
     };
 
-    const getLockedState = () => {
-        if (currentLockedNode.id == "") {
-            return <UnlockOutlined />
-        } else {
-            return <LockOutlined />
-        }
-    }
-
     return (
         <div className='app'>
             <EditSidePlane
@@ -948,8 +965,11 @@ const GraphView = (props: GraphViewProps) => {
 
             <div
                 className={"app-zoom-win"}
-                style={{ marginLeft: 2, whiteSpace: "nowrap" }}
+                style={{ marginLeft: 7, whiteSpace: "nowrap" }}
             >
+                <Tooltip placement="topLeft" title="Add a breakpoint to the selected node [F9]">
+                    <Button icon={<PushpinOutlined />} onClick={ClickBreakpoint} />
+                </Tooltip>
                 <Tooltip placement="topLeft" title="ZoomIn">
                     <Button icon={<ZoomInOutlined />} onClick={ClickZoomIn} />
                 </Tooltip>

@@ -64,7 +64,7 @@ export function Stdout() {
     }, [threadInfo, themeValue])
 
     return (
-        <div className='ant-tabs-tabpane'> 
+        <div> 
             <Tabs activeKey={"1"}>
 
                 <TabPane
@@ -113,7 +113,7 @@ export function Blackboard() {
     }, [metainfo])
 
     return (
-        <div>
+        <div className='ant-tabs-tabpane'>
             <Tabs activeKey={"1"}>
                 <TabPane
                     tab={
@@ -125,7 +125,7 @@ export function Blackboard() {
                     key="1"
                 >
                     <ReactJson
-                        name=""
+                        name="bot"
                         src={JSON.parse(metainfo)}
                         theme={jsontheme}
                         enableClipboard={false}
