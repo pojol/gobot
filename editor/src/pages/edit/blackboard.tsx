@@ -18,7 +18,17 @@ export function Stdout() {
 
     const { threadInfo } = useSelector((state: RootState) => state.debugInfoSlice);
     const [runtimeerr, setRuntimeerr] = useState("");
-    const [change, setChange] = useState("")
+    const [change, setChange] = useState(String.raw`
+                                __              __      
+                               /\ \            /\ \__   
+                       __     ___\ \ \____    ___\ \ ,_\  
+                     /'_ '\  / __'\ \ '__'\  / __'\ \ \  
+                    /\ \L\ \/\ \L\ \ \ \L\ \/\ \L\ \ \ \_ 
+                    \ \____ \ \____/\ \_,__/\ \____/\ \__\
+                     \/___L\ \/___/  \/___/  \/___/  \/__/
+                       /\____/                            
+                       \_/__/           <b>v0.4.4</b>                 
+    `)
     const { themeValue } = useSelector((state: RootState) => state.configSlice)
 
     useEffect(() => {
@@ -50,15 +60,11 @@ export function Stdout() {
 
                 msg += "------------------------------\n"
             })
+
+            if (msg !== "") {
+                setChange(msg)
+            }
         } catch (err) {
-        }
-
-        if (haveerr) {
-            setRuntimeerr(msg)
-        } else {
-
-            setRuntimeerr("")
-            setChange(msg)
         }
 
     }, [threadInfo, themeValue])
