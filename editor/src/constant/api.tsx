@@ -41,7 +41,10 @@ const Api = {
     ConfigSystemInfo : "config.sys.info",
     ConfigSystemSet : "config.sys.set",
     ConfigGlobalInfo : "config.global.info",
-    ConfigGlobalSet : "config.global.set"
+    ConfigGlobalSet : "config.global.set",
+
+    //
+    RuntimeInfo : "runtime.info",
 }
 
 

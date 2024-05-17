@@ -82,7 +82,7 @@ ext:
 	return state, changestr, err
 }
 
-func (t *Tick) Do(mod Mode) (state string, end bool) {
+func (t *Tick) Do(mod Mode) (state string, end bool, logs []string) {
 
 	nods := t.blackboard.GetOpenNods()
 	t.blackboard.ThreadInfoReset()
@@ -94,7 +94,7 @@ func (t *Tick) Do(mod Mode) (state string, end bool) {
 		err = n.onTick(t)
 
 		state, msg, parseerr = t.stateCheck(mod, n.getType())
-
+		// thread 信息用于编辑器标记运行时节点信息（展示项
 		threadInfo := ThreadInfo{
 			Number: n.getBase().getThread(),
 			CurNod: n.getBase().ID(),
@@ -102,12 +102,15 @@ func (t *Tick) Do(mod Mode) (state string, end bool) {
 		}
 
 		if err != nil {
-			threadInfo.ErrMsg = fmt.Sprintf("tick err %v", err.Error())
-			fmt.Println("tick err", threadInfo.ErrMsg)
+			logs = append(logs, fmt.Sprintf("<b><u>check err</u></b> thread:%v name:%v id:%v\n%v",
+				n.getBase().getThread(),
+				n.getBase().ID(),
+				n.getBase().Name(),
+				err.Error()),
+			)
 		}
 		if parseerr != nil {
-			threadInfo.ErrMsg = fmt.Sprintf("%v parse err %v", threadInfo.ErrMsg, parseerr.Error())
-			fmt.Println("tick parse err", threadInfo.ErrMsg)
+			//threadInfo.ErrMsg = fmt.Sprintf("%v parse err %v", threadInfo.ErrMsg, parseerr.Error())
 		}
 
 		if state != Succ {
@@ -115,12 +118,9 @@ func (t *Tick) Do(mod Mode) (state string, end bool) {
 				end = true
 			} else if state == Break {
 				end = true
-				threadInfo.ErrMsg = fmt.Sprintf("script break err %v", msg)
-				fmt.Println("tick break err", threadInfo.ErrMsg)
 			} else if state == Error {
 				// 节点脚本出错，脚本逻辑自行抛出的错误
-				threadInfo.ErrMsg = fmt.Sprintf("script err %v", msg)
-				fmt.Println("tick script err", threadInfo.ErrMsg)
+				//threadInfo.ErrMsg = fmt.Sprintf("script err %v", msg)
 			}
 		}
 
@@ -143,5 +143,5 @@ func (t *Tick) Do(mod Mode) (state string, end bool) {
 	}
 
 ext:
-	return state, end
+	return state, end, logs
 }

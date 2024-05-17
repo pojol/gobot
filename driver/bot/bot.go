@@ -166,13 +166,21 @@ func NewWithBehaviorTree(path string, bt *behavior.Tree, mode behavior.Mode, nam
 		fmt.Println("set bot name", err.Error())
 	}
 
+	bot.addLog(fmt.Sprintf("create bot id %v name %v success", bot.id, bot.name))
+
 	return bot
 }
 
 func (b *Bot) loopThread(doneCh chan<- string, errch chan<- ErrInfo) {
 
 	for {
-		state, end := b.tick.Do(b.mod)
+		state, end, logs := b.tick.Do(b.mod)
+		if len(logs) != 0 {
+			for _, log := range logs {
+				b.addLog(log)
+			}
+		}
+
 		if end {
 			doneCh <- b.id
 			goto ext
@@ -208,7 +216,13 @@ func (b *Bot) RunByBlock() error {
 	}()
 
 	for {
-		state, end := b.tick.Do(b.mod)
+		state, end, logs := b.tick.Do(b.mod)
+		if len(logs) != 0 {
+			for _, log := range logs {
+				b.addLog(log)
+			}
+		}
+
 		if end {
 			return nil
 		}
@@ -262,8 +276,24 @@ func (b *Bot) close() {
 		pool.FreeState(b.bs)
 	}
 
-	fmt.Println("bot", b.Name(), "batch", b.batch, "idx", b.id, "close")
+	b.addLog(fmt.Sprintf("close bot id %v name %v success", b.id, b.name))
+}
 
+// PopLog - 弹出一条日志
+func (b *Bot) PopLog() string {
+	line := b.bs.LogMod.Pop()
+
+	return line
+}
+
+func (b *Bot) addLog(log string) {
+	fmt.Println("=>", log)
+
+	log = time.Now().Format("2006-01-02 15:04:05") + " =================>\n" + log
+
+	if b.mod != behavior.Thread {
+		b.bs.LogMod.Push(log)
+	}
 }
 
 type State int32
@@ -281,7 +311,14 @@ func (b *Bot) RunByStep() State {
 	stepmu.Lock()
 	defer stepmu.Unlock()
 
-	state, end := b.tick.Do(b.mod)
+	// 这边的错误日志需要记录下
+	state, end, logs := b.tick.Do(b.mod)
+	if len(logs) != 0 {
+		for _, log := range logs {
+			b.addLog(log)
+		}
+	}
+
 	if end {
 		return SEnd
 	}

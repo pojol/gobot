@@ -130,3 +130,12 @@ type PrefabSetTagsReq struct {
 	Name string   `json:"name"`
 	Tags []string `json:"tags"`
 }
+
+// ------------------------ runtime ------------------------
+type RuntimeInfoReq struct {
+	ID string
+}
+
+type RuntimeInfoRes struct {
+	Msg string
+}

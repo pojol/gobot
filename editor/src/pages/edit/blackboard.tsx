@@ -6,18 +6,37 @@ import { useSelector } from 'react-redux'
 import Editor from "react-medium-editor";
 import { RootState } from '@/models/store';
 import "./blackboard.css";
+const { Post } = require("../../utils/request");
+import Api from "../../constant/api";
 
 require("medium-editor/dist/css/medium-editor.css");
 require("medium-editor/dist/css/themes/default.css");
-
 import ThemeType from '@/constant/constant';
+import { TaskTimer } from 'tasktimer';
 
 const { TabPane } = Tabs;
 
+const stdoutstr = async (botid: string) => {
+    let info = "";
+    try {
+        const json = await Post(localStorage.remoteAddr, Api.RuntimeInfo, { ID: botid });
+        if (json.Code == 200) {
+            info = json.Body.Msg;
+        }
+    } catch (err) {
+        console.error("Error:", err);
+    }
+
+    if (info !== "") {
+        console.info("post runtime.info", info);
+    }
+
+    return info;
+};
+
+
 export function Stdout() {
 
-    const { threadInfo } = useSelector((state: RootState) => state.debugInfoSlice);
-    const [runtimeerr, setRuntimeerr] = useState("");
     const [change, setChange] = useState(String.raw`
                                 __              __      
                                /\ \            /\ \__   
@@ -30,47 +49,37 @@ export function Stdout() {
                        \_/__/           <b>v0.4.4</b>                 
     `)
     const { themeValue } = useSelector((state: RootState) => state.configSlice)
+    const { currentDebugBot } = useSelector((state: RootState) => state.treeSlice)
 
     useEffect(() => {
-        let msg = ""
-        let haveerr = false
 
-        try {
-            threadInfo.forEach(element => {
-                msg += "<b>Thread[" + element.number + "]</b>\n"
-
-                if (element.errmsg !== "") {
-                    msg += element.errmsg
-                    msg += "------------------------------\n"
-                    haveerr = true
-                    throw new Error();
-                }
-
-                let changemsg = "{}"
-                if (element.change !== "") {
-                    changemsg = element.change
-                }
-
-                try {
-                    msg += JSON.stringify(JSON.parse(changemsg), null, 2) + "\n"
-                } catch (error) {
-                    console.warn(error)
-                    msg += changemsg + "\n"
-                }
-
-                msg += "------------------------------\n"
-            })
-
-            if (msg !== "") {
-                setChange(msg)
+        const newTimer = new TaskTimer(500);
+        newTimer.on('tick', async () => {
+            if (currentDebugBot === "") {
+                return
             }
-        } catch (err) {
+
+            let newmsg = await stdoutstr(currentDebugBot);
+            if (newmsg !== "") {
+                setChange(prev => {
+                    let oldmsg = newmsg + "\n" + prev;
+                    return oldmsg
+                })
+            }
+        });
+        newTimer.start();
+
+        return () => {
+            // 清理定时器
+            if (newTimer) {
+                newTimer.stop();
+            }
         }
 
-    }, [threadInfo, themeValue])
+    }, [themeValue, currentDebugBot])
 
     return (
-        <div> 
+        <div>
             <Tabs activeKey={"1"}>
 
                 <TabPane
@@ -92,7 +101,7 @@ export function Stdout() {
                         text={change}
                     />
                 </TabPane>
-                
+
             </Tabs>
         </div>
     );

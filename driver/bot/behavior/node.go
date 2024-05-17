@@ -61,6 +61,11 @@ func (a *Node) ID() string {
 	return a.id
 }
 
+// Name 返回节点的名称
+func (a *Node) Name() string {
+	return ""
+}
+
 func (a *Node) Type() string {
 	return a.ty
 }

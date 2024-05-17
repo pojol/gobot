@@ -22,6 +22,7 @@ type BotState struct {
 	base64Mod    *script.Base64Module
 	mgoMod       *script.MgoModule
 	md5Mod       *script.MD5Module
+	LogMod       *script.LogModule
 }
 
 func (pl *lStatePool) Get() *BotState {
@@ -50,6 +51,7 @@ func _new_state() *BotState {
 		base64Mod:    &script.Base64Module{},
 		mgoMod:       &script.MgoModule{},
 		md5Mod:       &script.MD5Module{},
+		LogMod:       &script.LogModule{},
 	}
 
 	b.L.PreloadModule("proto", b.protoMod.Loader)
@@ -60,6 +62,7 @@ func _new_state() *BotState {
 	b.L.PreloadModule("base64", b.base64Mod.Loader)
 	b.L.PreloadModule("mgo", b.mgoMod.Loader)
 	b.L.PreloadModule("md5", b.md5Mod.Loader)
+	b.L.PreloadModule("log", b.LogMod.Loader)
 
 	return b
 }
@@ -80,7 +83,14 @@ func GetState() *BotState {
 	return luaPool.Get()
 }
 
+func (bs *BotState) Clean() {
+	// module clean
+	bs.LogMod.Clean()
+}
+
 func PutState(state *BotState) {
+	state.Clean()
+
 	luaPool.Put(state)
 }
 
@@ -89,6 +99,8 @@ func NewState() *BotState {
 }
 
 func FreeState(state *BotState) {
+	state.Clean()
+
 	state.L.Close()
 }
 
