@@ -1,4 +1,4 @@
 
-.scroll-patch {
-    padding-bottom: 100px;
-}
+.ant-tabs-tabpane {
+    height: 500px; /* 设置 Tabs 控件的高度 */
+  }

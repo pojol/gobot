@@ -756,6 +756,43 @@ EXT:
 	return nil
 }
 
+func BotRuntimeInfo(ctx echo.Context) error {
+	code := Succ
+	var b *bot.Bot
+	req := &RuntimeInfoReq{}
+	res := &response{}
+	body := &RuntimeInfoRes{}
+
+	bts, err := ioutil.ReadAll(ctx.Request().Body)
+	if err != nil {
+		code = ErrContentRead // tmp
+		fmt.Println(err.Error())
+		goto EXT
+	}
+	err = json.Unmarshal(bts, &req)
+	if err != nil {
+		code = ErrContentRead // tmp
+		fmt.Println(err.Error())
+		goto EXT
+	}
+
+	b = factory.Global.FindBot(req.ID)
+	if b == nil {
+		code = ErrCantFindBot
+		goto EXT
+	}
+
+	body.Msg = b.PopLog()
+
+EXT:
+	res.Code = int(code)
+	res.Msg = errmap[code]
+	res.Body = body
+
+	ctx.JSON(http.StatusOK, res)
+	return nil
+}
+
 func ReqPrint() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
@@ -773,6 +810,8 @@ func Route(e *echo.Echo) {
 		ctx.JSONBlob(http.StatusOK, []byte(``))
 		return nil
 	})
+
+	e.POST("/runtime.info", BotRuntimeInfo)
 
 	e.POST("/file.uploadTxt", FileTextUpload)
 	e.POST("/file.uploadBlob", FileBlobUpload)

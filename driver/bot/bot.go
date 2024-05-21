@@ -261,9 +261,13 @@ func (b *Bot) close() {
 	} else {
 		pool.FreeState(b.bs)
 	}
+}
 
-	fmt.Println("bot", b.Name(), "batch", b.batch, "idx", b.id, "close")
+// PopLog - 弹出一条日志
+func (b *Bot) PopLog() string {
+	line := b.bs.LogMod.Pop()
 
+	return line
 }
 
 type State int32
@@ -281,6 +285,7 @@ func (b *Bot) RunByStep() State {
 	stepmu.Lock()
 	defer stepmu.Unlock()
 
+	// 这边的错误日志需要记录下
 	state, end := b.tick.Do(b.mod)
 	if end {
 		return SEnd
