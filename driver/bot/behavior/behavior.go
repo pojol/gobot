@@ -18,8 +18,9 @@ type Tree struct {
 
 	Wait int32 `xml:"wait"`
 
-	Loop int32  `xml:"loop"` // 用于记录循环节点的循环x次数
-	Code string `xml:"code"`
+	Loop  int32  `xml:"loop"` // 用于记录循环节点的循环x次数
+	Code  string `xml:"code"`
+	Alias string `xml:"alias"` // 用于记录别名
 
 	root INod
 

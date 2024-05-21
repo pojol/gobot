@@ -37,7 +37,7 @@ const stdoutstr = async (botid: string) => {
 
 export function Stdout() {
 
-    const [change, setChange] = useState(String.raw`
+    const ver = String.raw`
                                 __              __      
                                /\ \            /\ \__   
                        __     ___\ \ \____    ___\ \ ,_\  
@@ -47,11 +47,15 @@ export function Stdout() {
                      \/___L\ \/___/  \/___/  \/___/  \/__/
                        /\____/                            
                        \_/__/           <b>v0.4.4</b>                 
-    `)
+    `
+
+    const [change, setChange] = useState(ver)
     const { themeValue } = useSelector((state: RootState) => state.configSlice)
     const { currentDebugBot } = useSelector((state: RootState) => state.treeSlice)
 
     useEffect(() => {
+
+        setChange(ver)
 
         const newTimer = new TaskTimer(500);
         newTimer.on('tick', async () => {

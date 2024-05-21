@@ -40,8 +40,9 @@ type INod interface {
 }
 
 type Node struct {
-	id string
-	ty string
+	id   string
+	name string
+	ty   string
 
 	child  []INod
 	parent INod
@@ -53,6 +54,7 @@ type Node struct {
 func (n *Node) Init(t *Tree, parent INod) {
 	n.id = t.ID
 	n.ty = t.Ty
+	n.name = t.Alias
 
 	n.parent = parent
 }
@@ -61,9 +63,13 @@ func (a *Node) ID() string {
 	return a.id
 }
 
+func (a *Node) GetShortID() string {
+	return a.id[len(a.id)-12:]
+}
+
 // Name 返回节点的名称
 func (a *Node) Name() string {
-	return ""
+	return a.name
 }
 
 func (a *Node) Type() string {

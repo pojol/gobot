@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/pojol/gobot/driver/bot/pool"
 	"github.com/pojol/gobot/driver/utils"
@@ -82,7 +83,7 @@ ext:
 	return state, changestr, err
 }
 
-func (t *Tick) Do(mod Mode) (state string, end bool, logs []string) {
+func (t *Tick) Do(mod Mode) (state string, end bool) {
 
 	nods := t.blackboard.GetOpenNods()
 	t.blackboard.ThreadInfoReset()
@@ -91,6 +92,13 @@ func (t *Tick) Do(mod Mode) (state string, end bool, logs []string) {
 	var msg string
 
 	for _, n := range nods {
+		// 要将一个节点的日志收集到一起，将alias写入到meta中
+		if n.getType() == SCRIPT && mod == Step {
+			log := time.Now().Format("2006-01-02 15:04:05") + " tick " + n.getBase().Name() + " " + n.getBase().GetShortID() + " =>"
+			t.bs.L.DoString(`
+				log.info("` + log + `")
+			`)
+		}
 		err = n.onTick(t)
 
 		state, msg, parseerr = t.stateCheck(mod, n.getType())
@@ -102,12 +110,14 @@ func (t *Tick) Do(mod Mode) (state string, end bool, logs []string) {
 		}
 
 		if err != nil {
-			logs = append(logs, fmt.Sprintf("<b><u>check err</u></b> thread:%v name:%v id:%v\n%v",
+			log := fmt.Sprintf("<b><u>check err</u></b> thread:%v name:%v id:%v\n%v",
 				n.getBase().getThread(),
 				n.getBase().ID(),
 				n.getBase().Name(),
-				err.Error()),
-			)
+				err.Error())
+			t.bs.L.DoString(`
+				log.info("` + log + `")
+			`)
 		}
 		if parseerr != nil {
 			//threadInfo.ErrMsg = fmt.Sprintf("%v parse err %v", threadInfo.ErrMsg, parseerr.Error())
@@ -143,5 +153,5 @@ func (t *Tick) Do(mod Mode) (state string, end bool, logs []string) {
 	}
 
 ext:
-	return state, end, logs
+	return state, end
 }

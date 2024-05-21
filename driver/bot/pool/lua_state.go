@@ -62,7 +62,9 @@ func _new_state() *BotState {
 	b.L.PreloadModule("base64", b.base64Mod.Loader)
 	b.L.PreloadModule("mgo", b.mgoMod.Loader)
 	b.L.PreloadModule("md5", b.md5Mod.Loader)
-	b.L.PreloadModule("log", b.LogMod.Loader)
+
+	// 全局 log
+	b.LogMod.Loader(b.L)
 
 	return b
 }
